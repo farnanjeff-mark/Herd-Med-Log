@@ -468,6 +468,26 @@
   searchBox.addEventListener('input', renderList);
 
   loadAll();
+
+  // Refresh whenever the app comes back into view (e.g. switching back
+  // to it from the home screen or another tab) instead of only on first load.
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible'){
+      loadAll();
+      if(currentCow) renderDetail();
+    }
+  });
+  window.addEventListener('focus', loadAll);
+  window.addEventListener('pageshow', loadAll);
+
+  // Tap the sync dot to force a manual refresh any time.
+  syncDot.style.cursor = 'pointer';
+  syncDot.title = 'Tap to refresh';
+  syncDot.addEventListener('click', async ()=>{
+    await loadAll();
+    if(currentCow) renderDetail();
+    showToast('Refreshed');
+  });
 })();
 </script>
 
