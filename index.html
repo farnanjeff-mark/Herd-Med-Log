@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Med Log</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Med Log">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#7A2E27">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" href="data:image/png;base64,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">
+<style>
+  :root{
+    --paper:#EFE8D8;
+    --ink:#2B2620;
+    --barn:#7A2E27;
+    --pasture:#455B3D;
+    --tag:#E3A93C;
+    --line:#c9bfa4;
+    --paper-raised:#F7F2E6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Georgia','Iowan Old Style',serif;-webkit-font-smoothing:antialiased;}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--paper);}
+
+  .header{padding:22px 18px 16px;border-bottom:3px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-start;}
+  .eyebrow{font-family:'Courier New',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--barn);margin:0 0 4px;}
+  .h1{font-family:Georgia,serif;font-weight:700;font-size:26px;margin:0;letter-spacing:.01em;}
+  .h1 span{color:var(--pasture);}
+  .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--pasture);margin-top:8px;flex-shrink:0;}
+  .sync-dot.err{background:var(--barn);}
+  .sync-dot.busy{background:var(--tag);}
+
+  .view{padding:16px 18px 100px;}
+  .hidden{display:none !important;}
+
+  .toolbar{display:flex;gap:8px;margin-bottom:14px;}
+  input, select, textarea{
+    font-family:'Courier New',monospace;
+    background:var(--paper-raised);
+    border:2px solid var(--ink);
+    color:var(--ink);
+    padding:10px 12px;
+    font-size:16px;
+    border-radius:2px;
+    width:100%;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--pasture);outline-offset:1px;}
+
+  .btn{
+    font-family:'Courier New',monospace;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    font-size:13px;border:2px solid var(--ink);background:var(--tag);color:var(--ink);
+    padding:10px 16px;border-radius:2px;cursor:pointer;white-space:nowrap;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn[disabled]{opacity:.5;cursor:default;}
+  .btn-outline{background:transparent;}
+  .btn-barn{background:var(--barn);color:var(--paper);border-color:var(--barn);}
+  .btn-pasture{background:var(--pasture);color:var(--paper);border-color:var(--pasture);}
+  .btn-full{width:100%;}
+  .btn-sm{padding:6px 10px;font-size:11px;}
+
+  .cow-card{
+    display:flex;justify-content:space-between;align-items:center;padding:14px 14px;margin-bottom:10px;
+    background:var(--paper-raised);border:2px solid var(--ink);border-left:8px solid var(--tag);
+    border-radius:2px;cursor:pointer;
+  }
+  .cow-card.recent-med{border-left-color:var(--barn);}
+  .cow-num{font-size:20px;font-weight:700;font-family:Georgia,serif;}
+  .cow-meta{font-family:'Courier New',monospace;font-size:11px;color:#6b6350;margin-top:2px;}
+  .chev{font-size:20px;color:var(--ink);opacity:.4;}
+
+  .empty{text-align:center;padding:50px 20px;color:#8a8163;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;}
+  .banner{
+    font-family:'Courier New',monospace;font-size:12px;background:#f4d9d5;border:2px solid var(--barn);
+    color:var(--barn);padding:10px 12px;border-radius:2px;margin-bottom:14px;line-height:1.5;
+  }
+
+  .back{
+    display:flex;align-items:center;gap:8px;font-family:'Courier New',monospace;font-size:13px;
+    letter-spacing:.05em;color:var(--paper);text-transform:uppercase;font-weight:700;
+    background:var(--barn);border:2px solid var(--ink);border-radius:2px;
+    padding:12px 14px;cursor:pointer;width:100%;margin-bottom:16px;
+  }
+  .back:active{transform:translateY(1px);}
+  .detail-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--ink);padding-bottom:14px;margin-bottom:16px;}
+  .detail-num{font-size:34px;font-weight:700;font-family:Georgia,serif;line-height:1;}
+  .detail-sub{font-family:'Courier New',monospace;font-size:11px;color:#6b6350;margin-top:4px;}
+
+  .section-label{
+    font-family:'Courier New',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--pasture);font-weight:700;margin:20px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px;
+  }
+
+  .record{background:var(--paper-raised);border:1.5px solid var(--line);border-radius:2px;padding:12px 14px;margin-bottom:8px;position:relative;}
+  .record-date{font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:var(--barn);}
+  .record-med{font-size:17px;font-weight:700;margin:3px 0 2px;}
+  .record-reason{font-size:14px;color:#4a4433;}
+  .record-notes{font-family:'Courier New',monospace;font-size:12px;color:#6b6350;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px;}
+  .record-del{position:absolute;top:10px;right:10px;background:none;border:none;color:#a08f6b;font-size:16px;cursor:pointer;padding:4px;}
+
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b6350;margin-bottom:5px;}
+  .row2{display:flex;gap:10px;}
+  .row2 > div{flex:1;}
+
+  .fab{
+    position:fixed;bottom:24px;left:50%;transform:translateX(calc(-50% + (min(480px,100vw) - 40px)/2 - 26px));
+    width:56px;height:56px;border-radius:50%;background:var(--barn);color:var(--paper);border:none;
+    font-size:28px;line-height:1;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.3);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fab:active{transform:translateX(calc(-50% + (min(480px,100vw) - 40px)/2 - 26px)) scale(.95);}
+
+  .modal-backdrop{position:fixed;inset:0;background:rgba(43,38,32,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;}
+  .modal{background:var(--paper);width:100%;max-width:480px;border-top:3px solid var(--ink);border-radius:12px 12px 0 0;padding:20px 18px 28px;max-height:88vh;overflow-y:auto;}
+  .modal-title{font-size:20px;font-weight:700;margin:0 0 16px;font-family:Georgia,serif;}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .modal-actions .btn{flex:1;}
+
+  .toast{
+    position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);
+    padding:10px 18px;border-radius:20px;font-family:'Courier New',monospace;font-size:12px;
+    z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;max-width:85%;text-align:center;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div>
+      <p class="eyebrow">Herd Health Ledger</p>
+      <h1 class="h1">Med <span>Log</span></h1>
+    </div>
+    <div class="sync-dot" id="syncDot" title="Sync status"></div>
+  </div>
+
+  <div class="view" id="listView">
+    <div id="connBanner" class="banner hidden"></div>
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="Find cow #..." autocomplete="off"/>
+    </div>
+    <div id="cowList"></div>
+    <div id="emptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
+  </div>
+
+  <div class="view hidden" id="detailView">
+    <button class="back" id="backBtn">&larr; All Cattle</button>
+    <div class="detail-head">
+      <div>
+        <div class="detail-num" id="detailNum">#000</div>
+        <div class="detail-sub" id="detailSub">0 treatments logged</div>
+      </div>
+      <button class="btn btn-outline btn-sm" id="deleteCowBtn">Remove Cow</button>
+    </div>
+
+    <button class="btn btn-pasture btn-full" id="addRecordBtn">+ Log Medicine Given</button>
+
+    <div class="section-label">Treatment History</div>
+    <div id="recordList"></div>
+    <div id="noRecords" class="empty hidden">No treatments logged for this cow yet.</div>
+  </div>
+
+  <button class="fab" id="fabAdd" title="Add cow">+</button>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+  // ---- Supabase connection ----
+  const SUPABASE_URL = 'https://nuutfigyhjyqhtxotuln.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_jvBVaIs5ZYmOUuE8o28mqQ_RMipD5Xw';
+  const REST = SUPABASE_URL + '/rest/v1';
+  const HEADERS = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json'
+  };
+
+  let cows = [];        // [{number, added_at}]
+  let treatments = [];  // [{id, cow_number, date, medicine, reason, notes}]
+  let currentCow = null;
+
+  const listView = document.getElementById('listView');
+  const detailView = document.getElementById('detailView');
+  const cowListEl = document.getElementById('cowList');
+  const emptyState = document.getElementById('emptyState');
+  const searchBox = document.getElementById('searchBox');
+  const toastEl = document.getElementById('toast');
+  const syncDot = document.getElementById('syncDot');
+  const connBanner = document.getElementById('connBanner');
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(()=>toastEl.classList.remove('show'), 1800);
+  }
+
+  function setSync(state){ // 'ok' | 'busy' | 'err'
+    syncDot.className = 'sync-dot' + (state==='err' ? ' err' : state==='busy' ? ' busy' : '');
+  }
+
+  function showConnError(msg){
+    connBanner.textContent = msg;
+    connBanner.classList.remove('hidden');
+  }
+  function clearConnError(){
+    connBanner.classList.add('hidden');
+  }
+
+  async function api(path, options){
+    setSync('busy');
+    try{
+      const res = await fetch(REST + path, Object.assign({ headers: HEADERS }, options||{}));
+      if(!res.ok){
+        const errText = await res.text().catch(()=> '');
+        throw new Error('Supabase error ' + res.status + ': ' + errText);
+      }
+      setSync('ok');
+      clearConnError();
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    }catch(e){
+      console.error(e);
+      setSync('err');
+      showConnError('Could not reach the database. Check your internet connection — your last change may not have saved.');
+      throw e;
+    }
+  }
+
+  async function loadAll(){
+    try{
+      const [cowsRes, treatRes] = await Promise.all([
+        api('/cows?select=*&order=number.asc', { method:'GET' }),
+        api('/treatments?select=*', { method:'GET' })
+      ]);
+      cows = cowsRes || [];
+      treatments = treatRes || [];
+    }catch(e){
+      cows = []; treatments = [];
+    }
+    renderList();
+  }
+
+  function fmtDate(iso){
+    const d = new Date(iso+'T00:00:00');
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }
+  function daysAgo(iso){
+    const d = new Date(iso+'T00:00:00');
+    const now = new Date(); now.setHours(0,0,0,0);
+    return Math.round((now-d)/86400000);
+  }
+  function escapeHtml(s){
+    const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML;
+  }
+  function recordsFor(num){
+    return treatments.filter(t=>t.cow_number===num);
+  }
+
+  function renderList(){
+    const q = (searchBox.value||'').trim().toLowerCase();
+    const sorted = [...cows].sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const filtered = sorted.filter(c => c.number.toLowerCase().includes(q));
+    cowListEl.innerHTML = '';
+    emptyState.classList.toggle('hidden', cows.length !== 0);
+
+    filtered.forEach(cow=>{
+      const num = cow.number;
+      const records = recordsFor(num);
+      const count = records.length;
+      let meta = count === 0 ? 'No treatments logged' : `${count} treatment${count>1?'s':''} logged`;
+      let recentClass = '';
+      if(count>0){
+        const last = [...records].sort((a,b)=>b.date.localeCompare(a.date))[0];
+        const ago = daysAgo(last.date);
+        meta += ` · last ${ago===0?'today':ago===1?'1 day ago':ago+' days ago'}`;
+        if(ago <= 21) recentClass = 'recent-med';
+      }
+      const card = document.createElement('div');
+      card.className = 'cow-card ' + recentClass;
+      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.addEventListener('click', ()=> openCow(num));
+      cowListEl.appendChild(card);
+    });
+  }
+
+  function openCow(num){
+    currentCow = num;
+    document.getElementById('detailNum').textContent = '#'+num;
+    listView.classList.add('hidden');
+    detailView.classList.remove('hidden');
+    renderDetail();
+    window.scrollTo(0,0);
+  }
+  function closeCow(){
+    currentCow = null;
+    detailView.classList.add('hidden');
+    listView.classList.remove('hidden');
+    renderList();
+    window.scrollTo(0,0);
+  }
+
+  function renderDetail(){
+    const records = [...recordsFor(currentCow)].sort((a,b)=> b.date.localeCompare(a.date));
+    document.getElementById('detailSub').textContent = records.length === 0 ? '0 treatments logged' : `${records.length} treatment${records.length>1?'s':''} logged`;
+    const listEl = document.getElementById('recordList');
+    const noRecords = document.getElementById('noRecords');
+    listEl.innerHTML = '';
+    noRecords.classList.toggle('hidden', records.length !== 0);
+
+    records.forEach(r=>{
+      const div = document.createElement('div');
+      div.className = 'record';
+      div.innerHTML = `
+        <button class="record-del" data-id="${r.id}">&times;</button>
+        <div class="record-date">${fmtDate(r.date)}</div>
+        <div class="record-med">${escapeHtml(r.medicine)}</div>
+        <div class="record-reason">${escapeHtml(r.reason)}</div>
+        ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+      `;
+      div.querySelector('.record-del').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        deleteRecord(r.id);
+      });
+      listEl.appendChild(div);
+    });
+  }
+
+  async function deleteRecord(id){
+    try{
+      await api('/treatments?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      treatments = treatments.filter(t=>t.id!==id);
+      renderDetail();
+      renderList();
+      showToast('Treatment removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  async function deleteCow(){
+    if(!currentCow) return;
+    if(!confirm(`Remove cow #${currentCow} and all its treatment history? This can't be undone.`)) return;
+    try{
+      await api('/cows?number=eq.' + encodeURIComponent(currentCow), { method:'DELETE' });
+      cows = cows.filter(c=>c.number!==currentCow);
+      treatments = treatments.filter(t=>t.cow_number!==currentCow);
+      closeCow();
+      showToast('Cow removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  // ---- Modals ----
+  function openModal(html){
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.id = 'activeModal';
+    backdrop.innerHTML = `<div class="modal">${html}</div>`;
+    backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) closeModal(); });
+    document.body.appendChild(backdrop);
+    return backdrop;
+  }
+  function closeModal(){
+    const m = document.getElementById('activeModal');
+    if(m) m.remove();
+  }
+
+  function addCowModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Cow</div>
+      <div class="field">
+        <label>Cow / Ear Tag Number</label>
+        <input type="text" id="newCowNum" inputmode="numeric" placeholder="e.g. 214" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddCow">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddCow">Add Cow</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddCow').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddCow').addEventListener('click', async ()=>{
+      const num = modal.querySelector('#newCowNum').value.trim();
+      if(!num){ showToast('Enter a cow number'); return; }
+      if(cows.some(c=>c.number===num)){ showToast('That cow already exists'); return; }
+      const btn = modal.querySelector('#confirmAddCow');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/cows', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ number: num })
+        });
+        cows.push(inserted[0]);
+        closeModal();
+        renderList();
+        showToast(`Cow #${num} added`);
+        openCow(num);
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not add cow — try again');
+      }
+    });
+  }
+
+  function addRecordModal(){
+    const today = new Date().toISOString().slice(0,10);
+    const modal = openModal(`
+      <div class="modal-title">Log Medicine — #${escapeHtml(currentCow)}</div>
+      <div class="row2">
+        <div class="field">
+          <label>Date Given</label>
+          <input type="date" id="recDate" value="${today}"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Medicine</label>
+        <input type="text" id="recMed" placeholder="e.g. LA-200, Draxxin, Bo-Se" autofocus/>
+      </div>
+      <div class="field">
+        <label>Reason</label>
+        <input type="text" id="recReason" placeholder="e.g. foot rot, pinkeye, respiratory"/>
+      </div>
+      <div class="field">
+        <label>Notes / Dosage (optional)</label>
+        <textarea id="recNotes" rows="2" placeholder="e.g. 10cc SQ, left neck"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddRec">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddRec">Save Entry</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddRec').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddRec').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#recDate').value;
+      const med = modal.querySelector('#recMed').value.trim();
+      const reason = modal.querySelector('#recReason').value.trim();
+      const notes = modal.querySelector('#recNotes').value.trim();
+      if(!dateVal || !med || !reason){ showToast('Date, medicine, and reason are required'); return; }
+      const btn = modal.querySelector('#confirmAddRec');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/treatments', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ cow_number: currentCow, date: dateVal, medicine: med, reason, notes: notes||null })
+        });
+        treatments.push(inserted[0]);
+        closeModal();
+        renderDetail();
+        renderList();
+        window.scrollTo(0,0);
+        showToast('Treatment logged');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
+  document.getElementById('fabAdd').addEventListener('click', addCowModal);
+  document.getElementById('backBtn').addEventListener('click', closeCow);
+  document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
+  document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
+  searchBox.addEventListener('input', renderList);
+
+  loadAll();
+})();
+</script>
+
+</body>
+</html>
