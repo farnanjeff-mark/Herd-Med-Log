@@ -29,9 +29,16 @@
   .eyebrow{font-family:'Courier New',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--barn);margin:0 0 4px;}
   .h1{font-family:Georgia,serif;font-weight:700;font-size:26px;margin:0;letter-spacing:.01em;}
   .h1 span{color:var(--pasture);}
-  .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--pasture);margin-top:8px;flex-shrink:0;}
+  .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--pasture);flex-shrink:0;}
   .sync-dot.err{background:var(--barn);}
   .sync-dot.busy{background:var(--tag);}
+  .refresh-btn{
+    display:flex;align-items:center;gap:7px;
+    font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    background:var(--paper-raised);border:2px solid var(--ink);border-radius:4px;
+    padding:8px 12px;cursor:pointer;color:var(--ink);margin-top:4px;
+  }
+  .refresh-btn:active{transform:translateY(1px);}
 
   .view{padding:16px 18px 100px;}
   .hidden{display:none !important;}
@@ -136,7 +143,7 @@
       <p class="eyebrow">Herd Health Ledger</p>
       <h1 class="h1">Med <span>Log</span></h1>
     </div>
-    <div class="sync-dot" id="syncDot" title="Sync status"></div>
+    <button class="refresh-btn" id="refreshBtn"><span id="refreshDot" class="sync-dot"></span> Refresh</button>
   </div>
 
   <div class="view" id="listView">
@@ -149,7 +156,10 @@
   </div>
 
   <div class="view hidden" id="detailView">
-    <button class="back" id="backBtn">&larr; All Cattle</button>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="back" id="backBtn" style="margin-bottom:0;flex:1;">&larr; All Cattle</button>
+      <button class="refresh-btn" id="detailRefreshBtn" style="margin-top:0;">&#8635;</button>
+    </div>
     <div class="detail-head">
       <div>
         <div class="detail-num" id="detailNum">#000</div>
@@ -192,7 +202,7 @@
   const emptyState = document.getElementById('emptyState');
   const searchBox = document.getElementById('searchBox');
   const toastEl = document.getElementById('toast');
-  const syncDot = document.getElementById('syncDot');
+  const syncDot = document.getElementById('refreshDot');
   const connBanner = document.getElementById('connBanner');
 
   function showToast(msg){
@@ -463,6 +473,11 @@
 
   document.getElementById('fabAdd').addEventListener('click', addCowModal);
   document.getElementById('backBtn').addEventListener('click', closeCow);
+  document.getElementById('detailRefreshBtn').addEventListener('click', async ()=>{
+    await loadAll();
+    if(currentCow) renderDetail();
+    showToast('Refreshed');
+  });
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
   searchBox.addEventListener('input', renderList);
@@ -480,10 +495,9 @@
   window.addEventListener('focus', loadAll);
   window.addEventListener('pageshow', loadAll);
 
-  // Tap the sync dot to force a manual refresh any time.
-  syncDot.style.cursor = 'pointer';
-  syncDot.title = 'Tap to refresh';
-  syncDot.addEventListener('click', async ()=>{
+  // Tap the refresh button to force a manual reload any time.
+  const refreshBtn = document.getElementById('refreshBtn');
+  refreshBtn.addEventListener('click', async ()=>{
     await loadAll();
     if(currentCow) renderDetail();
     showToast('Refreshed');
