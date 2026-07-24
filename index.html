@@ -416,6 +416,44 @@
     });
   }
 
+  function fieldWithOther(id, label, options, placeholder){
+    const opts = options.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+    return `
+      <div class="field">
+        <label>${label}</label>
+        <select id="${id}Select">
+          <option value="">-- Select --</option>
+          ${opts}
+          <option value="__other__">Other (type it in)</option>
+        </select>
+        <input type="text" id="${id}Other" placeholder="${placeholder}" style="margin-top:8px;display:none;"/>
+      </div>
+    `;
+  }
+
+  const MEDICINE_OPTIONS = ['LA-200','Draxxin','Baytril','Excede','Nuflor','Banamine','Penicillin','Bo-Se','Ivomec (dewormer)','Dectomax','Vitamin B12','Tetanus antitoxin','Clostridial vaccine (7-way)','BRD vaccine'];
+  const REASON_OPTIONS = ['Respiratory / pneumonia','Foot rot','Pinkeye','Scours / diarrhea','Bloat','Mastitis','Injury / wound','Parasite / worming','Routine vaccination','Calving difficulty'];
+
+  function wireFieldWithOther(modal, id){
+    const select = modal.querySelector('#'+id+'Select');
+    const other = modal.querySelector('#'+id+'Other');
+    select.addEventListener('change', ()=>{
+      if(select.value === '__other__'){
+        other.style.display = 'block';
+        other.focus();
+      } else {
+        other.style.display = 'none';
+        other.value = '';
+      }
+    });
+  }
+  function valueOf(modal, id){
+    const select = modal.querySelector('#'+id+'Select');
+    const other = modal.querySelector('#'+id+'Other');
+    if(select.value === '__other__') return other.value.trim();
+    return select.value;
+  }
+
   function addRecordModal(){
     const today = new Date().toISOString().slice(0,10);
     const modal = openModal(`
@@ -426,14 +464,8 @@
           <input type="date" id="recDate" value="${today}"/>
         </div>
       </div>
-      <div class="field">
-        <label>Medicine</label>
-        <input type="text" id="recMed" placeholder="e.g. LA-200, Draxxin, Bo-Se" autofocus/>
-      </div>
-      <div class="field">
-        <label>Reason</label>
-        <input type="text" id="recReason" placeholder="e.g. foot rot, pinkeye, respiratory"/>
-      </div>
+      ${fieldWithOther('recMed', 'Medicine', MEDICINE_OPTIONS, 'Type medicine name')}
+      ${fieldWithOther('recReason', 'Reason', REASON_OPTIONS, 'Type reason')}
       <div class="field">
         <label>Notes / Dosage (optional)</label>
         <textarea id="recNotes" rows="2" placeholder="e.g. 10cc SQ, left neck"></textarea>
@@ -443,11 +475,13 @@
         <button class="btn btn-barn" id="confirmAddRec">Save Entry</button>
       </div>
     `);
+    wireFieldWithOther(modal, 'recMed');
+    wireFieldWithOther(modal, 'recReason');
     modal.querySelector('#cancelAddRec').addEventListener('click', closeModal);
     modal.querySelector('#confirmAddRec').addEventListener('click', async ()=>{
       const dateVal = modal.querySelector('#recDate').value;
-      const med = modal.querySelector('#recMed').value.trim();
-      const reason = modal.querySelector('#recReason').value.trim();
+      const med = valueOf(modal, 'recMed');
+      const reason = valueOf(modal, 'recReason');
       const notes = modal.querySelector('#recNotes').value.trim();
       if(!dateVal || !med || !reason){ showToast('Date, medicine, and reason are required'); return; }
       const btn = modal.querySelector('#confirmAddRec');
