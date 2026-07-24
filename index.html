@@ -150,6 +150,7 @@
     <div id="connBanner" class="banner hidden"></div>
     <div class="toolbar">
       <input type="text" id="searchBox" placeholder="Find cow #..." autocomplete="off"/>
+      <button class="btn btn-outline btn-sm" id="exportBtn" style="flex-shrink:0;">Export</button>
     </div>
     <div id="cowList"></div>
     <div id="emptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
@@ -514,7 +515,51 @@
   });
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
-  searchBox.addEventListener('input', renderList);
+  document.getElementById('exportBtn').addEventListener('click', exportCsv);
+
+  function csvEscape(val){
+    const s = (val===null || val===undefined) ? '' : String(val);
+    if(/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  }
+
+  async function exportCsv(){
+    // Refresh first so the export reflects the latest data, not a stale in-memory copy.
+    await loadAll();
+    const rows = [['Cow Number','Date Given','Medicine','Reason','Notes','Cow Added']];
+    const cowMap = {};
+    cows.forEach(c=> cowMap[c.number] = c.added_at);
+
+    const sortedTreatments = [...treatments].sort((a,b)=>{
+      const numCmp = a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true});
+      if(numCmp !== 0) return numCmp;
+      return a.date.localeCompare(b.date);
+    });
+
+    sortedTreatments.forEach(t=>{
+      rows.push([t.cow_number, t.date, t.medicine, t.reason, t.notes||'', cowMap[t.cow_number]||'']);
+    });
+
+    // Include cows with zero treatments too, so nothing gets left out of the export.
+    const treatedCows = new Set(treatments.map(t=>t.cow_number));
+    cows.filter(c=>!treatedCows.has(c.number))
+        .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
+        .forEach(c=>{
+          rows.push([c.number, '', '', '', '', c.added_at]);
+        });
+
+    const csv = rows.map(r=> r.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'herd-med-log-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Spreadsheet downloaded');
+  }
 
   loadAll();
 
