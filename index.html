@@ -84,6 +84,19 @@
     font-family:'Courier New',monospace;font-size:12px;background:#f4d9d5;border:2px solid var(--barn);
     color:var(--barn);padding:10px 12px;border-radius:2px;margin-bottom:14px;line-height:1.5;
   }
+  .banner-note{background:#fbeecb;border-color:var(--tag);color:#6b4e12;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .banner-note .banner-actions{display:flex;gap:8px;flex-shrink:0;}
+  .banner-note button{
+    font-family:'Courier New',monospace;font-size:11px;font-weight:700;text-transform:uppercase;
+    border:1.5px solid #6b4e12;background:transparent;color:#6b4e12;padding:5px 9px;border-radius:2px;cursor:pointer;
+  }
+
+  .stats-row{display:flex;gap:10px;margin-bottom:14px;}
+  .stat-chip{flex:1;background:var(--paper-raised);border:2px solid var(--ink);border-radius:2px;padding:10px 8px;text-align:center;}
+  .stat-num{font-size:22px;font-weight:700;font-family:Georgia,serif;}
+  .stat-label{font-family:'Courier New',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:#6b6350;margin-top:2px;line-height:1.3;}
+
+  .lot-badge{display:inline-block;background:var(--pasture);color:var(--paper);font-size:9px;font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:8px;margin-left:6px;}
 
   .back{
     display:flex;align-items:center;gap:8px;font-family:'Courier New',monospace;font-size:13px;
@@ -109,6 +122,8 @@
   .record-reason{font-size:14px;color:#4a4433;}
   .record-notes{font-family:'Courier New',monospace;font-size:12px;color:#6b6350;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px;}
   .record-del{position:absolute;top:10px;right:10px;background:none;border:none;color:#a08f6b;font-size:16px;cursor:pointer;padding:4px;}
+  .record-edit{position:absolute;top:10px;right:34px;background:none;border:none;color:#a08f6b;font-size:14px;cursor:pointer;padding:4px;}
+  .record-withdrawal{display:inline-block;font-family:'Courier New',monospace;font-size:11px;font-weight:700;background:#f4d9d5;color:var(--barn);padding:3px 7px;border-radius:2px;margin-top:6px;}
 
   .field{margin-bottom:12px;}
   .field label{display:block;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b6350;margin-bottom:5px;}
@@ -150,9 +165,20 @@
 
   <div class="view" id="listView">
     <div id="connBanner" class="banner hidden"></div>
+    <div id="backupBanner" class="banner banner-note hidden">
+      <span id="backupBannerText"></span>
+      <span class="banner-actions">
+        <button id="backupExportBtn">Export Now</button>
+        <button id="backupDismissBtn">Dismiss</button>
+      </span>
+    </div>
+    <div class="stats-row" id="statsRow"></div>
     <div class="toolbar">
-      <input type="text" id="searchBox" placeholder="Find cow #..." autocomplete="off"/>
+      <input type="text" id="searchBox" placeholder="Search cow #, medicine, reason..." autocomplete="off"/>
       <button class="btn btn-outline btn-sm" id="exportBtn" style="flex-shrink:0;">Export</button>
+    </div>
+    <div class="toolbar" id="lotFilterRow" style="display:none;">
+      <select id="lotFilter"><option value="">All Lots / Groups</option></select>
     </div>
     <div id="cowList"></div>
     <div id="emptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
@@ -255,6 +281,7 @@
       cows = []; treatments = [];
     }
     renderList();
+    checkBackupReminder();
   }
 
   function fmtDate(iso){
@@ -266,6 +293,14 @@
     const now = new Date(); now.setHours(0,0,0,0);
     return Math.round((now-d)/86400000);
   }
+  function addDays(iso, days){
+    const d = new Date(iso+'T00:00:00');
+    d.setDate(d.getDate() + Number(days));
+    return d;
+  }
+  function todayDate(){
+    const d = new Date(); d.setHours(0,0,0,0); return d;
+  }
   function escapeHtml(s){
     const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML;
   }
@@ -273,10 +308,74 @@
     return treatments.filter(t=>t.cow_number===num);
   }
 
+  function cowWithdrawalInfo(num){
+    const meds = recordsFor(num).filter(r=>r.medicine);
+    const today = todayDate();
+    let inWithdrawal = false;
+    let clearDate = null; // explicit, from withdrawal_days
+    meds.forEach(m=>{
+      if(m.withdrawal_days !== null && m.withdrawal_days !== undefined && m.withdrawal_days !== ''){
+        const cd = addDays(m.date, m.withdrawal_days);
+        if(cd >= today){
+          inWithdrawal = true;
+          if(!clearDate || cd > clearDate) clearDate = cd;
+        }
+      } else if(daysAgo(m.date) <= 21){
+        inWithdrawal = true;
+      }
+    });
+    return { inWithdrawal, clearDate };
+  }
+
+  function populateLotFilter(){
+    const lotFilterRow = document.getElementById('lotFilterRow');
+    const lotFilter = document.getElementById('lotFilter');
+    const lots = [...new Set(cows.map(c=>c.lot).filter(Boolean))].sort();
+    if(lots.length === 0){
+      lotFilterRow.style.display = 'none';
+      return;
+    }
+    lotFilterRow.style.display = '';
+    const prevValue = lotFilter.value;
+    lotFilter.innerHTML = '<option value="">All Lots / Groups</option>' +
+      lots.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+    if(lots.includes(prevValue)) lotFilter.value = prevValue;
+  }
+
+  function renderStats(){
+    const statsRow = document.getElementById('statsRow');
+    const inWithdrawalCount = cows.filter(c=> cowWithdrawalInfo(c.number).clearDate !== null).length;
+    const now = new Date();
+    const treatmentsThisMonth = treatments.filter(t=>{
+      if(!t.medicine) return false;
+      const d = new Date(t.date+'T00:00:00');
+      return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    }).length;
+    statsRow.innerHTML = `
+      <div class="stat-chip"><div class="stat-num">${inWithdrawalCount}</div><div class="stat-label">In Withdrawal</div></div>
+      <div class="stat-chip"><div class="stat-num">${treatmentsThisMonth}</div><div class="stat-label">Treated This Month</div></div>
+      <div class="stat-chip"><div class="stat-num">${cows.length}</div><div class="stat-label">Total Cattle</div></div>
+    `;
+  }
+
   function renderList(){
+    populateLotFilter();
+    renderStats();
     const q = (searchBox.value||'').trim().toLowerCase();
+    const lotFilterVal = document.getElementById('lotFilter').value;
     const sorted = [...cows].sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
-    const filtered = sorted.filter(c => c.number.toLowerCase().includes(q));
+
+    const filtered = sorted.filter(c=>{
+      if(lotFilterVal && c.lot !== lotFilterVal) return false;
+      if(!q) return true;
+      if(c.number.toLowerCase().includes(q)) return true;
+      return recordsFor(c.number).some(r=>
+        (r.medicine||'').toLowerCase().includes(q) ||
+        (r.reason||'').toLowerCase().includes(q) ||
+        (r.notes||'').toLowerCase().includes(q)
+      );
+    });
+
     cowListEl.innerHTML = '';
     emptyState.classList.toggle('hidden', cows.length !== 0);
 
@@ -294,16 +393,23 @@
         if(notesOnly.length>0) parts.push(`${notesOnly.length} note${notesOnly.length>1?'s':''}`);
         meta = parts.join(' · ');
       }
+      const wd = cowWithdrawalInfo(num);
       let recentClass = '';
       if(meds.length>0){
-        const last = [...meds].sort((a,b)=>b.date.localeCompare(a.date))[0];
-        const ago = daysAgo(last.date);
-        meta += ` · last med ${ago===0?'today':ago===1?'1 day ago':ago+' days ago'}`;
-        if(ago <= 21) recentClass = 'recent-med';
+        if(wd.clearDate){
+          meta += ` · Clear ${fmtDate(wd.clearDate.toISOString().slice(0,10))}`;
+          recentClass = 'recent-med';
+        } else {
+          const last = [...meds].sort((a,b)=>b.date.localeCompare(a.date))[0];
+          const ago = daysAgo(last.date);
+          meta += ` · last med ${ago===0?'today':ago===1?'1 day ago':ago+' days ago'}`;
+          if(wd.inWithdrawal) recentClass = 'recent-med';
+        }
       }
       const card = document.createElement('div');
       card.className = 'cow-card ' + recentClass;
-      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
+      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}${lotBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openCow(num));
       cowListEl.appendChild(card);
     });
@@ -338,19 +444,34 @@
     listEl.innerHTML = '';
     noRecords.classList.toggle('hidden', records.length !== 0);
 
+    const today = todayDate();
+
     records.forEach(r=>{
       const div = document.createElement('div');
       const isNote = !r.medicine;
       div.className = 'record' + (isNote ? ' note-entry' : '');
+      let withdrawalHtml = '';
+      if(!isNote && r.withdrawal_days !== null && r.withdrawal_days !== undefined && r.withdrawal_days !== ''){
+        const cd = addDays(r.date, r.withdrawal_days);
+        if(cd >= today){
+          withdrawalHtml = `<div class="record-withdrawal">Clear to sell/ship on ${fmtDate(cd.toISOString().slice(0,10))}</div>`;
+        }
+      }
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
+        <button class="record-edit" data-id="${r.id}">&#9998;</button>
         <div class="record-date">${fmtDate(r.date)}${isNote ? ' · NOTE' : ''}</div>
         ${isNote ? '' : `<div class="record-med">${escapeHtml(r.medicine)}</div><div class="record-reason">${escapeHtml(r.reason)}</div>`}
         ${r.notes ? `<div class="${isNote ? 'record-reason' : 'record-notes'}">${escapeHtml(r.notes)}</div>` : ''}
+        ${withdrawalHtml}
       `;
       div.querySelector('.record-del').addEventListener('click', (e)=>{
         e.stopPropagation();
         deleteRecord(r.id);
+      });
+      div.querySelector('.record-edit').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        editRecordModal(r);
       });
       listEl.appendChild(div);
     });
@@ -400,6 +521,10 @@
         <label>Cow / Ear Tag Number</label>
         <input type="text" id="newCowNum" inputmode="numeric" placeholder="e.g. 214" autofocus/>
       </div>
+      <div class="field">
+        <label>Lot / Pasture / Group (optional)</label>
+        <input type="text" id="newCowLot" placeholder="e.g. East pasture, Weaned heifers"/>
+      </div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelAddCow">Cancel</button>
         <button class="btn btn-barn" id="confirmAddCow">Add Cow</button>
@@ -408,6 +533,7 @@
     modal.querySelector('#cancelAddCow').addEventListener('click', closeModal);
     modal.querySelector('#confirmAddCow').addEventListener('click', async ()=>{
       const num = modal.querySelector('#newCowNum').value.trim();
+      const lot = modal.querySelector('#newCowLot').value.trim();
       if(!num){ showToast('Enter a cow number'); return; }
       if(cows.some(c=>c.number===num)){ showToast('That cow already exists'); return; }
       const btn = modal.querySelector('#confirmAddCow');
@@ -416,7 +542,7 @@
         const inserted = await api('/cows', {
           method:'POST',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ number: num })
+          body: JSON.stringify({ number: num, lot: lot||null })
         });
         cows.push(inserted[0]);
         closeModal();
@@ -467,64 +593,106 @@
     if(select.value === '__other__') return other.value.trim();
     return select.value;
   }
+  function prefillFieldWithOther(modal, id, value, options){
+    const select = modal.querySelector('#'+id+'Select');
+    const other = modal.querySelector('#'+id+'Other');
+    if(!value) return;
+    if(options.includes(value)){
+      select.value = value;
+    } else {
+      select.value = '__other__';
+      other.style.display = 'block';
+      other.value = value;
+    }
+  }
 
-  function addRecordModal(){
+  function recordModal(existingRecord){
+    const isEdit = !!existingRecord;
     const today = new Date().toISOString().slice(0,10);
     const modal = openModal(`
-      <div class="modal-title">Log Entry — #${escapeHtml(currentCow)}</div>
+      <div class="modal-title">${isEdit ? 'Edit Entry' : 'Log Entry'} — #${escapeHtml(currentCow)}</div>
       <div class="row2">
         <div class="field">
           <label>Date</label>
-          <input type="date" id="recDate" value="${today}"/>
+          <input type="date" id="recDate" value="${isEdit ? existingRecord.date : today}"/>
         </div>
       </div>
       ${fieldWithOther('recMed', 'Medicine (optional)', MEDICINE_OPTIONS, 'Type medicine name')}
       ${fieldWithOther('recReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
       <div class="field">
+        <label>Withdrawal Period (days, optional)</label>
+        <input type="number" id="recWithdrawal" min="0" placeholder="e.g. 28 — from the label or your vet" value="${isEdit && existingRecord.withdrawal_days!=null ? existingRecord.withdrawal_days : ''}"/>
+      </div>
+      <div class="field">
         <label>Notes</label>
-        <textarea id="recNotes" rows="2" placeholder="Dosage, observations, or just a general note"></textarea>
+        <textarea id="recNotes" rows="2" placeholder="Dosage, observations, or just a general note">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
       </div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelAddRec">Cancel</button>
-        <button class="btn btn-barn" id="confirmAddRec">Save Entry</button>
+        <button class="btn btn-barn" id="confirmAddRec">${isEdit ? 'Save Changes' : 'Save Entry'}</button>
       </div>
     `);
     wireFieldWithOther(modal, 'recMed');
     wireFieldWithOther(modal, 'recReason');
+    if(isEdit){
+      prefillFieldWithOther(modal, 'recMed', existingRecord.medicine, MEDICINE_OPTIONS);
+      prefillFieldWithOther(modal, 'recReason', existingRecord.reason, REASON_OPTIONS);
+    }
     modal.querySelector('#cancelAddRec').addEventListener('click', closeModal);
     modal.querySelector('#confirmAddRec').addEventListener('click', async ()=>{
       const dateVal = modal.querySelector('#recDate').value;
       const med = valueOf(modal, 'recMed');
       const reason = valueOf(modal, 'recReason');
       const notes = modal.querySelector('#recNotes').value.trim();
+      const withdrawalRaw = modal.querySelector('#recWithdrawal').value;
+      const withdrawalDays = withdrawalRaw ? parseInt(withdrawalRaw, 10) : null;
       if(!dateVal){ showToast('Date is required'); return; }
       if(!med && !reason && !notes){ showToast('Enter at least a medicine/reason or a note'); return; }
       const btn = modal.querySelector('#confirmAddRec');
       btn.disabled = true;
+      const body = { date: dateVal, medicine: med||null, reason: reason||null, notes: notes||null, withdrawal_days: withdrawalDays };
       try{
-        const inserted = await api('/treatments', {
-          method:'POST',
-          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ cow_number: currentCow, date: dateVal, medicine: med||null, reason: reason||null, notes: notes||null })
-        });
-        treatments.push(inserted[0]);
+        if(isEdit){
+          const updated = await api('/treatments?id=eq.' + encodeURIComponent(existingRecord.id), {
+            method:'PATCH',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          const idx = treatments.findIndex(t=>t.id===existingRecord.id);
+          if(idx !== -1) treatments[idx] = updated[0];
+        } else {
+          const inserted = await api('/treatments', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(Object.assign({ cow_number: currentCow }, body))
+          });
+          treatments.push(inserted[0]);
+        }
         closeModal();
         renderDetail();
         renderList();
         window.scrollTo(0,0);
-        showToast('Entry logged');
+        showToast(isEdit ? 'Entry updated' : 'Entry logged');
       }catch(e){
         btn.disabled = false;
         showToast('Could not save — try again');
       }
     });
   }
+  function addRecordModal(){ recordModal(null); }
+  function editRecordModal(record){ recordModal(record); }
 
   document.getElementById('fabAdd').addEventListener('click', addCowModal);
   document.getElementById('backBtn').addEventListener('click', closeCow);
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
   document.getElementById('exportBtn').addEventListener('click', exportCsv);
+  document.getElementById('lotFilter').addEventListener('change', renderList);
+  document.getElementById('backupExportBtn').addEventListener('click', exportCsv);
+  document.getElementById('backupDismissBtn').addEventListener('click', ()=>{
+    localStorage.setItem('backupDismissedAt', Date.now().toString());
+    document.getElementById('backupBanner').classList.add('hidden');
+  });
 
   function csvEscape(val){
     const s = (val===null || val===undefined) ? '' : String(val);
@@ -535,9 +703,9 @@
   async function exportCsv(){
     // Refresh first so the export reflects the latest data, not a stale in-memory copy.
     await loadAll();
-    const rows = [['Cow Number','Date Given','Medicine','Reason','Notes','Cow Added']];
+    const rows = [['Cow Number','Lot/Group','Date Given','Medicine','Reason','Withdrawal Days','Notes','Cow Added']];
     const cowMap = {};
-    cows.forEach(c=> cowMap[c.number] = c.added_at);
+    cows.forEach(c=> cowMap[c.number] = c);
 
     const sortedTreatments = [...treatments].sort((a,b)=>{
       const numCmp = a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true});
@@ -546,7 +714,8 @@
     });
 
     sortedTreatments.forEach(t=>{
-      rows.push([t.cow_number, t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', cowMap[t.cow_number]||'']);
+      const c = cowMap[t.cow_number] || {};
+      rows.push([t.cow_number, c.lot||'', t.date, t.medicine || '(note only)', t.reason || '', t.withdrawal_days ?? '', t.notes||'', c.added_at||'']);
     });
 
     // Include cows with zero treatments too, so nothing gets left out of the export.
@@ -554,7 +723,7 @@
     cows.filter(c=>!treatedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push([c.number, '', '', '', '', c.added_at]);
+          rows.push([c.number, c.lot||'', '', '', '', '', '', c.added_at]);
         });
 
     const csv = rows.map(r=> r.map(csvEscape).join(',')).join('\r\n');
@@ -567,7 +736,25 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    localStorage.setItem('lastExportAt', Date.now().toString());
+    document.getElementById('backupBanner').classList.add('hidden');
     showToast('Spreadsheet downloaded');
+  }
+
+  function checkBackupReminder(){
+    const DAY = 86400000;
+    const lastExport = parseInt(localStorage.getItem('lastExportAt')||'0', 10);
+    const dismissed = parseInt(localStorage.getItem('backupDismissedAt')||'0', 10);
+    const daysSinceExport = (Date.now() - lastExport) / DAY;
+    const daysSinceDismiss = (Date.now() - dismissed) / DAY;
+    if(cows.length > 0 && daysSinceExport > 30 && daysSinceDismiss > 7){
+      const label = lastExport ? `${Math.floor(daysSinceExport)} days` : "You haven't yet";
+      document.getElementById('backupBannerText').textContent =
+        lastExport ? `It's been ${label} since your last spreadsheet backup.` : "You haven't exported a spreadsheet backup yet.";
+      document.getElementById('backupBanner').classList.remove('hidden');
+    } else {
+      document.getElementById('backupBanner').classList.add('hidden');
+    }
   }
 
   loadAll();
