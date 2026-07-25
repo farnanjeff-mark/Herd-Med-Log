@@ -101,7 +101,9 @@
     color:var(--pasture);font-weight:700;margin:20px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px;
   }
 
-  .record{background:var(--paper-raised);border:1.5px solid var(--line);border-radius:2px;padding:12px 14px;margin-bottom:8px;position:relative;}
+  .record{background:var(--paper-raised);border:1.5px solid var(--line);border-left:6px solid var(--line);border-radius:2px;padding:12px 14px;margin-bottom:8px;position:relative;}
+  .record.note-entry{border-left-color:#3B6E8F;}
+  .record.note-entry .record-date{color:#3B6E8F;}
   .record-date{font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:var(--barn);}
   .record-med{font-size:17px;font-weight:700;margin:3px 0 2px;}
   .record-reason{font-size:14px;color:#4a4433;}
@@ -341,8 +343,8 @@
 
     records.forEach(r=>{
       const div = document.createElement('div');
-      div.className = 'record';
       const isNote = !r.medicine;
+      div.className = 'record' + (isNote ? ' note-entry' : '');
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
         <div class="record-date">${fmtDate(r.date)}${isNote ? ' · NOTE' : ''}</div>
