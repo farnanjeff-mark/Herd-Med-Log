@@ -284,13 +284,22 @@
     filtered.forEach(cow=>{
       const num = cow.number;
       const records = recordsFor(num);
-      const count = records.length;
-      let meta = count === 0 ? 'No treatments logged' : `${count} treatment${count>1?'s':''} logged`;
+      const meds = records.filter(r=>r.medicine);
+      const notesOnly = records.filter(r=>!r.medicine);
+      let meta;
+      if(meds.length === 0 && notesOnly.length === 0){
+        meta = 'No entries logged';
+      } else {
+        const parts = [];
+        if(meds.length>0) parts.push(`${meds.length} treatment${meds.length>1?'s':''}`);
+        if(notesOnly.length>0) parts.push(`${notesOnly.length} note${notesOnly.length>1?'s':''}`);
+        meta = parts.join(' · ');
+      }
       let recentClass = '';
-      if(count>0){
-        const last = [...records].sort((a,b)=>b.date.localeCompare(a.date))[0];
+      if(meds.length>0){
+        const last = [...meds].sort((a,b)=>b.date.localeCompare(a.date))[0];
         const ago = daysAgo(last.date);
-        meta += ` · last ${ago===0?'today':ago===1?'1 day ago':ago+' days ago'}`;
+        meta += ` · last med ${ago===0?'today':ago===1?'1 day ago':ago+' days ago'}`;
         if(ago <= 21) recentClass = 'recent-med';
       }
       const card = document.createElement('div');
@@ -319,7 +328,12 @@
 
   function renderDetail(){
     const records = [...recordsFor(currentCow)].sort((a,b)=> b.date.localeCompare(a.date));
-    document.getElementById('detailSub').textContent = records.length === 0 ? '0 treatments logged' : `${records.length} treatment${records.length>1?'s':''} logged`;
+    const meds = records.filter(r=>r.medicine).length;
+    const notes = records.length - meds;
+    const parts = [];
+    if(meds>0) parts.push(`${meds} treatment${meds>1?'s':''}`);
+    if(notes>0) parts.push(`${notes} note${notes>1?'s':''}`);
+    document.getElementById('detailSub').textContent = parts.length ? parts.join(' · ') + ' logged' : '0 entries logged';
     const listEl = document.getElementById('recordList');
     const noRecords = document.getElementById('noRecords');
     listEl.innerHTML = '';
@@ -328,12 +342,12 @@
     records.forEach(r=>{
       const div = document.createElement('div');
       div.className = 'record';
+      const isNote = !r.medicine;
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
-        <div class="record-date">${fmtDate(r.date)}</div>
-        <div class="record-med">${escapeHtml(r.medicine)}</div>
-        <div class="record-reason">${escapeHtml(r.reason)}</div>
-        ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+        <div class="record-date">${fmtDate(r.date)}${isNote ? ' · NOTE' : ''}</div>
+        ${isNote ? '' : `<div class="record-med">${escapeHtml(r.medicine)}</div><div class="record-reason">${escapeHtml(r.reason)}</div>`}
+        ${r.notes ? `<div class="${isNote ? 'record-reason' : 'record-notes'}">${escapeHtml(r.notes)}</div>` : ''}
       `;
       div.querySelector('.record-del').addEventListener('click', (e)=>{
         e.stopPropagation();
@@ -458,18 +472,18 @@
   function addRecordModal(){
     const today = new Date().toISOString().slice(0,10);
     const modal = openModal(`
-      <div class="modal-title">Log Medicine — #${escapeHtml(currentCow)}</div>
+      <div class="modal-title">Log Entry — #${escapeHtml(currentCow)}</div>
       <div class="row2">
         <div class="field">
-          <label>Date Given</label>
+          <label>Date</label>
           <input type="date" id="recDate" value="${today}"/>
         </div>
       </div>
-      ${fieldWithOther('recMed', 'Medicine', MEDICINE_OPTIONS, 'Type medicine name')}
-      ${fieldWithOther('recReason', 'Reason', REASON_OPTIONS, 'Type reason')}
+      ${fieldWithOther('recMed', 'Medicine (optional)', MEDICINE_OPTIONS, 'Type medicine name')}
+      ${fieldWithOther('recReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
       <div class="field">
-        <label>Notes / Dosage (optional)</label>
-        <textarea id="recNotes" rows="2" placeholder="e.g. 10cc SQ, left neck"></textarea>
+        <label>Notes</label>
+        <textarea id="recNotes" rows="2" placeholder="Dosage, observations, or just a general note"></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelAddRec">Cancel</button>
@@ -484,21 +498,22 @@
       const med = valueOf(modal, 'recMed');
       const reason = valueOf(modal, 'recReason');
       const notes = modal.querySelector('#recNotes').value.trim();
-      if(!dateVal || !med || !reason){ showToast('Date, medicine, and reason are required'); return; }
+      if(!dateVal){ showToast('Date is required'); return; }
+      if(!med && !reason && !notes){ showToast('Enter at least a medicine/reason or a note'); return; }
       const btn = modal.querySelector('#confirmAddRec');
       btn.disabled = true;
       try{
         const inserted = await api('/treatments', {
           method:'POST',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ cow_number: currentCow, date: dateVal, medicine: med, reason, notes: notes||null })
+          body: JSON.stringify({ cow_number: currentCow, date: dateVal, medicine: med||null, reason: reason||null, notes: notes||null })
         });
         treatments.push(inserted[0]);
         closeModal();
         renderDetail();
         renderList();
         window.scrollTo(0,0);
-        showToast('Treatment logged');
+        showToast('Entry logged');
       }catch(e){
         btn.disabled = false;
         showToast('Could not save — try again');
@@ -537,7 +552,7 @@
     });
 
     sortedTreatments.forEach(t=>{
-      rows.push([t.cow_number, t.date, t.medicine, t.reason, t.notes||'', cowMap[t.cow_number]||'']);
+      rows.push([t.cow_number, t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', cowMap[t.cow_number]||'']);
     });
 
     // Include cows with zero treatments too, so nothing gets left out of the export.
