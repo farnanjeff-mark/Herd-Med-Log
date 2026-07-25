@@ -159,10 +159,7 @@
   </div>
 
   <div class="view hidden" id="detailView">
-    <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <button class="back" id="backBtn" style="margin-bottom:0;flex:1;">&larr; All Cattle</button>
-      <button class="refresh-btn" id="detailRefreshBtn" style="margin-top:0;">&#8635;</button>
-    </div>
+    <button class="back" id="backBtn">&larr; All Cattle</button>
     <div class="detail-head">
       <div>
         <div class="detail-num" id="detailNum">#000</div>
@@ -525,11 +522,6 @@
 
   document.getElementById('fabAdd').addEventListener('click', addCowModal);
   document.getElementById('backBtn').addEventListener('click', closeCow);
-  document.getElementById('detailRefreshBtn').addEventListener('click', async ()=>{
-    await loadAll();
-    if(currentCow) renderDetail();
-    showToast('Refreshed');
-  });
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
   document.getElementById('exportBtn').addEventListener('click', exportCsv);
