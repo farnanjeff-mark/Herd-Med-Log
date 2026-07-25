@@ -190,6 +190,7 @@
       <div>
         <div class="detail-num" id="detailNum">#000</div>
         <div class="detail-sub" id="detailSub">0 treatments logged</div>
+        <div class="detail-sub" id="detailLot" style="cursor:pointer;text-decoration:underline;margin-top:6px;">Set lot/pasture</div>
       </div>
       <button class="btn btn-outline btn-sm" id="deleteCowBtn">Remove Cow</button>
     </div>
@@ -421,7 +422,13 @@
     listView.classList.add('hidden');
     detailView.classList.remove('hidden');
     renderDetail();
+    updateLotLabel();
     window.scrollTo(0,0);
+  }
+  function updateLotLabel(){
+    const cow = cows.find(c=>c.number===currentCow);
+    const el = document.getElementById('detailLot');
+    el.textContent = (cow && cow.lot) ? `Lot: ${cow.lot} (tap to edit)` : 'Set lot/pasture';
   }
   function closeCow(){
     currentCow = null;
@@ -686,6 +693,44 @@
   document.getElementById('backBtn').addEventListener('click', closeCow);
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
+  document.getElementById('detailLot').addEventListener('click', editLotModal);
+
+  function editLotModal(){
+    const cow = cows.find(c=>c.number===currentCow);
+    const modal = openModal(`
+      <div class="modal-title">Lot / Pasture — #${escapeHtml(currentCow)}</div>
+      <div class="field">
+        <label>Lot / Pasture / Group</label>
+        <input type="text" id="editLotInput" placeholder="e.g. East pasture, Weaned heifers" value="${escapeHtml(cow && cow.lot ? cow.lot : '')}" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEditLot">Cancel</button>
+        <button class="btn btn-barn" id="confirmEditLot">Save</button>
+      </div>
+    `);
+    modal.querySelector('#cancelEditLot').addEventListener('click', closeModal);
+    modal.querySelector('#confirmEditLot').addEventListener('click', async ()=>{
+      const lot = modal.querySelector('#editLotInput').value.trim();
+      const btn = modal.querySelector('#confirmEditLot');
+      btn.disabled = true;
+      try{
+        const updated = await api('/cows?number=eq.' + encodeURIComponent(currentCow), {
+          method:'PATCH',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ lot: lot||null })
+        });
+        const idx = cows.findIndex(c=>c.number===currentCow);
+        if(idx !== -1) cows[idx] = updated[0];
+        closeModal();
+        updateLotLabel();
+        renderList();
+        showToast('Lot updated');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
   document.getElementById('exportBtn').addEventListener('click', exportCsv);
   document.getElementById('lotFilter').addEventListener('change', renderList);
   document.getElementById('backupExportBtn').addEventListener('click', exportCsv);
