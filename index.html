@@ -356,7 +356,11 @@
   function latestRecordFor(num){
     const records = recordsFor(num);
     if(records.length === 0) return null;
-    return [...records].sort((a,b)=> new Date(b.created_at) - new Date(a.created_at))[0];
+    return [...records].sort((a,b)=>{
+      const dateCmp = b.date.localeCompare(a.date);
+      if(dateCmp !== 0) return dateCmp;
+      return new Date(b.created_at) - new Date(a.created_at); // same-day tiebreaker
+    })[0];
   }
 
   function renderList(){
@@ -374,6 +378,8 @@
         if(!la && !lb) return a.number.localeCompare(b.number, undefined, {numeric:true});
         if(!la) return 1;
         if(!lb) return -1;
+        const dateCmp = lb.date.localeCompare(la.date);
+        if(dateCmp !== 0) return dateCmp;
         return new Date(lb.created_at) - new Date(la.created_at);
       });
     } else {
