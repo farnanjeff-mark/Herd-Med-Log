@@ -328,11 +328,9 @@
   function populateLotFilter(){
     const lotFilterRow = document.getElementById('lotFilterRow');
     const lotFilter = document.getElementById('lotFilter');
-    const lots = [...new Set(cows.map(c=>c.lot).filter(Boolean))].sort();
-    if(lots.length === 0){
-      lotFilterRow.style.display = 'none';
-      return;
-    }
+    const usedLots = [...new Set(cows.map(c=>c.lot).filter(Boolean))];
+    const extraLots = usedLots.filter(l=>!LOT_OPTIONS.includes(l)).sort();
+    const lots = [...LOT_OPTIONS, ...extraLots];
     lotFilterRow.style.display = '';
     const prevValue = lotFilter.value;
     lotFilter.innerHTML = '<option value="">All Lots / Groups</option>' +
