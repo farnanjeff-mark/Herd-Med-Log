@@ -535,10 +535,19 @@
   function addCowModal(){
     const modal = openModal(`
       <div class="modal-title">Add Cow</div>
-      <div class="field">
-        <label>Cow / Ear Tag Number</label>
-        <input type="text" id="newCowNum" inputmode="numeric" placeholder="e.g. 214" autofocus/>
+      <div id="singleAddFields">
+        <div class="field">
+          <label>Cow / Ear Tag Number</label>
+          <input type="text" id="newCowNum" inputmode="numeric" placeholder="e.g. 214" autofocus/>
+        </div>
       </div>
+      <div id="bulkAddFields" class="hidden">
+        <div class="field">
+          <label>Cow / Ear Tag Numbers</label>
+          <textarea id="newCowBulkNums" rows="4" placeholder="e.g. 214, 215, 216 or one per line"></textarea>
+        </div>
+      </div>
+      <a href="#" id="toggleBulkMode" style="display:block;font-family:'Courier New',monospace;font-size:12px;color:var(--barn);text-decoration:underline;margin-bottom:14px;">Add multiple cows at once</a>
       ${fieldWithOther('newCowLot', 'Lot / Pasture / Group (optional)', LOT_OPTIONS, 'Type lot/pasture')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelAddCow">Cancel</button>
@@ -547,27 +556,69 @@
     `);
     wireFieldWithOther(modal, 'newCowLot');
     modal.querySelector('#cancelAddCow').addEventListener('click', closeModal);
-    modal.querySelector('#confirmAddCow').addEventListener('click', async ()=>{
-      const num = modal.querySelector('#newCowNum').value.trim();
+
+    let bulkMode = false;
+    const singleFields = modal.querySelector('#singleAddFields');
+    const bulkFields = modal.querySelector('#bulkAddFields');
+    const toggleLink = modal.querySelector('#toggleBulkMode');
+    const confirmBtn = modal.querySelector('#confirmAddCow');
+    toggleLink.addEventListener('click', (e)=>{
+      e.preventDefault();
+      bulkMode = !bulkMode;
+      singleFields.classList.toggle('hidden', bulkMode);
+      bulkFields.classList.toggle('hidden', !bulkMode);
+      toggleLink.textContent = bulkMode ? 'Switch back to adding one cow' : 'Add multiple cows at once';
+      confirmBtn.textContent = bulkMode ? 'Add Cows' : 'Add Cow';
+    });
+
+    confirmBtn.addEventListener('click', async ()=>{
       const lot = valueOf(modal, 'newCowLot');
-      if(!num){ showToast('Enter a cow number'); return; }
-      if(cows.some(c=>c.number===num)){ showToast('That cow already exists'); return; }
-      const btn = modal.querySelector('#confirmAddCow');
-      btn.disabled = true;
+      confirmBtn.disabled = true;
+
+      if(!bulkMode){
+        const num = modal.querySelector('#newCowNum').value.trim();
+        if(!num){ showToast('Enter a cow number'); confirmBtn.disabled = false; return; }
+        if(cows.some(c=>c.number===num)){ showToast('That cow already exists'); confirmBtn.disabled = false; return; }
+        try{
+          const inserted = await api('/cows', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify({ number: num, lot: lot||null })
+          });
+          cows.push(inserted[0]);
+          closeModal();
+          renderList();
+          showToast(`Cow #${num} added`);
+          openCow(num);
+        }catch(e){
+          confirmBtn.disabled = false;
+          showToast('Could not add cow — try again');
+        }
+        return;
+      }
+
+      // Bulk mode: split on commas, newlines, or spaces; dedupe against existing cows.
+      const raw = modal.querySelector('#newCowBulkNums').value;
+      const entered = [...new Set(raw.split(/[,\n\s]+/).map(s=>s.trim()).filter(Boolean))];
+      if(entered.length === 0){ showToast('Enter at least one cow number'); confirmBtn.disabled = false; return; }
+      const existingNums = new Set(cows.map(c=>c.number));
+      const toAdd = entered.filter(n=>!existingNums.has(n));
+      const skipped = entered.length - toAdd.length;
+      if(toAdd.length === 0){ showToast('All of those cows already exist'); confirmBtn.disabled = false; return; }
+
       try{
         const inserted = await api('/cows', {
           method:'POST',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ number: num, lot: lot||null })
+          body: JSON.stringify(toAdd.map(num=>({ number: num, lot: lot||null })))
         });
-        cows.push(inserted[0]);
+        cows.push(...inserted);
         closeModal();
         renderList();
-        showToast(`Cow #${num} added`);
-        openCow(num);
+        showToast(`${inserted.length} cow${inserted.length>1?'s':''} added` + (skipped>0 ? ` (${skipped} already existed)` : ''));
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not add cow — try again');
+        confirmBtn.disabled = false;
+        showToast('Could not add cows — try again');
       }
     });
   }
