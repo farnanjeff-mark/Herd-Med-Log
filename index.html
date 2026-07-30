@@ -789,6 +789,7 @@
   document.getElementById('exportBtn').addEventListener('click', exportCsv);
   document.getElementById('lotFilter').addEventListener('change', renderList);
   document.getElementById('sortBy').addEventListener('change', renderList);
+  searchBox.addEventListener('input', renderList);
   document.getElementById('backupExportBtn').addEventListener('click', exportCsv);
   document.getElementById('backupDismissBtn').addEventListener('click', ()=>{
     localStorage.setItem('backupDismissedAt', Date.now().toString());
