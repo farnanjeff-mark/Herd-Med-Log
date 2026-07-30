@@ -159,7 +159,7 @@
   <div class="header">
     <div>
       <p class="eyebrow">Herd Health Ledger</p>
-      <h1 class="h1">Med <span>Log</span></h1>
+      <h1 class="h1" id="headerTitle">Herd <span>Ledger</span></h1>
     </div>
     <button class="refresh-btn" id="refreshBtn"><span id="refreshDot" class="sync-dot"></span> Refresh</button>
   </div>
@@ -235,7 +235,7 @@
       </select>
     </div>
     <div id="calvingCowList"></div>
-    <div id="calvingEmptyState" class="empty hidden">No cattle logged yet.<br/>Add cattle from the Meds &amp; Notes section first.</div>
+    <div id="calvingEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
   </div>
 
   <div class="view hidden" id="calvingDetailView">
@@ -504,11 +504,15 @@
     });
   }
 
+  function setHeaderTitle(text, highlight){
+    document.getElementById('headerTitle').innerHTML = text + (highlight ? ` <span>${highlight}</span>` : '');
+  }
   function showHome(){
     currentCow = null;
     currentCalvingCow = null;
     searchBox.value = '';
     if(calvingSearchBox) calvingSearchBox.value = '';
+    setHeaderTitle('Herd', 'Ledger');
     homeView.classList.remove('hidden');
     listView.classList.add('hidden');
     detailView.classList.add('hidden');
@@ -518,6 +522,7 @@
     window.scrollTo(0,0);
   }
   function showMedsNotes(){
+    setHeaderTitle('Med', 'Log');
     homeView.classList.add('hidden');
     detailView.classList.add('hidden');
     calvingListView.classList.add('hidden');
@@ -528,12 +533,13 @@
     window.scrollTo(0,0);
   }
   function showCalvingList(){
+    setHeaderTitle('Calving', 'Records');
     homeView.classList.add('hidden');
     listView.classList.add('hidden');
     detailView.classList.add('hidden');
     calvingDetailView.classList.add('hidden');
     calvingListView.classList.remove('hidden');
-    fabAdd.classList.add('hidden');
+    fabAdd.classList.remove('hidden');
     renderCalvingList();
     window.scrollTo(0,0);
   }
@@ -542,6 +548,7 @@
     document.getElementById('calvingDetailNum').textContent = '#'+num;
     calvingListView.classList.add('hidden');
     calvingDetailView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
     renderCalvingDetail();
     window.scrollTo(0,0);
   }
@@ -549,6 +556,7 @@
     currentCalvingCow = null;
     calvingDetailView.classList.add('hidden');
     calvingListView.classList.remove('hidden');
+    fabAdd.classList.remove('hidden');
     calvingSearchBox.value = '';
     renderCalvingList();
     window.scrollTo(0,0);
