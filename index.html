@@ -1464,41 +1464,52 @@
     });
   }
 
+  function isWithinLastWeek(dateStr){
+    const ago = daysAgo(dateStr);
+    return ago >= 0 && ago <= 7;
+  }
+
   function buildMedsListText(){
-    const lines = ['MEDS & NOTES —'];
+    const lines = ['MEDS & NOTES — Last 7 Days'];
     [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true})).forEach(cow=>{
-      const records = recordsFor(cow.number);
+      const records = [...recordsFor(cow.number)].filter(r=>isWithinLastWeek(r.date)).sort((a,b)=>a.date.localeCompare(b.date));
       if(records.length === 0) return;
-      const meds = records.filter(r=>r.medicine);
-      const notesOnly = records.length - meds.length;
-      const parts = [];
-      if(meds.length) parts.push(`${meds.length} tx`);
-      if(notesOnly) parts.push(`${notesOnly} note${notesOnly>1?'s':''}`);
-      lines.push(`#${cow.number}: ${parts.join(', ')}`);
+      lines.push(`#${cow.number}:`);
+      records.forEach(r=>{
+        if(r.medicine){
+          lines.push(`  ${fmtDate(r.date)} - ${r.medicine}${r.reason ? ' / '+r.reason : ''}${r.notes ? ' — '+r.notes : ''}`);
+        } else {
+          lines.push(`  ${fmtDate(r.date)} - NOTE: ${r.notes||''}`);
+        }
+      });
     });
-    if(lines.length === 1) lines.push('(no entries yet)');
+    if(lines.length === 1) lines.push('(no activity in the last 7 days)');
     return lines.join('\n');
   }
   function buildCalvingListText(){
-    const lines = ['CALVING RECORDS —'];
+    const lines = ['CALVING RECORDS — Last 7 Days'];
     [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true})).forEach(cow=>{
-      const records = calvingsFor(cow.number);
+      const records = [...calvingsFor(cow.number)].filter(r=>isWithinLastWeek(r.calving_date)).sort((a,b)=>a.calving_date.localeCompare(b.calving_date));
       if(records.length === 0) return;
-      const last = [...records].sort((a,b)=>b.calving_date.localeCompare(a.calving_date))[0];
-      lines.push(`#${cow.number}: ${records.length} calving${records.length>1?'s':''}, last ${fmtDate(last.calving_date)} (${calfSexLabel(last.calf_sex)})`);
+      lines.push(`#${cow.number}:`);
+      records.forEach(r=>{
+        lines.push(`  ${fmtDate(r.calving_date)} - ${calfSexLabel(r.calf_sex)} calf${r.notes ? ' — '+r.notes : ''}`);
+      });
     });
-    if(lines.length === 1) lines.push('(no entries yet)');
+    if(lines.length === 1) lines.push('(no activity in the last 7 days)');
     return lines.join('\n');
   }
   function buildNotesListText(){
-    const lines = ['GENERAL NOTES —'];
+    const lines = ['GENERAL NOTES — Last 7 Days'];
     [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true})).forEach(cow=>{
-      const records = generalNotesFor(cow.number);
+      const records = [...generalNotesFor(cow.number)].filter(r=>isWithinLastWeek(r.note_date)).sort((a,b)=>a.note_date.localeCompare(b.note_date));
       if(records.length === 0) return;
-      const last = [...records].sort((a,b)=>b.note_date.localeCompare(a.note_date))[0];
-      lines.push(`#${cow.number}: ${records.length} note${records.length>1?'s':''}, last ${fmtDate(last.note_date)}`);
+      lines.push(`#${cow.number}:`);
+      records.forEach(r=>{
+        lines.push(`  ${fmtDate(r.note_date)} - ${r.note||''}`);
+      });
     });
-    if(lines.length === 1) lines.push('(no entries yet)');
+    if(lines.length === 1) lines.push('(no activity in the last 7 days)');
     return lines.join('\n');
   }
 
