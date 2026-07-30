@@ -67,6 +67,7 @@
   .btn-outline{background:transparent;}
   .btn-barn{background:var(--barn);color:var(--paper);border-color:var(--barn);}
   .btn-pasture{background:var(--pasture);color:var(--paper);border-color:var(--pasture);}
+  .btn-pink{background:#D46A8C;color:var(--paper);border-color:#D46A8C;}
   .btn-full{width:100%;}
   .btn-sm{padding:7px 12px;font-size:13px;}
 
@@ -169,7 +170,7 @@
       <p class="eyebrow">Herd Health Ledger</p>
       <h1 class="h1" style="margin-bottom:30px;">Welcome</h1>
       <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Meds &amp; Notes</button>
-      <button class="btn btn-outline btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;">🐮 Calving Records</button>
+      <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;">🐮 Calving Records</button>
     </div>
   </div>
 
@@ -782,6 +783,7 @@
     modal.querySelector('#cancelAddCow').addEventListener('click', closeModal);
 
     let bulkMode = false;
+    const cameFromCalving = !calvingListView.classList.contains('hidden');
     const singleFields = modal.querySelector('#singleAddFields');
     const bulkFields = modal.querySelector('#bulkAddFields');
     const toggleLink = modal.querySelector('#toggleBulkMode');
@@ -811,9 +813,14 @@
           });
           cows.push(inserted[0]);
           closeModal();
-          renderList();
           showToast(`Cow #${num} added`);
-          openCow(num);
+          if(cameFromCalving){
+            renderCalvingList();
+            openCalvingCow(num);
+          } else {
+            renderList();
+            openCow(num);
+          }
         }catch(e){
           confirmBtn.disabled = false;
           showToast('Could not add cow — try again');
@@ -838,7 +845,7 @@
         });
         cows.push(...inserted);
         closeModal();
-        renderList();
+        if(cameFromCalving) renderCalvingList(); else renderList();
         showToast(`${inserted.length} cow${inserted.length>1?'s':''} added` + (skipped>0 ? ` (${skipped} already existed)` : ''));
       }catch(e){
         confirmBtn.disabled = false;
