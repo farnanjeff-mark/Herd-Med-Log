@@ -164,7 +164,16 @@
     <button class="refresh-btn" id="refreshBtn"><span id="refreshDot" class="sync-dot"></span> Refresh</button>
   </div>
 
-  <div class="view" id="listView">
+  <div class="view" id="homeView">
+    <div style="text-align:center;padding:40px 10px;">
+      <p class="eyebrow">Herd Health Ledger</p>
+      <h1 class="h1" style="margin-bottom:30px;">Welcome</h1>
+      <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;">🐄 Meds &amp; Notes</button>
+    </div>
+  </div>
+
+  <div class="view hidden" id="listView">
+    <button class="btn btn-outline btn-full" id="listHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div id="connBanner" class="banner hidden"></div>
     <div id="backupBanner" class="banner banner-note hidden">
       <span id="backupBannerText"></span>
@@ -192,7 +201,10 @@
   </div>
 
   <div class="view hidden" id="detailView">
-    <button class="back" id="backBtn">&larr; All Cattle</button>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-outline" id="detailHomeBtn" style="flex:1;">🏠 Home</button>
+      <button class="back" id="backBtn" style="margin-bottom:0;flex:1;">&larr; All Cattle</button>
+    </div>
     <div class="detail-head">
       <div>
         <div class="detail-num" id="detailNum">#000</div>
@@ -210,8 +222,9 @@
     <div id="noRecords" class="empty hidden">No treatments logged for this cow yet.</div>
   </div>
 
-  <button class="fab" id="fabAdd" title="Add cow">+</button>
+  <button class="fab hidden" id="fabAdd" title="Add cow">+</button>
 </div>
+
 
 <div id="toast" class="toast"></div>
 
@@ -231,8 +244,10 @@
   let treatments = [];  // [{id, cow_number, date, medicine, reason, notes}]
   let currentCow = null;
 
+  const homeView = document.getElementById('homeView');
   const listView = document.getElementById('listView');
   const detailView = document.getElementById('detailView');
+  const fabAdd = document.getElementById('fabAdd');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
   const searchBox = document.getElementById('searchBox');
@@ -438,12 +453,31 @@
     });
   }
 
+  function showHome(){
+    currentCow = null;
+    searchBox.value = '';
+    homeView.classList.remove('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    window.scrollTo(0,0);
+  }
+  function showMedsNotes(){
+    homeView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    listView.classList.remove('hidden');
+    fabAdd.classList.remove('hidden');
+    renderList();
+    window.scrollTo(0,0);
+  }
+
   function openCow(num){
     currentCow = num;
     searchBox.blur();
     document.getElementById('detailNum').textContent = '#'+num;
     listView.classList.add('hidden');
     detailView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
     renderDetail();
     updateLotLabel();
     window.scrollTo(0,0);
@@ -457,6 +491,7 @@
     currentCow = null;
     detailView.classList.add('hidden');
     listView.classList.remove('hidden');
+    fabAdd.classList.remove('hidden');
     searchBox.value = '';
     renderList();
     window.scrollTo(0,0);
@@ -747,6 +782,9 @@
   function editRecordModal(record){ recordModal(record); }
 
   document.getElementById('fabAdd').addEventListener('click', addCowModal);
+  document.getElementById('homeMedsBtn').addEventListener('click', showMedsNotes);
+  document.getElementById('listHomeBtn').addEventListener('click', showHome);
+  document.getElementById('detailHomeBtn').addEventListener('click', showHome);
   document.getElementById('backBtn').addEventListener('click', closeCow);
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
