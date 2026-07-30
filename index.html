@@ -439,6 +439,7 @@
 
   function openCow(num){
     currentCow = num;
+    searchBox.blur();
     document.getElementById('detailNum').textContent = '#'+num;
     listView.classList.add('hidden');
     detailView.classList.remove('hidden');
