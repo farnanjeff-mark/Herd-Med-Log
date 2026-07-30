@@ -68,6 +68,7 @@
   .btn-barn{background:var(--barn);color:var(--paper);border-color:var(--barn);}
   .btn-pasture{background:var(--pasture);color:var(--paper);border-color:var(--pasture);}
   .btn-pink{background:#D46A8C;color:var(--paper);border-color:#D46A8C;}
+  .btn-blue{background:#3B6E8F;color:var(--paper);border-color:#3B6E8F;}
   .btn-full{width:100%;}
   .btn-sm{padding:7px 12px;font-size:13px;}
 
@@ -170,7 +171,8 @@
       <p class="eyebrow">Herd Health Ledger</p>
       <h1 class="h1" style="margin-bottom:30px;">Welcome</h1>
       <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Meds &amp; Notes</button>
-      <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;">🐮 Calving Records</button>
+      <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
+      <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;">📝 General Notes</button>
     </div>
   </div>
 
@@ -259,6 +261,41 @@
     <div id="noCalvingRecords" class="empty hidden">No calvings logged for this cow yet.</div>
   </div>
 
+  <div class="view hidden" id="notesListView">
+    <button class="btn btn-outline btn-full" id="notesListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
+    <div class="toolbar">
+      <input type="text" id="notesSearchBox" placeholder="Search cow #, notes..." autocomplete="off"/>
+    </div>
+    <div class="toolbar">
+      <select id="notesSortBy" style="flex:1;">
+        <option value="number">Sort: Cow Number</option>
+        <option value="recent">Sort: Most Recent Note</option>
+      </select>
+    </div>
+    <div id="notesCowList"></div>
+    <div id="notesEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
+  </div>
+
+  <div class="view hidden" id="notesDetailView">
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-outline" id="notesDetailHomeBtn" style="flex:1;">🏠 Home</button>
+      <button class="back" id="notesBackBtn" style="margin-bottom:0;flex:1;">&larr; All Cattle</button>
+    </div>
+    <div class="detail-head">
+      <div>
+        <div class="detail-num" id="notesDetailNum">#000</div>
+        <div class="detail-sub" id="notesDetailSub">0 notes logged</div>
+      </div>
+      <button class="btn btn-outline btn-sm" id="deleteNotesCowBtn">Remove Cow</button>
+    </div>
+
+    <button class="btn btn-blue btn-full" id="addGeneralNoteBtn">+ Add Note</button>
+
+    <div class="section-label">Notes History</div>
+    <div id="generalNoteList"></div>
+    <div id="noGeneralNotes" class="empty hidden">No notes logged for this cow yet.</div>
+  </div>
+
   <button class="fab hidden" id="fabAdd" title="Add cow">+</button>
 </div>
 
@@ -280,19 +317,24 @@
   let cows = [];        // [{number, added_at}]
   let treatments = [];  // [{id, cow_number, date, medicine, reason, notes}]
   let calvings = [];    // [{id, cow_number, calving_date, calf_sex, notes, linked_treatment_id}]
+  let generalNotes = []; // [{id, cow_number, note_date, note}]
   let currentCow = null;
   let currentCalvingCow = null;
+  let currentNotesCow = null;
 
   const homeView = document.getElementById('homeView');
   const listView = document.getElementById('listView');
   const detailView = document.getElementById('detailView');
   const calvingListView = document.getElementById('calvingListView');
   const calvingDetailView = document.getElementById('calvingDetailView');
+  const notesListView = document.getElementById('notesListView');
+  const notesDetailView = document.getElementById('notesDetailView');
   const fabAdd = document.getElementById('fabAdd');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
   const searchBox = document.getElementById('searchBox');
   const calvingSearchBox = document.getElementById('calvingSearchBox');
+  const notesSearchBox = document.getElementById('notesSearchBox');
   const toastEl = document.getElementById('toast');
   const syncDot = document.getElementById('refreshDot');
   const connBanner = document.getElementById('connBanner');
@@ -337,20 +379,24 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
-        api('/calvings?select=*', { method:'GET' })
+        api('/calvings?select=*', { method:'GET' }),
+        api('/general_notes?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
       calvings = calvingsRes || [];
+      generalNotes = notesRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = [];
+      cows = []; treatments = []; calvings = []; generalNotes = [];
     }
     renderList();
     renderCalvingList();
     if(currentCalvingCow) renderCalvingDetail();
+    renderNotesList();
+    if(currentNotesCow) renderNotesDetail();
     checkBackupReminder();
   }
 
@@ -379,6 +425,9 @@
   }
   function calvingsFor(num){
     return calvings.filter(c=>c.cow_number===num);
+  }
+  function generalNotesFor(num){
+    return generalNotes.filter(n=>n.cow_number===num);
   }
 
   function calfSexLabel(sex){
@@ -512,14 +561,18 @@
   function showHome(){
     currentCow = null;
     currentCalvingCow = null;
+    currentNotesCow = null;
     searchBox.value = '';
     if(calvingSearchBox) calvingSearchBox.value = '';
+    if(notesSearchBox) notesSearchBox.value = '';
     setHeaderTitle('Herd', 'Ledger');
     homeView.classList.remove('hidden');
     listView.classList.add('hidden');
     detailView.classList.add('hidden');
     calvingListView.classList.add('hidden');
     calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     window.scrollTo(0,0);
   }
@@ -529,6 +582,8 @@
     detailView.classList.add('hidden');
     calvingListView.classList.add('hidden');
     calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
     listView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderList();
@@ -540,6 +595,8 @@
     listView.classList.add('hidden');
     detailView.classList.add('hidden');
     calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
     calvingListView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderCalvingList();
@@ -561,6 +618,37 @@
     fabAdd.classList.remove('hidden');
     calvingSearchBox.value = '';
     renderCalvingList();
+    window.scrollTo(0,0);
+  }
+  function showNotesList(){
+    setHeaderTitle('General', 'Notes');
+    homeView.classList.add('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
+    notesListView.classList.remove('hidden');
+    fabAdd.classList.remove('hidden');
+    renderNotesList();
+    window.scrollTo(0,0);
+  }
+  function openNotesCow(num){
+    currentNotesCow = num;
+    document.getElementById('notesDetailNum').textContent = '#'+num;
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    renderNotesDetail();
+    window.scrollTo(0,0);
+  }
+  function closeNotesCow(){
+    currentNotesCow = null;
+    notesDetailView.classList.add('hidden');
+    notesListView.classList.remove('hidden');
+    fabAdd.classList.remove('hidden');
+    notesSearchBox.value = '';
+    renderNotesList();
     window.scrollTo(0,0);
   }
 
@@ -711,6 +799,87 @@
     });
   }
 
+  function renderNotesList(){
+    const listEl = document.getElementById('notesCowList');
+    const emptyEl = document.getElementById('notesEmptyState');
+    if(!listEl) return; // view not yet in DOM on first pass
+    const q = (notesSearchBox.value||'').trim().toLowerCase();
+    const sortMode = document.getElementById('notesSortBy').value;
+
+    function latestNoteFor(num){
+      const list = generalNotesFor(num);
+      if(list.length === 0) return null;
+      return [...list].sort((a,b)=> b.note_date.localeCompare(a.note_date))[0];
+    }
+
+    let sorted;
+    if(sortMode === 'recent'){
+      sorted = [...cows].sort((a,b)=>{
+        const la = latestNoteFor(a.number);
+        const lb = latestNoteFor(b.number);
+        if(!la && !lb) return a.number.localeCompare(b.number, undefined, {numeric:true});
+        if(!la) return 1;
+        if(!lb) return -1;
+        return lb.note_date.localeCompare(la.note_date);
+      });
+    } else {
+      sorted = [...cows].sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
+    }
+
+    const filtered = sorted.filter(c=>{
+      if(!q) return true;
+      if(c.number.toLowerCase().includes(q)) return true;
+      return generalNotesFor(c.number).some(n=> (n.note||'').toLowerCase().includes(q));
+    });
+
+    listEl.innerHTML = '';
+    emptyEl.classList.toggle('hidden', cows.length !== 0);
+
+    filtered.forEach(cow=>{
+      const num = cow.number;
+      const records = generalNotesFor(num);
+      let meta = records.length === 0 ? 'No notes logged' : `${records.length} note${records.length>1?'s':''} logged`;
+      if(records.length>0){
+        const last = latestNoteFor(num);
+        meta += ` · last ${fmtDate(last.note_date)}`;
+      }
+      const card = document.createElement('div');
+      card.className = 'cow-card';
+      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.addEventListener('click', ()=> openNotesCow(num));
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderNotesDetail(){
+    const records = [...generalNotesFor(currentNotesCow)].sort((a,b)=> b.note_date.localeCompare(a.note_date));
+    document.getElementById('notesDetailSub').textContent = records.length === 0 ? '0 notes logged' : `${records.length} note${records.length>1?'s':''} logged`;
+    const listEl = document.getElementById('generalNoteList');
+    const noRecords = document.getElementById('noGeneralNotes');
+    listEl.innerHTML = '';
+    noRecords.classList.toggle('hidden', records.length !== 0);
+
+    records.forEach(r=>{
+      const div = document.createElement('div');
+      div.className = 'record note-entry';
+      div.innerHTML = `
+        <button class="record-del" data-id="${r.id}">&times;</button>
+        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        <div class="record-date">${fmtDate(r.note_date)}</div>
+        <div class="record-reason">${escapeHtml(r.note)}</div>
+      `;
+      div.querySelector('.record-del').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        deleteGeneralNote(r.id);
+      });
+      div.querySelector('.record-edit').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        editGeneralNoteModal(r);
+      });
+      listEl.appendChild(div);
+    });
+  }
+
   async function deleteRecord(id){
     try{
       await api('/treatments?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
@@ -718,6 +887,16 @@
       renderDetail();
       renderList();
       showToast('Treatment removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  async function deleteGeneralNote(id){
+    try{
+      await api('/general_notes?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      generalNotes = generalNotes.filter(n=>n.id!==id);
+      renderNotesDetail();
+      renderNotesList();
+      showToast('Note removed');
     }catch(e){ showToast('Could not remove — try again'); }
   }
 
@@ -739,6 +918,7 @@
       cows = cows.filter(c=>c.number!==currentCow);
       treatments = treatments.filter(t=>t.cow_number!==currentCow);
       calvings = calvings.filter(c=>c.cow_number!==currentCow);
+      generalNotes = generalNotes.filter(n=>n.cow_number!==currentCow);
       closeCow();
       showToast('Cow removed');
     }catch(e){ showToast('Could not remove — try again'); }
@@ -752,7 +932,22 @@
       cows = cows.filter(c=>c.number!==currentCalvingCow);
       treatments = treatments.filter(t=>t.cow_number!==currentCalvingCow);
       calvings = calvings.filter(c=>c.cow_number!==currentCalvingCow);
+      generalNotes = generalNotes.filter(n=>n.cow_number!==currentCalvingCow);
       closeCalvingCow();
+      showToast('Cow removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  async function deleteCowFromNotes(){
+    if(!currentNotesCow) return;
+    if(!confirm(`Remove cow #${currentNotesCow} and all its records (treatments, notes, and calvings)? This can't be undone.`)) return;
+    try{
+      await api('/cows?number=eq.' + encodeURIComponent(currentNotesCow), { method:'DELETE' });
+      cows = cows.filter(c=>c.number!==currentNotesCow);
+      treatments = treatments.filter(t=>t.cow_number!==currentNotesCow);
+      calvings = calvings.filter(c=>c.cow_number!==currentNotesCow);
+      generalNotes = generalNotes.filter(n=>n.cow_number!==currentNotesCow);
+      closeNotesCow();
       showToast('Cow removed');
     }catch(e){ showToast('Could not remove — try again'); }
   }
@@ -799,6 +994,7 @@
 
     let bulkMode = false;
     const cameFromCalving = !calvingListView.classList.contains('hidden');
+    const cameFromNotes = !notesListView.classList.contains('hidden');
     const singleFields = modal.querySelector('#singleAddFields');
     const bulkFields = modal.querySelector('#bulkAddFields');
     const toggleLink = modal.querySelector('#toggleBulkMode');
@@ -832,6 +1028,9 @@
           if(cameFromCalving){
             renderCalvingList();
             openCalvingCow(num);
+          } else if(cameFromNotes){
+            renderNotesList();
+            openNotesCow(num);
           } else {
             renderList();
             openCow(num);
@@ -860,7 +1059,7 @@
         });
         cows.push(...inserted);
         closeModal();
-        if(cameFromCalving) renderCalvingList(); else renderList();
+        if(cameFromCalving) renderCalvingList(); else if(cameFromNotes) renderNotesList(); else renderList();
         showToast(`${inserted.length} cow${inserted.length>1?'s':''} added` + (skipped>0 ? ` (${skipped} already existed)` : ''));
       }catch(e){
         confirmBtn.disabled = false;
@@ -1055,6 +1254,64 @@
   function addCalvingModal(){ calvingModal(null); }
   function editCalvingModal(record){ calvingModal(record); }
 
+  function generalNoteModal(existingRecord){
+    const isEdit = !!existingRecord;
+    const today = new Date().toISOString().slice(0,10);
+    const modal = openModal(`
+      <div class="modal-title">${isEdit ? 'Edit Note' : 'Add Note'} — #${escapeHtml(currentNotesCow)}</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="genNoteDate" value="${isEdit ? existingRecord.note_date : today}"/>
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <textarea id="genNoteText" rows="3" placeholder="General observation or note">${isEdit ? escapeHtml(existingRecord.note||'') : ''}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelGenNote">Cancel</button>
+        <button class="btn btn-blue" id="confirmGenNote">${isEdit ? 'Save Changes' : 'Save Note'}</button>
+      </div>
+    `);
+    modal.querySelector('#cancelGenNote').addEventListener('click', closeModal);
+    modal.querySelector('#confirmGenNote').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#genNoteDate').value;
+      const noteText = modal.querySelector('#genNoteText').value.trim();
+      if(!dateVal){ showToast('Date is required'); return; }
+      if(!noteText){ showToast('Enter a note'); return; }
+      const btn = modal.querySelector('#confirmGenNote');
+      btn.disabled = true;
+      const body = { note_date: dateVal, note: noteText };
+      try{
+        if(isEdit){
+          const updated = await api('/general_notes?id=eq.' + encodeURIComponent(existingRecord.id), {
+            method:'PATCH',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          const idx = generalNotes.findIndex(n=>n.id===existingRecord.id);
+          if(idx !== -1) generalNotes[idx] = updated[0];
+        } else {
+          const inserted = await api('/general_notes', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(Object.assign({ cow_number: currentNotesCow }, body))
+          });
+          generalNotes.push(inserted[0]);
+        }
+        closeModal();
+        renderNotesDetail();
+        renderNotesList();
+        window.scrollTo(0,0);
+        showToast(isEdit ? 'Note updated' : 'Note logged');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+  function addGeneralNoteModal(){ generalNoteModal(null); }
+  function editGeneralNoteModal(record){ generalNoteModal(record); }
+
   document.getElementById('fabAdd').addEventListener('click', addCowModal);
   document.getElementById('homeMedsBtn').addEventListener('click', showMedsNotes);
   document.getElementById('listHomeBtn').addEventListener('click', showHome);
@@ -1067,6 +1324,14 @@
   document.getElementById('deleteCalvingCowBtn').addEventListener('click', deleteCowFromCalving);
   document.getElementById('calvingSearchBox').addEventListener('input', renderCalvingList);
   document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
+  document.getElementById('homeGeneralNotesBtn').addEventListener('click', showNotesList);
+  document.getElementById('notesListHomeBtn').addEventListener('click', showHome);
+  document.getElementById('notesDetailHomeBtn').addEventListener('click', showHome);
+  document.getElementById('notesBackBtn').addEventListener('click', closeNotesCow);
+  document.getElementById('addGeneralNoteBtn').addEventListener('click', addGeneralNoteModal);
+  document.getElementById('deleteNotesCowBtn').addEventListener('click', deleteCowFromNotes);
+  document.getElementById('notesSearchBox').addEventListener('input', renderNotesList);
+  document.getElementById('notesSortBy').addEventListener('change', renderNotesList);
   document.getElementById('backBtn').addEventListener('click', closeCow);
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
