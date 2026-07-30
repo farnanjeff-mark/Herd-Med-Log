@@ -230,6 +230,7 @@
     <button class="btn btn-outline btn-full" id="calvingListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
       <input type="text" id="calvingSearchBox" placeholder="Search cow #, calf sex, notes..." autocomplete="off"/>
+      <button class="btn btn-outline btn-sm" id="calvingExportBtn" style="flex-shrink:0;">Export</button>
     </div>
     <div class="toolbar">
       <select id="calvingSortBy" style="flex:1;">
@@ -265,6 +266,7 @@
     <button class="btn btn-outline btn-full" id="notesListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
       <input type="text" id="notesSearchBox" placeholder="Search cow #, notes..." autocomplete="off"/>
+      <button class="btn btn-outline btn-sm" id="notesExportBtn" style="flex-shrink:0;">Export</button>
     </div>
     <div class="toolbar">
       <select id="notesSortBy" style="flex:1;">
@@ -1375,6 +1377,8 @@
     });
   }
   document.getElementById('exportBtn').addEventListener('click', exportCsv);
+  document.getElementById('calvingExportBtn').addEventListener('click', exportCalvingsCsv);
+  document.getElementById('notesExportBtn').addEventListener('click', exportGeneralNotesCsv);
   document.getElementById('lotFilter').addEventListener('change', renderList);
   document.getElementById('sortBy').addEventListener('change', renderList);
   searchBox.addEventListener('input', renderList);
@@ -1388,6 +1392,21 @@
     const s = (val===null || val===undefined) ? '' : String(val);
     if(/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
     return s;
+  }
+
+  function downloadCsv(rows, filenamePrefix){
+    const csv = rows.map(r=> r.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filenamePrefix + '-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    localStorage.setItem('lastExportAt', Date.now().toString());
+    document.getElementById('backupBanner').classList.add('hidden');
   }
 
   async function exportCsv(){
@@ -1416,18 +1435,63 @@
           rows.push([c.number, c.lot||'', '', '', '', '', c.added_at]);
         });
 
-    const csv = rows.map(r=> r.map(csvEscape).join(',')).join('\r\n');
-    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'herd-med-log-' + new Date().toISOString().slice(0,10) + '.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    localStorage.setItem('lastExportAt', Date.now().toString());
-    document.getElementById('backupBanner').classList.add('hidden');
+    downloadCsv(rows, 'herd-med-log');
+    showToast('Spreadsheet downloaded');
+  }
+
+  async function exportCalvingsCsv(){
+    await loadAll();
+    const rows = [['Cow Number','Lot/Group','Calving Date','Calf Sex','Notes','Cow Added']];
+    const cowMap = {};
+    cows.forEach(c=> cowMap[c.number] = c);
+
+    const sortedCalvings = [...calvings].sort((a,b)=>{
+      const numCmp = a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true});
+      if(numCmp !== 0) return numCmp;
+      return a.calving_date.localeCompare(b.calving_date);
+    });
+
+    sortedCalvings.forEach(r=>{
+      const c = cowMap[r.cow_number] || {};
+      rows.push([r.cow_number, c.lot||'', r.calving_date, calfSexLabel(r.calf_sex), r.notes||'', c.added_at||'']);
+    });
+
+    const calvedCows = new Set(calvings.map(c=>c.cow_number));
+    cows.filter(c=>!calvedCows.has(c.number))
+        .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
+        .forEach(c=>{
+          rows.push([c.number, c.lot||'', '', '', '', c.added_at]);
+        });
+
+    downloadCsv(rows, 'calving-records');
+    showToast('Spreadsheet downloaded');
+  }
+
+  async function exportGeneralNotesCsv(){
+    await loadAll();
+    const rows = [['Cow Number','Lot/Group','Date','Note','Cow Added']];
+    const cowMap = {};
+    cows.forEach(c=> cowMap[c.number] = c);
+
+    const sortedNotes = [...generalNotes].sort((a,b)=>{
+      const numCmp = a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true});
+      if(numCmp !== 0) return numCmp;
+      return a.note_date.localeCompare(b.note_date);
+    });
+
+    sortedNotes.forEach(n=>{
+      const c = cowMap[n.cow_number] || {};
+      rows.push([n.cow_number, c.lot||'', n.note_date, n.note||'', c.added_at||'']);
+    });
+
+    const notedCows = new Set(generalNotes.map(n=>n.cow_number));
+    cows.filter(c=>!notedCows.has(c.number))
+        .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
+        .forEach(c=>{
+          rows.push([c.number, c.lot||'', '', '', c.added_at]);
+        });
+
+    downloadCsv(rows, 'general-notes');
     showToast('Spreadsheet downloaded');
   }
 
