@@ -249,6 +249,7 @@
         <div class="detail-num" id="calvingDetailNum">#000</div>
         <div class="detail-sub" id="calvingDetailSub">0 calvings logged</div>
       </div>
+      <button class="btn btn-outline btn-sm" id="deleteCalvingCowBtn">Remove Cow</button>
     </div>
 
     <button class="btn btn-pasture btn-full" id="addCalvingBtn">+ Log Calving</button>
@@ -737,7 +738,21 @@
       await api('/cows?number=eq.' + encodeURIComponent(currentCow), { method:'DELETE' });
       cows = cows.filter(c=>c.number!==currentCow);
       treatments = treatments.filter(t=>t.cow_number!==currentCow);
+      calvings = calvings.filter(c=>c.cow_number!==currentCow);
       closeCow();
+      showToast('Cow removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  async function deleteCowFromCalving(){
+    if(!currentCalvingCow) return;
+    if(!confirm(`Remove cow #${currentCalvingCow} and all its records (treatments, notes, and calvings)? This can't be undone.`)) return;
+    try{
+      await api('/cows?number=eq.' + encodeURIComponent(currentCalvingCow), { method:'DELETE' });
+      cows = cows.filter(c=>c.number!==currentCalvingCow);
+      treatments = treatments.filter(t=>t.cow_number!==currentCalvingCow);
+      calvings = calvings.filter(c=>c.cow_number!==currentCalvingCow);
+      closeCalvingCow();
       showToast('Cow removed');
     }catch(e){ showToast('Could not remove — try again'); }
   }
@@ -1049,6 +1064,7 @@
   document.getElementById('calvingDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('calvingBackBtn').addEventListener('click', closeCalvingCow);
   document.getElementById('addCalvingBtn').addEventListener('click', addCalvingModal);
+  document.getElementById('deleteCalvingCowBtn').addEventListener('click', deleteCowFromCalving);
   document.getElementById('calvingSearchBox').addEventListener('input', renderCalvingList);
   document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
   document.getElementById('backBtn').addEventListener('click', closeCow);
