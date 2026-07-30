@@ -168,7 +168,8 @@
     <div style="text-align:center;padding:40px 10px;">
       <p class="eyebrow">Herd Health Ledger</p>
       <h1 class="h1" style="margin-bottom:30px;">Welcome</h1>
-      <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;">🐄 Meds &amp; Notes</button>
+      <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Meds &amp; Notes</button>
+      <button class="btn btn-outline btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;">🐮 Calving Records</button>
     </div>
   </div>
 
@@ -222,6 +223,40 @@
     <div id="noRecords" class="empty hidden">No treatments logged for this cow yet.</div>
   </div>
 
+  <div class="view hidden" id="calvingListView">
+    <button class="btn btn-outline btn-full" id="calvingListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
+    <div class="toolbar">
+      <input type="text" id="calvingSearchBox" placeholder="Search cow #, calf sex, notes..." autocomplete="off"/>
+    </div>
+    <div class="toolbar">
+      <select id="calvingSortBy" style="flex:1;">
+        <option value="number">Sort: Cow Number</option>
+        <option value="recent">Sort: Most Recent Calving</option>
+      </select>
+    </div>
+    <div id="calvingCowList"></div>
+    <div id="calvingEmptyState" class="empty hidden">No cattle logged yet.<br/>Add cattle from the Meds &amp; Notes section first.</div>
+  </div>
+
+  <div class="view hidden" id="calvingDetailView">
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-outline" id="calvingDetailHomeBtn" style="flex:1;">🏠 Home</button>
+      <button class="back" id="calvingBackBtn" style="margin-bottom:0;flex:1;">&larr; All Cattle</button>
+    </div>
+    <div class="detail-head">
+      <div>
+        <div class="detail-num" id="calvingDetailNum">#000</div>
+        <div class="detail-sub" id="calvingDetailSub">0 calvings logged</div>
+      </div>
+    </div>
+
+    <button class="btn btn-pasture btn-full" id="addCalvingBtn">+ Log Calving</button>
+
+    <div class="section-label">Calving History</div>
+    <div id="calvingRecordList"></div>
+    <div id="noCalvingRecords" class="empty hidden">No calvings logged for this cow yet.</div>
+  </div>
+
   <button class="fab hidden" id="fabAdd" title="Add cow">+</button>
 </div>
 
@@ -242,15 +277,20 @@
 
   let cows = [];        // [{number, added_at}]
   let treatments = [];  // [{id, cow_number, date, medicine, reason, notes}]
+  let calvings = [];    // [{id, cow_number, calving_date, calf_sex, notes, linked_treatment_id}]
   let currentCow = null;
+  let currentCalvingCow = null;
 
   const homeView = document.getElementById('homeView');
   const listView = document.getElementById('listView');
   const detailView = document.getElementById('detailView');
+  const calvingListView = document.getElementById('calvingListView');
+  const calvingDetailView = document.getElementById('calvingDetailView');
   const fabAdd = document.getElementById('fabAdd');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
   const searchBox = document.getElementById('searchBox');
+  const calvingSearchBox = document.getElementById('calvingSearchBox');
   const toastEl = document.getElementById('toast');
   const syncDot = document.getElementById('refreshDot');
   const connBanner = document.getElementById('connBanner');
@@ -295,16 +335,20 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
-        api('/treatments?select=*', { method:'GET' })
+        api('/treatments?select=*', { method:'GET' }),
+        api('/calvings?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
+      calvings = calvingsRes || [];
     }catch(e){
-      cows = []; treatments = [];
+      cows = []; treatments = []; calvings = [];
     }
     renderList();
+    renderCalvingList();
+    if(currentCalvingCow) renderCalvingDetail();
     checkBackupReminder();
   }
 
@@ -330,6 +374,13 @@
   }
   function recordsFor(num){
     return treatments.filter(t=>t.cow_number===num);
+  }
+  function calvingsFor(num){
+    return calvings.filter(c=>c.cow_number===num);
+  }
+
+  function calfSexLabel(sex){
+    return sex === 'B' ? 'Bull' : sex === 'H' ? 'Heifer' : 'Unknown';
   }
 
   function cowRecentMedInfo(num){
@@ -455,19 +506,51 @@
 
   function showHome(){
     currentCow = null;
+    currentCalvingCow = null;
     searchBox.value = '';
+    if(calvingSearchBox) calvingSearchBox.value = '';
     homeView.classList.remove('hidden');
     listView.classList.add('hidden');
     detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showMedsNotes(){
     homeView.classList.add('hidden');
     detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
     listView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderList();
+    window.scrollTo(0,0);
+  }
+  function showCalvingList(){
+    homeView.classList.add('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    calvingListView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    renderCalvingList();
+    window.scrollTo(0,0);
+  }
+  function openCalvingCow(num){
+    currentCalvingCow = num;
+    document.getElementById('calvingDetailNum').textContent = '#'+num;
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.remove('hidden');
+    renderCalvingDetail();
+    window.scrollTo(0,0);
+  }
+  function closeCalvingCow(){
+    currentCalvingCow = null;
+    calvingDetailView.classList.add('hidden');
+    calvingListView.classList.remove('hidden');
+    calvingSearchBox.value = '';
+    renderCalvingList();
     window.scrollTo(0,0);
   }
 
@@ -533,6 +616,91 @@
     });
   }
 
+  function renderCalvingList(){
+    const listEl = document.getElementById('calvingCowList');
+    const emptyEl = document.getElementById('calvingEmptyState');
+    if(!listEl) return; // views not yet in DOM on first pass
+    const q = (calvingSearchBox.value||'').trim().toLowerCase();
+    const sortMode = document.getElementById('calvingSortBy').value;
+
+    function latestCalvingFor(num){
+      const list = calvingsFor(num);
+      if(list.length === 0) return null;
+      return [...list].sort((a,b)=> b.calving_date.localeCompare(a.calving_date))[0];
+    }
+
+    let sorted;
+    if(sortMode === 'recent'){
+      sorted = [...cows].sort((a,b)=>{
+        const la = latestCalvingFor(a.number);
+        const lb = latestCalvingFor(b.number);
+        if(!la && !lb) return a.number.localeCompare(b.number, undefined, {numeric:true});
+        if(!la) return 1;
+        if(!lb) return -1;
+        return lb.calving_date.localeCompare(la.calving_date);
+      });
+    } else {
+      sorted = [...cows].sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
+    }
+
+    const filtered = sorted.filter(c=>{
+      if(!q) return true;
+      if(c.number.toLowerCase().includes(q)) return true;
+      return calvingsFor(c.number).some(r=>
+        calfSexLabel(r.calf_sex).toLowerCase().includes(q) ||
+        (r.notes||'').toLowerCase().includes(q)
+      );
+    });
+
+    listEl.innerHTML = '';
+    emptyEl.classList.toggle('hidden', cows.length !== 0);
+
+    filtered.forEach(cow=>{
+      const num = cow.number;
+      const records = calvingsFor(num);
+      let meta = records.length === 0 ? 'No calvings logged' : `${records.length} calving${records.length>1?'s':''} logged`;
+      if(records.length>0){
+        const last = latestCalvingFor(num);
+        meta += ` · last ${fmtDate(last.calving_date)} (${calfSexLabel(last.calf_sex)})`;
+      }
+      const card = document.createElement('div');
+      card.className = 'cow-card';
+      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.addEventListener('click', ()=> openCalvingCow(num));
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderCalvingDetail(){
+    const records = [...calvingsFor(currentCalvingCow)].sort((a,b)=> b.calving_date.localeCompare(a.calving_date));
+    document.getElementById('calvingDetailSub').textContent = records.length === 0 ? '0 calvings logged' : `${records.length} calving${records.length>1?'s':''} logged`;
+    const listEl = document.getElementById('calvingRecordList');
+    const noRecords = document.getElementById('noCalvingRecords');
+    listEl.innerHTML = '';
+    noRecords.classList.toggle('hidden', records.length !== 0);
+
+    records.forEach(r=>{
+      const div = document.createElement('div');
+      div.className = 'record';
+      div.innerHTML = `
+        <button class="record-del" data-id="${r.id}">&times;</button>
+        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        <div class="record-date">${fmtDate(r.calving_date)}</div>
+        <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
+        ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+      `;
+      div.querySelector('.record-del').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        deleteCalvingRecord(r.id);
+      });
+      div.querySelector('.record-edit').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        editCalvingModal(r);
+      });
+      listEl.appendChild(div);
+    });
+  }
+
   async function deleteRecord(id){
     try{
       await api('/treatments?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
@@ -540,6 +708,16 @@
       renderDetail();
       renderList();
       showToast('Treatment removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  async function deleteCalvingRecord(id){
+    try{
+      await api('/calvings?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      calvings = calvings.filter(c=>c.id!==id);
+      renderCalvingDetail();
+      renderCalvingList();
+      showToast('Calving record removed');
     }catch(e){ showToast('Could not remove — try again'); }
   }
 
@@ -781,10 +959,83 @@
   function addRecordModal(){ recordModal(null); }
   function editRecordModal(record){ recordModal(record); }
 
+  function calvingModal(existingRecord){
+    const isEdit = !!existingRecord;
+    const today = new Date().toISOString().slice(0,10);
+    const modal = openModal(`
+      <div class="modal-title">${isEdit ? 'Edit Calving' : 'Log Calving'} — #${escapeHtml(currentCalvingCow)}</div>
+      <div class="field">
+        <label>Calving Date</label>
+        <input type="date" id="calvDate" value="${isEdit ? existingRecord.calving_date : today}"/>
+      </div>
+      <div class="field">
+        <label>Calf Sex</label>
+        <select id="calvSex">
+          <option value="">-- Select --</option>
+          <option value="B" ${isEdit && existingRecord.calf_sex==='B' ? 'selected' : ''}>Bull (B)</option>
+          <option value="H" ${isEdit && existingRecord.calf_sex==='H' ? 'selected' : ''}>Heifer (H)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="calvNotes" rows="2" placeholder="Calving notes, any complications, etc.">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelCalv">Cancel</button>
+        <button class="btn btn-barn" id="confirmCalv">${isEdit ? 'Save Changes' : 'Save Entry'}</button>
+      </div>
+    `);
+    modal.querySelector('#cancelCalv').addEventListener('click', closeModal);
+    modal.querySelector('#confirmCalv').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#calvDate').value;
+      const sex = modal.querySelector('#calvSex').value;
+      const notes = modal.querySelector('#calvNotes').value.trim();
+      if(!dateVal){ showToast('Calving date is required'); return; }
+      const btn = modal.querySelector('#confirmCalv');
+      btn.disabled = true;
+      const body = { calving_date: dateVal, calf_sex: sex||null, notes: notes||null };
+      try{
+        if(isEdit){
+          const updated = await api('/calvings?id=eq.' + encodeURIComponent(existingRecord.id), {
+            method:'PATCH',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          const idx = calvings.findIndex(c=>c.id===existingRecord.id);
+          if(idx !== -1) calvings[idx] = updated[0];
+        } else {
+          const inserted = await api('/calvings', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(Object.assign({ cow_number: currentCalvingCow }, body))
+          });
+          calvings.push(inserted[0]);
+        }
+        closeModal();
+        renderCalvingDetail();
+        renderCalvingList();
+        window.scrollTo(0,0);
+        showToast(isEdit ? 'Calving updated' : 'Calving logged');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+  function addCalvingModal(){ calvingModal(null); }
+  function editCalvingModal(record){ calvingModal(record); }
+
   document.getElementById('fabAdd').addEventListener('click', addCowModal);
   document.getElementById('homeMedsBtn').addEventListener('click', showMedsNotes);
   document.getElementById('listHomeBtn').addEventListener('click', showHome);
   document.getElementById('detailHomeBtn').addEventListener('click', showHome);
+  document.getElementById('homeCalvingBtn').addEventListener('click', showCalvingList);
+  document.getElementById('calvingListHomeBtn').addEventListener('click', showHome);
+  document.getElementById('calvingDetailHomeBtn').addEventListener('click', showHome);
+  document.getElementById('calvingBackBtn').addEventListener('click', closeCalvingCow);
+  document.getElementById('addCalvingBtn').addEventListener('click', addCalvingModal);
+  document.getElementById('calvingSearchBox').addEventListener('input', renderCalvingList);
+  document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
   document.getElementById('backBtn').addEventListener('click', closeCow);
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
