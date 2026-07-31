@@ -170,7 +170,10 @@
   <div class="view" id="homeView">
     <div style="text-align:center;padding:40px 10px;">
       <p class="eyebrow">Herd Health Ledger</p>
-      <h1 class="h1" style="margin-bottom:30px;">Welcome</h1>
+      <h1 class="h1" style="margin-bottom:16px;">Welcome</h1>
+      <div class="stats-row" style="margin-bottom:20px;">
+        <div class="stat-chip"><div class="stat-num" id="homeTotalCattle">0</div><div class="stat-label">Total Cattle</div></div>
+      </div>
       <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Meds &amp; Notes</button>
       <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
       <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">📝 General Notes</button>
@@ -221,7 +224,6 @@
     </div>
 
     <button class="btn btn-outline btn-full" id="detailLot" style="margin-bottom:12px;">Set lot/pasture</button>
-    <button class="btn btn-outline btn-full" id="detailOwner" style="margin-bottom:12px;">Set owner</button>
 
     <button class="btn btn-pasture btn-full" id="addRecordBtn">+ Log Medicine Given</button>
 
@@ -296,6 +298,9 @@
       </div>
       <button class="btn btn-outline btn-sm" id="deleteNotesCowBtn">Remove Cow</button>
     </div>
+
+    <button class="btn btn-outline btn-full" id="notesDetailLot" style="margin-bottom:12px;">Set lot/pasture</button>
+    <button class="btn btn-outline btn-full" id="notesDetailOwner" style="margin-bottom:12px;">Set owner</button>
 
     <button class="btn btn-blue btn-full" id="addGeneralNoteBtn">+ Add Note</button>
 
@@ -405,6 +410,8 @@
     if(currentCalvingCow) renderCalvingDetail();
     renderNotesList();
     if(currentNotesCow) renderNotesDetail();
+    const homeTotalEl = document.getElementById('homeTotalCattle');
+    if(homeTotalEl) homeTotalEl.textContent = cows.length;
     checkBackupReminder();
   }
 
@@ -587,6 +594,7 @@
     notesListView.classList.add('hidden');
     notesDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
+    document.getElementById('homeTotalCattle').textContent = cows.length;
     window.scrollTo(0,0);
   }
   function showMedsNotes(){
@@ -653,6 +661,8 @@
     notesDetailView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     renderNotesDetail();
+    updateNotesLotLabel();
+    updateNotesOwnerLabel();
     window.scrollTo(0,0);
   }
   function closeNotesCow(){
@@ -674,18 +684,41 @@
     fabAdd.classList.add('hidden');
     renderDetail();
     updateLotLabel();
-    updateOwnerLabel();
     window.scrollTo(0,0);
+  }
+  function getActiveCowNumber(){
+    if(!notesDetailView.classList.contains('hidden')) return currentNotesCow;
+    if(!calvingDetailView.classList.contains('hidden')) return currentCalvingCow;
+    return currentCow;
   }
   function updateLotLabel(){
     const cow = cows.find(c=>c.number===currentCow);
     const el = document.getElementById('detailLot');
     el.textContent = (cow && cow.lot) ? `Lot: ${cow.lot} (tap to edit)` : 'Set lot/pasture';
   }
-  function updateOwnerLabel(){
-    const cow = cows.find(c=>c.number===currentCow);
-    const el = document.getElementById('detailOwner');
+  function updateNotesLotLabel(){
+    const cow = cows.find(c=>c.number===currentNotesCow);
+    const el = document.getElementById('notesDetailLot');
+    el.textContent = (cow && cow.lot) ? `Lot: ${cow.lot} (tap to edit)` : 'Set lot/pasture';
+  }
+  function updateNotesOwnerLabel(){
+    const cow = cows.find(c=>c.number===currentNotesCow);
+    const el = document.getElementById('notesDetailOwner');
     el.textContent = (cow && cow.owner) ? `Owner: ${cow.owner} (tap to edit)` : 'Set owner';
+  }
+  function refreshOpenCowHeaders(){
+    if(currentCow && !detailView.classList.contains('hidden')){
+      document.getElementById('detailNum').innerHTML = ownerNumHtml(currentCow, (cows.find(c=>c.number===currentCow)||{}).owner);
+      updateLotLabel();
+    }
+    if(currentCalvingCow && !calvingDetailView.classList.contains('hidden')){
+      document.getElementById('calvingDetailNum').innerHTML = ownerNumHtml(currentCalvingCow, (cows.find(c=>c.number===currentCalvingCow)||{}).owner);
+    }
+    if(currentNotesCow && !notesDetailView.classList.contains('hidden')){
+      document.getElementById('notesDetailNum').innerHTML = ownerNumHtml(currentNotesCow, (cows.find(c=>c.number===currentNotesCow)||{}).owner);
+      updateNotesLotLabel();
+      updateNotesOwnerLabel();
+    }
   }
   function closeCow(){
     currentCow = null;
@@ -1359,15 +1392,17 @@
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
   document.getElementById('detailLot').addEventListener('click', editLotModal);
-  document.getElementById('detailOwner').addEventListener('click', editOwnerModal);
+  document.getElementById('notesDetailLot').addEventListener('click', editLotModal);
+  document.getElementById('notesDetailOwner').addEventListener('click', editOwnerModal);
 
   const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
-  const OWNER_OPTIONS = ['JF','FCC','Kellan','Clint'];
+  const OWNER_OPTIONS = ['JF','FCC','Kellan','Clint','LA'];
   function ownerColor(owner){
     if(owner === 'JF') return '#D46A8C';
     if(owner === 'FCC') return '#D4B93C';
     if(owner === 'Kellan') return '#FFFFFF';
     if(owner === 'Clint') return '#000000';
+    if(owner === 'LA') return '#4A7A3D';
     return null;
   }
   function ownerNumHtml(num, owner){
@@ -1377,9 +1412,10 @@
   }
 
   function editLotModal(){
-    const cow = cows.find(c=>c.number===currentCow);
+    const targetNum = getActiveCowNumber();
+    const cow = cows.find(c=>c.number===targetNum);
     const modal = openModal(`
-      <div class="modal-title">Lot / Pasture — #${escapeHtml(currentCow)}</div>
+      <div class="modal-title">Lot / Pasture — #${escapeHtml(targetNum)}</div>
       ${fieldWithOther('editLot', 'Lot / Pasture / Group', LOT_OPTIONS, 'Type lot/pasture')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelEditLot">Cancel</button>
@@ -1394,16 +1430,18 @@
       const btn = modal.querySelector('#confirmEditLot');
       btn.disabled = true;
       try{
-        const updated = await api('/cows?number=eq.' + encodeURIComponent(currentCow), {
+        const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
           method:'PATCH',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
           body: JSON.stringify({ lot: lot||null })
         });
-        const idx = cows.findIndex(c=>c.number===currentCow);
+        const idx = cows.findIndex(c=>c.number===targetNum);
         if(idx !== -1) cows[idx] = updated[0];
         closeModal();
-        updateLotLabel();
+        refreshOpenCowHeaders();
         renderList();
+        renderCalvingList();
+        renderNotesList();
         showToast('Lot updated');
       }catch(e){
         btn.disabled = false;
@@ -1413,9 +1451,10 @@
   }
 
   function editOwnerModal(){
-    const cow = cows.find(c=>c.number===currentCow);
+    const targetNum = getActiveCowNumber();
+    const cow = cows.find(c=>c.number===targetNum);
     const modal = openModal(`
-      <div class="modal-title">Owner — #${escapeHtml(currentCow)}</div>
+      <div class="modal-title">Owner — #${escapeHtml(targetNum)}</div>
       ${fieldWithOther('editOwner', 'Owner', OWNER_OPTIONS, 'Type owner name')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelEditOwner">Cancel</button>
@@ -1430,17 +1469,18 @@
       const btn = modal.querySelector('#confirmEditOwner');
       btn.disabled = true;
       try{
-        const updated = await api('/cows?number=eq.' + encodeURIComponent(currentCow), {
+        const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
           method:'PATCH',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
           body: JSON.stringify({ owner: owner||null })
         });
-        const idx = cows.findIndex(c=>c.number===currentCow);
+        const idx = cows.findIndex(c=>c.number===targetNum);
         if(idx !== -1) cows[idx] = updated[0];
         closeModal();
-        document.getElementById('detailNum').innerHTML = ownerNumHtml(currentCow, owner);
-        updateOwnerLabel();
+        refreshOpenCowHeaders();
         renderList();
+        renderCalvingList();
+        renderNotesList();
         showToast('Owner updated');
       }catch(e){
         btn.disabled = false;
