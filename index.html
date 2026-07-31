@@ -178,7 +178,8 @@
       <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
       <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">📝 General Notes</button>
       <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything (All 3 Lists)</button>
-      <button class="btn btn-outline btn-full" id="bulkEditBtn">🔧 Bulk Edit Owner / Lot</button>
+      <button class="btn btn-outline btn-full" id="bulkEditBtn" style="margin-bottom:12px;">🔧 Bulk Edit Owner / Lot</button>
+      <button class="btn btn-outline btn-full" id="homeProfileBtn">👤 Cow Profile</button>
     </div>
   </div>
 
@@ -221,6 +222,7 @@
     </div>
 
     <button class="btn btn-outline btn-full" id="detailLot" style="margin-bottom:12px;">Set lot/pasture</button>
+    <button class="btn btn-outline btn-full" id="detailViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
     <button class="btn btn-pasture btn-full" id="addRecordBtn">+ Log Medicine Given</button>
 
@@ -258,6 +260,8 @@
       </div>
       <button class="btn btn-outline btn-sm" id="deleteCalvingCowBtn">Remove Cow</button>
     </div>
+
+    <button class="btn btn-outline btn-full" id="calvingViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
     <button class="btn btn-pasture btn-full" id="addCalvingBtn">+ Log Calving</button>
 
@@ -302,12 +306,47 @@
 
     <button class="btn btn-outline btn-full" id="notesDetailLot" style="margin-bottom:12px;">Set lot/pasture</button>
     <button class="btn btn-outline btn-full" id="notesDetailOwner" style="margin-bottom:12px;">Set owner</button>
+    <button class="btn btn-outline btn-full" id="notesViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
     <button class="btn btn-blue btn-full" id="addGeneralNoteBtn">+ Add Note</button>
 
     <div class="section-label">Notes History</div>
     <div id="generalNoteList"></div>
     <div id="noGeneralNotes" class="empty hidden">No notes logged for this cow yet.</div>
+  </div>
+
+  <div class="view hidden" id="profileListView">
+    <button class="btn btn-outline btn-full" id="profileListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
+    <div class="toolbar">
+      <input type="text" id="profileSearchBox" placeholder="Search cow #..." autocomplete="off"/>
+    </div>
+    <div id="profileCowList"></div>
+    <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
+  </div>
+
+  <div class="view hidden" id="profileView">
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-outline" id="profileHomeBtn" style="flex:1;">🏠 Home</button>
+      <button class="back" id="profileBackBtn" style="margin-bottom:0;flex:1;">&larr; All Cattle</button>
+    </div>
+    <div class="detail-head">
+      <div>
+        <div class="detail-num" id="profileNum">#000</div>
+        <div class="detail-sub" id="profileSub"></div>
+      </div>
+    </div>
+
+    <div class="section-label">Meds &amp; Notes</div>
+    <div id="profileMedsList"></div>
+    <button class="btn btn-pasture btn-full" id="profileGoMeds" style="margin-bottom:20px;">Go to Meds &amp; Notes →</button>
+
+    <div class="section-label">Calving Records</div>
+    <div id="profileCalvingList"></div>
+    <button class="btn btn-pink btn-full" id="profileGoCalving" style="margin-bottom:20px;">Go to Calving Records →</button>
+
+    <div class="section-label">General Notes</div>
+    <div id="profileNotesList"></div>
+    <button class="btn btn-blue btn-full" id="profileGoNotes">Go to General Notes →</button>
   </div>
 
   <button class="fab hidden" id="fabAdd" title="Add cow">+</button>
@@ -335,6 +374,7 @@
   let currentCow = null;
   let currentCalvingCow = null;
   let currentNotesCow = null;
+  let currentProfileCow = null;
 
   const homeView = document.getElementById('homeView');
   const listView = document.getElementById('listView');
@@ -343,12 +383,15 @@
   const calvingDetailView = document.getElementById('calvingDetailView');
   const notesListView = document.getElementById('notesListView');
   const notesDetailView = document.getElementById('notesDetailView');
+  const profileListView = document.getElementById('profileListView');
+  const profileView = document.getElementById('profileView');
   const fabAdd = document.getElementById('fabAdd');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
   const searchBox = document.getElementById('searchBox');
   const calvingSearchBox = document.getElementById('calvingSearchBox');
   const notesSearchBox = document.getElementById('notesSearchBox');
+  const profileSearchBox = document.getElementById('profileSearchBox');
   const toastEl = document.getElementById('toast');
   const syncDot = document.getElementById('refreshDot');
   const connBanner = document.getElementById('connBanner');
@@ -411,6 +454,8 @@
     if(currentCalvingCow) renderCalvingDetail();
     renderNotesList();
     if(currentNotesCow) renderNotesDetail();
+    renderProfileList();
+    if(currentProfileCow) renderProfile();
     const homeTotalEl = document.getElementById('homeTotalCattle');
     if(homeTotalEl) homeTotalEl.textContent = cows.length;
     checkBackupReminder();
@@ -580,9 +625,11 @@
     currentCow = null;
     currentCalvingCow = null;
     currentNotesCow = null;
+    currentProfileCow = null;
     searchBox.value = '';
     if(calvingSearchBox) calvingSearchBox.value = '';
     if(notesSearchBox) notesSearchBox.value = '';
+    if(profileSearchBox) profileSearchBox.value = '';
     setHeaderTitle('Herd', 'Ledger');
     homeView.classList.remove('hidden');
     listView.classList.add('hidden');
@@ -591,6 +638,8 @@
     calvingDetailView.classList.add('hidden');
     notesListView.classList.add('hidden');
     notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     document.getElementById('homeTotalCattle').textContent = cows.length;
     window.scrollTo(0,0);
@@ -603,6 +652,8 @@
     calvingDetailView.classList.add('hidden');
     notesListView.classList.add('hidden');
     notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
     listView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderList();
@@ -616,6 +667,8 @@
     calvingDetailView.classList.add('hidden');
     notesListView.classList.add('hidden');
     notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
     calvingListView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderCalvingList();
@@ -623,9 +676,12 @@
   }
   function openCalvingCow(num){
     currentCalvingCow = num;
+    setHeaderTitle('Calving', 'Records');
     document.getElementById('calvingDetailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     calvingListView.classList.add('hidden');
     calvingDetailView.classList.remove('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderCalvingDetail();
     window.scrollTo(0,0);
@@ -647,6 +703,8 @@
     calvingListView.classList.add('hidden');
     calvingDetailView.classList.add('hidden');
     notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
     notesListView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderNotesList();
@@ -654,9 +712,12 @@
   }
   function openNotesCow(num){
     currentNotesCow = num;
+    setHeaderTitle('General', 'Notes');
     document.getElementById('notesDetailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     notesListView.classList.add('hidden');
     notesDetailView.classList.remove('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderNotesDetail();
     updateNotesLotLabel();
@@ -672,13 +733,55 @@
     renderNotesList();
     window.scrollTo(0,0);
   }
+  function showProfileList(){
+    setHeaderTitle('Cow', 'Profile');
+    homeView.classList.add('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
+    profileView.classList.add('hidden');
+    profileListView.classList.remove('hidden');
+    fabAdd.classList.remove('hidden');
+    renderProfileList();
+    window.scrollTo(0,0);
+  }
+  function openProfileCow(num){
+    currentProfileCow = num;
+    setHeaderTitle('Cow', 'Profile');
+    profileListView.classList.add('hidden');
+    listView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
+    profileView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    renderProfile();
+    window.scrollTo(0,0);
+  }
+  function closeProfileCow(){
+    currentProfileCow = null;
+    profileView.classList.add('hidden');
+    profileListView.classList.remove('hidden');
+    fabAdd.classList.remove('hidden');
+    profileSearchBox.value = '';
+    renderProfileList();
+    window.scrollTo(0,0);
+  }
 
   function openCow(num){
     currentCow = num;
     searchBox.blur();
+    setHeaderTitle('Med', 'Log');
     document.getElementById('detailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     listView.classList.add('hidden');
     detailView.classList.remove('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderDetail();
     updateLotLabel();
@@ -942,6 +1045,79 @@
       listEl.appendChild(div);
     });
   }
+
+  function renderProfileList(){
+    const listEl = document.getElementById('profileCowList');
+    const emptyEl = document.getElementById('profileEmptyState');
+    if(!listEl) return;
+    const q = (profileSearchBox.value||'').trim().toLowerCase();
+    const sorted = [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const filtered = sorted.filter(c=> !q || c.number.toLowerCase().includes(q));
+
+    listEl.innerHTML = '';
+    emptyEl.classList.toggle('hidden', cows.length !== 0);
+
+    filtered.forEach(cow=>{
+      const num = cow.number;
+      const medCount = recordsFor(num).length;
+      const calvCount = calvingsFor(num).length;
+      const noteCount = generalNotesFor(num).length;
+      const meta = `${medCount} med entr${medCount===1?'y':'ies'} · ${calvCount} calving${calvCount!==1?'s':''} · ${noteCount} note${noteCount!==1?'s':''}`;
+      const card = document.createElement('div');
+      card.className = 'cow-card';
+      const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
+      const ownerBadge = cow.owner ? `<span class="lot-badge" style="background:#6b6350;">${escapeHtml(cow.owner)}</span>` : '';
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.addEventListener('click', ()=> openProfileCow(num));
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderProfile(){
+    const num = currentProfileCow;
+    const cow = cows.find(c=>c.number===num) || {};
+    document.getElementById('profileNum').innerHTML = ownerNumHtml(num, cow.owner);
+    const subParts = [];
+    if(cow.lot) subParts.push(`Lot: ${cow.lot}`);
+    if(cow.owner) subParts.push(`Owner: ${cow.owner}`);
+    document.getElementById('profileSub').textContent = subParts.join(' · ') || 'No lot or owner set';
+
+    // Meds & Notes
+    const meds = [...recordsFor(num)].sort((a,b)=>b.date.localeCompare(a.date));
+    const medsEl = document.getElementById('profileMedsList');
+    medsEl.innerHTML = meds.length === 0
+      ? '<p class="empty" style="padding:10px 0;">No entries yet.</p>'
+      : meds.map(r=>{
+          const isNote = !r.medicine;
+          return `<div class="record${isNote ? ' note-entry' : ''}">
+            <div class="record-date">${fmtDate(r.date)}${isNote ? ' · NOTE' : ''}</div>
+            ${isNote ? '' : `<div class="record-med">${escapeHtml(r.medicine)}</div><div class="record-reason">${escapeHtml(r.reason||'')}</div>`}
+            ${r.notes ? `<div class="${isNote ? 'record-reason' : 'record-notes'}">${escapeHtml(r.notes)}</div>` : ''}
+          </div>`;
+        }).join('');
+
+    // Calving Records
+    const calvingRecs = [...calvingsFor(num)].sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
+    const calvEl = document.getElementById('profileCalvingList');
+    calvEl.innerHTML = calvingRecs.length === 0
+      ? '<p class="empty" style="padding:10px 0;">No entries yet.</p>'
+      : calvingRecs.map(r=>`<div class="record">
+          <div class="record-date">${fmtDate(r.calving_date)}</div>
+          <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
+          ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+        </div>`).join('');
+
+    // General Notes
+    const notesRecs = [...generalNotesFor(num)].sort((a,b)=>b.note_date.localeCompare(a.note_date));
+    const notesEl = document.getElementById('profileNotesList');
+    notesEl.innerHTML = notesRecs.length === 0
+      ? '<p class="empty" style="padding:10px 0;">No entries yet.</p>'
+      : notesRecs.map(r=>`<div class="record note-entry">
+          <div class="record-date">${fmtDate(r.note_date)}</div>
+          <div class="record-reason">${escapeHtml(r.note||'')}</div>
+        </div>`).join('');
+  }
+
 
   async function deleteRecord(id){
     try{
@@ -1393,6 +1569,17 @@
   document.getElementById('homeGeneralNotesBtn').addEventListener('click', showNotesList);
   document.getElementById('exportEverythingBtn').addEventListener('click', exportEverything);
   document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
+  document.getElementById('homeProfileBtn').addEventListener('click', showProfileList);
+  document.getElementById('profileListHomeBtn').addEventListener('click', showHome);
+  document.getElementById('profileHomeBtn').addEventListener('click', showHome);
+  document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
+  document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
+  document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
+  document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
+  document.getElementById('profileGoNotes').addEventListener('click', ()=> openNotesCow(currentProfileCow));
+  document.getElementById('detailViewProfile').addEventListener('click', ()=> openProfileCow(currentCow));
+  document.getElementById('calvingViewProfile').addEventListener('click', ()=> openProfileCow(currentCalvingCow));
+  document.getElementById('notesViewProfile').addEventListener('click', ()=> openProfileCow(currentNotesCow));
   document.getElementById('notesListHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesBackBtn').addEventListener('click', closeNotesCow);
