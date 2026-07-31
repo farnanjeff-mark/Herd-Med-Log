@@ -1533,7 +1533,7 @@
 
     const cowOptionsHtml = activeCows.map(num=>`
       <label style="display:flex;align-items:center;gap:8px;padding:6px 0;">
-        <input type="checkbox" class="cowCheck" value="${escapeHtml(num)}" checked style="width:18px;height:18px;"/>
+        <input type="checkbox" class="cowCheck" value="${escapeHtml(num)}" style="width:18px;height:18px;"/>
         <span>#${escapeHtml(num)}</span>
       </label>
     `).join('') || '<p class="empty" style="padding:10px 0;">No recent activity in the last 7 days.</p>';
@@ -1547,7 +1547,7 @@
 
     const modal = openModal(`
       <div class="modal-title">Text This List</div>
-      <div class="section-label">Cows to Include ${activeCows.length ? `<a href="#" id="toggleAllCows" style="text-transform:none;letter-spacing:0;color:var(--barn);text-decoration:underline;">(select none)</a>` : ''}</div>
+      <div class="section-label">Cows to Include ${activeCows.length ? `<a href="#" id="toggleAllCows" style="text-transform:none;letter-spacing:0;color:var(--barn);text-decoration:underline;">(select all)</a>` : ''}</div>
       <div style="max-height:160px;overflow-y:auto;margin-bottom:10px;">${cowOptionsHtml}</div>
       <div class="section-label">Send To</div>
       <div>${recipOptionsHtml}</div>
