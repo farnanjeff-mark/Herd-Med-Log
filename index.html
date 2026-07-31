@@ -280,6 +280,7 @@
       <select id="notesSortBy" style="flex:1;">
         <option value="number">Sort: Cow Number</option>
         <option value="recent">Sort: Most Recent Note</option>
+        <option value="owner">Sort: Owner</option>
       </select>
     </div>
     <div id="notesCowList"></div>
@@ -872,6 +873,16 @@
         if(!la) return 1;
         if(!lb) return -1;
         return lb.note_date.localeCompare(la.note_date);
+      });
+    } else if(sortMode === 'owner'){
+      sorted = [...cows].sort((a,b)=>{
+        const oa = a.owner || '';
+        const ob = b.owner || '';
+        if(!oa && ob) return 1;
+        if(oa && !ob) return -1;
+        const ownerCmp = oa.localeCompare(ob);
+        if(ownerCmp !== 0) return ownerCmp;
+        return a.number.localeCompare(b.number, undefined, {numeric:true});
       });
     } else {
       sorted = [...cows].sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
