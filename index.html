@@ -1475,44 +1475,37 @@
 
   function buildMedsListText(){
     const lines = ['MEDS & NOTES — Last 7 Days'];
-    [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true})).forEach(cow=>{
-      const records = [...recordsFor(cow.number)].filter(r=>isWithinLastWeek(r.date)).sort((a,b)=>b.date.localeCompare(a.date));
-      if(records.length === 0) return;
-      lines.push(`#${cow.number}:`);
-      records.forEach(r=>{
-        if(r.medicine){
-          lines.push(`  ${fmtDateShort(r.date)} - ${r.medicine}${r.reason ? ' / '+r.reason : ''}${r.notes ? ' — '+r.notes : ''}`);
-        } else {
-          lines.push(`  ${fmtDateShort(r.date)} - NOTE: ${r.notes||''}`);
-        }
-      });
+    const items = [];
+    treatments.filter(r=>isWithinLastWeek(r.date)).forEach(r=>{
+      const desc = r.medicine
+        ? `${r.medicine}${r.reason ? ' / '+r.reason : ''}${r.notes ? ' — '+r.notes : ''}`
+        : `NOTE: ${r.notes||''}`;
+      items.push({ date: r.date, cow: r.cow_number, text: desc });
     });
+    items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
+    items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
     if(lines.length === 1) lines.push('(no activity in the last 7 days)');
     return lines.join('\n');
   }
   function buildCalvingListText(){
     const lines = ['CALVING RECORDS — Last 7 Days'];
-    [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true})).forEach(cow=>{
-      const records = [...calvingsFor(cow.number)].filter(r=>isWithinLastWeek(r.calving_date)).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
-      if(records.length === 0) return;
-      lines.push(`#${cow.number}:`);
-      records.forEach(r=>{
-        lines.push(`  ${fmtDateShort(r.calving_date)} - ${calfSexLabel(r.calf_sex)} calf${r.notes ? ' — '+r.notes : ''}`);
-      });
+    const items = [];
+    calvings.filter(r=>isWithinLastWeek(r.calving_date)).forEach(r=>{
+      items.push({ date: r.calving_date, cow: r.cow_number, text: `${calfSexLabel(r.calf_sex)} calf${r.notes ? ' — '+r.notes : ''}` });
     });
+    items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
+    items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
     if(lines.length === 1) lines.push('(no activity in the last 7 days)');
     return lines.join('\n');
   }
   function buildNotesListText(){
     const lines = ['GENERAL NOTES — Last 7 Days'];
-    [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true})).forEach(cow=>{
-      const records = [...generalNotesFor(cow.number)].filter(r=>isWithinLastWeek(r.note_date)).sort((a,b)=>b.note_date.localeCompare(a.note_date));
-      if(records.length === 0) return;
-      lines.push(`#${cow.number}:`);
-      records.forEach(r=>{
-        lines.push(`  ${fmtDateShort(r.note_date)} - ${r.note||''}`);
-      });
+    const items = [];
+    generalNotes.filter(r=>isWithinLastWeek(r.note_date)).forEach(r=>{
+      items.push({ date: r.note_date, cow: r.cow_number, text: r.note||'' });
     });
+    items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
+    items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
     if(lines.length === 1) lines.push('(no activity in the last 7 days)');
     return lines.join('\n');
   }
