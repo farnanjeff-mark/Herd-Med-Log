@@ -194,11 +194,7 @@
     <div class="stats-row" id="statsRow"></div>
     <div class="toolbar">
       <input type="text" id="searchBox" placeholder="Search cow #, medicine, reason..." autocomplete="off"/>
-      <button class="btn btn-outline btn-sm" id="exportBtn" style="flex-shrink:0;">Export</button>
       <button class="btn btn-outline btn-sm" id="textListBtn" style="flex-shrink:0;">✉️ Text</button>
-    </div>
-    <div class="toolbar" id="lotFilterRow" style="display:none;">
-      <select id="lotFilter"><option value="">All Lots / Groups</option></select>
     </div>
     <div class="toolbar">
       <select id="sortBy" style="flex:1;">
@@ -275,6 +271,9 @@
       <input type="text" id="notesSearchBox" placeholder="Search cow #, notes..." autocomplete="off"/>
       <button class="btn btn-outline btn-sm" id="notesExportBtn" style="flex-shrink:0;">Export</button>
       <button class="btn btn-outline btn-sm" id="notesTextListBtn" style="flex-shrink:0;">✉️ Text</button>
+    </div>
+    <div class="toolbar" id="notesLotFilterRow" style="display:none;">
+      <select id="notesLotFilter"><option value="">All Lots / Groups</option></select>
     </div>
     <div class="toolbar">
       <select id="notesSortBy" style="flex:1;">
@@ -462,9 +461,9 @@
     return { recentlyTreated };
   }
 
-  function populateLotFilter(){
-    const lotFilterRow = document.getElementById('lotFilterRow');
-    const lotFilter = document.getElementById('lotFilter');
+  function populateLotFilter(rowId, selectId){
+    const lotFilterRow = document.getElementById(rowId);
+    const lotFilter = document.getElementById(selectId);
     const usedLots = [...new Set(cows.map(c=>c.lot).filter(Boolean))];
     const extraLots = usedLots.filter(l=>!LOT_OPTIONS.includes(l)).sort();
     const lots = [...LOT_OPTIONS, ...extraLots];
@@ -501,10 +500,8 @@
   }
 
   function renderList(){
-    populateLotFilter();
     renderStats();
     const q = (searchBox.value||'').trim().toLowerCase();
-    const lotFilterVal = document.getElementById('lotFilter').value;
     const sortMode = document.getElementById('sortBy').value;
 
     let sorted;
@@ -524,7 +521,6 @@
     }
 
     const filtered = sorted.filter(c=>{
-      if(lotFilterVal && c.lot !== lotFilterVal) return false;
       if(!q) return true;
       if(c.number.toLowerCase().includes(q)) return true;
       return recordsFor(c.number).some(r=>
@@ -855,7 +851,9 @@
     const listEl = document.getElementById('notesCowList');
     const emptyEl = document.getElementById('notesEmptyState');
     if(!listEl) return; // view not yet in DOM on first pass
+    populateLotFilter('notesLotFilterRow', 'notesLotFilter');
     const q = (notesSearchBox.value||'').trim().toLowerCase();
+    const lotFilterVal = document.getElementById('notesLotFilter').value;
     const sortMode = document.getElementById('notesSortBy').value;
 
     function latestNoteFor(num){
@@ -879,6 +877,7 @@
     }
 
     const filtered = sorted.filter(c=>{
+      if(lotFilterVal && c.lot !== lotFilterVal) return false;
       if(!q) return true;
       if(c.number.toLowerCase().includes(q)) return true;
       return generalNotesFor(c.number).some(n=> (n.note||'').toLowerCase().includes(q));
@@ -1388,6 +1387,7 @@
   document.getElementById('deleteNotesCowBtn').addEventListener('click', deleteCowFromNotes);
   document.getElementById('notesSearchBox').addEventListener('input', renderNotesList);
   document.getElementById('notesSortBy').addEventListener('change', renderNotesList);
+  document.getElementById('notesLotFilter').addEventListener('change', renderNotesList);
   document.getElementById('backBtn').addEventListener('click', closeCow);
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
@@ -1488,13 +1488,11 @@
       }
     });
   }
-  document.getElementById('exportBtn').addEventListener('click', exportCsv);
   document.getElementById('calvingExportBtn').addEventListener('click', exportCalvingsCsv);
   document.getElementById('notesExportBtn').addEventListener('click', exportGeneralNotesCsv);
   document.getElementById('textListBtn').addEventListener('click', ()=> textListModal('meds'));
   document.getElementById('calvingTextListBtn').addEventListener('click', ()=> textListModal('calving'));
   document.getElementById('notesTextListBtn').addEventListener('click', ()=> textListModal('notes'));
-  document.getElementById('lotFilter').addEventListener('change', renderList);
   document.getElementById('sortBy').addEventListener('change', renderList);
   searchBox.addEventListener('input', renderList);
   document.getElementById('backupExportBtn').addEventListener('click', exportCsv);
