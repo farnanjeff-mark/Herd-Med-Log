@@ -172,7 +172,8 @@
       <h1 class="h1" style="margin-bottom:30px;">Welcome</h1>
       <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Meds &amp; Notes</button>
       <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
-      <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;">📝 General Notes</button>
+      <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">📝 General Notes</button>
+      <button class="btn btn-outline btn-full" id="exportEverythingBtn">📦 Export Everything (All 3 Lists)</button>
     </div>
   </div>
 
@@ -1334,6 +1335,7 @@
   document.getElementById('calvingSearchBox').addEventListener('input', renderCalvingList);
   document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
   document.getElementById('homeGeneralNotesBtn').addEventListener('click', showNotesList);
+  document.getElementById('exportEverythingBtn').addEventListener('click', exportEverything);
   document.getElementById('notesListHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesBackBtn').addEventListener('click', closeNotesCow);
@@ -1474,7 +1476,7 @@
   }
 
   function buildMedsListText(cowFilter){
-    const lines = ['MEDS & NOTES — Last 7 Days'];
+    const lines = ['MEDS & NOTES'];
     const items = [];
     treatments.filter(r=>isWithinLastWeek(r.date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       const desc = r.medicine
@@ -1488,7 +1490,7 @@
     return lines.join('\n');
   }
   function buildCalvingListText(cowFilter){
-    const lines = ['CALVING RECORDS — Last 7 Days'];
+    const lines = ['CALVING RECORDS'];
     const items = [];
     calvings.filter(r=>isWithinLastWeek(r.calving_date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       items.push({ date: r.calving_date, cow: r.cow_number, text: `${calfSexLabel(r.calf_sex)} calf${r.notes ? ' — '+r.notes : ''}` });
@@ -1499,7 +1501,7 @@
     return lines.join('\n');
   }
   function buildNotesListText(cowFilter){
-    const lines = ['GENERAL NOTES — Last 7 Days'];
+    const lines = ['GENERAL NOTES'];
     const items = [];
     generalNotes.filter(r=>isWithinLastWeek(r.note_date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       items.push({ date: r.note_date, cow: r.cow_number, text: r.note||'' });
@@ -1604,7 +1606,7 @@
   async function exportCsv(){
     // Refresh first so the export reflects the latest data, not a stale in-memory copy.
     await loadAll();
-    const rows = [['Cow Number','Lot/Group','Date Given','Medicine','Reason','Notes','Cow Added']];
+    const rows = [['Record ID','Cow Number','Lot/Group','Cow Added','Date Given','Medicine','Reason','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -1616,7 +1618,7 @@
 
     sortedTreatments.forEach(t=>{
       const c = cowMap[t.cow_number] || {};
-      rows.push([t.cow_number, c.lot||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', c.added_at||'']);
+      rows.push([t.id, t.cow_number, c.lot||'', c.added_at||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', t.created_at||'']);
     });
 
     // Include cows with zero treatments too, so nothing gets left out of the export.
@@ -1624,7 +1626,7 @@
     cows.filter(c=>!treatedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push([c.number, c.lot||'', '', '', '', '', c.added_at]);
+          rows.push(['', c.number, c.lot||'', c.added_at||'', '', '', '', '', '']);
         });
 
     downloadCsv(rows, 'herd-med-log');
@@ -1633,7 +1635,7 @@
 
   async function exportCalvingsCsv(){
     await loadAll();
-    const rows = [['Cow Number','Lot/Group','Calving Date','Calf Sex','Notes','Cow Added']];
+    const rows = [['Record ID','Cow Number','Lot/Group','Cow Added','Calving Date','Calf Sex','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -1645,14 +1647,14 @@
 
     sortedCalvings.forEach(r=>{
       const c = cowMap[r.cow_number] || {};
-      rows.push([r.cow_number, c.lot||'', r.calving_date, calfSexLabel(r.calf_sex), r.notes||'', c.added_at||'']);
+      rows.push([r.id, r.cow_number, c.lot||'', c.added_at||'', r.calving_date, calfSexLabel(r.calf_sex), r.notes||'', r.created_at||'']);
     });
 
     const calvedCows = new Set(calvings.map(c=>c.cow_number));
     cows.filter(c=>!calvedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push([c.number, c.lot||'', '', '', '', c.added_at]);
+          rows.push(['', c.number, c.lot||'', c.added_at||'', '', '', '', '']);
         });
 
     downloadCsv(rows, 'calving-records');
@@ -1661,7 +1663,7 @@
 
   async function exportGeneralNotesCsv(){
     await loadAll();
-    const rows = [['Cow Number','Lot/Group','Date','Note','Cow Added']];
+    const rows = [['Record ID','Cow Number','Lot/Group','Cow Added','Date','Note','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -1673,18 +1675,25 @@
 
     sortedNotes.forEach(n=>{
       const c = cowMap[n.cow_number] || {};
-      rows.push([n.cow_number, c.lot||'', n.note_date, n.note||'', c.added_at||'']);
+      rows.push([n.id, n.cow_number, c.lot||'', c.added_at||'', n.note_date, n.note||'', n.created_at||'']);
     });
 
     const notedCows = new Set(generalNotes.map(n=>n.cow_number));
     cows.filter(c=>!notedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push([c.number, c.lot||'', '', '', c.added_at]);
+          rows.push(['', c.number, c.lot||'', c.added_at||'', '', '', '']);
         });
 
     downloadCsv(rows, 'general-notes');
     showToast('Spreadsheet downloaded');
+  }
+
+  async function exportEverything(){
+    await loadAll();
+    exportCsv();
+    setTimeout(()=> exportCalvingsCsv(), 400);
+    setTimeout(()=> exportGeneralNotesCsv(), 800);
   }
 
   function checkBackupReminder(){
@@ -1693,7 +1702,7 @@
     const dismissed = parseInt(localStorage.getItem('backupDismissedAt')||'0', 10);
     const daysSinceExport = (Date.now() - lastExport) / DAY;
     const daysSinceDismiss = (Date.now() - dismissed) / DAY;
-    if(cows.length > 0 && daysSinceExport > 30 && daysSinceDismiss > 7){
+    if(cows.length > 0 && daysSinceExport > 14 && daysSinceDismiss > 7){
       const label = lastExport ? `${Math.floor(daysSinceExport)} days` : "You haven't yet";
       document.getElementById('backupBannerText').textContent =
         lastExport ? `It's been ${label} since your last spreadsheet backup.` : "You haven't exported a spreadsheet backup yet.";
