@@ -1473,10 +1473,10 @@
     return ago >= 0 && ago <= 7;
   }
 
-  function buildMedsListText(){
+  function buildMedsListText(cowFilter){
     const lines = ['MEDS & NOTES — Last 7 Days'];
     const items = [];
-    treatments.filter(r=>isWithinLastWeek(r.date)).forEach(r=>{
+    treatments.filter(r=>isWithinLastWeek(r.date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       const desc = r.medicine
         ? `${r.medicine}${r.reason ? ' / '+r.reason : ''}${r.notes ? ' — '+r.notes : ''}`
         : `NOTE: ${r.notes||''}`;
@@ -1487,10 +1487,10 @@
     if(lines.length === 1) lines.push('(no activity in the last 7 days)');
     return lines.join('\n');
   }
-  function buildCalvingListText(){
+  function buildCalvingListText(cowFilter){
     const lines = ['CALVING RECORDS — Last 7 Days'];
     const items = [];
-    calvings.filter(r=>isWithinLastWeek(r.calving_date)).forEach(r=>{
+    calvings.filter(r=>isWithinLastWeek(r.calving_date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       items.push({ date: r.calving_date, cow: r.cow_number, text: `${calfSexLabel(r.calf_sex)} calf${r.notes ? ' — '+r.notes : ''}` });
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
@@ -1498,10 +1498,10 @@
     if(lines.length === 1) lines.push('(no activity in the last 7 days)');
     return lines.join('\n');
   }
-  function buildNotesListText(){
+  function buildNotesListText(cowFilter){
     const lines = ['GENERAL NOTES — Last 7 Days'];
     const items = [];
-    generalNotes.filter(r=>isWithinLastWeek(r.note_date)).forEach(r=>{
+    generalNotes.filter(r=>isWithinLastWeek(r.note_date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       items.push({ date: r.note_date, cow: r.cow_number, text: r.note||'' });
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
@@ -1510,10 +1510,35 @@
     return lines.join('\n');
   }
 
+  function cowsWithRecentActivity(section){
+    let dateField, source, dateKey;
+    if(section === 'meds'){ source = treatments; dateKey = 'date'; }
+    else if(section === 'calving'){ source = calvings; dateKey = 'calving_date'; }
+    else { source = generalNotes; dateKey = 'note_date'; }
+
+    const latestByNum = {};
+    source.filter(r=>isWithinLastWeek(r[dateKey])).forEach(r=>{
+      if(!latestByNum[r.cow_number] || r[dateKey] > latestByNum[r.cow_number]){
+        latestByNum[r.cow_number] = r[dateKey];
+      }
+    });
+    return Object.keys(latestByNum)
+      .sort((a,b)=> latestByNum[b].localeCompare(latestByNum[a]) || a.localeCompare(b, undefined, {numeric:true}));
+  }
+
   function textListModal(section){
     const builders = { meds: buildMedsListText, calving: buildCalvingListText, notes: buildNotesListText };
+    const activeCows = cowsWithRecentActivity(section);
     const recipients = getRecipients();
-    const optionsHtml = recipients.map((r,i)=>`
+
+    const cowOptionsHtml = activeCows.map(num=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:6px 0;">
+        <input type="checkbox" class="cowCheck" value="${escapeHtml(num)}" checked style="width:18px;height:18px;"/>
+        <span>#${escapeHtml(num)}</span>
+      </label>
+    `).join('') || '<p class="empty" style="padding:10px 0;">No recent activity in the last 7 days.</p>';
+
+    const recipOptionsHtml = recipients.map((r,i)=>`
       <label style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);">
         <input type="checkbox" class="recipCheck" data-idx="${i}" style="width:18px;height:18px;"/>
         <span>${escapeHtml(r.name)} <span style="color:#6b6350;font-family:'Courier New',monospace;font-size:12px;">${escapeHtml(r.phone)}</span></span>
@@ -1522,7 +1547,10 @@
 
     const modal = openModal(`
       <div class="modal-title">Text This List</div>
-      <div>${optionsHtml}</div>
+      <div class="section-label">Cows to Include ${activeCows.length ? `<a href="#" id="toggleAllCows" style="text-transform:none;letter-spacing:0;color:var(--barn);text-decoration:underline;">(select none)</a>` : ''}</div>
+      <div style="max-height:160px;overflow-y:auto;margin-bottom:10px;">${cowOptionsHtml}</div>
+      <div class="section-label">Send To</div>
+      <div>${recipOptionsHtml}</div>
       <a href="#" id="manageRecipLink" style="display:block;font-family:'Courier New',monospace;font-size:12px;color:var(--barn);text-decoration:underline;margin:12px 0 16px;">Manage recipients</a>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelTextList">Cancel</button>
@@ -1535,11 +1563,23 @@
       closeModal();
       manageRecipientsModal(()=> textListModal(section));
     });
+    const toggleAllLink = modal.querySelector('#toggleAllCows');
+    if(toggleAllLink){
+      toggleAllLink.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const boxes = [...modal.querySelectorAll('.cowCheck')];
+        const anyChecked = boxes.some(b=>b.checked);
+        boxes.forEach(b=> b.checked = !anyChecked);
+        toggleAllLink.textContent = anyChecked ? '(select all)' : '(select none)';
+      });
+    }
     modal.querySelector('#sendTextListBtn').addEventListener('click', ()=>{
-      const checked = [...modal.querySelectorAll('.recipCheck:checked')].map(cb=> recipients[parseInt(cb.dataset.idx,10)]);
-      if(checked.length === 0){ showToast('Select at least one recipient'); return; }
-      const phones = checked.map(r=> r.phone.replace(/[^\d+]/g,'')).join(',');
-      const body = builders[section]();
+      const checkedRecips = [...modal.querySelectorAll('.recipCheck:checked')].map(cb=> recipients[parseInt(cb.dataset.idx,10)]);
+      if(checkedRecips.length === 0){ showToast('Select at least one recipient'); return; }
+      const checkedCows = new Set([...modal.querySelectorAll('.cowCheck:checked')].map(cb=>cb.value));
+      if(checkedCows.size === 0){ showToast('Select at least one cow'); return; }
+      const phones = checkedRecips.map(r=> r.phone.replace(/[^\d+]/g,'')).join(',');
+      const body = builders[section](checkedCows);
       const smsUri = 'sms:' + phones + '?body=' + encodeURIComponent(body);
       closeModal();
       window.location.href = smsUri;
