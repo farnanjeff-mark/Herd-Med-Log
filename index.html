@@ -177,7 +177,8 @@
       <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Meds &amp; Notes</button>
       <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
       <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">📝 General Notes</button>
-      <button class="btn btn-outline btn-full" id="exportEverythingBtn">📦 Export Everything (All 3 Lists)</button>
+      <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything (All 3 Lists)</button>
+      <button class="btn btn-outline btn-full" id="bulkEditBtn">🔧 Bulk Edit Owner / Lot</button>
     </div>
   </div>
 
@@ -1380,6 +1381,7 @@
   document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
   document.getElementById('homeGeneralNotesBtn').addEventListener('click', showNotesList);
   document.getElementById('exportEverythingBtn').addEventListener('click', exportEverything);
+  document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
   document.getElementById('notesListHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesBackBtn').addEventListener('click', closeNotesCow);
@@ -1487,6 +1489,82 @@
         showToast('Could not save — try again');
       }
     });
+  }
+
+  function bulkEditModal(){
+    let field = 'owner'; // 'owner' | 'lot'
+
+    function render(){
+      const options = field === 'owner' ? OWNER_OPTIONS : LOT_OPTIONS;
+      const label = field === 'owner' ? 'Owner' : 'Lot / Pasture';
+      const sortedCows = [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+      const cowOptionsHtml = sortedCows.map(c=>{
+        const missing = field === 'owner' ? !c.owner : !c.lot;
+        const currentVal = field === 'owner' ? (c.owner||'—') : (c.lot||'—');
+        return `
+          <label style="display:flex;align-items:center;gap:8px;padding:6px 0;">
+            <input type="checkbox" class="bulkCowCheck" value="${escapeHtml(c.number)}" ${missing ? 'checked' : ''} style="width:18px;height:18px;"/>
+            <span>#${escapeHtml(c.number)} <span style="color:#6b6350;font-family:'Courier New',monospace;font-size:12px;">(current: ${escapeHtml(currentVal)})</span></span>
+          </label>
+        `;
+      }).join('') || '<p class="empty" style="padding:10px 0;">No cattle yet.</p>';
+
+      const modal = openModal(`
+        <div class="modal-title">Bulk Edit</div>
+        <div class="row2" style="margin-bottom:14px;">
+          <button class="btn ${field==='owner' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldOwner" style="flex:1;">Owner</button>
+          <button class="btn ${field==='lot' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldLot" style="flex:1;">Lot / Pasture</button>
+        </div>
+        ${fieldWithOther('bulkValue', `Set ${label} To`, options, `Type ${label.toLowerCase()}`)}
+        <div class="section-label">Cows to Update <a href="#" id="bulkToggleAll" style="text-transform:none;letter-spacing:0;color:var(--barn);text-decoration:underline;">(select all)</a></div>
+        <div style="max-height:220px;overflow-y:auto;margin-bottom:10px;">${cowOptionsHtml}</div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" id="cancelBulkEdit">Cancel</button>
+          <button class="btn btn-barn" id="confirmBulkEdit">Apply</button>
+        </div>
+      `);
+      wireFieldWithOther(modal, 'bulkValue');
+      modal.querySelector('#cancelBulkEdit').addEventListener('click', closeModal);
+      modal.querySelector('#bulkFieldOwner').addEventListener('click', ()=>{ closeModal(); field='owner'; render(); });
+      modal.querySelector('#bulkFieldLot').addEventListener('click', ()=>{ closeModal(); field='lot'; render(); });
+      modal.querySelector('#bulkToggleAll').addEventListener('click', (e)=>{
+        e.preventDefault();
+        const boxes = [...modal.querySelectorAll('.bulkCowCheck')];
+        const allChecked = boxes.every(b=>b.checked);
+        boxes.forEach(b=> b.checked = !allChecked);
+        e.target.textContent = allChecked ? '(select all)' : '(select none)';
+      });
+      modal.querySelector('#confirmBulkEdit').addEventListener('click', async ()=>{
+        const value = valueOf(modal, 'bulkValue');
+        const selected = [...modal.querySelectorAll('.bulkCowCheck:checked')].map(cb=>cb.value);
+        if(selected.length === 0){ showToast('Select at least one cow'); return; }
+        if(!value){ showToast(`Choose a ${label.toLowerCase()} to apply`); return; }
+        const btn = modal.querySelector('#confirmBulkEdit');
+        btn.disabled = true;
+        try{
+          const filterList = selected.map(n=>`"${n.replace(/"/g,'\\"')}"`).join(',');
+          const updated = await api('/cows?number=in.(' + filterList + ')', {
+            method:'PATCH',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify({ [field]: value })
+          });
+          updated.forEach(u=>{
+            const idx = cows.findIndex(c=>c.number===u.number);
+            if(idx !== -1) cows[idx] = u;
+          });
+          closeModal();
+          refreshOpenCowHeaders();
+          renderList();
+          renderCalvingList();
+          renderNotesList();
+          showToast(`${selected.length} cow${selected.length>1?'s':''} updated`);
+        }catch(e){
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
+      });
+    }
+    render();
   }
   document.getElementById('calvingExportBtn').addEventListener('click', exportCalvingsCsv);
   document.getElementById('notesExportBtn').addEventListener('click', exportGeneralNotesCsv);
