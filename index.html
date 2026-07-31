@@ -562,7 +562,9 @@
       card.className = 'cow-card ' + recentClass;
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
       const ownerBadge = cow.owner ? `<span class="lot-badge" style="background:#6b6350;">${escapeHtml(cow.owner)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      const oColor = ownerColor(cow.owner);
+      const numStyle = oColor ? `style="color:${oColor};${oColor==='#FFFFFF' ? 'text-shadow:0 0 2px #000,0 0 1px #000;' : ''}"` : '';
+      card.innerHTML = `<div><div class="cow-num"><span ${numStyle}>#${escapeHtml(num)}</span>${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openCow(num));
       cowListEl.appendChild(card);
     });
@@ -1003,16 +1005,14 @@
       </div>
       <a href="#" id="toggleBulkMode" style="display:block;font-family:'Courier New',monospace;font-size:12px;color:var(--barn);text-decoration:underline;margin-bottom:14px;">Add multiple cows at once</a>
       ${fieldWithOther('newCowLot', 'Lot / Pasture / Group (optional)', LOT_OPTIONS, 'Type lot/pasture')}
-      <div class="field">
-        <label>Owner (optional)</label>
-        <input type="text" id="newCowOwner" placeholder="e.g. Jeff, Dad, Partner name"/>
-      </div>
+      ${fieldWithOther('newCowOwner', 'Owner (optional)', OWNER_OPTIONS, 'Type owner name')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelAddCow">Cancel</button>
         <button class="btn btn-barn" id="confirmAddCow">Add Cow</button>
       </div>
     `);
     wireFieldWithOther(modal, 'newCowLot');
+    wireFieldWithOther(modal, 'newCowOwner');
     modal.querySelector('#cancelAddCow').addEventListener('click', closeModal);
 
     let bulkMode = false;
@@ -1033,7 +1033,7 @@
 
     confirmBtn.addEventListener('click', async ()=>{
       const lot = valueOf(modal, 'newCowLot');
-      const owner = modal.querySelector('#newCowOwner').value.trim();
+      const owner = valueOf(modal, 'newCowOwner');
       confirmBtn.disabled = true;
 
       if(!bulkMode){
@@ -1364,6 +1364,14 @@
   document.getElementById('detailOwner').addEventListener('click', editOwnerModal);
 
   const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
+  const OWNER_OPTIONS = ['JF','FCC','Kellan','Clint'];
+  function ownerColor(owner){
+    if(owner === 'JF') return '#D46A8C';
+    if(owner === 'FCC') return '#D4B93C';
+    if(owner === 'Kellan') return '#FFFFFF';
+    if(owner === 'Clint') return '#000000';
+    return null;
+  }
 
   function editLotModal(){
     const cow = cows.find(c=>c.number===currentCow);
@@ -1405,18 +1413,17 @@
     const cow = cows.find(c=>c.number===currentCow);
     const modal = openModal(`
       <div class="modal-title">Owner — #${escapeHtml(currentCow)}</div>
-      <div class="field">
-        <label>Owner</label>
-        <input type="text" id="editOwnerInput" placeholder="e.g. Jeff, Dad, Partner name" value="${escapeHtml(cow && cow.owner ? cow.owner : '')}" autofocus/>
-      </div>
+      ${fieldWithOther('editOwner', 'Owner', OWNER_OPTIONS, 'Type owner name')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelEditOwner">Cancel</button>
         <button class="btn btn-barn" id="confirmEditOwner">Save</button>
       </div>
     `);
+    wireFieldWithOther(modal, 'editOwner');
+    if(cow && cow.owner) prefillFieldWithOther(modal, 'editOwner', cow.owner, OWNER_OPTIONS);
     modal.querySelector('#cancelEditOwner').addEventListener('click', closeModal);
     modal.querySelector('#confirmEditOwner').addEventListener('click', async ()=>{
-      const owner = modal.querySelector('#editOwnerInput').value.trim();
+      const owner = valueOf(modal, 'editOwner');
       const btn = modal.querySelector('#confirmEditOwner');
       btn.disabled = true;
       try{
