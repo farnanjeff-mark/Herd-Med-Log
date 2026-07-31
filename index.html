@@ -221,6 +221,7 @@
     </div>
 
     <button class="btn btn-outline btn-full" id="detailLot" style="margin-bottom:12px;">Set lot/pasture</button>
+    <button class="btn btn-outline btn-full" id="detailOwner" style="margin-bottom:12px;">Set owner</button>
 
     <button class="btn btn-pasture btn-full" id="addRecordBtn">+ Log Medicine Given</button>
 
@@ -560,7 +561,8 @@
       const card = document.createElement('div');
       card.className = 'cow-card ' + recentClass;
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}${lotBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      const ownerBadge = cow.owner ? `<span class="lot-badge" style="background:#6b6350;">${escapeHtml(cow.owner)}</span>` : '';
+      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openCow(num));
       cowListEl.appendChild(card);
     });
@@ -672,12 +674,18 @@
     fabAdd.classList.add('hidden');
     renderDetail();
     updateLotLabel();
+    updateOwnerLabel();
     window.scrollTo(0,0);
   }
   function updateLotLabel(){
     const cow = cows.find(c=>c.number===currentCow);
     const el = document.getElementById('detailLot');
     el.textContent = (cow && cow.lot) ? `Lot: ${cow.lot} (tap to edit)` : 'Set lot/pasture';
+  }
+  function updateOwnerLabel(){
+    const cow = cows.find(c=>c.number===currentCow);
+    const el = document.getElementById('detailOwner');
+    el.textContent = (cow && cow.owner) ? `Owner: ${cow.owner} (tap to edit)` : 'Set owner';
   }
   function closeCow(){
     currentCow = null;
@@ -995,6 +1003,10 @@
       </div>
       <a href="#" id="toggleBulkMode" style="display:block;font-family:'Courier New',monospace;font-size:12px;color:var(--barn);text-decoration:underline;margin-bottom:14px;">Add multiple cows at once</a>
       ${fieldWithOther('newCowLot', 'Lot / Pasture / Group (optional)', LOT_OPTIONS, 'Type lot/pasture')}
+      <div class="field">
+        <label>Owner (optional)</label>
+        <input type="text" id="newCowOwner" placeholder="e.g. Jeff, Dad, Partner name"/>
+      </div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelAddCow">Cancel</button>
         <button class="btn btn-barn" id="confirmAddCow">Add Cow</button>
@@ -1021,6 +1033,7 @@
 
     confirmBtn.addEventListener('click', async ()=>{
       const lot = valueOf(modal, 'newCowLot');
+      const owner = modal.querySelector('#newCowOwner').value.trim();
       confirmBtn.disabled = true;
 
       if(!bulkMode){
@@ -1031,7 +1044,7 @@
           const inserted = await api('/cows', {
             method:'POST',
             headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-            body: JSON.stringify({ number: num, lot: lot||null })
+            body: JSON.stringify({ number: num, lot: lot||null, owner: owner||null })
           });
           cows.push(inserted[0]);
           closeModal();
@@ -1066,7 +1079,7 @@
         const inserted = await api('/cows', {
           method:'POST',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify(toAdd.map(num=>({ number: num, lot: lot||null })))
+          body: JSON.stringify(toAdd.map(num=>({ number: num, lot: lot||null, owner: owner||null })))
         });
         cows.push(...inserted);
         closeModal();
@@ -1348,6 +1361,7 @@
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
   document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
   document.getElementById('detailLot').addEventListener('click', editLotModal);
+  document.getElementById('detailOwner').addEventListener('click', editOwnerModal);
 
   const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
 
@@ -1380,6 +1394,43 @@
         updateLotLabel();
         renderList();
         showToast('Lot updated');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
+  function editOwnerModal(){
+    const cow = cows.find(c=>c.number===currentCow);
+    const modal = openModal(`
+      <div class="modal-title">Owner — #${escapeHtml(currentCow)}</div>
+      <div class="field">
+        <label>Owner</label>
+        <input type="text" id="editOwnerInput" placeholder="e.g. Jeff, Dad, Partner name" value="${escapeHtml(cow && cow.owner ? cow.owner : '')}" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEditOwner">Cancel</button>
+        <button class="btn btn-barn" id="confirmEditOwner">Save</button>
+      </div>
+    `);
+    modal.querySelector('#cancelEditOwner').addEventListener('click', closeModal);
+    modal.querySelector('#confirmEditOwner').addEventListener('click', async ()=>{
+      const owner = modal.querySelector('#editOwnerInput').value.trim();
+      const btn = modal.querySelector('#confirmEditOwner');
+      btn.disabled = true;
+      try{
+        const updated = await api('/cows?number=eq.' + encodeURIComponent(currentCow), {
+          method:'PATCH',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ owner: owner||null })
+        });
+        const idx = cows.findIndex(c=>c.number===currentCow);
+        if(idx !== -1) cows[idx] = updated[0];
+        closeModal();
+        updateOwnerLabel();
+        renderList();
+        showToast('Owner updated');
       }catch(e){
         btn.disabled = false;
         showToast('Could not save — try again');
@@ -1605,7 +1656,7 @@
   }
 
   function buildMedsRows(){
-    const rows = [['Record ID','Cow Number','Lot/Group','Cow Added','Date Given','Medicine','Reason','Notes','Logged At']];
+    const rows = [['Record ID','Cow Number','Lot/Group','Owner','Cow Added','Date Given','Medicine','Reason','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -1617,20 +1668,20 @@
 
     sortedTreatments.forEach(t=>{
       const c = cowMap[t.cow_number] || {};
-      rows.push([t.id, t.cow_number, c.lot||'', c.added_at||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', t.created_at||'']);
+      rows.push([t.id, t.cow_number, c.lot||'', c.owner||'', c.added_at||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', t.created_at||'']);
     });
 
     const treatedCows = new Set(treatments.map(t=>t.cow_number));
     cows.filter(c=>!treatedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.lot||'', c.added_at||'', '', '', '', '', '']);
+          rows.push(['', c.number, c.lot||'', c.owner||'', c.added_at||'', '', '', '', '', '']);
         });
     return rows;
   }
 
   function buildCalvingRows(){
-    const rows = [['Record ID','Cow Number','Lot/Group','Cow Added','Calving Date','Calf Sex','Notes','Logged At']];
+    const rows = [['Record ID','Cow Number','Lot/Group','Owner','Cow Added','Calving Date','Calf Sex','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -1642,20 +1693,20 @@
 
     sortedCalvings.forEach(r=>{
       const c = cowMap[r.cow_number] || {};
-      rows.push([r.id, r.cow_number, c.lot||'', c.added_at||'', r.calving_date, calfSexLabel(r.calf_sex), r.notes||'', r.created_at||'']);
+      rows.push([r.id, r.cow_number, c.lot||'', c.owner||'', c.added_at||'', r.calving_date, calfSexLabel(r.calf_sex), r.notes||'', r.created_at||'']);
     });
 
     const calvedCows = new Set(calvings.map(c=>c.cow_number));
     cows.filter(c=>!calvedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.lot||'', c.added_at||'', '', '', '', '']);
+          rows.push(['', c.number, c.lot||'', c.owner||'', c.added_at||'', '', '', '', '']);
         });
     return rows;
   }
 
   function buildNotesRows(){
-    const rows = [['Record ID','Cow Number','Lot/Group','Cow Added','Date','Note','Logged At']];
+    const rows = [['Record ID','Cow Number','Lot/Group','Owner','Cow Added','Date','Note','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -1667,14 +1718,14 @@
 
     sortedNotes.forEach(n=>{
       const c = cowMap[n.cow_number] || {};
-      rows.push([n.id, n.cow_number, c.lot||'', c.added_at||'', n.note_date, n.note||'', n.created_at||'']);
+      rows.push([n.id, n.cow_number, c.lot||'', c.owner||'', c.added_at||'', n.note_date, n.note||'', n.created_at||'']);
     });
 
     const notedCows = new Set(generalNotes.map(n=>n.cow_number));
     cows.filter(c=>!notedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.lot||'', c.added_at||'', '', '', '']);
+          rows.push(['', c.number, c.lot||'', c.owner||'', c.added_at||'', '', '', '']);
         });
     return rows;
   }
