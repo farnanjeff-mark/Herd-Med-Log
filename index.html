@@ -154,6 +154,7 @@
   }
   .toast.show{opacity:1;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1603,9 +1604,7 @@
     document.getElementById('backupBanner').classList.add('hidden');
   }
 
-  async function exportCsv(){
-    // Refresh first so the export reflects the latest data, not a stale in-memory copy.
-    await loadAll();
+  function buildMedsRows(){
     const rows = [['Record ID','Cow Number','Lot/Group','Cow Added','Date Given','Medicine','Reason','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
@@ -1621,20 +1620,16 @@
       rows.push([t.id, t.cow_number, c.lot||'', c.added_at||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', t.created_at||'']);
     });
 
-    // Include cows with zero treatments too, so nothing gets left out of the export.
     const treatedCows = new Set(treatments.map(t=>t.cow_number));
     cows.filter(c=>!treatedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
           rows.push(['', c.number, c.lot||'', c.added_at||'', '', '', '', '', '']);
         });
-
-    downloadCsv(rows, 'herd-med-log');
-    showToast('Spreadsheet downloaded');
+    return rows;
   }
 
-  async function exportCalvingsCsv(){
-    await loadAll();
+  function buildCalvingRows(){
     const rows = [['Record ID','Cow Number','Lot/Group','Cow Added','Calving Date','Calf Sex','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
@@ -1656,13 +1651,10 @@
         .forEach(c=>{
           rows.push(['', c.number, c.lot||'', c.added_at||'', '', '', '', '']);
         });
-
-    downloadCsv(rows, 'calving-records');
-    showToast('Spreadsheet downloaded');
+    return rows;
   }
 
-  async function exportGeneralNotesCsv(){
-    await loadAll();
+  function buildNotesRows(){
     const rows = [['Record ID','Cow Number','Lot/Group','Cow Added','Date','Note','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
@@ -1684,16 +1676,47 @@
         .forEach(c=>{
           rows.push(['', c.number, c.lot||'', c.added_at||'', '', '', '']);
         });
+    return rows;
+  }
 
-    downloadCsv(rows, 'general-notes');
+  async function exportCsv(){
+    // Refresh first so the export reflects the latest data, not a stale in-memory copy.
+    await loadAll();
+    downloadCsv(buildMedsRows(), 'herd-med-log');
+    showToast('Spreadsheet downloaded');
+  }
+
+  async function exportCalvingsCsv(){
+    await loadAll();
+    downloadCsv(buildCalvingRows(), 'calving-records');
+    showToast('Spreadsheet downloaded');
+  }
+
+  async function exportGeneralNotesCsv(){
+    await loadAll();
+    downloadCsv(buildNotesRows(), 'general-notes');
     showToast('Spreadsheet downloaded');
   }
 
   async function exportEverything(){
     await loadAll();
-    exportCsv();
-    setTimeout(()=> exportCalvingsCsv(), 400);
-    setTimeout(()=> exportGeneralNotesCsv(), 800);
+    if(typeof XLSX === 'undefined'){
+      showToast('Could not load spreadsheet library — check your connection and try again');
+      return;
+    }
+    try{
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildMedsRows()), 'Meds & Notes');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildCalvingRows()), 'Calving Records');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildNotesRows()), 'General Notes');
+      XLSX.writeFile(wb, 'herd-full-export-' + new Date().toISOString().slice(0,10) + '.xlsx');
+      localStorage.setItem('lastExportAt', Date.now().toString());
+      document.getElementById('backupBanner').classList.add('hidden');
+      showToast('Full spreadsheet downloaded');
+    }catch(e){
+      console.error(e);
+      showToast('Export failed — try again');
+    }
   }
 
   function checkBackupReminder(){
