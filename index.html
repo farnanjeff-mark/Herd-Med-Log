@@ -562,9 +562,7 @@
       card.className = 'cow-card ' + recentClass;
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
       const ownerBadge = cow.owner ? `<span class="lot-badge" style="background:#6b6350;">${escapeHtml(cow.owner)}</span>` : '';
-      const oColor = ownerColor(cow.owner);
-      const numStyle = oColor ? `style="color:${oColor};${oColor==='#FFFFFF' ? 'text-shadow:0 0 2px #000,0 0 1px #000;' : ''}"` : '';
-      card.innerHTML = `<div><div class="cow-num"><span ${numStyle}>#${escapeHtml(num)}</span>${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openCow(num));
       cowListEl.appendChild(card);
     });
@@ -619,7 +617,7 @@
   }
   function openCalvingCow(num){
     currentCalvingCow = num;
-    document.getElementById('calvingDetailNum').textContent = '#'+num;
+    document.getElementById('calvingDetailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     calvingListView.classList.add('hidden');
     calvingDetailView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
@@ -650,7 +648,7 @@
   }
   function openNotesCow(num){
     currentNotesCow = num;
-    document.getElementById('notesDetailNum').textContent = '#'+num;
+    document.getElementById('notesDetailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     notesListView.classList.add('hidden');
     notesDetailView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
@@ -670,7 +668,7 @@
   function openCow(num){
     currentCow = num;
     searchBox.blur();
-    document.getElementById('detailNum').textContent = '#'+num;
+    document.getElementById('detailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     listView.classList.add('hidden');
     detailView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
@@ -784,7 +782,7 @@
       }
       const card = document.createElement('div');
       card.className = 'cow-card';
-      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openCalvingCow(num));
       listEl.appendChild(card);
     });
@@ -866,7 +864,7 @@
       }
       const card = document.createElement('div');
       card.className = 'cow-card';
-      card.innerHTML = `<div><div class="cow-num">#${escapeHtml(num)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openNotesCow(num));
       listEl.appendChild(card);
     });
@@ -1372,6 +1370,11 @@
     if(owner === 'Clint') return '#000000';
     return null;
   }
+  function ownerNumHtml(num, owner){
+    const oColor = ownerColor(owner);
+    const style = oColor ? `style="color:${oColor};${oColor==='#FFFFFF' ? 'text-shadow:0 0 2px #000,0 0 1px #000;' : ''}"` : '';
+    return `<span ${style}>#${escapeHtml(num)}</span>`;
+  }
 
   function editLotModal(){
     const cow = cows.find(c=>c.number===currentCow);
@@ -1435,6 +1438,7 @@
         const idx = cows.findIndex(c=>c.number===currentCow);
         if(idx !== -1) cows[idx] = updated[0];
         closeModal();
+        document.getElementById('detailNum').innerHTML = ownerNumHtml(currentCow, owner);
         updateOwnerLabel();
         renderList();
         showToast('Owner updated');
