@@ -377,6 +377,11 @@
       </div>
     </div>
 
+    <div class="section-label">Photos</div>
+    <div id="profilePhotosList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
+    <input type="file" id="profilePhotoInput" accept="image/*" capture="environment" style="display:none;"/>
+    <button class="btn btn-outline btn-full" id="profileAddPhotoBtn" style="margin-bottom:20px;">📷 Add Photo</button>
+
     <div class="section-label">Meds &amp; Notes</div>
     <div id="profileMedsList"></div>
     <button class="btn btn-pasture btn-full" id="profileGoMeds" style="margin-bottom:20px;">Go to Meds &amp; Notes →</button>
@@ -496,6 +501,7 @@
   let generalNotes = []; // [{id, cow_number, note_date, note}]
   let weights = [];      // [{id, cow_number, weigh_date, weight, notes}]
   let breedingRecords = []; // [{id, cow_number, breed_date, bred_to, vet_calls, natural_sire, pregnancy_method, expected_due_date}]
+  let cowPhotos = []; // [{id, cow_number, storage_path, photo_url, taken_at}]
   let currentCow = null;
   let currentCalvingCow = null;
   let currentNotesCow = null;
@@ -573,13 +579,14 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
         api('/general_notes?select=*', { method:'GET' }),
         api('/weights?select=*', { method:'GET' }),
-        api('/breeding_records?select=*', { method:'GET' })
+        api('/breeding_records?select=*', { method:'GET' }),
+        api('/cow_photos?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -587,8 +594,9 @@
       generalNotes = notesRes || [];
       weights = weightsRes || [];
       breedingRecords = breedingRes || [];
+      cowPhotos = photosRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = [];
     }
     renderList();
     renderCalvingList();
@@ -664,6 +672,9 @@
   }
   function breedingFor(num){
     return breedingRecords.filter(b=>b.cow_number===num);
+  }
+  function photosFor(num){
+    return cowPhotos.filter(p=>p.cow_number===num);
   }
   function computeDueDate(breedDateStr){
     const d = new Date(breedDateStr+'T00:00:00');
@@ -1408,6 +1419,103 @@
     });
   }
 
+  function compressImageFile(file, maxDim, quality){
+    maxDim = maxDim || 1600;
+    quality = quality || 0.8;
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = (e)=>{
+        const img = new Image();
+        img.onload = ()=>{
+          let w = img.width, h = img.height;
+          if(w > h && w > maxDim){ h = Math.round(h * (maxDim / w)); w = maxDim; }
+          else if(h >= w && h > maxDim){ w = Math.round(w * (maxDim / h)); h = maxDim; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(blob=>{
+            if(blob) resolve(blob); else reject(new Error('Compression failed'));
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadCowPhoto(file, cowNum){
+    const blob = await compressImageFile(file);
+    const path = `${cowNum}/${Date.now()}.jpg`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/cow-photos/${path}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'image/jpeg'
+      },
+      body: blob
+    });
+    if(!uploadRes.ok){
+      const errText = await uploadRes.text().catch(()=> '');
+      throw new Error('Upload failed: ' + errText);
+    }
+    const photoUrl = `${SUPABASE_URL}/storage/v1/object/public/cow-photos/${path}`;
+    const inserted = await api('/cow_photos', {
+      method: 'POST',
+      headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+      body: JSON.stringify({
+        cow_number: cowNum,
+        storage_path: path,
+        photo_url: photoUrl,
+        taken_at: new Date().toISOString().slice(0,10)
+      })
+    });
+    return inserted[0];
+  }
+
+  async function deleteCowPhoto(photo){
+    if(!confirm('Delete this photo? This can\'t be undone.')) return;
+    try{
+      await fetch(`${SUPABASE_URL}/storage/v1/object/cow-photos/${photo.storage_path}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      await api('/cow_photos?id=eq.' + encodeURIComponent(photo.id), { method:'DELETE' });
+      cowPhotos = cowPhotos.filter(p=>p.id !== photo.id);
+      renderProfilePhotos(currentProfileCow);
+      showToast('Photo removed');
+    }catch(e){
+      console.error(e);
+      showToast('Could not remove photo — try again');
+    }
+  }
+
+  function renderProfilePhotos(num){
+    const el = document.getElementById('profilePhotosList');
+    if(!el) return;
+    const photos = [...photosFor(num)].sort((a,b)=> b.taken_at.localeCompare(a.taken_at));
+    if(photos.length === 0){
+      el.innerHTML = '<p class="empty" style="padding:6px 0;">No photos yet.</p>';
+      return;
+    }
+    el.innerHTML = photos.map(p => `
+      <div style="position:relative;width:100px;">
+        <img src="${p.photo_url}" style="width:100px;height:100px;object-fit:cover;border-radius:4px;border:2px solid var(--ink);display:block;"/>
+        <div style="font-family:'Courier New',monospace;font-size:10px;text-align:center;margin-top:2px;color:#6b6350;">${fmtDateShort(p.taken_at)}</div>
+        <a href="${p.photo_url}" download="cow-${escapeHtml(num)}-${p.taken_at}.jpg" target="_blank" title="Download" style="position:absolute;top:3px;left:3px;background:rgba(255,255,255,.9);border-radius:3px;padding:1px 5px;font-size:12px;text-decoration:none;color:var(--ink);">⬇</a>
+        <button class="photo-del-btn" data-id="${p.id}" title="Delete" style="position:absolute;top:3px;right:3px;background:rgba(255,255,255,.9);border:none;border-radius:3px;padding:1px 6px;font-size:13px;cursor:pointer;color:var(--barn);">&times;</button>
+      </div>
+    `).join('');
+    el.querySelectorAll('.photo-del-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const photo = photos.find(p=>p.id === btn.dataset.id);
+        if(photo) deleteCowPhoto(photo);
+      });
+    });
+  }
+
   function renderProfile(){
     const num = currentProfileCow;
     const cow = cows.find(c=>c.number===num) || {};
@@ -1416,6 +1524,7 @@
     if(cow.lot) subParts.push(`Lot: ${cow.lot}`);
     if(cow.owner) subParts.push(`Owner: ${cow.owner}`);
     document.getElementById('profileSub').textContent = subParts.join(' · ') || 'No lot or owner set';
+    renderProfilePhotos(num);
 
     // Meds & Notes
     const meds = [...recordsFor(num)].sort((a,b)=>b.date.localeCompare(a.date));
@@ -2408,6 +2517,24 @@
   document.getElementById('breedingSearchBox').addEventListener('input', renderBreedingList);
   document.getElementById('breedingSortBy').addEventListener('change', renderBreedingList);
   document.getElementById('profileGoBreeding').addEventListener('click', ()=> openBreedingCow(currentProfileCow));
+  document.getElementById('profileAddPhotoBtn').addEventListener('click', ()=>{
+    document.getElementById('profilePhotoInput').click();
+  });
+  document.getElementById('profilePhotoInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    e.target.value = '';
+    if(!file || !currentProfileCow) return;
+    showToast('Uploading photo…');
+    try{
+      const inserted = await uploadCowPhoto(file, currentProfileCow);
+      cowPhotos.push(inserted);
+      renderProfilePhotos(currentProfileCow);
+      showToast('Photo added');
+    }catch(err){
+      console.error(err);
+      showToast('Could not upload photo — try again');
+    }
+  });
   document.getElementById('notesListHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesBackBtn').addEventListener('click', closeNotesCow);
