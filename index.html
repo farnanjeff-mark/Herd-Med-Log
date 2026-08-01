@@ -189,7 +189,7 @@
 
   <div class="view hidden" id="moreToolsView">
     <button class="btn btn-outline btn-full" id="moreToolsHomeBtn" style="margin-bottom:24px;">🏠 Home</button>
-    <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything (All 3 Lists)</button>
+    <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything</button>
     <button class="btn btn-outline btn-full" id="bulkEditBtn" style="margin-bottom:12px;">🔧 Bulk Edit Owner / Lot</button>
     <button class="btn btn-outline btn-full" id="importDataBtn">📥 Import Data</button>
   </div>
@@ -2490,7 +2490,7 @@
   }
 
   function buildMedsRows(){
-    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Date Given','Medicine','Reason','Notes','Logged At']];
+    const rows = [['Cow Number','Status','Lot/Group','Owner','Date Given','Medicine','Reason','Notes']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -2502,20 +2502,20 @@
 
     sortedTreatments.forEach(t=>{
       const c = cowMap[t.cow_number] || {};
-      rows.push([t.id, t.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', t.created_at||'']);
+      rows.push([t.cow_number, c.status||'Active', c.lot||'', c.owner||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'']);
     });
 
     const treatedCows = new Set(treatments.map(t=>t.cow_number));
     cows.filter(c=>!treatedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '', '', '']);
+          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '', '', '']);
         });
     return rows;
   }
 
   function buildCalvingRows(){
-    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Calving Date','Calf Sex','Birth Weight (lbs)','Sire','Birth Assist','Notes','Logged At']];
+    const rows = [['Cow Number','Status','Lot/Group','Owner','Calving Date','Calf Sex','Birth Weight (lbs)','Sire','Birth Assist','Notes']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -2527,20 +2527,20 @@
 
     sortedCalvings.forEach(r=>{
       const c = cowMap[r.cow_number] || {};
-      rows.push([r.id, r.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', r.calving_date, calfSexLabel(r.calf_sex), r.birth_weight!=null ? r.birth_weight : '', r.sire||'', r.birth_assist||'', r.notes||'', r.created_at||'']);
+      rows.push([r.cow_number, c.status||'Active', c.lot||'', c.owner||'', r.calving_date, calfSexLabel(r.calf_sex), r.birth_weight!=null ? r.birth_weight : '', r.sire||'', r.birth_assist||'', r.notes||'']);
     });
 
     const calvedCows = new Set(calvings.map(c=>c.cow_number));
     cows.filter(c=>!calvedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '', '', '', '', '']);
+          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '', '', '', '', '']);
         });
     return rows;
   }
 
   function buildNotesRows(){
-    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Date','Note','Logged At']];
+    const rows = [['Cow Number','Status','Lot/Group','Owner','Date','Note']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -2552,20 +2552,20 @@
 
     sortedNotes.forEach(n=>{
       const c = cowMap[n.cow_number] || {};
-      rows.push([n.id, n.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', n.note_date, n.note||'', n.created_at||'']);
+      rows.push([n.cow_number, c.status||'Active', c.lot||'', c.owner||'', n.note_date, n.note||'']);
     });
 
     const notedCows = new Set(generalNotes.map(n=>n.cow_number));
     cows.filter(c=>!notedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '']);
+          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '']);
         });
     return rows;
   }
 
   function buildWeightsRows(){
-    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Date','Weight (lbs)','Notes','Logged At']];
+    const rows = [['Cow Number','Status','Lot/Group','Owner','Date','Weight (lbs)','Notes']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -2577,14 +2577,14 @@
 
     sortedWeights.forEach(w=>{
       const c = cowMap[w.cow_number] || {};
-      rows.push([w.id, w.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', w.weigh_date, w.weight!=null ? w.weight : '', w.notes||'', w.created_at||'']);
+      rows.push([w.cow_number, c.status||'Active', c.lot||'', c.owner||'', w.weigh_date, w.weight!=null ? w.weight : '', w.notes||'']);
     });
 
     const weighedCows = new Set(weights.map(w=>w.cow_number));
     cows.filter(c=>!weighedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '', '']);
+          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '', '']);
         });
     return rows;
   }
