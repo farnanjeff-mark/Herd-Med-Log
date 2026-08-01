@@ -81,6 +81,8 @@
   }
   .cow-card.recent-med{border-left-color:var(--barn);}
   .cow-card.recent-note{border-left-color:#3B6E8F;}
+  .cow-card.status-inactive{opacity:0.5;border-left-color:#999;}
+  .status-badge{display:inline-block;background:#8a8163;color:var(--paper);font-size:9px;font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:8px;margin-left:6px;}
   .cow-num{font-size:22px;font-weight:700;font-family:Georgia,serif;}
   .cow-meta{font-family:'Courier New',monospace;font-size:13px;color:#6b6350;margin-top:2px;}
   .chev{font-size:20px;color:var(--ink);opacity:.4;}
@@ -225,6 +227,7 @@
     </div>
 
     <button class="btn btn-outline btn-full" id="detailLot" style="margin-bottom:12px;">Set lot/pasture</button>
+    <button class="btn btn-outline btn-full" id="detailStatus" style="margin-bottom:12px;">Status: Active</button>
     <button class="btn btn-outline btn-full" id="detailViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
     <button class="btn btn-pasture btn-full" id="addRecordBtn">+ Log Medicine Given</button>
@@ -307,6 +310,7 @@
 
     <button class="btn btn-outline btn-full" id="notesDetailLot" style="margin-bottom:12px;">Set lot/pasture</button>
     <button class="btn btn-outline btn-full" id="notesDetailOwner" style="margin-bottom:12px;">Set owner</button>
+    <button class="btn btn-outline btn-full" id="notesDetailStatus" style="margin-bottom:12px;">Status: Active</button>
     <button class="btn btn-outline btn-full" id="notesViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
     <button class="btn btn-blue btn-full" id="addGeneralNoteBtn">+ Add Note</button>
@@ -508,7 +512,7 @@
     renderWeightsList();
     if(currentWeightsCow) renderWeightsDetail();
     const homeTotalEl = document.getElementById('homeTotalCattle');
-    if(homeTotalEl) homeTotalEl.textContent = cows.length;
+    if(homeTotalEl) homeTotalEl.textContent = cows.filter(isActiveStatus).length;
     checkBackupReminder();
   }
 
@@ -585,7 +589,7 @@
     }).length;
     statsRow.innerHTML = `
       <div class="stat-chip"><div class="stat-num">${treatmentsThisMonth}</div><div class="stat-label">Treated This Month</div></div>
-      <div class="stat-chip"><div class="stat-num">${cows.length}</div><div class="stat-label">Total Cattle</div></div>
+      <div class="stat-chip"><div class="stat-num">${cows.filter(isActiveStatus).length}</div><div class="stat-label">Total Cattle</div></div>
     `;
   }
 
@@ -663,10 +667,10 @@
         recentClass = 'recent-note';
       }
       const card = document.createElement('div');
-      card.className = 'cow-card ' + recentClass;
+      card.className = 'cow-card ' + recentClass + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
       const ownerBadge = cow.owner ? `<span class="lot-badge" style="background:#6b6350;">${escapeHtml(cow.owner)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openCow(num));
       cowListEl.appendChild(card);
     });
@@ -699,7 +703,7 @@
     weightsListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
-    document.getElementById('homeTotalCattle').textContent = cows.length;
+    document.getElementById('homeTotalCattle').textContent = cows.filter(isActiveStatus).length;
     window.scrollTo(0,0);
   }
   function showMedsNotes(){
@@ -790,6 +794,7 @@
     renderNotesDetail();
     updateNotesLotLabel();
     updateNotesOwnerLabel();
+    updateNotesStatusLabel();
     window.scrollTo(0,0);
   }
   function closeNotesCow(){
@@ -897,6 +902,7 @@
     fabAdd.classList.add('hidden');
     renderDetail();
     updateLotLabel();
+    updateStatusLabel();
     window.scrollTo(0,0);
   }
   function getActiveCowNumber(){
@@ -909,6 +915,11 @@
     const el = document.getElementById('detailLot');
     el.textContent = (cow && cow.lot) ? `Lot: ${cow.lot} (tap to edit)` : 'Set lot/pasture';
   }
+  function updateStatusLabel(){
+    const cow = cows.find(c=>c.number===currentCow);
+    const el = document.getElementById('detailStatus');
+    el.textContent = `Status: ${(cow && cow.status) || 'Active'} (tap to edit)`;
+  }
   function updateNotesLotLabel(){
     const cow = cows.find(c=>c.number===currentNotesCow);
     const el = document.getElementById('notesDetailLot');
@@ -919,10 +930,16 @@
     const el = document.getElementById('notesDetailOwner');
     el.textContent = (cow && cow.owner) ? `Owner: ${cow.owner} (tap to edit)` : 'Set owner';
   }
+  function updateNotesStatusLabel(){
+    const cow = cows.find(c=>c.number===currentNotesCow);
+    const el = document.getElementById('notesDetailStatus');
+    el.textContent = `Status: ${(cow && cow.status) || 'Active'} (tap to edit)`;
+  }
   function refreshOpenCowHeaders(){
     if(currentCow && !detailView.classList.contains('hidden')){
       document.getElementById('detailNum').innerHTML = ownerNumHtml(currentCow, (cows.find(c=>c.number===currentCow)||{}).owner);
       updateLotLabel();
+      updateStatusLabel();
     }
     if(currentCalvingCow && !calvingDetailView.classList.contains('hidden')){
       document.getElementById('calvingDetailNum').innerHTML = ownerNumHtml(currentCalvingCow, (cows.find(c=>c.number===currentCalvingCow)||{}).owner);
@@ -931,6 +948,7 @@
       document.getElementById('notesDetailNum').innerHTML = ownerNumHtml(currentNotesCow, (cows.find(c=>c.number===currentNotesCow)||{}).owner);
       updateNotesLotLabel();
       updateNotesOwnerLabel();
+      updateNotesStatusLabel();
     }
     if(currentWeightsCow && !weightsDetailView.classList.contains('hidden')){
       document.getElementById('weightsDetailNum').innerHTML = ownerNumHtml(currentWeightsCow, (cows.find(c=>c.number===currentWeightsCow)||{}).owner);
@@ -1030,8 +1048,8 @@
         meta += ` · last ${fmtDate(last.calving_date)} (${calfSexLabel(last.calf_sex)})`;
       }
       const card = document.createElement('div');
-      card.className = 'cow-card';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.className = 'cow-card' + (isActiveStatus(cow) ? '' : ' status-inactive');
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openCalvingCow(num));
       listEl.appendChild(card);
     });
@@ -1125,8 +1143,8 @@
         meta += ` · last ${fmtDate(last.note_date)}`;
       }
       const card = document.createElement('div');
-      card.className = 'cow-card';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.className = 'cow-card' + (isActiveStatus(cow) ? '' : ' status-inactive');
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openNotesCow(num));
       listEl.appendChild(card);
     });
@@ -1179,10 +1197,10 @@
       const noteCount = generalNotesFor(num).length;
       const meta = `${medCount} med entr${medCount===1?'y':'ies'} · ${calvCount} calving${calvCount!==1?'s':''} · ${noteCount} note${noteCount!==1?'s':''}`;
       const card = document.createElement('div');
-      card.className = 'cow-card';
+      card.className = 'cow-card' + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
       const ownerBadge = cow.owner ? `<span class="lot-badge" style="background:#6b6350;">${escapeHtml(cow.owner)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openProfileCow(num));
       listEl.appendChild(card);
     });
@@ -1289,10 +1307,10 @@
         meta += ` · last ${fmtDate(last.weigh_date)}${last.weight!=null ? ' (' + last.weight + ' lbs)' : ''}`;
       }
       const card = document.createElement('div');
-      card.className = 'cow-card';
+      card.className = 'cow-card' + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
       const ownerBadge = cow.owner ? `<span class="lot-badge" style="background:#6b6350;">${escapeHtml(cow.owner)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openWeightsCow(num));
       listEl.appendChild(card);
     });
@@ -1909,6 +1927,8 @@
   document.getElementById('detailLot').addEventListener('click', editLotModal);
   document.getElementById('notesDetailLot').addEventListener('click', editLotModal);
   document.getElementById('notesDetailOwner').addEventListener('click', editOwnerModal);
+  document.getElementById('detailStatus').addEventListener('click', editStatusModal);
+  document.getElementById('notesDetailStatus').addEventListener('click', editStatusModal);
 
   const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
   const OWNER_OPTIONS = ['JF','FCC','Kellan','Clint','LA'];
@@ -1924,6 +1944,13 @@
     const oColor = ownerColor(owner);
     const style = oColor ? `style="color:${oColor};${oColor==='#FFFFFF' ? 'text-shadow:0 0 2px #000,0 0 1px #000;' : ''}"` : '';
     return `<span ${style}>#${escapeHtml(num)}</span>`;
+  }
+  const STATUS_OPTIONS = ['Active','Sold','Deceased'];
+  function isActiveStatus(cow){
+    return !cow.status || cow.status === 'Active';
+  }
+  function statusBadgeHtml(cow){
+    return (cow.status && cow.status !== 'Active') ? `<span class="status-badge">${escapeHtml(cow.status)}</span>` : '';
   }
 
   function editLotModal(){
@@ -2005,6 +2032,53 @@
       }
     });
   }
+
+  function editStatusModal(){
+    const targetNum = getActiveCowNumber();
+    const cow = cows.find(c=>c.number===targetNum);
+    const currentStatus = (cow && cow.status) || 'Active';
+    const modal = openModal(`
+      <div class="modal-title">Status — #${escapeHtml(targetNum)}</div>
+      <div class="field">
+        <label>Status</label>
+        <select id="editStatusSelect">
+          ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===currentStatus?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEditStatus">Cancel</button>
+        <button class="btn btn-barn" id="confirmEditStatus">Save</button>
+      </div>
+    `);
+    modal.querySelector('#cancelEditStatus').addEventListener('click', closeModal);
+    modal.querySelector('#confirmEditStatus').addEventListener('click', async ()=>{
+      const status = modal.querySelector('#editStatusSelect').value;
+      const btn = modal.querySelector('#confirmEditStatus');
+      btn.disabled = true;
+      try{
+        const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
+          method:'PATCH',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ status: status })
+        });
+        const idx = cows.findIndex(c=>c.number===targetNum);
+        if(idx !== -1) cows[idx] = updated[0];
+        closeModal();
+        refreshOpenCowHeaders();
+        renderList();
+        renderCalvingList();
+        renderNotesList();
+        renderWeightsList();
+        const homeTotalEl = document.getElementById('homeTotalCattle');
+        if(homeTotalEl) homeTotalEl.textContent = cows.filter(isActiveStatus).length;
+        showToast('Status updated');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
 
   function bulkEditModal(){
     let field = 'owner'; // 'owner' | 'lot'
@@ -2297,7 +2371,7 @@
   }
 
   function buildMedsRows(){
-    const rows = [['Record ID','Cow Number','Lot/Group','Owner','Cow Added','Date Given','Medicine','Reason','Notes','Logged At']];
+    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Date Given','Medicine','Reason','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -2309,20 +2383,20 @@
 
     sortedTreatments.forEach(t=>{
       const c = cowMap[t.cow_number] || {};
-      rows.push([t.id, t.cow_number, c.lot||'', c.owner||'', c.added_at||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', t.created_at||'']);
+      rows.push([t.id, t.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'', t.created_at||'']);
     });
 
     const treatedCows = new Set(treatments.map(t=>t.cow_number));
     cows.filter(c=>!treatedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.lot||'', c.owner||'', c.added_at||'', '', '', '', '', '']);
+          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '', '', '']);
         });
     return rows;
   }
 
   function buildCalvingRows(){
-    const rows = [['Record ID','Cow Number','Lot/Group','Owner','Cow Added','Calving Date','Calf Sex','Notes','Logged At']];
+    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Calving Date','Calf Sex','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -2334,20 +2408,20 @@
 
     sortedCalvings.forEach(r=>{
       const c = cowMap[r.cow_number] || {};
-      rows.push([r.id, r.cow_number, c.lot||'', c.owner||'', c.added_at||'', r.calving_date, calfSexLabel(r.calf_sex), r.notes||'', r.created_at||'']);
+      rows.push([r.id, r.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', r.calving_date, calfSexLabel(r.calf_sex), r.notes||'', r.created_at||'']);
     });
 
     const calvedCows = new Set(calvings.map(c=>c.cow_number));
     cows.filter(c=>!calvedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.lot||'', c.owner||'', c.added_at||'', '', '', '', '']);
+          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '', '']);
         });
     return rows;
   }
 
   function buildNotesRows(){
-    const rows = [['Record ID','Cow Number','Lot/Group','Owner','Cow Added','Date','Note','Logged At']];
+    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Date','Note','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -2359,20 +2433,20 @@
 
     sortedNotes.forEach(n=>{
       const c = cowMap[n.cow_number] || {};
-      rows.push([n.id, n.cow_number, c.lot||'', c.owner||'', c.added_at||'', n.note_date, n.note||'', n.created_at||'']);
+      rows.push([n.id, n.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', n.note_date, n.note||'', n.created_at||'']);
     });
 
     const notedCows = new Set(generalNotes.map(n=>n.cow_number));
     cows.filter(c=>!notedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.lot||'', c.owner||'', c.added_at||'', '', '', '']);
+          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '']);
         });
     return rows;
   }
 
   function buildWeightsRows(){
-    const rows = [['Record ID','Cow Number','Lot/Group','Owner','Cow Added','Date','Weight (lbs)','Notes','Logged At']];
+    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Date','Weight (lbs)','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -2384,14 +2458,14 @@
 
     sortedWeights.forEach(w=>{
       const c = cowMap[w.cow_number] || {};
-      rows.push([w.id, w.cow_number, c.lot||'', c.owner||'', c.added_at||'', w.weigh_date, w.weight!=null ? w.weight : '', w.notes||'', w.created_at||'']);
+      rows.push([w.id, w.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', w.weigh_date, w.weight!=null ? w.weight : '', w.notes||'', w.created_at||'']);
     });
 
     const weighedCows = new Set(weights.map(w=>w.cow_number));
     cows.filter(c=>!weighedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.lot||'', c.owner||'', c.added_at||'', '', '', '', '']);
+          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '', '']);
         });
     return rows;
   }
