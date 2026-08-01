@@ -236,7 +236,6 @@
     <button class="btn btn-outline btn-full" id="calvingListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
       <input type="text" id="calvingSearchBox" placeholder="Search cow #, calf sex, notes..." autocomplete="off"/>
-      <button class="btn btn-outline btn-sm" id="calvingExportBtn" style="flex-shrink:0;">Export</button>
       <button class="btn btn-outline btn-sm" id="calvingTextListBtn" style="flex-shrink:0;">✉️ Text</button>
     </div>
     <div class="toolbar">
@@ -275,7 +274,6 @@
     <button class="btn btn-outline btn-full" id="notesListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
       <input type="text" id="notesSearchBox" placeholder="Search cow #, notes..." autocomplete="off"/>
-      <button class="btn btn-outline btn-sm" id="notesExportBtn" style="flex-shrink:0;">Export</button>
       <button class="btn btn-outline btn-sm" id="notesTextListBtn" style="flex-shrink:0;">✉️ Text</button>
     </div>
     <div class="toolbar" id="notesLotFilterRow" style="display:none;">
@@ -1765,8 +1763,6 @@
     }
     render();
   }
-  document.getElementById('calvingExportBtn').addEventListener('click', exportCalvingsCsv);
-  document.getElementById('notesExportBtn').addEventListener('click', exportGeneralNotesCsv);
   document.getElementById('textListBtn').addEventListener('click', ()=> textListModal('meds'));
   document.getElementById('calvingTextListBtn').addEventListener('click', ()=> textListModal('calving'));
   document.getElementById('notesTextListBtn').addEventListener('click', ()=> textListModal('notes'));
