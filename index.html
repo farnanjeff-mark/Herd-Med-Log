@@ -183,8 +183,42 @@
       <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
       <button class="btn btn-orange btn-full" id="homeWeightsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">⚖️ Weights</button>
       <button class="btn btn-grey btn-full" id="homeProfileBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">👤 Cow Profile</button>
-      <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything (All 3 Lists)</button>
-      <button class="btn btn-outline btn-full" id="bulkEditBtn">🔧 Bulk Edit Owner / Lot</button>
+      <button class="btn btn-outline btn-full" id="homeMoreToolsBtn">⋯ More Tools</button>
+    </div>
+  </div>
+
+  <div class="view hidden" id="moreToolsView">
+    <button class="btn btn-outline btn-full" id="moreToolsHomeBtn" style="margin-bottom:24px;">🏠 Home</button>
+    <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything (All 3 Lists)</button>
+    <button class="btn btn-outline btn-full" id="bulkEditBtn" style="margin-bottom:12px;">🔧 Bulk Edit Owner / Lot</button>
+    <button class="btn btn-outline btn-full" id="importDataBtn">📥 Import Data</button>
+  </div>
+
+  <div class="view hidden" id="importView">
+    <button class="btn btn-outline btn-full" id="importHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:14px;">Import Data</div>
+
+    <div class="section-label">Which section?</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="btn btn-pasture" id="importTypeMeds" style="flex:1;min-width:120px;">Meds &amp; Notes</button>
+      <button class="btn btn-outline" id="importTypeCalving" style="flex:1;min-width:120px;">Calving</button>
+      <button class="btn btn-outline" id="importTypeNotes" style="flex:1;min-width:120px;">Notes</button>
+      <button class="btn btn-outline" id="importTypeWeights" style="flex:1;min-width:120px;">Weights</button>
+    </div>
+
+    <div id="importFormatHint" class="banner banner-note" style="display:block;"></div>
+
+    <div class="field">
+      <label>Paste Your Rows</label>
+      <textarea id="importTextarea" rows="8" placeholder="Paste rows here — one entry per line"></textarea>
+    </div>
+    <button class="btn btn-barn btn-full" id="importParseBtn" style="margin-bottom:16px;">Preview</button>
+
+    <div id="importPreviewWrap" class="hidden">
+      <div class="section-label">Preview</div>
+      <div id="importPreviewSummary" class="cow-meta" style="margin-bottom:10px;"></div>
+      <div id="importPreviewList" style="max-height:280px;overflow-y:auto;margin-bottom:14px;"></div>
+      <button class="btn btn-barn btn-full" id="importConfirmBtn">Import Valid Rows</button>
     </div>
   </div>
 
@@ -423,6 +457,8 @@
   let currentNotesCow = null;
   let currentProfileCow = null;
   let currentWeightsCow = null;
+  let importType = 'meds'; // 'meds' | 'calving' | 'notes' | 'weights'
+  let importParsedRows = [];
 
   const homeView = document.getElementById('homeView');
   const listView = document.getElementById('listView');
@@ -435,6 +471,8 @@
   const profileView = document.getElementById('profileView');
   const weightsListView = document.getElementById('weightsListView');
   const weightsDetailView = document.getElementById('weightsDetailView');
+  const moreToolsView = document.getElementById('moreToolsView');
+  const importView = document.getElementById('importView');
   const fabAdd = document.getElementById('fabAdd');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
@@ -523,6 +561,25 @@
   function fmtDateShort(iso){
     const d = new Date(iso+'T00:00:00');
     return d.toLocaleDateString('en-US',{month:'numeric',day:'numeric'});
+  }
+  function parseDateFlexible(str){
+    if(!str) return null;
+    str = str.trim();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+    const m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if(m){
+      let [, mo, da, yr] = m;
+      if(yr.length === 2) yr = (parseInt(yr,10) < 50 ? '20' : '19') + yr;
+      mo = mo.padStart(2,'0'); da = da.padStart(2,'0');
+      const iso = `${yr}-${mo}-${da}`;
+      const d = new Date(iso+'T00:00:00');
+      if(isNaN(d.getTime())) return null;
+      return iso;
+    }
+    return null;
+  }
+  function splitImportRow(line){
+    return (line.includes('\t') ? line.split('\t') : line.split(',')).map(s=>s.trim());
   }
   function daysAgo(iso){
     const d = new Date(iso+'T00:00:00');
@@ -702,8 +759,27 @@
     profileView.classList.add('hidden');
     weightsListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
+    moreToolsView.classList.add('hidden');
+    importView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     document.getElementById('homeTotalCattle').textContent = cows.filter(isActiveStatus).length;
+    window.scrollTo(0,0);
+  }
+  function showMoreTools(){
+    setHeaderTitle('More', 'Tools');
+    homeView.classList.add('hidden');
+    moreToolsView.classList.remove('hidden');
+    importView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    window.scrollTo(0,0);
+  }
+  function showImportView(){
+    setHeaderTitle('Import', 'Data');
+    homeView.classList.add('hidden');
+    moreToolsView.classList.add('hidden');
+    importView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    setImportType('meds');
     window.scrollTo(0,0);
   }
   function showMedsNotes(){
@@ -1892,6 +1968,16 @@
   document.getElementById('homeGeneralNotesBtn').addEventListener('click', showNotesList);
   document.getElementById('exportEverythingBtn').addEventListener('click', exportEverything);
   document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
+  document.getElementById('homeMoreToolsBtn').addEventListener('click', showMoreTools);
+  document.getElementById('moreToolsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('importDataBtn').addEventListener('click', showImportView);
+  document.getElementById('importHomeBtn').addEventListener('click', showHome);
+  document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
+  document.getElementById('importTypeCalving').addEventListener('click', ()=> setImportType('calving'));
+  document.getElementById('importTypeNotes').addEventListener('click', ()=> setImportType('notes'));
+  document.getElementById('importTypeWeights').addEventListener('click', ()=> setImportType('weights'));
+  document.getElementById('importParseBtn').addEventListener('click', parseAndPreviewImport);
+  document.getElementById('importConfirmBtn').addEventListener('click', confirmImport);
   document.getElementById('homeProfileBtn').addEventListener('click', showProfileList);
   document.getElementById('profileListHomeBtn').addEventListener('click', showHome);
   document.getElementById('profileHomeBtn').addEventListener('click', showHome);
@@ -2509,6 +2595,165 @@
       console.error(e);
       showToast('Export failed — try again');
     }
+  }
+
+  // ---- Import Data ----
+  const IMPORT_TYPE_BTN_IDS = { meds:'importTypeMeds', calving:'importTypeCalving', notes:'importTypeNotes', weights:'importTypeWeights' };
+
+  function importConfig(type){
+    if(type === 'calving') return {
+      label:'Calving', table:'calvings',
+      hint:"Columns (tab or comma separated), one entry per line: Cow #, Date, Calf Sex (B or H, optional), Notes (optional).\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, H, easy calving",
+      parse(fields){
+        const cow = (fields[0]||'').trim();
+        const date = parseDateFlexible(fields[1]);
+        let sex = (fields[2]||'').trim().toUpperCase();
+        if(sex !== 'B' && sex !== 'H') sex = '';
+        const notes = (fields[3]||'').trim();
+        if(!cow) return {error:'Missing cow number'};
+        if(!date) return {error:'Invalid or missing date'};
+        return { cow, body:{ cow_number:cow, calving_date:date, calf_sex: sex||null, notes: notes||null } };
+      }
+    };
+    if(type === 'notes') return {
+      label:'General Notes', table:'general_notes',
+      hint:"Columns: Cow #, Date, Note.\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, Checked on her — looks good",
+      parse(fields){
+        const cow = (fields[0]||'').trim();
+        const date = parseDateFlexible(fields[1]);
+        const note = (fields[2]||'').trim();
+        if(!cow) return {error:'Missing cow number'};
+        if(!date) return {error:'Invalid or missing date'};
+        if(!note) return {error:'Missing note text'};
+        return { cow, body:{ cow_number:cow, note_date:date, note } };
+      }
+    };
+    if(type === 'weights') return {
+      label:'Weights', table:'weights',
+      hint:"Columns: Cow #, Date, Weight (lbs), Notes (optional).\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, 550, ",
+      parse(fields){
+        const cow = (fields[0]||'').trim();
+        const date = parseDateFlexible(fields[1]);
+        const weightRaw = (fields[2]||'').trim();
+        const notes = (fields[3]||'').trim();
+        if(!cow) return {error:'Missing cow number'};
+        if(!date) return {error:'Invalid or missing date'};
+        if(!weightRaw || isNaN(parseFloat(weightRaw))) return {error:'Missing or invalid weight'};
+        return { cow, body:{ cow_number:cow, weigh_date:date, weight:parseFloat(weightRaw), notes: notes||null } };
+      }
+    };
+    // default: meds
+    return {
+      label:'Meds & Notes', table:'treatments',
+      hint:"Columns: Cow #, Date, Medicine (optional), Reason (optional), Notes (optional) — at least one of Medicine/Reason/Notes must be filled in.\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, Draxxin, pinkeye, ",
+      parse(fields){
+        const cow = (fields[0]||'').trim();
+        const date = parseDateFlexible(fields[1]);
+        const medicine = (fields[2]||'').trim();
+        const reason = (fields[3]||'').trim();
+        const notes = (fields[4]||'').trim();
+        if(!cow) return {error:'Missing cow number'};
+        if(!date) return {error:'Invalid or missing date'};
+        if(!medicine && !reason && !notes) return {error:'Need medicine/reason or a note'};
+        return { cow, body:{ cow_number:cow, date, medicine: medicine||null, reason: reason||null, notes: notes||null } };
+      }
+    };
+  }
+
+  function setImportType(type){
+    importType = type;
+    Object.keys(IMPORT_TYPE_BTN_IDS).forEach(k=>{
+      document.getElementById(IMPORT_TYPE_BTN_IDS[k]).className = (k === type) ? 'btn btn-pasture' : 'btn btn-outline';
+    });
+    document.getElementById('importFormatHint').textContent = importConfig(type).hint;
+    document.getElementById('importPreviewWrap').classList.add('hidden');
+    document.getElementById('importTextarea').value = '';
+    importParsedRows = [];
+  }
+
+  function parseAndPreviewImport(){
+    const raw = document.getElementById('importTextarea').value;
+    const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(lines.length === 0){ showToast('Paste some rows first'); return; }
+    const cfg = importConfig(importType);
+    const existingNums = new Set(cows.map(c=>c.number));
+    const results = lines.map((line, idx)=>{
+      const fields = splitImportRow(line);
+      const parsed = cfg.parse(fields);
+      return Object.assign({ line, idx, isNewCow: parsed.cow ? !existingNums.has(parsed.cow) : false }, parsed);
+    });
+    importParsedRows = results;
+    renderImportPreview(results);
+  }
+
+  function renderImportPreview(results){
+    const validCount = results.filter(r=>!r.error).length;
+    const invalidCount = results.length - validCount;
+    const newCows = new Set(results.filter(r=>!r.error && r.isNewCow).map(r=>r.cow));
+    document.getElementById('importPreviewSummary').textContent =
+      `${validCount} valid, ${invalidCount} invalid` + (newCows.size ? ` · ${newCows.size} new cow${newCows.size>1?'s':''} will be created` : '');
+    const listEl = document.getElementById('importPreviewList');
+    listEl.innerHTML = results.map(r=>{
+      if(r.error){
+        return `<div class="record" style="border-left:6px solid var(--barn);">
+          <div class="record-date" style="color:var(--barn);">Line ${r.idx+1}: ${escapeHtml(r.error)}</div>
+          <div class="record-reason">${escapeHtml(r.line)}</div>
+        </div>`;
+      }
+      const newTag = r.isNewCow ? ` <span class="status-badge" style="background:var(--pasture);">NEW COW</span>` : '';
+      return `<div class="record" style="border-left:6px solid var(--pasture);">
+        <div class="record-date">Line ${r.idx+1} — #${escapeHtml(r.cow)}${newTag}</div>
+        <div class="record-reason">${escapeHtml(r.line)}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('importPreviewWrap').classList.remove('hidden');
+    document.getElementById('importConfirmBtn').textContent = `Import ${validCount} Valid Row${validCount!==1?'s':''}`;
+    document.getElementById('importConfirmBtn').disabled = validCount === 0;
+  }
+
+  async function confirmImport(){
+    const cfg = importConfig(importType);
+    const validRows = importParsedRows.filter(r=>!r.error);
+    if(validRows.length === 0){ showToast('No valid rows to import'); return; }
+    const btn = document.getElementById('importConfirmBtn');
+    btn.disabled = true;
+    try{
+      const newCowNums = [...new Set(validRows.filter(r=>r.isNewCow).map(r=>r.cow))];
+      if(newCowNums.length > 0){
+        const insertedCows = await api('/cows', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify(newCowNums.map(num=>({ number: num })))
+        });
+        cows.push(...insertedCows);
+      }
+      const bodies = validRows.map(r=>r.body);
+      const inserted = await api('/' + cfg.table, {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify(bodies)
+      });
+      if(importType === 'calving') calvings.push(...inserted);
+      else if(importType === 'notes') generalNotes.push(...inserted);
+      else if(importType === 'weights') weights.push(...inserted);
+      else treatments.push(...inserted);
+
+      renderList();
+      renderCalvingList();
+      renderNotesList();
+      renderWeightsList();
+      renderProfileList();
+      const homeTotalEl = document.getElementById('homeTotalCattle');
+      if(homeTotalEl) homeTotalEl.textContent = cows.filter(isActiveStatus).length;
+      document.getElementById('importTextarea').value = '';
+      document.getElementById('importPreviewWrap').classList.add('hidden');
+      importParsedRows = [];
+      showToast(`Imported ${inserted.length} record${inserted.length!==1?'s':''}` + (newCowNums.length ? ` (${newCowNums.length} new cow${newCowNums.length>1?'s':''} added)` : ''));
+    }catch(e){
+      console.error(e);
+      showToast('Import failed — try again');
+    }
+    btn.disabled = false;
   }
 
   function checkBackupReminder(){
