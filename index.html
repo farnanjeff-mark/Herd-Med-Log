@@ -2636,12 +2636,14 @@
   function importConfig(type){
     if(type === 'calving') return {
       label:'Calving', table:'calvings',
-      hint:"Columns (tab or comma separated), one entry per line: Cow #, Date, Calf Sex (B or H, optional), Birth Weight lbs (optional), Sire (optional), Birth Assist (None/Easy Pull/Hard Pull/C-Section, optional), Notes (optional).\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, H, 75, Bull 42, Easy Pull, easy calving",
+      hint:"Columns (tab or comma separated), one entry per line: Cow #, Date, Calf Sex (B, Bull, H, or Heifer — optional), Birth Weight lbs (optional), Sire (optional), Birth Assist (None/Easy Pull/Hard Pull/C-Section, optional), Notes (optional).\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, Heifer, 75, Bull 42, Easy Pull, easy calving",
       parse(fields){
         const cow = (fields[0]||'').trim();
         const date = parseDateFlexible(fields[1]);
-        let sex = (fields[2]||'').trim().toUpperCase();
-        if(sex !== 'B' && sex !== 'H') sex = '';
+        const sexRaw = (fields[2]||'').trim().toUpperCase();
+        let sex = '';
+        if(sexRaw === 'B' || sexRaw === 'BULL') sex = 'B';
+        else if(sexRaw === 'H' || sexRaw === 'HEIFER') sex = 'H';
         const weightRaw = (fields[3]||'').trim();
         const sire = (fields[4]||'').trim();
         let assist = (fields[5]||'').trim();
