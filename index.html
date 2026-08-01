@@ -81,7 +81,7 @@
   }
   .cow-card.recent-med{border-left-color:var(--barn);}
   .cow-card.recent-note{border-left-color:#3B6E8F;}
-  .cow-card.status-inactive{opacity:0.5;border-left-color:#999;}
+  .cow-card.status-inactive{background:#c9c2b3;border-left-color:#8a8163;}
   .status-badge{display:inline-block;background:#8a8163;color:var(--paper);font-size:9px;font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:8px;margin-left:6px;}
   .cow-num{font-size:22px;font-weight:700;font-family:Georgia,serif;}
   .cow-meta{font-family:'Courier New',monospace;font-size:13px;color:#6b6350;margin-top:2px;}
@@ -179,7 +179,7 @@
         <div class="stat-chip"><div class="stat-num" id="homeTotalCattle">0</div><div class="stat-label">Total Cattle</div></div>
       </div>
       <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">📝 General Notes</button>
-      <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Meds &amp; Notes</button>
+      <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Medications</button>
       <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
       <button class="btn btn-orange btn-full" id="homeWeightsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">⚖️ Weights</button>
       <button class="btn btn-grey btn-full" id="homeProfileBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">👤 Cow Profile</button>
@@ -261,7 +261,6 @@
     </div>
 
     <button class="btn btn-outline btn-full" id="detailLot" style="margin-bottom:12px;">Set lot/pasture</button>
-    <button class="btn btn-outline btn-full" id="detailStatus" style="margin-bottom:12px;">Status: Active</button>
     <button class="btn btn-outline btn-full" id="detailViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
     <button class="btn btn-pasture btn-full" id="addRecordBtn">+ Log Medicine Given</button>
@@ -978,7 +977,6 @@
     fabAdd.classList.add('hidden');
     renderDetail();
     updateLotLabel();
-    updateStatusLabel();
     window.scrollTo(0,0);
   }
   function getActiveCowNumber(){
@@ -990,11 +988,6 @@
     const cow = cows.find(c=>c.number===currentCow);
     const el = document.getElementById('detailLot');
     el.textContent = (cow && cow.lot) ? `Lot: ${cow.lot} (tap to edit)` : 'Set lot/pasture';
-  }
-  function updateStatusLabel(){
-    const cow = cows.find(c=>c.number===currentCow);
-    const el = document.getElementById('detailStatus');
-    el.textContent = `Status: ${(cow && cow.status) || 'Active'} (tap to edit)`;
   }
   function updateNotesLotLabel(){
     const cow = cows.find(c=>c.number===currentNotesCow);
@@ -1015,7 +1008,6 @@
     if(currentCow && !detailView.classList.contains('hidden')){
       document.getElementById('detailNum').innerHTML = ownerNumHtml(currentCow, (cows.find(c=>c.number===currentCow)||{}).owner);
       updateLotLabel();
-      updateStatusLabel();
     }
     if(currentCalvingCow && !calvingDetailView.classList.contains('hidden')){
       document.getElementById('calvingDetailNum').innerHTML = ownerNumHtml(currentCalvingCow, (cows.find(c=>c.number===currentCalvingCow)||{}).owner);
@@ -2013,7 +2005,6 @@
   document.getElementById('detailLot').addEventListener('click', editLotModal);
   document.getElementById('notesDetailLot').addEventListener('click', editLotModal);
   document.getElementById('notesDetailOwner').addEventListener('click', editOwnerModal);
-  document.getElementById('detailStatus').addEventListener('click', editStatusModal);
   document.getElementById('notesDetailStatus').addEventListener('click', editStatusModal);
 
   const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
