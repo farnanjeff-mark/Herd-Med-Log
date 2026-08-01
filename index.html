@@ -564,8 +564,9 @@
   function parseDateFlexible(str){
     if(!str) return null;
     str = str.trim();
-    if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
-    const m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    const isoMatch = str.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s].*)?$/);
+    if(isoMatch) return isoMatch[1];
+    const m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s.*)?$/);
     if(m){
       let [, mo, da, yr] = m;
       if(yr.length === 2) yr = (parseInt(yr,10) < 50 ? '20' : '19') + yr;
@@ -1134,11 +1135,16 @@
     records.forEach(r=>{
       const div = document.createElement('div');
       div.className = 'record';
+      const details = [];
+      if(r.birth_weight != null) details.push(`${r.birth_weight} lbs`);
+      if(r.sire) details.push(`Sire: ${escapeHtml(r.sire)}`);
+      if(r.birth_assist && r.birth_assist !== 'None') details.push(escapeHtml(r.birth_assist));
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
         <button class="record-edit" data-id="${r.id}">&#9998;</button>
         <div class="record-date">${fmtDate(r.calving_date)}</div>
         <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
+        ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
         ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
       `;
       div.querySelector('.record-del').addEventListener('click', (e)=>{
@@ -1302,11 +1308,18 @@
     const calvEl = document.getElementById('profileCalvingList');
     calvEl.innerHTML = calvingRecs.length === 0
       ? '<p class="empty" style="padding:10px 0;">No entries yet.</p>'
-      : calvingRecs.map(r=>`<div class="record">
-          <div class="record-date">${fmtDate(r.calving_date)}</div>
-          <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
-          ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
-        </div>`).join('');
+      : calvingRecs.map(r=>{
+          const details = [];
+          if(r.birth_weight != null) details.push(`${r.birth_weight} lbs`);
+          if(r.sire) details.push(`Sire: ${escapeHtml(r.sire)}`);
+          if(r.birth_assist && r.birth_assist !== 'None') details.push(escapeHtml(r.birth_assist));
+          return `<div class="record">
+            <div class="record-date">${fmtDate(r.calving_date)}</div>
+            <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
+            ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
+            ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+          </div>`;
+        }).join('');
 
     // General Notes
     const notesRecs = [...generalNotesFor(num)].sort((a,b)=>b.note_date.localeCompare(a.note_date));
@@ -1758,6 +1771,8 @@
   function addRecordModal(){ recordModal(null); }
   function editRecordModal(record){ recordModal(record); }
 
+  const BIRTH_ASSIST_OPTIONS = ['None','Easy Pull','Hard Pull','C-Section'];
+
   function calvingModal(existingRecord){
     const isEdit = !!existingRecord;
     const today = new Date().toISOString().slice(0,10);
@@ -1776,6 +1791,20 @@
         </select>
       </div>
       <div class="field">
+        <label>Birth Weight (lbs)</label>
+        <input type="number" id="calvWeight" step="0.1" min="0" placeholder="e.g. 75" value="${isEdit && existingRecord.birth_weight!=null ? existingRecord.birth_weight : ''}"/>
+      </div>
+      <div class="field">
+        <label>Sire</label>
+        <input type="text" id="calvSire" placeholder="Bull name or ID" value="${isEdit ? escapeHtml(existingRecord.sire||'') : ''}"/>
+      </div>
+      <div class="field">
+        <label>Birth Assist</label>
+        <select id="calvAssist">
+          ${BIRTH_ASSIST_OPTIONS.map(o=>`<option value="${o}" ${isEdit && existingRecord.birth_assist===o ? 'selected' : (!isEdit && o==='None' ? 'selected' : '')}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
         <label>Notes</label>
         <textarea id="calvNotes" rows="2" placeholder="Calving notes, any complications, etc.">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
       </div>
@@ -1788,11 +1817,19 @@
     modal.querySelector('#confirmCalv').addEventListener('click', async ()=>{
       const dateVal = modal.querySelector('#calvDate').value;
       const sex = modal.querySelector('#calvSex').value;
+      const weightRaw = modal.querySelector('#calvWeight').value;
+      const sire = modal.querySelector('#calvSire').value.trim();
+      const assist = modal.querySelector('#calvAssist').value;
       const notes = modal.querySelector('#calvNotes').value.trim();
       if(!dateVal){ showToast('Calving date is required'); return; }
       const btn = modal.querySelector('#confirmCalv');
       btn.disabled = true;
-      const body = { calving_date: dateVal, calf_sex: sex||null, notes: notes||null };
+      const body = {
+        calving_date: dateVal, calf_sex: sex||null, notes: notes||null,
+        birth_weight: weightRaw ? parseFloat(weightRaw) : null,
+        sire: sire||null,
+        birth_assist: assist||null
+      };
       try{
         if(isEdit){
           const updated = await api('/calvings?id=eq.' + encodeURIComponent(existingRecord.id), {
@@ -2337,7 +2374,12 @@
     const lines = ['CALVING RECORDS'];
     const items = [];
     calvings.filter(r=>isWithinLastWeek(r.calving_date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
-      items.push({ date: r.calving_date, cow: r.cow_number, text: `${calfSexLabel(r.calf_sex)} calf${r.notes ? ' — '+r.notes : ''}` });
+      const parts = [`${calfSexLabel(r.calf_sex)} calf`];
+      if(r.birth_weight != null) parts.push(`${r.birth_weight} lbs`);
+      if(r.sire) parts.push(`Sire: ${r.sire}`);
+      if(r.birth_assist && r.birth_assist !== 'None') parts.push(r.birth_assist);
+      if(r.notes) parts.push(r.notes);
+      items.push({ date: r.calving_date, cow: r.cow_number, text: parts.join(' — ') });
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
     items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
@@ -2473,7 +2515,7 @@
   }
 
   function buildCalvingRows(){
-    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Calving Date','Calf Sex','Notes','Logged At']];
+    const rows = [['Record ID','Cow Number','Status','Lot/Group','Owner','Cow Added','Calving Date','Calf Sex','Birth Weight (lbs)','Sire','Birth Assist','Notes','Logged At']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -2485,14 +2527,14 @@
 
     sortedCalvings.forEach(r=>{
       const c = cowMap[r.cow_number] || {};
-      rows.push([r.id, r.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', r.calving_date, calfSexLabel(r.calf_sex), r.notes||'', r.created_at||'']);
+      rows.push([r.id, r.cow_number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', r.calving_date, calfSexLabel(r.calf_sex), r.birth_weight!=null ? r.birth_weight : '', r.sire||'', r.birth_assist||'', r.notes||'', r.created_at||'']);
     });
 
     const calvedCows = new Set(calvings.map(c=>c.cow_number));
     cows.filter(c=>!calvedCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '', '']);
+          rows.push(['', c.number, c.status||'Active', c.lot||'', c.owner||'', c.added_at||'', '', '', '', '', '', '', '']);
         });
     return rows;
   }
@@ -2594,16 +2636,26 @@
   function importConfig(type){
     if(type === 'calving') return {
       label:'Calving', table:'calvings',
-      hint:"Columns (tab or comma separated), one entry per line: Cow #, Date, Calf Sex (B or H, optional), Notes (optional).\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, H, easy calving",
+      hint:"Columns (tab or comma separated), one entry per line: Cow #, Date, Calf Sex (B or H, optional), Birth Weight lbs (optional), Sire (optional), Birth Assist (None/Easy Pull/Hard Pull/C-Section, optional), Notes (optional).\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, H, 75, Bull 42, Easy Pull, easy calving",
       parse(fields){
         const cow = (fields[0]||'').trim();
         const date = parseDateFlexible(fields[1]);
         let sex = (fields[2]||'').trim().toUpperCase();
         if(sex !== 'B' && sex !== 'H') sex = '';
-        const notes = (fields[3]||'').trim();
+        const weightRaw = (fields[3]||'').trim();
+        const sire = (fields[4]||'').trim();
+        let assist = (fields[5]||'').trim();
+        if(assist && !BIRTH_ASSIST_OPTIONS.some(o=>o.toLowerCase()===assist.toLowerCase())) assist = '';
+        else if(assist) assist = BIRTH_ASSIST_OPTIONS.find(o=>o.toLowerCase()===assist.toLowerCase());
+        const notes = (fields[6]||'').trim();
         if(!cow) return {error:'Missing cow number'};
         if(!date) return {error:'Invalid or missing date'};
-        return { cow, body:{ cow_number:cow, calving_date:date, calf_sex: sex||null, notes: notes||null } };
+        if(weightRaw && isNaN(parseFloat(weightRaw))) return {error:'Invalid birth weight'};
+        return { cow, body:{
+          cow_number:cow, calving_date:date, calf_sex: sex||null,
+          birth_weight: weightRaw ? parseFloat(weightRaw) : null,
+          sire: sire||null, birth_assist: assist||null, notes: notes||null
+        } };
       }
     };
     if(type === 'notes') return {
