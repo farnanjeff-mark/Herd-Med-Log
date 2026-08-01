@@ -70,6 +70,7 @@
   .btn-pink{background:#D46A8C;color:var(--paper);border-color:#D46A8C;}
   .btn-blue{background:#3B6E8F;color:var(--paper);border-color:#3B6E8F;}
   .btn-grey{background:#6b6350;color:var(--paper);border-color:#6b6350;}
+  .btn-orange{background:#C4732B;color:var(--paper);border-color:#C4732B;}
   .btn-full{width:100%;}
   .btn-sm{padding:7px 12px;font-size:13px;}
 
@@ -178,6 +179,7 @@
       <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">📝 General Notes</button>
       <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Meds &amp; Notes</button>
       <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
+      <button class="btn btn-orange btn-full" id="homeWeightsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">⚖️ Weights</button>
       <button class="btn btn-grey btn-full" id="homeProfileBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">👤 Cow Profile</button>
       <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything (All 3 Lists)</button>
       <button class="btn btn-outline btn-full" id="bulkEditBtn">🔧 Bulk Edit Owner / Lot</button>
@@ -345,7 +347,48 @@
 
     <div class="section-label">General Notes</div>
     <div id="profileNotesList"></div>
-    <button class="btn btn-blue btn-full" id="profileGoNotes">Go to General Notes →</button>
+    <button class="btn btn-blue btn-full" id="profileGoNotes" style="margin-bottom:20px;">Go to General Notes →</button>
+
+    <div class="section-label">Weights</div>
+    <div id="profileWeightsList"></div>
+    <button class="btn btn-orange btn-full" id="profileGoWeights">Go to Weights →</button>
+  </div>
+
+  <div class="view hidden" id="weightsListView">
+    <button class="btn btn-outline btn-full" id="weightsListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
+    <div class="toolbar">
+      <input type="text" id="weightsSearchBox" placeholder="Search cow #, notes..." autocomplete="off"/>
+    </div>
+    <div class="toolbar">
+      <select id="weightsSortBy" style="flex:1;">
+        <option value="number">Sort: Cow Number</option>
+        <option value="recent">Sort: Most Recent Weight</option>
+      </select>
+    </div>
+    <div id="weightsCowList"></div>
+    <div id="weightsEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
+  </div>
+
+  <div class="view hidden" id="weightsDetailView">
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-outline" id="weightsDetailHomeBtn" style="flex:1;">🏠 Home</button>
+      <button class="back" id="weightsBackBtn" style="margin-bottom:0;flex:1;">&larr; All Cattle</button>
+    </div>
+    <div class="detail-head">
+      <div>
+        <div class="detail-num" id="weightsDetailNum">#000</div>
+        <div class="detail-sub" id="weightsDetailSub">0 weights logged</div>
+      </div>
+      <button class="btn btn-outline btn-sm" id="deleteWeightsCowBtn">Remove Cow</button>
+    </div>
+
+    <button class="btn btn-outline btn-full" id="weightsViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
+
+    <button class="btn btn-orange btn-full" id="addWeightBtn">+ Log Weight</button>
+
+    <div class="section-label">Weight History</div>
+    <div id="weightRecordList"></div>
+    <div id="noWeightRecords" class="empty hidden">No weights logged for this cow yet.</div>
   </div>
 
   <button class="fab hidden" id="fabAdd" title="Add cow">+</button>
@@ -370,10 +413,12 @@
   let treatments = [];  // [{id, cow_number, date, medicine, reason, notes}]
   let calvings = [];    // [{id, cow_number, calving_date, calf_sex, notes, linked_treatment_id}]
   let generalNotes = []; // [{id, cow_number, note_date, note}]
+  let weights = [];      // [{id, cow_number, weigh_date, weight, notes}]
   let currentCow = null;
   let currentCalvingCow = null;
   let currentNotesCow = null;
   let currentProfileCow = null;
+  let currentWeightsCow = null;
 
   const homeView = document.getElementById('homeView');
   const listView = document.getElementById('listView');
@@ -384,6 +429,8 @@
   const notesDetailView = document.getElementById('notesDetailView');
   const profileListView = document.getElementById('profileListView');
   const profileView = document.getElementById('profileView');
+  const weightsListView = document.getElementById('weightsListView');
+  const weightsDetailView = document.getElementById('weightsDetailView');
   const fabAdd = document.getElementById('fabAdd');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
@@ -391,6 +438,7 @@
   const calvingSearchBox = document.getElementById('calvingSearchBox');
   const notesSearchBox = document.getElementById('notesSearchBox');
   const profileSearchBox = document.getElementById('profileSearchBox');
+  const weightsSearchBox = document.getElementById('weightsSearchBox');
   const toastEl = document.getElementById('toast');
   const syncDot = document.getElementById('refreshDot');
   const connBanner = document.getElementById('connBanner');
@@ -435,18 +483,20 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
-        api('/general_notes?select=*', { method:'GET' })
+        api('/general_notes?select=*', { method:'GET' }),
+        api('/weights?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
       calvings = calvingsRes || [];
       generalNotes = notesRes || [];
+      weights = weightsRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = [];
     }
     renderList();
     renderCalvingList();
@@ -455,6 +505,8 @@
     if(currentNotesCow) renderNotesDetail();
     renderProfileList();
     if(currentProfileCow) renderProfile();
+    renderWeightsList();
+    if(currentWeightsCow) renderWeightsDetail();
     const homeTotalEl = document.getElementById('homeTotalCattle');
     if(homeTotalEl) homeTotalEl.textContent = cows.length;
     checkBackupReminder();
@@ -492,6 +544,9 @@
   }
   function generalNotesFor(num){
     return generalNotes.filter(n=>n.cow_number===num);
+  }
+  function weightsFor(num){
+    return weights.filter(w=>w.cow_number===num);
   }
 
   function calfSexLabel(sex){
@@ -625,10 +680,12 @@
     currentCalvingCow = null;
     currentNotesCow = null;
     currentProfileCow = null;
+    currentWeightsCow = null;
     searchBox.value = '';
     if(calvingSearchBox) calvingSearchBox.value = '';
     if(notesSearchBox) notesSearchBox.value = '';
     if(profileSearchBox) profileSearchBox.value = '';
+    if(weightsSearchBox) weightsSearchBox.value = '';
     setHeaderTitle('Herd', 'Ledger');
     homeView.classList.remove('hidden');
     listView.classList.add('hidden');
@@ -639,6 +696,8 @@
     notesDetailView.classList.add('hidden');
     profileListView.classList.add('hidden');
     profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     document.getElementById('homeTotalCattle').textContent = cows.length;
     window.scrollTo(0,0);
@@ -653,6 +712,8 @@
     notesDetailView.classList.add('hidden');
     profileListView.classList.add('hidden');
     profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
     listView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderList();
@@ -668,6 +729,8 @@
     notesDetailView.classList.add('hidden');
     profileListView.classList.add('hidden');
     profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
     calvingListView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderCalvingList();
@@ -681,6 +744,8 @@
     calvingDetailView.classList.remove('hidden');
     profileListView.classList.add('hidden');
     profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderCalvingDetail();
     window.scrollTo(0,0);
@@ -704,6 +769,8 @@
     notesDetailView.classList.add('hidden');
     profileListView.classList.add('hidden');
     profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
     notesListView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderNotesList();
@@ -717,6 +784,8 @@
     notesDetailView.classList.remove('hidden');
     profileListView.classList.add('hidden');
     profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderNotesDetail();
     updateNotesLotLabel();
@@ -742,6 +811,8 @@
     notesListView.classList.add('hidden');
     notesDetailView.classList.add('hidden');
     profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
     profileListView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     renderProfileList();
@@ -754,9 +825,11 @@
     listView.classList.add('hidden');
     calvingListView.classList.add('hidden');
     notesListView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
     detailView.classList.add('hidden');
     calvingDetailView.classList.add('hidden');
     notesDetailView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
     profileView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     renderProfile();
@@ -771,6 +844,44 @@
     renderProfileList();
     window.scrollTo(0,0);
   }
+  function showWeightsList(){
+    setHeaderTitle('Weights', '');
+    homeView.classList.add('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
+    weightsListView.classList.remove('hidden');
+    fabAdd.classList.remove('hidden');
+    renderWeightsList();
+    window.scrollTo(0,0);
+  }
+  function openWeightsCow(num){
+    currentWeightsCow = num;
+    setHeaderTitle('Weights', '');
+    document.getElementById('weightsDetailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
+    weightsListView.classList.add('hidden');
+    weightsDetailView.classList.remove('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    renderWeightsDetail();
+    window.scrollTo(0,0);
+  }
+  function closeWeightsCow(){
+    currentWeightsCow = null;
+    weightsDetailView.classList.add('hidden');
+    weightsListView.classList.remove('hidden');
+    fabAdd.classList.remove('hidden');
+    weightsSearchBox.value = '';
+    renderWeightsList();
+    window.scrollTo(0,0);
+  }
 
   function openCow(num){
     currentCow = num;
@@ -781,6 +892,8 @@
     detailView.classList.remove('hidden');
     profileListView.classList.add('hidden');
     profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderDetail();
     updateLotLabel();
@@ -818,6 +931,9 @@
       document.getElementById('notesDetailNum').innerHTML = ownerNumHtml(currentNotesCow, (cows.find(c=>c.number===currentNotesCow)||{}).owner);
       updateNotesLotLabel();
       updateNotesOwnerLabel();
+    }
+    if(currentWeightsCow && !weightsDetailView.classList.contains('hidden')){
+      document.getElementById('weightsDetailNum').innerHTML = ownerNumHtml(currentWeightsCow, (cows.find(c=>c.number===currentWeightsCow)||{}).owner);
     }
   }
   function closeCow(){
@@ -1115,6 +1231,101 @@
           <div class="record-date">${fmtDate(r.note_date)}</div>
           <div class="record-reason">${escapeHtml(r.note||'')}</div>
         </div>`).join('');
+
+    // Weights
+    const weightRecs = [...weightsFor(num)].sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date));
+    const weightsEl = document.getElementById('profileWeightsList');
+    weightsEl.innerHTML = weightRecs.length === 0
+      ? '<p class="empty" style="padding:10px 0;">No entries yet.</p>'
+      : weightRecs.map(r=>`<div class="record">
+          <div class="record-date">${fmtDate(r.weigh_date)}</div>
+          <div class="record-med">${r.weight!=null ? r.weight + ' lbs' : ''}</div>
+          ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+        </div>`).join('');
+  }
+
+  function renderWeightsList(){
+    const listEl = document.getElementById('weightsCowList');
+    const emptyEl = document.getElementById('weightsEmptyState');
+    if(!listEl) return;
+    const q = (weightsSearchBox.value||'').trim().toLowerCase();
+    const sortMode = document.getElementById('weightsSortBy').value;
+
+    function latestWeightFor(num){
+      const list = weightsFor(num);
+      if(list.length === 0) return null;
+      return [...list].sort((a,b)=> b.weigh_date.localeCompare(a.weigh_date))[0];
+    }
+
+    let sorted;
+    if(sortMode === 'recent'){
+      sorted = [...cows].sort((a,b)=>{
+        const la = latestWeightFor(a.number);
+        const lb = latestWeightFor(b.number);
+        if(!la && !lb) return a.number.localeCompare(b.number, undefined, {numeric:true});
+        if(!la) return 1;
+        if(!lb) return -1;
+        return lb.weigh_date.localeCompare(la.weigh_date);
+      });
+    } else {
+      sorted = [...cows].sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
+    }
+
+    const filtered = sorted.filter(c=>{
+      if(!q) return true;
+      if(c.number.toLowerCase().includes(q)) return true;
+      return weightsFor(c.number).some(w=> (w.notes||'').toLowerCase().includes(q));
+    });
+
+    listEl.innerHTML = '';
+    emptyEl.classList.toggle('hidden', cows.length !== 0);
+
+    filtered.forEach(cow=>{
+      const num = cow.number;
+      const records = weightsFor(num);
+      let meta = records.length === 0 ? 'No weights logged' : `${records.length} weight${records.length>1?'s':''} logged`;
+      if(records.length>0){
+        const last = latestWeightFor(num);
+        meta += ` · last ${fmtDate(last.weigh_date)}${last.weight!=null ? ' (' + last.weight + ' lbs)' : ''}`;
+      }
+      const card = document.createElement('div');
+      card.className = 'cow-card';
+      const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
+      const ownerBadge = cow.owner ? `<span class="lot-badge" style="background:#6b6350;">${escapeHtml(cow.owner)}</span>` : '';
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.addEventListener('click', ()=> openWeightsCow(num));
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderWeightsDetail(){
+    const records = [...weightsFor(currentWeightsCow)].sort((a,b)=> b.weigh_date.localeCompare(a.weigh_date));
+    document.getElementById('weightsDetailSub').textContent = records.length === 0 ? '0 weights logged' : `${records.length} weight${records.length>1?'s':''} logged`;
+    const listEl = document.getElementById('weightRecordList');
+    const noRecords = document.getElementById('noWeightRecords');
+    listEl.innerHTML = '';
+    noRecords.classList.toggle('hidden', records.length !== 0);
+
+    records.forEach(r=>{
+      const div = document.createElement('div');
+      div.className = 'record';
+      div.innerHTML = `
+        <button class="record-del" data-id="${r.id}">&times;</button>
+        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        <div class="record-date">${fmtDate(r.weigh_date)}</div>
+        <div class="record-med">${r.weight!=null ? r.weight + ' lbs' : ''}</div>
+        ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+      `;
+      div.querySelector('.record-del').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        deleteWeight(r.id);
+      });
+      div.querySelector('.record-edit').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        editWeightModal(r);
+      });
+      listEl.appendChild(div);
+    });
   }
 
 
@@ -1138,6 +1349,16 @@
     }catch(e){ showToast('Could not remove — try again'); }
   }
 
+  async function deleteWeight(id){
+    try{
+      await api('/weights?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      weights = weights.filter(w=>w.id!==id);
+      renderWeightsDetail();
+      renderWeightsList();
+      showToast('Weight removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
   async function deleteCalvingRecord(id){
     try{
       await api('/calvings?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
@@ -1157,6 +1378,7 @@
       treatments = treatments.filter(t=>t.cow_number!==currentCow);
       calvings = calvings.filter(c=>c.cow_number!==currentCow);
       generalNotes = generalNotes.filter(n=>n.cow_number!==currentCow);
+      weights = weights.filter(w=>w.cow_number!==currentCow);
       closeCow();
       showToast('Cow removed');
     }catch(e){ showToast('Could not remove — try again'); }
@@ -1171,6 +1393,7 @@
       treatments = treatments.filter(t=>t.cow_number!==currentCalvingCow);
       calvings = calvings.filter(c=>c.cow_number!==currentCalvingCow);
       generalNotes = generalNotes.filter(n=>n.cow_number!==currentCalvingCow);
+      weights = weights.filter(w=>w.cow_number!==currentCalvingCow);
       closeCalvingCow();
       showToast('Cow removed');
     }catch(e){ showToast('Could not remove — try again'); }
@@ -1185,7 +1408,23 @@
       treatments = treatments.filter(t=>t.cow_number!==currentNotesCow);
       calvings = calvings.filter(c=>c.cow_number!==currentNotesCow);
       generalNotes = generalNotes.filter(n=>n.cow_number!==currentNotesCow);
+      weights = weights.filter(w=>w.cow_number!==currentNotesCow);
       closeNotesCow();
+      showToast('Cow removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  async function deleteCowFromWeights(){
+    if(!currentWeightsCow) return;
+    if(!confirm(`Remove cow #${currentWeightsCow} and all its records (treatments, notes, calvings, and weights)? This can't be undone.`)) return;
+    try{
+      await api('/cows?number=eq.' + encodeURIComponent(currentWeightsCow), { method:'DELETE' });
+      cows = cows.filter(c=>c.number!==currentWeightsCow);
+      treatments = treatments.filter(t=>t.cow_number!==currentWeightsCow);
+      calvings = calvings.filter(c=>c.cow_number!==currentWeightsCow);
+      generalNotes = generalNotes.filter(n=>n.cow_number!==currentWeightsCow);
+      weights = weights.filter(w=>w.cow_number!==currentWeightsCow);
+      closeWeightsCow();
       showToast('Cow removed');
     }catch(e){ showToast('Could not remove — try again'); }
   }
@@ -1235,6 +1474,7 @@
     let bulkMode = false;
     const cameFromCalving = !calvingListView.classList.contains('hidden');
     const cameFromNotes = !notesListView.classList.contains('hidden');
+    const cameFromWeights = !weightsListView.classList.contains('hidden');
     const singleFields = modal.querySelector('#singleAddFields');
     const bulkFields = modal.querySelector('#bulkAddFields');
     const toggleLink = modal.querySelector('#toggleBulkMode');
@@ -1272,6 +1512,9 @@
           } else if(cameFromNotes){
             renderNotesList();
             openNotesCow(num);
+          } else if(cameFromWeights){
+            renderWeightsList();
+            openWeightsCow(num);
           } else {
             renderList();
             openCow(num);
@@ -1300,7 +1543,7 @@
         });
         cows.push(...inserted);
         closeModal();
-        if(cameFromCalving) renderCalvingList(); else if(cameFromNotes) renderNotesList(); else renderList();
+        if(cameFromCalving) renderCalvingList(); else if(cameFromNotes) renderNotesList(); else if(cameFromWeights) renderWeightsList(); else renderList();
         showToast(`${inserted.length} cow${inserted.length>1?'s':''} added` + (skipped>0 ? ` (${skipped} already existed)` : ''));
       }catch(e){
         confirmBtn.disabled = false;
@@ -1495,6 +1738,69 @@
   function addCalvingModal(){ calvingModal(null); }
   function editCalvingModal(record){ calvingModal(record); }
 
+  function weightModal(existingRecord){
+    const isEdit = !!existingRecord;
+    const today = new Date().toISOString().slice(0,10);
+    const modal = openModal(`
+      <div class="modal-title">${isEdit ? 'Edit Weight' : 'Log Weight'} — #${escapeHtml(currentWeightsCow)}</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="wgtDate" value="${isEdit ? existingRecord.weigh_date : today}"/>
+      </div>
+      <div class="field">
+        <label>Weight (lbs)</label>
+        <input type="number" id="wgtWeight" step="0.1" min="0" placeholder="e.g. 550" value="${isEdit && existingRecord.weight!=null ? existingRecord.weight : ''}"/>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="wgtNotes" rows="2" placeholder="Optional notes">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelWgt">Cancel</button>
+        <button class="btn btn-barn" id="confirmWgt">${isEdit ? 'Save Changes' : 'Save Entry'}</button>
+      </div>
+    `);
+    modal.querySelector('#cancelWgt').addEventListener('click', closeModal);
+    modal.querySelector('#confirmWgt').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#wgtDate').value;
+      const weightRaw = modal.querySelector('#wgtWeight').value;
+      const notes = modal.querySelector('#wgtNotes').value.trim();
+      if(!dateVal){ showToast('Date is required'); return; }
+      if(!weightRaw){ showToast('Enter a weight'); return; }
+      const btn = modal.querySelector('#confirmWgt');
+      btn.disabled = true;
+      const body = { weigh_date: dateVal, weight: parseFloat(weightRaw), notes: notes||null };
+      try{
+        if(isEdit){
+          const updated = await api('/weights?id=eq.' + encodeURIComponent(existingRecord.id), {
+            method:'PATCH',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          const idx = weights.findIndex(w=>w.id===existingRecord.id);
+          if(idx !== -1) weights[idx] = updated[0];
+        } else {
+          const inserted = await api('/weights', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(Object.assign({ cow_number: currentWeightsCow }, body))
+          });
+          weights.push(inserted[0]);
+        }
+        closeModal();
+        renderWeightsDetail();
+        renderWeightsList();
+        window.scrollTo(0,0);
+        showToast(isEdit ? 'Weight updated' : 'Weight logged');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+  function addWeightModal(){ weightModal(null); }
+  function editWeightModal(record){ weightModal(record); }
+
   function generalNoteModal(existingRecord){
     const isEdit = !!existingRecord;
     const today = new Date().toISOString().slice(0,10);
@@ -1579,6 +1885,16 @@
   document.getElementById('detailViewProfile').addEventListener('click', ()=> openProfileCow(currentCow));
   document.getElementById('calvingViewProfile').addEventListener('click', ()=> openProfileCow(currentCalvingCow));
   document.getElementById('notesViewProfile').addEventListener('click', ()=> openProfileCow(currentNotesCow));
+  document.getElementById('homeWeightsBtn').addEventListener('click', showWeightsList);
+  document.getElementById('weightsListHomeBtn').addEventListener('click', showHome);
+  document.getElementById('weightsDetailHomeBtn').addEventListener('click', showHome);
+  document.getElementById('weightsBackBtn').addEventListener('click', closeWeightsCow);
+  document.getElementById('deleteWeightsCowBtn').addEventListener('click', deleteCowFromWeights);
+  document.getElementById('weightsViewProfile').addEventListener('click', ()=> openProfileCow(currentWeightsCow));
+  document.getElementById('addWeightBtn').addEventListener('click', addWeightModal);
+  document.getElementById('weightsSearchBox').addEventListener('input', renderWeightsList);
+  document.getElementById('weightsSortBy').addEventListener('change', renderWeightsList);
+  document.getElementById('profileGoWeights').addEventListener('click', ()=> openWeightsCow(currentProfileCow));
   document.getElementById('notesListHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesBackBtn').addEventListener('click', closeNotesCow);
@@ -1641,6 +1957,7 @@
         renderList();
         renderCalvingList();
         renderNotesList();
+        renderWeightsList();
         showToast('Lot updated');
       }catch(e){
         btn.disabled = false;
@@ -1680,6 +1997,7 @@
         renderList();
         renderCalvingList();
         renderNotesList();
+        renderWeightsList();
         showToast('Owner updated');
       }catch(e){
         btn.disabled = false;
@@ -1754,6 +2072,7 @@
           renderList();
           renderCalvingList();
           renderNotesList();
+          renderWeightsList();
           showToast(`${selected.length} cow${selected.length>1?'s':''} updated`);
         }catch(e){
           btn.disabled = false;
@@ -2052,6 +2371,31 @@
     return rows;
   }
 
+  function buildWeightsRows(){
+    const rows = [['Record ID','Cow Number','Lot/Group','Owner','Cow Added','Date','Weight (lbs)','Notes','Logged At']];
+    const cowMap = {};
+    cows.forEach(c=> cowMap[c.number] = c);
+
+    const sortedWeights = [...weights].sort((a,b)=>{
+      const numCmp = a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true});
+      if(numCmp !== 0) return numCmp;
+      return a.weigh_date.localeCompare(b.weigh_date);
+    });
+
+    sortedWeights.forEach(w=>{
+      const c = cowMap[w.cow_number] || {};
+      rows.push([w.id, w.cow_number, c.lot||'', c.owner||'', c.added_at||'', w.weigh_date, w.weight!=null ? w.weight : '', w.notes||'', w.created_at||'']);
+    });
+
+    const weighedCows = new Set(weights.map(w=>w.cow_number));
+    cows.filter(c=>!weighedCows.has(c.number))
+        .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
+        .forEach(c=>{
+          rows.push(['', c.number, c.lot||'', c.owner||'', c.added_at||'', '', '', '', '']);
+        });
+    return rows;
+  }
+
   async function exportCsv(){
     // Refresh first so the export reflects the latest data, not a stale in-memory copy.
     await loadAll();
@@ -2082,6 +2426,7 @@
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildMedsRows()), 'Meds & Notes');
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildCalvingRows()), 'Calving Records');
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildNotesRows()), 'General Notes');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildWeightsRows()), 'Weights');
       XLSX.writeFile(wb, 'herd-full-export-' + new Date().toISOString().slice(0,10) + '.xlsx');
       localStorage.setItem('lastExportAt', Date.now().toString());
       document.getElementById('backupBanner').classList.add('hidden');
