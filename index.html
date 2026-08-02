@@ -173,9 +173,8 @@
   </div>
 
   <div class="view" id="homeView">
-    <div style="text-align:center;padding:40px 10px;">
-      <p class="eyebrow">Herd Health Ledger</p>
-      <h1 class="h1" style="margin-bottom:16px;">Welcome</h1>
+    <div style="text-align:center;padding:20px 10px;">
+      <p class="eyebrow" style="margin-bottom:14px;">Herd Health Ledger</p>
       <div class="stats-row" style="margin-bottom:20px;">
         <div class="stat-chip"><div class="stat-num" id="homeTotalCattle">0</div><div class="stat-label">Total Cattle</div></div>
       </div>
@@ -193,7 +192,8 @@
     <button class="btn btn-outline btn-full" id="moreToolsHomeBtn" style="margin-bottom:24px;">🏠 Home</button>
     <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything</button>
     <button class="btn btn-outline btn-full" id="bulkEditBtn" style="margin-bottom:12px;">🔧 Bulk Edit Owner / Lot</button>
-    <button class="btn btn-outline btn-full" id="importDataBtn">📥 Import Data</button>
+    <button class="btn btn-outline btn-full" id="importDataBtn" style="margin-bottom:12px;">📥 Import Data</button>
+    <button class="btn btn-outline btn-full" id="headcountByOwnerBtn">📊 Headcount by Owner</button>
   </div>
 
   <div class="view hidden" id="importView">
@@ -2478,6 +2478,7 @@
   document.getElementById('homeMoreToolsBtn').addEventListener('click', showMoreTools);
   document.getElementById('moreToolsHomeBtn').addEventListener('click', showHome);
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
+  document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
   document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
   document.getElementById('importTypeCalving').addEventListener('click', ()=> setImportType('calving'));
@@ -2703,6 +2704,36 @@
     });
   }
 
+
+  function headcountByOwnerModal(){
+    const activeCows = cows.filter(isActiveStatus);
+    const counts = {};
+    activeCows.forEach(c=>{
+      const owner = c.owner || 'Unassigned';
+      counts[owner] = (counts[owner]||0) + 1;
+    });
+    const rows = Object.entries(counts).sort((a,b)=> b[1]-a[1]);
+    const total = activeCows.length;
+    const rowsHtml = rows.map(([owner,count])=>`
+      <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:16px;">
+        <span>${escapeHtml(owner)}</span>
+        <span style="font-weight:700;">${count}</span>
+      </div>
+    `).join('') || '<p class="empty" style="padding:14px 0;">No active cattle yet.</p>';
+
+    const modal = openModal(`
+      <div class="modal-title">Headcount by Owner</div>
+      <div style="font-family:'Courier New',monospace;font-size:11px;color:#6b6350;margin-bottom:10px;">Active cattle only — Sold/Deceased not counted</div>
+      <div>${rowsHtml}</div>
+      <div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;border-top:2px solid var(--ink);font-weight:700;font-size:17px;">
+        <span>Total Active</span><span>${total}</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeHeadcountBtn">Close</button>
+      </div>
+    `);
+    modal.querySelector('#closeHeadcountBtn').addEventListener('click', closeModal);
+  }
 
   function bulkEditModal(){
     let field = 'owner'; // 'owner' | 'lot'
