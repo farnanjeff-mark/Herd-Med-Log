@@ -56,7 +56,7 @@
     width:100%;
   }
   input:focus, select:focus, textarea:focus{outline:2px solid var(--pasture);outline-offset:1px;}
-  #searchBox{background:#ffffff;}
+  #searchBox, #calvingSearchBox, #notesSearchBox, #profileSearchBox, #weightsSearchBox, #breedingSearchBox{background:#ffffff;}
 
   .btn{
     font-family:'Courier New',monospace;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
@@ -189,7 +189,8 @@
     <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything</button>
     <button class="btn btn-outline btn-full" id="bulkEditBtn" style="margin-bottom:12px;">🔧 Bulk Edit Owner / Lot</button>
     <button class="btn btn-outline btn-full" id="importDataBtn" style="margin-bottom:12px;">📥 Import Data</button>
-    <button class="btn btn-outline btn-full" id="headcountByOwnerBtn">📊 Headcount by Owner</button>
+    <button class="btn btn-outline btn-full" id="headcountByOwnerBtn" style="margin-bottom:12px;">📊 Headcount by Owner</button>
+    <button class="btn btn-outline btn-full" id="soldDeceasedBtn">📋 Sold / Deceased List</button>
   </div>
 
   <div class="view hidden" id="importView">
@@ -2480,6 +2481,7 @@
   document.getElementById('moreToolsHomeBtn').addEventListener('click', showHome);
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
+  document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
   document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
   document.getElementById('importTypeCalving').addEventListener('click', ()=> setImportType('calving'));
@@ -2733,6 +2735,46 @@
       </div>
     `);
     modal.querySelector('#closeHeadcountBtn').addEventListener('click', closeModal);
+  }
+
+  function soldDeceasedModal(){
+    const inactive = cows.filter(c=>!isActiveStatus(c));
+    const sold = inactive.filter(c=>c.status==='Sold').sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const deceased = inactive.filter(c=>c.status==='Deceased').sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+
+    function rowsFor(list){
+      return list.map(c=>{
+        const meta = [c.lot, c.owner].filter(Boolean).join(' · ');
+        return `
+          <div class="cow-row-item" data-num="${escapeHtml(c.number)}" style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;">
+            <div>
+              <div style="font-weight:700;font-size:16px;">#${escapeHtml(c.number)}</div>
+              ${meta ? `<div style="font-family:'Courier New',monospace;font-size:11px;color:#6b6350;">${escapeHtml(meta)}</div>` : ''}
+            </div>
+            <span class="chev">&rsaquo;</span>
+          </div>
+        `;
+      }).join('') || '<p class="empty" style="padding:10px 0;">None.</p>';
+    }
+
+    const modal = openModal(`
+      <div class="modal-title">Sold / Deceased List</div>
+      <div class="section-label">Sold (${sold.length})</div>
+      <div>${rowsFor(sold)}</div>
+      <div class="section-label" style="margin-top:16px;">Deceased (${deceased.length})</div>
+      <div>${rowsFor(deceased)}</div>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeSoldDeceasedBtn">Close</button>
+      </div>
+    `);
+    modal.querySelectorAll('.cow-row-item').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        const num = row.dataset.num;
+        closeModal();
+        openProfileCow(num);
+      });
+    });
+    modal.querySelector('#closeSoldDeceasedBtn').addEventListener('click', closeModal);
   }
 
   function bulkEditModal(){
