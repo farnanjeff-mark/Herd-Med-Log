@@ -27,8 +27,9 @@
 
   .header{padding:22px 18px 16px;border-bottom:3px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-start;}
   .eyebrow{font-family:'Courier New',monospace;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--barn);margin:0 0 4px;}
-  .h1{font-family:Georgia,serif;font-weight:700;font-size:26px;margin:0;letter-spacing:.01em;}
-  .h1 span{color:var(--pasture);}
+  .h1{font-family:Georgia,serif;font-weight:700;font-size:15px;margin:4px 0 0;letter-spacing:.08em;text-transform:uppercase;color:var(--barn);}
+  .company-name{font-family:Georgia,serif;font-weight:700;font-size:26px;margin:0;letter-spacing:.01em;}
+  .h1 span{color:var(--barn);}
   .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--pasture);flex-shrink:0;}
   .sync-dot.err{background:var(--barn);}
   .sync-dot.busy{background:var(--tag);}
@@ -164,26 +165,21 @@
 <body>
 
 <div class="app">
-  <div class="header">
-    <div>
-      <p class="eyebrow">Herd Health Ledger</p>
+  <div class="header" style="text-align:center;">
+    <div style="width:100%;">
+      <p class="company-name">Farnan Cattle Company</p>
       <h1 class="h1" id="headerTitle">Herd <span>Ledger</span></h1>
     </div>
-    <button class="refresh-btn" id="refreshBtn"><span id="refreshDot" class="sync-dot"></span> Refresh</button>
   </div>
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
-      <p class="eyebrow" style="margin-bottom:14px;">Herd Health Ledger</p>
-      <div class="stats-row" style="margin-bottom:20px;">
-        <div class="stat-chip"><div class="stat-num" id="homeTotalCattle">0</div><div class="stat-label">Total Cattle</div></div>
-      </div>
-      <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">📝 General Notes</button>
+      <button class="btn btn-grey btn-full" id="homeProfileBtn" style="padding:18px;font-size:16px;margin-bottom:12px;margin-top:8px;">👤 Cow Profile</button>
       <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Medications</button>
       <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
       <button class="btn btn-purple btn-full" id="homeBreedingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐂 Breeding Records</button>
       <button class="btn btn-orange btn-full" id="homeWeightsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">⚖️ Weights</button>
-      <button class="btn btn-grey btn-full" id="homeProfileBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">👤 Cow Profile</button>
+      <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">📝 General Notes</button>
       <button class="btn btn-outline btn-full" id="homeMoreToolsBtn">⋯ More Tools</button>
     </div>
   </div>
@@ -259,10 +255,8 @@
         <div class="detail-num" id="detailNum">#000</div>
         <div class="detail-sub" id="detailSub">0 treatments logged</div>
       </div>
-      <button class="btn btn-outline btn-sm" id="deleteCowBtn">Remove Cow</button>
     </div>
 
-    <button class="btn btn-outline btn-full" id="detailLot" style="margin-bottom:12px;">Set lot/pasture</button>
     <button class="btn btn-outline btn-full" id="detailViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
     <button class="btn btn-pasture btn-full" id="addRecordBtn">+ Log Medicine Given</button>
@@ -298,7 +292,6 @@
         <div class="detail-num" id="calvingDetailNum">#000</div>
         <div class="detail-sub" id="calvingDetailSub">0 calvings logged</div>
       </div>
-      <button class="btn btn-outline btn-sm" id="deleteCalvingCowBtn">Remove Cow</button>
     </div>
 
     <button class="btn btn-outline btn-full" id="calvingViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
@@ -337,12 +330,8 @@
         <div class="detail-num" id="notesDetailNum">#000</div>
         <div class="detail-sub" id="notesDetailSub">0 notes logged</div>
       </div>
-      <button class="btn btn-outline btn-sm" id="deleteNotesCowBtn">Remove Cow</button>
     </div>
 
-    <button class="btn btn-outline btn-full" id="notesDetailLot" style="margin-bottom:12px;">Set lot/pasture</button>
-    <button class="btn btn-outline btn-full" id="notesDetailOwner" style="margin-bottom:12px;">Set owner</button>
-    <button class="btn btn-outline btn-full" id="notesDetailStatus" style="margin-bottom:12px;">Status: Active</button>
     <button class="btn btn-outline btn-full" id="notesViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
     <button class="btn btn-blue btn-full" id="addGeneralNoteBtn">+ Add Note</button>
@@ -375,6 +364,12 @@
         <div class="detail-sub" id="profileSub"></div>
       </div>
     </div>
+
+    <div class="section-label">Manage Cow</div>
+    <button class="btn btn-outline btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set lot/pasture</button>
+    <button class="btn btn-outline btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
+    <button class="btn btn-outline btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
+    <button class="btn btn-outline btn-full" id="profileRemoveCowBtn" style="margin-bottom:20px;">Remove Cow</button>
 
     <div class="section-label">Photos</div>
     <div id="profilePhotosList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
@@ -427,7 +422,6 @@
         <div class="detail-num" id="weightsDetailNum">#000</div>
         <div class="detail-sub" id="weightsDetailSub">0 weights logged</div>
       </div>
-      <button class="btn btn-outline btn-sm" id="deleteWeightsCowBtn">Remove Cow</button>
     </div>
 
     <button class="btn btn-outline btn-full" id="weightsViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
@@ -464,7 +458,6 @@
         <div class="detail-num" id="breedingDetailNum">#000</div>
         <div class="detail-sub" id="breedingDetailSub">0 breedings logged</div>
       </div>
-      <button class="btn btn-outline btn-sm" id="deleteBreedingCowBtn">Remove Cow</button>
     </div>
 
     <button class="btn btn-outline btn-full" id="breedingViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
@@ -545,7 +538,7 @@
   }
 
   function setSync(state){ // 'ok' | 'busy' | 'err'
-    syncDot.className = 'sync-dot' + (state==='err' ? ' err' : state==='busy' ? ' busy' : '');
+    if(syncDot) syncDot.className = 'sync-dot' + (state==='err' ? ' err' : state==='busy' ? ' busy' : '');
   }
 
   function showConnError(msg){
@@ -822,7 +815,6 @@
     moreToolsView.classList.add('hidden');
     importView.classList.add('hidden');
     fabAdd.classList.add('hidden');
-    document.getElementById('homeTotalCattle').textContent = cows.filter(isActiveStatus).length;
     window.scrollTo(0,0);
   }
   function showMoreTools(){
@@ -938,9 +930,6 @@
     breedingDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderNotesDetail();
-    updateNotesLotLabel();
-    updateNotesOwnerLabel();
-    updateNotesStatusLabel();
     window.scrollTo(0,0);
   }
   function closeNotesCow(){
@@ -988,6 +977,9 @@
     profileView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     renderProfile();
+    updateProfileLotLabel();
+    updateProfileOwnerLabel();
+    updateProfileStatusLabel();
     window.scrollTo(0,0);
   }
   function closeProfileCow(){
@@ -1096,53 +1088,52 @@
     breedingDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderDetail();
-    updateLotLabel();
     window.scrollTo(0,0);
   }
   function getActiveCowNumber(){
+    if(!profileView.classList.contains('hidden')) return currentProfileCow;
     if(!notesDetailView.classList.contains('hidden')) return currentNotesCow;
     if(!calvingDetailView.classList.contains('hidden')) return currentCalvingCow;
+    if(!weightsDetailView.classList.contains('hidden')) return currentWeightsCow;
+    if(!breedingDetailView.classList.contains('hidden')) return currentBreedingCow;
     return currentCow;
   }
-  function updateLotLabel(){
-    const cow = cows.find(c=>c.number===currentCow);
-    const el = document.getElementById('detailLot');
+  function updateProfileLotLabel(){
+    const cow = cows.find(c=>c.number===currentProfileCow);
+    const el = document.getElementById('profileLotBtn');
     el.textContent = (cow && cow.lot) ? `Lot: ${cow.lot} (tap to edit)` : 'Set lot/pasture';
   }
-  function updateNotesLotLabel(){
-    const cow = cows.find(c=>c.number===currentNotesCow);
-    const el = document.getElementById('notesDetailLot');
-    el.textContent = (cow && cow.lot) ? `Lot: ${cow.lot} (tap to edit)` : 'Set lot/pasture';
-  }
-  function updateNotesOwnerLabel(){
-    const cow = cows.find(c=>c.number===currentNotesCow);
-    const el = document.getElementById('notesDetailOwner');
+  function updateProfileOwnerLabel(){
+    const cow = cows.find(c=>c.number===currentProfileCow);
+    const el = document.getElementById('profileOwnerBtn');
     el.textContent = (cow && cow.owner) ? `Owner: ${cow.owner} (tap to edit)` : 'Set owner';
   }
-  function updateNotesStatusLabel(){
-    const cow = cows.find(c=>c.number===currentNotesCow);
-    const el = document.getElementById('notesDetailStatus');
+  function updateProfileStatusLabel(){
+    const cow = cows.find(c=>c.number===currentProfileCow);
+    const el = document.getElementById('profileStatusBtn');
     el.textContent = `Status: ${(cow && cow.status) || 'Active'} (tap to edit)`;
   }
   function refreshOpenCowHeaders(){
     if(currentCow && !detailView.classList.contains('hidden')){
       document.getElementById('detailNum').innerHTML = ownerNumHtml(currentCow, (cows.find(c=>c.number===currentCow)||{}).owner);
-      updateLotLabel();
     }
     if(currentCalvingCow && !calvingDetailView.classList.contains('hidden')){
       document.getElementById('calvingDetailNum').innerHTML = ownerNumHtml(currentCalvingCow, (cows.find(c=>c.number===currentCalvingCow)||{}).owner);
     }
     if(currentNotesCow && !notesDetailView.classList.contains('hidden')){
       document.getElementById('notesDetailNum').innerHTML = ownerNumHtml(currentNotesCow, (cows.find(c=>c.number===currentNotesCow)||{}).owner);
-      updateNotesLotLabel();
-      updateNotesOwnerLabel();
-      updateNotesStatusLabel();
     }
     if(currentWeightsCow && !weightsDetailView.classList.contains('hidden')){
       document.getElementById('weightsDetailNum').innerHTML = ownerNumHtml(currentWeightsCow, (cows.find(c=>c.number===currentWeightsCow)||{}).owner);
     }
     if(currentBreedingCow && !breedingDetailView.classList.contains('hidden')){
       document.getElementById('breedingDetailNum').innerHTML = ownerNumHtml(currentBreedingCow, (cows.find(c=>c.number===currentBreedingCow)||{}).owner);
+    }
+    if(currentProfileCow && !profileView.classList.contains('hidden')){
+      document.getElementById('profileNum').innerHTML = ownerNumHtml(currentProfileCow, (cows.find(c=>c.number===currentProfileCow)||{}).owner);
+      updateProfileLotLabel();
+      updateProfileOwnerLabel();
+      updateProfileStatusLabel();
     }
   }
   function closeCow(){
@@ -1892,6 +1883,24 @@
     }catch(e){ showToast('Could not remove — try again'); }
   }
 
+  async function deleteCowFromProfile(){
+    if(!currentProfileCow) return;
+    const num = currentProfileCow;
+    if(!confirm(`Remove cow #${num} and ALL its records (treatments, notes, calvings, weights, breeding, and photos)? This can't be undone.`)) return;
+    try{
+      await api('/cows?number=eq.' + encodeURIComponent(num), { method:'DELETE' });
+      cows = cows.filter(c=>c.number!==num);
+      treatments = treatments.filter(t=>t.cow_number!==num);
+      calvings = calvings.filter(c=>c.cow_number!==num);
+      generalNotes = generalNotes.filter(n=>n.cow_number!==num);
+      weights = weights.filter(w=>w.cow_number!==num);
+      breedingRecords = breedingRecords.filter(b=>b.cow_number!==num);
+      cowPhotos = cowPhotos.filter(p=>p.cow_number!==num);
+      closeProfileCow();
+      showToast('Cow removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
   // ---- Modals ----
   function openModal(html){
     const backdrop = document.createElement('div');
@@ -2454,7 +2463,6 @@
   document.getElementById('calvingDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('calvingBackBtn').addEventListener('click', closeCalvingCow);
   document.getElementById('addCalvingBtn').addEventListener('click', addCalvingModal);
-  document.getElementById('deleteCalvingCowBtn').addEventListener('click', deleteCowFromCalving);
   document.getElementById('calvingSearchBox').addEventListener('input', renderCalvingList);
   document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
   document.getElementById('homeGeneralNotesBtn').addEventListener('click', showNotesList);
@@ -2488,7 +2496,6 @@
   document.getElementById('weightsListHomeBtn').addEventListener('click', showHome);
   document.getElementById('weightsDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('weightsBackBtn').addEventListener('click', closeWeightsCow);
-  document.getElementById('deleteWeightsCowBtn').addEventListener('click', deleteCowFromWeights);
   document.getElementById('weightsViewProfile').addEventListener('click', ()=> openProfileCow(currentWeightsCow));
   document.getElementById('addWeightBtn').addEventListener('click', addWeightModal);
   document.getElementById('weightsSearchBox').addEventListener('input', renderWeightsList);
@@ -2498,12 +2505,15 @@
   document.getElementById('breedingListHomeBtn').addEventListener('click', showHome);
   document.getElementById('breedingDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('breedingBackBtn').addEventListener('click', closeBreedingCow);
-  document.getElementById('deleteBreedingCowBtn').addEventListener('click', deleteCowFromBreeding);
   document.getElementById('breedingViewProfile').addEventListener('click', ()=> openProfileCow(currentBreedingCow));
   document.getElementById('addBreedingBtn').addEventListener('click', addBreedingModal);
   document.getElementById('breedingSearchBox').addEventListener('input', renderBreedingList);
   document.getElementById('breedingSortBy').addEventListener('change', renderBreedingList);
   document.getElementById('profileGoBreeding').addEventListener('click', ()=> openBreedingCow(currentProfileCow));
+  document.getElementById('profileLotBtn').addEventListener('click', editLotModal);
+  document.getElementById('profileOwnerBtn').addEventListener('click', editOwnerModal);
+  document.getElementById('profileStatusBtn').addEventListener('click', editStatusModal);
+  document.getElementById('profileRemoveCowBtn').addEventListener('click', deleteCowFromProfile);
   document.getElementById('profileAddPhotoBtn').addEventListener('click', ()=>{
     document.getElementById('profilePhotoInput').click();
   });
@@ -2526,16 +2536,10 @@
   document.getElementById('notesDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('notesBackBtn').addEventListener('click', closeNotesCow);
   document.getElementById('addGeneralNoteBtn').addEventListener('click', addGeneralNoteModal);
-  document.getElementById('deleteNotesCowBtn').addEventListener('click', deleteCowFromNotes);
   document.getElementById('notesSearchBox').addEventListener('input', renderNotesList);
   document.getElementById('notesSortBy').addEventListener('change', renderNotesList);
   document.getElementById('backBtn').addEventListener('click', closeCow);
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
-  document.getElementById('deleteCowBtn').addEventListener('click', deleteCow);
-  document.getElementById('detailLot').addEventListener('click', editLotModal);
-  document.getElementById('notesDetailLot').addEventListener('click', editLotModal);
-  document.getElementById('notesDetailOwner').addEventListener('click', editOwnerModal);
-  document.getElementById('notesDetailStatus').addEventListener('click', editStatusModal);
 
   const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
   const OWNER_OPTIONS = ['JF','FCC','Kellan','Clint','LA'];
@@ -2593,6 +2597,7 @@
         renderNotesList();
         renderWeightsList();
         renderBreedingList();
+        renderProfileList();
         showToast('Lot updated');
       }catch(e){
         btn.disabled = false;
@@ -2634,6 +2639,7 @@
         renderNotesList();
         renderWeightsList();
         renderBreedingList();
+        renderProfileList();
         showToast('Owner updated');
       }catch(e){
         btn.disabled = false;
@@ -2679,6 +2685,7 @@
         renderNotesList();
         renderWeightsList();
         renderBreedingList();
+        renderProfileList();
         const homeTotalEl = document.getElementById('homeTotalCattle');
         if(homeTotalEl) homeTotalEl.textContent = cows.filter(isActiveStatus).length;
         showToast('Status updated');
@@ -3404,14 +3411,6 @@
   });
   window.addEventListener('focus', loadAll);
   window.addEventListener('pageshow', loadAll);
-
-  // Tap the refresh button to force a manual reload any time.
-  const refreshBtn = document.getElementById('refreshBtn');
-  refreshBtn.addEventListener('click', async ()=>{
-    await loadAll();
-    if(currentCow) renderDetail();
-    showToast('Refreshed');
-  });
 })();
 </script>
 
