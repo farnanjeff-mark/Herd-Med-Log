@@ -1468,8 +1468,7 @@
       const card = document.createElement('div');
       card.className = 'cow-card' + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      const ownerBadge = cow.owner ? `<span class="lot-badge" style="background:#6b6350;">${escapeHtml(cow.owner)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${ownerBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openProfileCow(num));
       listEl.appendChild(card);
     });
