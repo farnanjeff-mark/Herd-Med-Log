@@ -159,6 +159,12 @@
     z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;max-width:85%;text-align:center;
   }
   .toast.show{opacity:1;}
+@media print{
+  .header, .fab, .toast, .banner, .modal-backdrop, .back, .btn, .chev, .photo-overlay-btn { display:none !important; }
+  body{background:#fff;}
+  .app{max-width:100%;}
+  .record{border-color:#999;background:#fff;}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -190,7 +196,9 @@
     <button class="btn btn-outline btn-full" id="bulkEditBtn" style="margin-bottom:12px;">🔧 Bulk Edit Owner / Lot</button>
     <button class="btn btn-outline btn-full" id="importDataBtn" style="margin-bottom:12px;">📥 Import Data</button>
     <button class="btn btn-outline btn-full" id="headcountByOwnerBtn" style="margin-bottom:12px;">📊 Headcount by Owner</button>
-    <button class="btn btn-outline btn-full" id="soldDeceasedBtn">📋 Sold / Deceased List</button>
+    <button class="btn btn-outline btn-full" id="soldDeceasedBtn" style="margin-bottom:12px;">📋 Sold / Deceased List</button>
+    <button class="btn btn-outline btn-full" id="globalSearchBtn" style="margin-bottom:12px;">🔎 Search Everything</button>
+    <button class="btn btn-outline btn-full" id="recentlyDeletedBtn">🗑️ Recently Deleted</button>
   </div>
 
   <div class="view hidden" id="importView">
@@ -220,6 +228,22 @@
       <div id="importPreviewList" style="max-height:280px;overflow-y:auto;margin-bottom:14px;"></div>
       <button class="btn btn-barn btn-full" id="importConfirmBtn">Import Valid Rows</button>
     </div>
+  </div>
+
+  <div class="view hidden" id="globalSearchView">
+    <button class="btn btn-outline btn-full" id="globalSearchHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:14px;">Search Everything</div>
+    <div class="toolbar">
+      <input type="text" id="globalSearchBox" placeholder="Search cow #, medicine, sire, notes..." autocomplete="off"/>
+    </div>
+    <div id="globalSearchResults" style="margin-top:14px;"></div>
+  </div>
+
+  <div class="view hidden" id="recentlyDeletedView">
+    <button class="btn btn-outline btn-full" id="recentlyDeletedHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Recently Deleted</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Covers individual entries (meds, calvings, notes, weights, breeding) from the last 30 days. Whole-cow removals aren't recoverable here.</div>
+    <div id="recentlyDeletedList"></div>
   </div>
 
   <div class="view hidden" id="listView">
@@ -366,6 +390,8 @@
       </div>
     </div>
 
+    <button class="btn btn-outline btn-full" id="profilePrintBtn" style="margin-bottom:20px;">🖨️ Print Summary</button>
+
     <div class="section-label">Photos</div>
     <div id="profilePhotosList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
     <input type="file" id="profilePhotoInput" accept="image/*" capture="environment" style="display:none;"/>
@@ -495,6 +521,7 @@
   let weights = [];      // [{id, cow_number, weigh_date, weight, notes}]
   let breedingRecords = []; // [{id, cow_number, breed_date, bred_to, vet_calls, natural_sire, pregnancy_method, expected_due_date}]
   let cowPhotos = []; // [{id, cow_number, storage_path, photo_url, taken_at}]
+  let deletedRecords = []; // [{id, table_name, record_data, cow_number, deleted_at}]
   let currentCow = null;
   let currentCalvingCow = null;
   let currentNotesCow = null;
@@ -519,6 +546,8 @@
   const breedingDetailView = document.getElementById('breedingDetailView');
   const moreToolsView = document.getElementById('moreToolsView');
   const importView = document.getElementById('importView');
+  const globalSearchView = document.getElementById('globalSearchView');
+  const recentlyDeletedView = document.getElementById('recentlyDeletedView');
   const fabAdd = document.getElementById('fabAdd');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
@@ -528,6 +557,7 @@
   const profileSearchBox = document.getElementById('profileSearchBox');
   const weightsSearchBox = document.getElementById('weightsSearchBox');
   const breedingSearchBox = document.getElementById('breedingSearchBox');
+  const globalSearchBox = document.getElementById('globalSearchBox');
   const toastEl = document.getElementById('toast');
   const syncDot = document.getElementById('refreshDot');
   const connBanner = document.getElementById('connBanner');
@@ -815,6 +845,8 @@
     breedingDetailView.classList.add('hidden');
     moreToolsView.classList.add('hidden');
     importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     window.scrollTo(0,0);
   }
@@ -823,6 +855,8 @@
     homeView.classList.add('hidden');
     moreToolsView.classList.remove('hidden');
     importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     window.scrollTo(0,0);
   }
@@ -830,10 +864,39 @@
     setHeaderTitle('Import', 'Data');
     homeView.classList.add('hidden');
     moreToolsView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
     importView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     setImportType('meds');
     window.scrollTo(0,0);
+  }
+  function showGlobalSearch(){
+    setHeaderTitle('Search', 'Everything');
+    homeView.classList.add('hidden');
+    moreToolsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    globalSearchView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    globalSearchBox.value = '';
+    document.getElementById('globalSearchResults').innerHTML = '';
+    window.scrollTo(0,0);
+  }
+  async function showRecentlyDeleted(){
+    setHeaderTitle('Recently', 'Deleted');
+    homeView.classList.add('hidden');
+    moreToolsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    window.scrollTo(0,0);
+    try{
+      const thirtyDaysAgo = new Date(Date.now() - 30*86400000).toISOString();
+      deletedRecords = await api('/deleted_records?select=*&deleted_at=gte.' + encodeURIComponent(thirtyDaysAgo) + '&order=deleted_at.desc', { method:'GET' }) || [];
+    }catch(e){ deletedRecords = []; }
+    renderRecentlyDeleted();
   }
   function showMedsNotes(){
     setHeaderTitle('Med', 'Log');
@@ -885,6 +948,8 @@
     breedingListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderCalvingDetail();
     window.scrollTo(0,0);
@@ -929,6 +994,8 @@
     breedingListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderNotesDetail();
     window.scrollTo(0,0);
@@ -977,6 +1044,8 @@
     breedingDetailView.classList.add('hidden');
     moreToolsView.classList.add('hidden');
     importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
     profileView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     renderProfile();
@@ -1021,6 +1090,8 @@
     weightsDetailView.classList.remove('hidden');
     profileListView.classList.add('hidden');
     profileView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderWeightsDetail();
     window.scrollTo(0,0);
@@ -1062,6 +1133,8 @@
     breedingDetailView.classList.remove('hidden');
     profileListView.classList.add('hidden');
     profileView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderBreedingDetail();
     window.scrollTo(0,0);
@@ -1089,6 +1162,8 @@
     breedingListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     renderDetail();
     window.scrollTo(0,0);
@@ -1483,8 +1558,8 @@
       <div style="position:relative;width:100px;">
         <img src="${p.photo_url}" style="width:100px;height:100px;object-fit:cover;border-radius:4px;border:2px solid var(--ink);display:block;"/>
         <div style="font-family:'Courier New',monospace;font-size:10px;text-align:center;margin-top:2px;color:#6b6350;">${fmtDateShort(p.taken_at)}</div>
-        <a href="${p.photo_url}" download="cow-${escapeHtml(num)}-${p.taken_at}.jpg" target="_blank" title="Download" style="position:absolute;top:3px;left:3px;background:rgba(255,255,255,.9);border-radius:3px;padding:1px 5px;font-size:12px;text-decoration:none;color:var(--ink);">⬇</a>
-        <button class="photo-del-btn" data-id="${p.id}" title="Delete" style="position:absolute;top:3px;right:3px;background:rgba(255,255,255,.9);border:none;border-radius:3px;padding:1px 6px;font-size:13px;cursor:pointer;color:var(--barn);">&times;</button>
+        <a href="${p.photo_url}" download="cow-${escapeHtml(num)}-${p.taken_at}.jpg" target="_blank" title="Download" class="photo-overlay-btn" style="position:absolute;top:3px;left:3px;background:rgba(255,255,255,.9);border-radius:3px;padding:1px 5px;font-size:12px;text-decoration:none;color:var(--ink);">⬇</a>
+        <button class="photo-del-btn photo-overlay-btn" data-id="${p.id}" title="Delete" style="position:absolute;top:3px;right:3px;background:rgba(255,255,255,.9);border:none;border-radius:3px;padding:1px 6px;font-size:13px;cursor:pointer;color:var(--barn);">&times;</button>
       </div>
     `).join('');
     el.querySelectorAll('.photo-del-btn').forEach(btn=>{
@@ -1758,8 +1833,20 @@
   }
 
 
+  async function snapshotBeforeDelete(tableName, record){
+    try{
+      await api('/deleted_records', {
+        method:'POST',
+        headers: HEADERS,
+        body: JSON.stringify({ table_name: tableName, record_data: record, cow_number: record.cow_number })
+      });
+    }catch(e){ console.error('Could not snapshot before delete', e); }
+  }
+
   async function deleteRecord(id){
     try{
+      const record = treatments.find(t=>t.id===id);
+      if(record) await snapshotBeforeDelete('treatments', record);
       await api('/treatments?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       treatments = treatments.filter(t=>t.id!==id);
       renderDetail();
@@ -1770,6 +1857,8 @@
 
   async function deleteGeneralNote(id){
     try{
+      const record = generalNotes.find(n=>n.id===id);
+      if(record) await snapshotBeforeDelete('general_notes', record);
       await api('/general_notes?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       generalNotes = generalNotes.filter(n=>n.id!==id);
       renderNotesDetail();
@@ -1780,6 +1869,8 @@
 
   async function deleteWeight(id){
     try{
+      const record = weights.find(w=>w.id===id);
+      if(record) await snapshotBeforeDelete('weights', record);
       await api('/weights?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       weights = weights.filter(w=>w.id!==id);
       renderWeightsDetail();
@@ -1790,6 +1881,8 @@
 
   async function deleteBreedingRecord(id){
     try{
+      const record = breedingRecords.find(b=>b.id===id);
+      if(record) await snapshotBeforeDelete('breeding_records', record);
       await api('/breeding_records?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       breedingRecords = breedingRecords.filter(b=>b.id!==id);
       renderBreedingDetail();
@@ -1800,6 +1893,8 @@
 
   async function deleteCalvingRecord(id){
     try{
+      const record = calvings.find(c=>c.id===id);
+      if(record) await snapshotBeforeDelete('calvings', record);
       await api('/calvings?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       calvings = calvings.filter(c=>c.id!==id);
       renderCalvingDetail();
@@ -2484,6 +2579,11 @@
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
   document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
+  document.getElementById('globalSearchBtn').addEventListener('click', showGlobalSearch);
+  document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
+  document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
+  document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
+  document.getElementById('recentlyDeletedHomeBtn').addEventListener('click', showHome);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
   document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
   document.getElementById('importTypeCalving').addEventListener('click', ()=> setImportType('calving'));
@@ -2526,6 +2626,7 @@
   document.getElementById('profileOwnerBtn').addEventListener('click', editOwnerModal);
   document.getElementById('profileStatusBtn').addEventListener('click', editStatusModal);
   document.getElementById('profileRemoveCowBtn').addEventListener('click', deleteCowFromProfile);
+  document.getElementById('profilePrintBtn').addEventListener('click', ()=> window.print());
   document.getElementById('profileAddPhotoBtn').addEventListener('click', ()=>{
     document.getElementById('profilePhotoInput').click();
   });
@@ -2737,6 +2838,122 @@
       </div>
     `);
     modal.querySelector('#closeHeadcountBtn').addEventListener('click', closeModal);
+  }
+
+  function globalSearchMatches(q){
+    const results = [];
+    treatments.forEach(t=>{
+      const hay = [t.cow_number, t.medicine, t.reason, t.notes].filter(Boolean).join(' ').toLowerCase();
+      if(hay.includes(q)) results.push({ section:'Meds & Notes', cow:t.cow_number, date:t.date,
+        text: t.medicine ? `${t.medicine}${t.reason?' / '+t.reason:''}${t.notes?' — '+t.notes:''}` : `NOTE: ${t.notes||''}`,
+        open:()=>openCow(t.cow_number) });
+    });
+    calvings.forEach(r=>{
+      const hay = [r.cow_number, calfSexLabel(r.calf_sex), r.sire, r.notes, r.birth_assist].filter(Boolean).join(' ').toLowerCase();
+      if(hay.includes(q)) results.push({ section:'Calving', cow:r.cow_number, date:r.calving_date,
+        text: `${calfSexLabel(r.calf_sex)} calf${r.sire?' · Sire: '+r.sire:''}${r.notes?' — '+r.notes:''}`,
+        open:()=>openCalvingCow(r.cow_number) });
+    });
+    generalNotes.forEach(n=>{
+      const hay = [n.cow_number, n.note].filter(Boolean).join(' ').toLowerCase();
+      if(hay.includes(q)) results.push({ section:'General Notes', cow:n.cow_number, date:n.note_date,
+        text: n.note||'', open:()=>openNotesCow(n.cow_number) });
+    });
+    weights.forEach(w=>{
+      const hay = [w.cow_number, w.notes].filter(Boolean).join(' ').toLowerCase();
+      if(hay.includes(q)) results.push({ section:'Weights', cow:w.cow_number, date:w.weigh_date,
+        text: `${w.weight!=null?w.weight+' lbs':''}${w.notes?' — '+w.notes:''}`,
+        open:()=>openWeightsCow(w.cow_number) });
+    });
+    breedingRecords.forEach(b=>{
+      const hay = [b.cow_number, b.bred_to, b.natural_sire, b.vet_calls, b.notes, b.pregnancy_method].filter(Boolean).join(' ').toLowerCase();
+      if(hay.includes(q)) results.push({ section:'Breeding', cow:b.cow_number, date:b.breed_date,
+        text: [b.bred_to, b.pregnancy_method, b.notes].filter(Boolean).join(' — '),
+        open:()=>openBreedingCow(b.cow_number) });
+    });
+    cows.forEach(c=>{
+      const hay = [c.number, c.owner, c.lot].filter(Boolean).join(' ').toLowerCase();
+      if(hay.includes(q)) results.push({ section:'Cow Profile', cow:c.number, date:null,
+        text: [c.lot, c.owner, c.status].filter(Boolean).join(' · ') || 'No lot/owner set',
+        open:()=>openProfileCow(c.number) });
+    });
+    results.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+    return results;
+  }
+
+  function renderGlobalSearchResults(){
+    const q = globalSearchBox.value.trim().toLowerCase();
+    const resultsEl = document.getElementById('globalSearchResults');
+    if(!q){ resultsEl.innerHTML = '<p class="empty" style="padding:14px 0;">Type to search across every section.</p>'; return; }
+    const results = globalSearchMatches(q);
+    if(results.length === 0){ resultsEl.innerHTML = '<p class="empty" style="padding:14px 0;">No matches.</p>'; return; }
+    resultsEl.innerHTML = results.map((r,i)=>`
+      <div class="record global-search-result" data-idx="${i}" style="cursor:pointer;">
+        <div class="record-date">${r.date?fmtDateShort(r.date)+' · ':''}#${escapeHtml(r.cow)} <span class="lot-badge">${escapeHtml(r.section)}</span></div>
+        <div class="record-reason">${escapeHtml(r.text)}</div>
+      </div>
+    `).join('');
+    resultsEl.querySelectorAll('.global-search-result').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        results[parseInt(el.dataset.idx,10)].open();
+      });
+    });
+  }
+
+  const DELETED_TABLE_LABELS = { treatments:'Meds & Notes', calvings:'Calving', general_notes:'General Notes', weights:'Weights', breeding_records:'Breeding' };
+
+  function renderRecentlyDeleted(){
+    const el = document.getElementById('recentlyDeletedList');
+    if(!el) return;
+    if(deletedRecords.length === 0){
+      el.innerHTML = '<p class="empty" style="padding:14px 0;">Nothing deleted recently.</p>';
+      return;
+    }
+    el.innerHTML = deletedRecords.map((d,i)=>{
+      const data = d.record_data;
+      let summary = '';
+      if(d.table_name === 'treatments') summary = data.medicine ? `${data.medicine}${data.reason?' / '+data.reason:''}` : `NOTE: ${data.notes||''}`;
+      else if(d.table_name === 'calvings') summary = `${calfSexLabel(data.calf_sex)} calf`;
+      else if(d.table_name === 'general_notes') summary = data.note||'';
+      else if(d.table_name === 'weights') summary = data.weight!=null ? data.weight+' lbs' : '';
+      else if(d.table_name === 'breeding_records') summary = data.bred_to || data.pregnancy_method || '';
+      return `
+        <div class="record">
+          <div class="record-date">#${escapeHtml(d.cow_number||'?')} · ${DELETED_TABLE_LABELS[d.table_name]||d.table_name} · deleted ${fmtDateShort((d.deleted_at||'').slice(0,10))}</div>
+          <div class="record-reason">${escapeHtml(summary)}</div>
+          <button class="btn btn-outline btn-sm restore-btn" data-idx="${i}" style="margin-top:8px;">Restore</button>
+        </div>
+      `;
+    }).join('');
+    el.querySelectorAll('.restore-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> restoreDeletedRecord(parseInt(btn.dataset.idx,10)));
+    });
+  }
+
+  async function restoreDeletedRecord(idx){
+    const d = deletedRecords[idx];
+    if(!d) return;
+    try{
+      const inserted = await api('/' + d.table_name, {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify(d.record_data)
+      });
+      if(d.table_name === 'treatments') treatments.push(inserted[0]);
+      else if(d.table_name === 'calvings') calvings.push(inserted[0]);
+      else if(d.table_name === 'general_notes') generalNotes.push(inserted[0]);
+      else if(d.table_name === 'weights') weights.push(inserted[0]);
+      else if(d.table_name === 'breeding_records') breedingRecords.push(inserted[0]);
+
+      await api('/deleted_records?id=eq.' + encodeURIComponent(d.id), { method:'DELETE' });
+      deletedRecords = deletedRecords.filter(x=>x.id!==d.id);
+      renderRecentlyDeleted();
+      renderList(); renderCalvingList(); renderNotesList(); renderWeightsList(); renderBreedingList(); renderProfileList();
+      showToast('Restored');
+    }catch(e){
+      console.error(e);
+      showToast('Could not restore — the cow this belonged to may no longer exist');
+    }
   }
 
   function soldDeceasedModal(){
