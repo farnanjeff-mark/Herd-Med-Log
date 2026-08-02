@@ -1462,7 +1462,9 @@
       const medCount = recordsFor(num).length;
       const calvCount = calvingsFor(num).length;
       const noteCount = generalNotesFor(num).length;
-      const meta = `${medCount} med entr${medCount===1?'y':'ies'} · ${calvCount} calving${calvCount!==1?'s':''} · ${noteCount} note${noteCount!==1?'s':''}`;
+      const weightCount = weightsFor(num).length;
+      const breedingCount = breedingFor(num).length;
+      const meta = `${medCount} med entr${medCount===1?'y':'ies'} · ${calvCount} calving${calvCount!==1?'s':''} · ${noteCount} note${noteCount!==1?'s':''} · ${weightCount} weight${weightCount!==1?'s':''} · ${breedingCount} breeding${breedingCount!==1?'s':''}`;
       const card = document.createElement('div');
       card.className = 'cow-card' + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
