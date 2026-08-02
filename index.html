@@ -365,12 +365,6 @@
       </div>
     </div>
 
-    <div class="section-label">Manage Cow</div>
-    <button class="btn btn-outline btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set lot/pasture</button>
-    <button class="btn btn-outline btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
-    <button class="btn btn-outline btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
-    <button class="btn btn-outline btn-full" id="profileRemoveCowBtn" style="margin-bottom:20px;">Remove Cow</button>
-
     <div class="section-label">Photos</div>
     <div id="profilePhotosList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
     <input type="file" id="profilePhotoInput" accept="image/*" capture="environment" style="display:none;"/>
@@ -394,7 +388,13 @@
 
     <div class="section-label">Breeding Records</div>
     <div id="profileBreedingList"></div>
-    <button class="btn btn-purple btn-full" id="profileGoBreeding">Go to Breeding Records →</button>
+    <button class="btn btn-purple btn-full" id="profileGoBreeding" style="margin-bottom:20px;">Go to Breeding Records →</button>
+
+    <div class="section-label">Manage Cow</div>
+    <button class="btn btn-outline btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set lot/pasture</button>
+    <button class="btn btn-outline btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
+    <button class="btn btn-outline btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
+    <button class="btn btn-outline btn-full" id="profileRemoveCowBtn">Remove Cow</button>
   </div>
 
   <div class="view hidden" id="weightsListView">
@@ -1570,6 +1570,7 @@
             <div class="record-date">${fmtDate(r.breed_date)}</div>
             ${r.expected_due_date ? `<div class="record-med">Due: ${fmtDate(r.expected_due_date)}</div>` : ''}
             ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
+            ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
           </div>`;
         }).join('');
   }
@@ -1739,6 +1740,7 @@
         <div class="record-date">${fmtDate(r.breed_date)}</div>
         ${r.expected_due_date ? `<div class="record-med">Due: ${fmtDate(r.expected_due_date)}</div>` : ''}
         ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
+        ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
       `;
       div.querySelector('.record-del').addEventListener('click', (e)=>{
         e.stopPropagation();
@@ -2338,6 +2340,10 @@
         <label>Expected Due Date</label>
         <input type="text" id="brdDueDisplay" value="${fmtDate(computeDueDate(initialDate))}" disabled style="background:#e5ded0;"/>
       </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="brdNotes" rows="2" placeholder="Any other notes about this breeding">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
+      </div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelBrd">Cancel</button>
         <button class="btn btn-barn" id="confirmBrd">${isEdit ? 'Save Changes' : 'Save Entry'}</button>
@@ -2354,6 +2360,7 @@
       const method = modal.querySelector('#brdMethod').value;
       const sire = modal.querySelector('#brdSire').value.trim();
       const vet = modal.querySelector('#brdVet').value.trim();
+      const notes = modal.querySelector('#brdNotes').value.trim();
       if(!dateVal){ showToast('Date is required'); return; }
       const btn = modal.querySelector('#confirmBrd');
       btn.disabled = true;
@@ -2363,6 +2370,7 @@
         pregnancy_method: method||null,
         natural_sire: sire||null,
         vet_calls: vet||null,
+        notes: notes||null,
         expected_due_date: computeDueDate(dateVal)
       };
       try{
@@ -3124,7 +3132,7 @@
   }
 
   function buildBreedingRows(){
-    const rows = [['Cow Number','Status','Lot/Group','Owner','Date','Bred To','Pregnancy Method','Natural Sire','Vet Calls','Expected Due Date']];
+    const rows = [['Cow Number','Status','Lot/Group','Owner','Date','Bred To','Pregnancy Method','Natural Sire','Vet Calls','Expected Due Date','Notes']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -3136,14 +3144,14 @@
 
     sortedBreeding.forEach(r=>{
       const c = cowMap[r.cow_number] || {};
-      rows.push([r.cow_number, c.status||'Active', c.lot||'', c.owner||'', r.breed_date, r.bred_to||'', r.pregnancy_method||'', r.natural_sire||'', r.vet_calls||'', r.expected_due_date||'']);
+      rows.push([r.cow_number, c.status||'Active', c.lot||'', c.owner||'', r.breed_date, r.bred_to||'', r.pregnancy_method||'', r.natural_sire||'', r.vet_calls||'', r.expected_due_date||'', r.notes||'']);
     });
 
     const bredCows = new Set(breedingRecords.map(r=>r.cow_number));
     cows.filter(c=>!bredCows.has(c.number))
         .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
         .forEach(c=>{
-          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '', '', '', '', '']);
+          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '', '', '', '', '', '']);
         });
     return rows;
   }
@@ -3249,7 +3257,7 @@
     };
     if(type === 'breeding') return {
       label:'Breeding', table:'breeding_records',
-      hint:"Columns: Cow #, Date, Bred To (optional), Pregnancy Method (ET/AI/BB, optional), Natural Sire (optional), Vet Calls (optional). Expected Due Date is calculated automatically (breed date + 283 days).\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, Bull 42, AI, , checked by vet 8/1",
+      hint:"Columns: Cow #, Date, Bred To (optional), Pregnancy Method (ET/AI/BB, optional), Natural Sire (optional), Vet Calls (optional), Notes (optional). Expected Due Date is calculated automatically (breed date + 283 days).\nDates can be MM/DD/YYYY or YYYY-MM-DD.\nExample: 214, 7/28/2026, Bull 42, AI, , checked by vet 8/1, ",
       parse(fields){
         const cow = (fields[0]||'').trim();
         const date = parseDateFlexible(fields[1]);
@@ -3258,12 +3266,13 @@
         if(method && !PREGNANCY_METHOD_OPTIONS.includes(method)) method = '';
         const sire = (fields[4]||'').trim();
         const vet = (fields[5]||'').trim();
+        const notes = (fields[6]||'').trim();
         if(!cow) return {error:'Missing cow number'};
         if(!date) return {error:'Invalid or missing date'};
         return { cow, body:{
           cow_number:cow, breed_date:date, bred_to: bredTo||null,
           pregnancy_method: method||null, natural_sire: sire||null,
-          vet_calls: vet||null, expected_due_date: computeDueDate(date)
+          vet_calls: vet||null, notes: notes||null, expected_due_date: computeDueDate(date)
         } };
       }
     };
