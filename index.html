@@ -190,7 +190,8 @@
       <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
       <button class="btn btn-purple btn-full" id="homeBreedingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐂 Breeding Records</button>
       <button class="btn btn-orange btn-full" id="homeWeightsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">⚖️ Weights</button>
-      <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">📝 General Notes</button>
+      <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">📝 General Notes</button>
+      <button class="btn btn-outline btn-full" id="homeHerdTallyBtn" style="margin-bottom:24px;">🔢 Herd Tally</button>
       <button class="btn btn-outline btn-full" id="homeMoreToolsBtn">⋯ More Tools</button>
     </div>
   </div>
@@ -250,6 +251,13 @@
     <div class="modal-title" style="margin-bottom:6px;">Recently Deleted</div>
     <div class="banner banner-note" style="display:block;margin-bottom:14px;">Covers individual entries (meds, calvings, notes, weights, breeding) from the last 30 days. Whole-cow removals aren't recoverable here.</div>
     <div id="recentlyDeletedList"></div>
+  </div>
+
+  <div class="view hidden" id="herdTallyView">
+    <button class="btn btn-outline btn-full" id="herdTallyHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Herd Tally</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:16px;">Manually entered counts per farm — not tied to your cattle records. Tap a box to update it.</div>
+    <div id="herdTallyContent"></div>
   </div>
 
   <div class="view hidden" id="listView">
@@ -528,6 +536,7 @@
   let breedingRecords = []; // [{id, cow_number, breed_date, bred_to, vet_calls, natural_sire, pregnancy_method, expected_due_date}]
   let cowPhotos = []; // [{id, cow_number, storage_path, photo_url, taken_at}]
   let deletedRecords = []; // [{id, table_name, record_data, cow_number, deleted_at}]
+  let herdTally = []; // [{id, location, cows, calves, bulls}]
   let currentCow = null;
   let currentCalvingCow = null;
   let currentNotesCow = null;
@@ -554,6 +563,7 @@
   const importView = document.getElementById('importView');
   const globalSearchView = document.getElementById('globalSearchView');
   const recentlyDeletedView = document.getElementById('recentlyDeletedView');
+  const herdTallyView = document.getElementById('herdTallyView');
   const fabAdd = document.getElementById('fabAdd');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
@@ -608,14 +618,15 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
         api('/general_notes?select=*', { method:'GET' }),
         api('/weights?select=*', { method:'GET' }),
         api('/breeding_records?select=*', { method:'GET' }),
-        api('/cow_photos?select=*', { method:'GET' })
+        api('/cow_photos?select=*', { method:'GET' }),
+        api('/herd_tally?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -624,9 +635,11 @@
       weights = weightsRes || [];
       breedingRecords = breedingRes || [];
       cowPhotos = photosRes || [];
+      if(tallyRes) herdTally = tallyRes;
     }catch(e){
       cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = [];
     }
+    renderHerdTally();
     renderList();
     renderCalvingList();
     if(currentCalvingCow) renderCalvingDetail();
@@ -853,7 +866,32 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    herdTallyView.classList.add('hidden');
     fabAdd.classList.add('hidden');
+    window.scrollTo(0,0);
+  }
+  function showHerdTally(){
+    setHeaderTitle('Herd', 'Tally');
+    homeView.classList.add('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    breedingListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
+    breedingDetailView.classList.add('hidden');
+    moreToolsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    herdTallyView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    renderHerdTally();
     window.scrollTo(0,0);
   }
   function showMoreTools(){
@@ -2603,6 +2641,8 @@
   document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
   document.getElementById('homeMoreToolsBtn').addEventListener('click', showMoreTools);
   document.getElementById('moreToolsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('homeHerdTallyBtn').addEventListener('click', showHerdTally);
+  document.getElementById('herdTallyHomeBtn').addEventListener('click', showHome);
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
   document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
@@ -2837,6 +2877,71 @@
     });
   }
 
+
+  function renderHerdTally(){
+    const el = document.getElementById('herdTallyContent');
+    if(!el) return;
+    el.innerHTML = LOT_OPTIONS.map(loc=>{
+      const row = herdTally.find(t=>t.location===loc) || { cows:0, calves:0, bulls:0 };
+      return `
+        <div class="section-label">${escapeHtml(loc)}</div>
+        <div class="stats-row" style="margin-bottom:16px;">
+          <div class="stat-chip tally-box" data-loc="${escapeHtml(loc)}" data-field="cows" style="cursor:pointer;">
+            <div class="stat-num">${row.cows}</div><div class="stat-label">Cows</div>
+          </div>
+          <div class="stat-chip tally-box" data-loc="${escapeHtml(loc)}" data-field="calves" style="cursor:pointer;">
+            <div class="stat-num">${row.calves}</div><div class="stat-label">Calves</div>
+          </div>
+          <div class="stat-chip tally-box" data-loc="${escapeHtml(loc)}" data-field="bulls" style="cursor:pointer;">
+            <div class="stat-num">${row.bulls}</div><div class="stat-label">Bulls</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    el.querySelectorAll('.tally-box').forEach(box=>{
+      box.addEventListener('click', ()=> editTallyModal(box.dataset.loc, box.dataset.field));
+    });
+  }
+
+  function editTallyModal(location, field){
+    const row = herdTally.find(t=>t.location===location) || { cows:0, calves:0, bulls:0 };
+    const fieldLabel = field.charAt(0).toUpperCase() + field.slice(1);
+    const modal = openModal(`
+      <div class="modal-title">${escapeHtml(location)} — ${fieldLabel}</div>
+      <div class="field">
+        <label>Count</label>
+        <input type="number" id="tallyEditInput" min="0" value="${row[field]}"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelTallyEdit">Cancel</button>
+        <button class="btn btn-barn" id="confirmTallyEdit">Save</button>
+      </div>
+    `);
+    modal.querySelector('#cancelTallyEdit').addEventListener('click', closeModal);
+    modal.querySelector('#confirmTallyEdit').addEventListener('click', async ()=>{
+      const val = parseInt(modal.querySelector('#tallyEditInput').value, 10);
+      if(isNaN(val) || val < 0){ showToast('Enter a valid count'); return; }
+      const btn = modal.querySelector('#confirmTallyEdit');
+      btn.disabled = true;
+      try{
+        const updated = await api('/herd_tally?location=eq.' + encodeURIComponent(location), {
+          method:'PATCH',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ [field]: val, updated_at: new Date().toISOString() })
+        });
+        if(updated && updated[0]){
+          const idx = herdTally.findIndex(t=>t.location===location);
+          if(idx !== -1) herdTally[idx] = updated[0]; else herdTally.push(updated[0]);
+        }
+        closeModal();
+        renderHerdTally();
+        showToast(`${escapeHtml(location)} ${fieldLabel.toLowerCase()} updated`);
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
 
   function headcountByOwnerModal(){
     const activeCows = cows.filter(isActiveStatus);
