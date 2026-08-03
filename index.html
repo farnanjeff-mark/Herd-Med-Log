@@ -103,6 +103,13 @@
 
   .stats-row{display:flex;gap:10px;margin-bottom:14px;}
   .stat-chip{flex:1;background:var(--paper-raised);border:2px solid var(--ink);border-radius:2px;padding:10px 8px;text-align:center;}
+  .farm-tally-card{background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;padding:16px 14px;margin-bottom:14px;}
+  .farm-tally-name{font-family:Georgia,serif;font-weight:700;font-size:20px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px dashed var(--line);}
+  .farm-tally-numbers{display:flex;justify-content:space-around;}
+  .farm-tally-item{cursor:pointer;padding:6px 12px;border-radius:8px;text-align:center;}
+  .farm-tally-item:active{background:rgba(0,0,0,.06);}
+  .farm-tally-num{display:block;font-size:30px;font-weight:700;font-family:Georgia,serif;line-height:1;}
+  .farm-tally-label{display:block;font-family:'Courier New',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6b6350;margin-top:5px;}
   .stat-num{font-size:22px;font-weight:700;font-family:Georgia,serif;}
   .stat-label{font-family:'Courier New',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b6350;margin-top:2px;line-height:1.3;}
 
@@ -191,7 +198,7 @@
       <button class="btn btn-purple btn-full" id="homeBreedingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐂 Breeding Records</button>
       <button class="btn btn-orange btn-full" id="homeWeightsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">⚖️ Weights</button>
       <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">📝 General Notes</button>
-      <button class="btn btn-outline btn-full" id="homeHerdTallyBtn" style="margin-bottom:24px;">🔢 Herd Tally</button>
+      <button class="btn btn-purple btn-full" id="homeHerdTallyBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">🔢 Herd Tally</button>
       <button class="btn btn-outline btn-full" id="homeMoreToolsBtn">⋯ More Tools</button>
     </div>
   </div>
@@ -2878,22 +2885,31 @@
   }
 
 
+  const HERD_TALLY_LOCATIONS = ["Olin's",'Ballard Corner',"Chase's",'Ford City'];
+  const HERD_TALLY_COLORS = ['var(--pasture)', 'var(--barn)', '#3B6E8F', '#C4732B'];
+
   function renderHerdTally(){
     const el = document.getElementById('herdTallyContent');
     if(!el) return;
-    el.innerHTML = LOT_OPTIONS.map(loc=>{
+    el.innerHTML = HERD_TALLY_LOCATIONS.map((loc,i)=>{
       const row = herdTally.find(t=>t.location===loc) || { cows:0, calves:0, bulls:0 };
+      const color = HERD_TALLY_COLORS[i % HERD_TALLY_COLORS.length];
       return `
-        <div class="section-label">${escapeHtml(loc)}</div>
-        <div class="stats-row" style="margin-bottom:16px;">
-          <div class="stat-chip tally-box" data-loc="${escapeHtml(loc)}" data-field="cows" style="cursor:pointer;">
-            <div class="stat-num">${row.cows}</div><div class="stat-label">Cows</div>
-          </div>
-          <div class="stat-chip tally-box" data-loc="${escapeHtml(loc)}" data-field="calves" style="cursor:pointer;">
-            <div class="stat-num">${row.calves}</div><div class="stat-label">Calves</div>
-          </div>
-          <div class="stat-chip tally-box" data-loc="${escapeHtml(loc)}" data-field="bulls" style="cursor:pointer;">
-            <div class="stat-num">${row.bulls}</div><div class="stat-label">Bulls</div>
+        <div class="farm-tally-card">
+          <div class="farm-tally-name" style="color:${color};">${escapeHtml(loc)}</div>
+          <div class="farm-tally-numbers">
+            <div class="farm-tally-item tally-box" data-loc="${escapeHtml(loc)}" data-field="cows">
+              <span class="farm-tally-num" style="color:${color};">${row.cows}</span>
+              <span class="farm-tally-label">Cows</span>
+            </div>
+            <div class="farm-tally-item tally-box" data-loc="${escapeHtml(loc)}" data-field="calves">
+              <span class="farm-tally-num" style="color:${color};">${row.calves}</span>
+              <span class="farm-tally-label">Calves</span>
+            </div>
+            <div class="farm-tally-item tally-box" data-loc="${escapeHtml(loc)}" data-field="bulls">
+              <span class="farm-tally-num" style="color:${color};">${row.bulls}</span>
+              <span class="farm-tally-label">Bulls</span>
+            </div>
           </div>
         </div>
       `;
