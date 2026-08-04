@@ -203,10 +203,10 @@
       <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;margin-top:8px;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile</button>
       <div style="display:flex;gap:10px;margin-bottom:12px;">
         <button class="btn btn-nav-section" id="homeMedsBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐄</span>&nbsp;Medications</button>
-        <button class="btn btn-nav-section" id="homeCalvingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐮</span>&nbsp;Calving Records</button>
+        <button class="btn btn-nav-section" id="homeCalvingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐮</span>&nbsp;Calving</button>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:12px;">
-        <button class="btn btn-nav-section" id="homeBreedingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐂</span>&nbsp;Breeding Records</button>
+        <button class="btn btn-nav-section" id="homeBreedingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐂</span>&nbsp;Breeding</button>
         <button class="btn btn-nav-section" id="homeWeightsBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">⚖️</span>&nbsp;Weights</button>
       </div>
       <button class="btn btn-nav-section btn-full" id="homeGeneralNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;General Notes</button>
@@ -277,8 +277,7 @@
 
   <div class="view hidden" id="herdTallyView">
     <button class="btn btn-outline btn-full" id="herdTallyHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
-    <div class="modal-title" style="margin-bottom:6px;">Herd Tally</div>
-    <div class="banner banner-note" style="display:block;margin-bottom:16px;">Manually entered counts per farm — not tied to your cattle records. Tap a box to update it.</div>
+    <div class="modal-title" style="margin-bottom:14px;">Herd Tally</div>
     <div id="herdTallyContent"></div>
   </div>
 
@@ -2958,21 +2957,12 @@
       const row = herdTally.find(t=>t.location===loc) || { cows:0, calves:0, bulls:0 };
       const color = HERD_TALLY_COLORS[i % HERD_TALLY_COLORS.length];
       return `
-        <div class="farm-tally-card">
-          <div class="farm-tally-name" style="color:${color};">${escapeHtml(loc)}</div>
-          <div class="farm-tally-numbers">
-            <div class="farm-tally-item tally-box" data-loc="${escapeHtml(loc)}" data-field="cows">
-              <span class="farm-tally-num" style="color:${color};">${row.cows}</span>
-              <span class="farm-tally-label">Cows</span>
-            </div>
-            <div class="farm-tally-item tally-box" data-loc="${escapeHtml(loc)}" data-field="calves">
-              <span class="farm-tally-num" style="color:${color};">${row.calves}</span>
-              <span class="farm-tally-label">Calves</span>
-            </div>
-            <div class="farm-tally-item tally-box" data-loc="${escapeHtml(loc)}" data-field="bulls">
-              <span class="farm-tally-num" style="color:${color};">${row.bulls}</span>
-              <span class="farm-tally-label">Bulls</span>
-            </div>
+        <div style="padding:10px 0;border-bottom:1px solid var(--line);">
+          <div style="font-weight:700;font-size:16px;color:${color};margin-bottom:8px;">${escapeHtml(loc)}</div>
+          <div style="display:flex;gap:20px;">
+            <span class="tally-box" data-loc="${escapeHtml(loc)}" data-field="cows" style="cursor:pointer;font-size:14px;"><b style="font-size:18px;">${row.cows}</b> Cows</span>
+            <span class="tally-box" data-loc="${escapeHtml(loc)}" data-field="calves" style="cursor:pointer;font-size:14px;"><b style="font-size:18px;">${row.calves}</b> Calves</span>
+            <span class="tally-box" data-loc="${escapeHtml(loc)}" data-field="bulls" style="cursor:pointer;font-size:14px;"><b style="font-size:18px;">${row.bulls}</b> Bulls</span>
           </div>
         </div>
       `;
