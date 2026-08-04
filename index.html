@@ -201,12 +201,19 @@
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
       <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;margin-top:8px;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile</button>
-      <button class="btn btn-nav-section btn-full" id="homeMedsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐄</span>&nbsp;&nbsp;Medications</button>
-      <button class="btn btn-nav-section btn-full" id="homeCalvingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐮</span>&nbsp;&nbsp;Calving Records</button>
-      <button class="btn btn-nav-section btn-full" id="homeBreedingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐂</span>&nbsp;&nbsp;Breeding Records</button>
-      <button class="btn btn-nav-section btn-full" id="homeWeightsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">⚖️</span>&nbsp;&nbsp;Weights</button>
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <button class="btn btn-nav-section" id="homeMedsBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐄</span>&nbsp;Medications</button>
+        <button class="btn btn-nav-section" id="homeCalvingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐮</span>&nbsp;Calving Records</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <button class="btn btn-nav-section" id="homeBreedingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐂</span>&nbsp;Breeding Records</button>
+        <button class="btn btn-nav-section" id="homeWeightsBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">⚖️</span>&nbsp;Weights</button>
+      </div>
       <button class="btn btn-nav-section btn-full" id="homeGeneralNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;General Notes</button>
-      <button class="btn btn-nav-section btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
+      <div style="display:flex;gap:10px;margin-bottom:24px;">
+        <button class="btn btn-nav-section" id="homeHerdTallyBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🔢</span>&nbsp;Herd Tally</button>
+        <button class="btn btn-nav-section" id="homeHayingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🌾</span>&nbsp;Haying</button>
+      </div>
       <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">⋯</span>&nbsp;&nbsp;More Tools</button>
     </div>
   </div>
@@ -273,6 +280,14 @@
     <div class="modal-title" style="margin-bottom:6px;">Herd Tally</div>
     <div class="banner banner-note" style="display:block;margin-bottom:16px;">Manually entered counts per farm — not tied to your cattle records. Tap a box to update it.</div>
     <div id="herdTallyContent"></div>
+  </div>
+
+  <div class="view hidden" id="hayingView">
+    <button class="btn btn-outline btn-full" id="hayingHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:14px;">Haying</div>
+    <button class="btn btn-nav-section btn-full" id="addHayingBtn" style="margin-bottom:18px;">+ Add Haying Entry</button>
+    <div id="hayingList"></div>
+    <div id="hayingEmptyState" class="empty hidden">No haying entries logged yet.</div>
   </div>
 
   <div class="view hidden" id="listView">
@@ -552,6 +567,7 @@
   let cowPhotos = []; // [{id, cow_number, storage_path, photo_url, taken_at}]
   let deletedRecords = []; // [{id, table_name, record_data, cow_number, deleted_at}]
   let herdTally = []; // [{id, location, cows, calves, bulls}]
+  let hayingLog = []; // [{id, entry_date, location, mowed, raked, tedded, total_bales, notes}]
   let currentCow = null;
   let currentCalvingCow = null;
   let currentNotesCow = null;
@@ -579,6 +595,7 @@
   const globalSearchView = document.getElementById('globalSearchView');
   const recentlyDeletedView = document.getElementById('recentlyDeletedView');
   const herdTallyView = document.getElementById('herdTallyView');
+  const hayingView = document.getElementById('hayingView');
   const fabAdd = document.getElementById('fabAdd');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
@@ -633,7 +650,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -641,7 +658,8 @@
         api('/weights?select=*', { method:'GET' }),
         api('/breeding_records?select=*', { method:'GET' }),
         api('/cow_photos?select=*', { method:'GET' }),
-        api('/herd_tally?select=*', { method:'GET' })
+        api('/herd_tally?select=*', { method:'GET' }),
+        api('/haying_log?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -651,10 +669,12 @@
       breedingRecords = breedingRes || [];
       cowPhotos = photosRes || [];
       if(tallyRes) herdTally = tallyRes;
+      hayingLog = hayingRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = [];
     }
     renderHerdTally();
+    renderHayingList();
     renderList();
     renderCalvingList();
     if(currentCalvingCow) renderCalvingDetail();
@@ -882,6 +902,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
+    hayingView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     window.scrollTo(0,0);
   }
@@ -904,9 +925,35 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    hayingView.classList.add('hidden');
     herdTallyView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     renderHerdTally();
+    window.scrollTo(0,0);
+  }
+  function showHaying(){
+    setHeaderTitle('Haying', '');
+    homeView.classList.add('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    breedingListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
+    breedingDetailView.classList.add('hidden');
+    moreToolsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    herdTallyView.classList.add('hidden');
+    hayingView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    renderHayingList();
     window.scrollTo(0,0);
   }
   function showMoreTools(){
@@ -2658,6 +2705,9 @@
   document.getElementById('moreToolsHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeHerdTallyBtn').addEventListener('click', showHerdTally);
   document.getElementById('herdTallyHomeBtn').addEventListener('click', showHome);
+  document.getElementById('homeHayingBtn').addEventListener('click', showHaying);
+  document.getElementById('hayingHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addHayingBtn').addEventListener('click', ()=> hayingModal(null));
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
   document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
@@ -2925,6 +2975,140 @@
     el.querySelectorAll('.tally-box').forEach(box=>{
       box.addEventListener('click', ()=> editTallyModal(box.dataset.loc, box.dataset.field));
     });
+  }
+
+  function renderHayingList(){
+    const listEl = document.getElementById('hayingList');
+    const emptyEl = document.getElementById('hayingEmptyState');
+    if(!listEl) return;
+    const sorted = [...hayingLog].sort((a,b)=> b.entry_date.localeCompare(a.entry_date));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(r=>{
+      const tasks = [];
+      if(r.mowed) tasks.push('Mowed');
+      if(r.raked) tasks.push('Raked');
+      if(r.tedded) tasks.push('Tedded');
+      const details = [];
+      if(r.location) details.push(r.location);
+      if(r.total_bales != null) details.push(`${r.total_bales} bales`);
+      if(tasks.length) details.push(tasks.join(', '));
+      return `
+        <div class="record">
+          <button class="record-del" data-id="${r.id}">&times;</button>
+          <button class="record-edit" data-id="${r.id}">&#9998;</button>
+          <div class="record-date">${fmtDate(r.entry_date)}</div>
+          ${details.length ? `<div class="record-reason">${escapeHtml(details.join(' · '))}</div>` : ''}
+          ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+    listEl.querySelectorAll('.record-del').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteHayingEntry(btn.dataset.id));
+    });
+    listEl.querySelectorAll('.record-edit').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const record = hayingLog.find(r=>r.id===btn.dataset.id);
+        if(record) hayingModal(record);
+      });
+    });
+  }
+
+  const HAYING_LOCATIONS = [
+    'Alfalfa', "Olin's South", "Olin's North", 'Brome around alfalfa', 'Ballard Corner Brome',
+    "Chase's", 'Ballard Corner', 'Island City', 'DL Across Road', 'DL Moore 40',
+    'DL Moore West', 'DL Hawk Corner', 'Hawk 1 - 8 acres', 'DL Hawk 2', 'Hawk 3 - Back'
+  ];
+
+  function hayingModal(existingRecord){
+    const isEdit = !!existingRecord;
+    const today = new Date().toISOString().slice(0,10);
+    const modal = openModal(`
+      <div class="modal-title">${isEdit ? 'Edit Haying Entry' : 'Add Haying Entry'}</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="hayDate" value="${isEdit ? existingRecord.entry_date : today}"/>
+      </div>
+      ${fieldWithOther('hayLocation', 'Location', HAYING_LOCATIONS, 'Type location')}
+      <div class="field">
+        <label>Total Bales</label>
+        <input type="number" id="hayBales" min="0" placeholder="e.g. 120" value="${isEdit && existingRecord.total_bales!=null ? existingRecord.total_bales : ''}"/>
+      </div>
+      <div class="field">
+        <label style="display:block;margin-bottom:8px;">Tasks</label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:normal;">
+          <input type="checkbox" id="hayMowed" ${isEdit && existingRecord.mowed ? 'checked' : ''} style="width:18px;height:18px;"/> Mowed
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:normal;">
+          <input type="checkbox" id="hayRaked" ${isEdit && existingRecord.raked ? 'checked' : ''} style="width:18px;height:18px;"/> Raked
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:normal;">
+          <input type="checkbox" id="hayTedded" ${isEdit && existingRecord.tedded ? 'checked' : ''} style="width:18px;height:18px;"/> Tedded
+        </label>
+      </div>
+      <div class="field">
+        <label>Hay Notes</label>
+        <textarea id="hayNotes" rows="2" placeholder="Weather, quality, anything else">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelHay">Cancel</button>
+        <button class="btn btn-barn" id="confirmHay">${isEdit ? 'Save Changes' : 'Save Entry'}</button>
+      </div>
+    `);
+    wireFieldWithOther(modal, 'hayLocation');
+    if(isEdit && existingRecord.location) prefillFieldWithOther(modal, 'hayLocation', existingRecord.location, HAYING_LOCATIONS);
+    modal.querySelector('#cancelHay').addEventListener('click', closeModal);
+    modal.querySelector('#confirmHay').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#hayDate').value;
+      if(!dateVal){ showToast('Date is required'); return; }
+      const location = valueOf(modal, 'hayLocation');
+      const balesRaw = modal.querySelector('#hayBales').value;
+      const mowed = modal.querySelector('#hayMowed').checked;
+      const raked = modal.querySelector('#hayRaked').checked;
+      const tedded = modal.querySelector('#hayTedded').checked;
+      const notes = modal.querySelector('#hayNotes').value.trim();
+      const btn = modal.querySelector('#confirmHay');
+      btn.disabled = true;
+      const body = {
+        entry_date: dateVal, location: location||null,
+        total_bales: balesRaw ? parseInt(balesRaw,10) : null,
+        mowed, raked, tedded, notes: notes||null
+      };
+      try{
+        if(isEdit){
+          const updated = await api('/haying_log?id=eq.' + encodeURIComponent(existingRecord.id), {
+            method:'PATCH',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          const idx = hayingLog.findIndex(r=>r.id===existingRecord.id);
+          if(idx !== -1) hayingLog[idx] = updated[0];
+        } else {
+          const inserted = await api('/haying_log', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          hayingLog.push(inserted[0]);
+        }
+        closeModal();
+        renderHayingList();
+        window.scrollTo(0,0);
+        showToast(isEdit ? 'Haying entry updated' : 'Haying entry logged');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
+  async function deleteHayingEntry(id){
+    if(!confirm('Remove this haying entry? This can\'t be undone.')) return;
+    try{
+      await api('/haying_log?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      hayingLog = hayingLog.filter(r=>r.id!==id);
+      renderHayingList();
+      showToast('Haying entry removed');
+    }catch(e){ showToast('Could not remove — try again'); }
   }
 
   function editTallyModal(location, field){
