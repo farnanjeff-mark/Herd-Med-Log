@@ -26,16 +26,16 @@
   .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--paper);}
 
   .header{padding:22px 18px 16px;border-bottom:3px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-start;}
-  .eyebrow{font-family:'Courier New',monospace;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--barn);margin:0 0 4px;}
-  .h1{font-family:Georgia,serif;font-weight:700;font-size:15px;margin:4px 0 0;letter-spacing:.08em;text-transform:uppercase;color:var(--barn);}
-  .company-name{font-family:Georgia,serif;font-weight:700;font-size:26px;margin:0;letter-spacing:.01em;}
+  .eyebrow{font-family:Arial,sans-serif;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--barn);margin:0 0 4px;}
+  .h1{font-family:Arial,sans-serif;font-weight:700;font-size:15px;margin:4px 0 0;letter-spacing:.08em;text-transform:uppercase;color:var(--barn);}
+  .company-name{font-family:Arial,sans-serif;font-weight:700;font-size:26px;margin:0;letter-spacing:.01em;}
   .h1 span{color:var(--barn);}
   .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--pasture);flex-shrink:0;}
   .sync-dot.err{background:var(--barn);}
   .sync-dot.busy{background:var(--tag);}
   .refresh-btn{
     display:flex;align-items:center;gap:7px;
-    font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
     background:var(--paper-raised);border:2px solid var(--ink);border-radius:4px;
     padding:8px 12px;cursor:pointer;color:var(--ink);margin-top:4px;
   }
@@ -46,7 +46,7 @@
 
   .toolbar{display:flex;gap:8px;margin-bottom:14px;}
   input, select, textarea{
-    font-family:'Courier New',monospace;
+    font-family:Arial,sans-serif;
     background:var(--paper-raised);
     border:2px solid var(--ink);
     color:var(--ink);
@@ -59,13 +59,14 @@
   #searchBox, #calvingSearchBox, #notesSearchBox, #profileSearchBox, #weightsSearchBox, #breedingSearchBox{background:#ffffff;}
 
   .btn{
-    font-family:'Courier New',monospace;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
     font-size:13px;border:2px solid var(--ink);background:var(--tag);color:var(--ink);
-    padding:10px 16px;border-radius:2px;cursor:pointer;white-space:nowrap;
+    padding:10px 16px;border-radius:10px;cursor:pointer;white-space:nowrap;
+    box-shadow:0 2px 5px rgba(43,38,32,.16);
   }
-  .btn:active{transform:translateY(1px);}
+  .btn:active{transform:translateY(1px);box-shadow:0 1px 2px rgba(43,38,32,.16);}
   .btn[disabled]{opacity:.5;cursor:default;}
-  .btn-outline{background:transparent;}
+  .btn-outline{background:#FAF3E6;border-color:#C7BBA0;color:var(--ink);}
   .btn-barn{background:var(--barn);color:var(--paper);border-color:var(--barn);}
   .btn-pasture{background:var(--pasture);color:var(--paper);border-color:var(--pasture);}
   .btn-pink{background:#D46A8C;color:var(--paper);border-color:#D46A8C;}
@@ -74,6 +75,8 @@
   .btn-orange{background:#C4732B;color:var(--paper);border-color:#C4732B;}
   .btn-purple{background:#7A5A9E;color:var(--paper);border-color:#7A5A9E;}
   .btn-yellow{background:var(--tag);color:var(--ink);border-color:var(--tag);}
+  .btn-nav-section{background:#0274BA;color:#fff;border-color:#0274BA;text-align:left;display:flex;align-items:center;gap:10px;}
+  .btn-nav-tool{background:#3C9142;color:#fff;border-color:#3C9142;text-align:left;display:flex;align-items:center;gap:10px;}
   .btn-full{width:100%;}
   .btn-sm{padding:7px 12px;font-size:13px;}
 
@@ -85,65 +88,65 @@
   .cow-card.recent-med{border-left-color:var(--barn);}
   .cow-card.recent-note{border-left-color:#3B6E8F;}
   .cow-card.status-inactive{background:#c9c2b3;border-left-color:#8a8163;}
-  .status-badge{display:inline-block;background:#8a8163;color:var(--paper);font-size:9px;font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:8px;margin-left:6px;}
-  .cow-num{font-size:22px;font-weight:700;font-family:Georgia,serif;}
-  .cow-meta{font-family:'Courier New',monospace;font-size:13px;color:#6b6350;margin-top:2px;}
+  .status-badge{display:inline-block;background:#8a8163;color:var(--paper);font-size:9px;font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:8px;margin-left:6px;}
+  .cow-num{font-size:22px;font-weight:700;font-family:Arial,sans-serif;}
+  .cow-meta{font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-top:2px;}
   .chev{font-size:20px;color:var(--ink);opacity:.4;}
 
-  .empty{text-align:center;padding:50px 20px;color:#8a8163;font-family:'Courier New',monospace;font-size:15px;line-height:1.6;}
+  .empty{text-align:center;padding:50px 20px;color:#8a8163;font-family:Arial,sans-serif;font-size:15px;line-height:1.6;}
   .banner{
-    font-family:'Courier New',monospace;font-size:12px;background:#f4d9d5;border:2px solid var(--barn);
+    font-family:Arial,sans-serif;font-size:12px;background:#f4d9d5;border:2px solid var(--barn);
     color:var(--barn);padding:10px 12px;border-radius:2px;margin-bottom:14px;line-height:1.5;
   }
   .banner-note{background:#fbeecb;border-color:var(--tag);color:#6b4e12;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
   .banner-note .banner-actions{display:flex;gap:8px;flex-shrink:0;}
   .banner-note button{
-    font-family:'Courier New',monospace;font-size:11px;font-weight:700;text-transform:uppercase;
+    font-family:Arial,sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;
     border:1.5px solid #6b4e12;background:transparent;color:#6b4e12;padding:5px 9px;border-radius:2px;cursor:pointer;
   }
 
   .stats-row{display:flex;gap:10px;margin-bottom:14px;}
   .stat-chip{flex:1;background:var(--paper-raised);border:2px solid var(--ink);border-radius:2px;padding:10px 8px;text-align:center;}
   .farm-tally-card{background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;padding:16px 14px;margin-bottom:14px;}
-  .farm-tally-name{font-family:Georgia,serif;font-weight:700;font-size:20px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px dashed var(--line);}
+  .farm-tally-name{font-family:Arial,sans-serif;font-weight:700;font-size:20px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px dashed var(--line);}
   .farm-tally-numbers{display:flex;justify-content:space-around;}
   .farm-tally-item{cursor:pointer;padding:6px 12px;border-radius:8px;text-align:center;}
   .farm-tally-item:active{background:rgba(0,0,0,.06);}
-  .farm-tally-num{display:block;font-size:30px;font-weight:700;font-family:Georgia,serif;line-height:1;}
-  .farm-tally-label{display:block;font-family:'Courier New',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6b6350;margin-top:5px;}
-  .stat-num{font-size:22px;font-weight:700;font-family:Georgia,serif;}
-  .stat-label{font-family:'Courier New',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b6350;margin-top:2px;line-height:1.3;}
+  .farm-tally-num{display:block;font-size:30px;font-weight:700;font-family:Arial,sans-serif;line-height:1;}
+  .farm-tally-label{display:block;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6b6350;margin-top:5px;}
+  .stat-num{font-size:22px;font-weight:700;font-family:Arial,sans-serif;}
+  .stat-label{font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b6350;margin-top:2px;line-height:1.3;}
 
-  .lot-badge{display:inline-block;background:var(--pasture);color:var(--paper);font-size:11px;font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:8px;margin-left:6px;}
+  .lot-badge{display:inline-block;background:var(--pasture);color:var(--paper);font-size:11px;font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:8px;margin-left:6px;}
 
   .back{
-    display:flex;align-items:center;gap:8px;font-family:'Courier New',monospace;font-size:13px;
+    display:flex;align-items:center;gap:8px;font-family:Arial,sans-serif;font-size:13px;
     letter-spacing:.05em;color:var(--paper);text-transform:uppercase;font-weight:700;
     background:var(--barn);border:2px solid var(--ink);border-radius:2px;
     padding:12px 14px;cursor:pointer;width:100%;margin-bottom:16px;
   }
   .back:active{transform:translateY(1px);}
   .detail-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--ink);padding-bottom:14px;margin-bottom:16px;}
-  .detail-num{font-size:34px;font-weight:700;font-family:Georgia,serif;line-height:1;}
-  .detail-sub{font-family:'Courier New',monospace;font-size:13px;color:#6b6350;margin-top:4px;}
+  .detail-num{font-size:34px;font-weight:700;font-family:Arial,sans-serif;line-height:1;}
+  .detail-sub{font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-top:4px;}
 
   .section-label{
-    font-family:'Courier New',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+    font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
     color:var(--pasture);font-weight:700;margin:20px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px;
   }
 
   .record{background:var(--paper-raised);border:1.5px solid var(--line);border-left:6px solid var(--line);border-radius:2px;padding:12px 14px;margin-bottom:8px;position:relative;}
   .record.note-entry{border-left-color:#3B6E8F;}
   .record.note-entry .record-date{color:#3B6E8F;}
-  .record-date{font-family:'Courier New',monospace;font-size:14px;font-weight:700;color:var(--barn);}
+  .record-date{font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:var(--barn);}
   .record-med{font-size:19px;font-weight:700;margin:3px 0 2px;}
   .record-reason{font-size:16px;color:#4a4433;}
-  .record-notes{font-family:'Courier New',monospace;font-size:14px;color:#6b6350;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px;}
+  .record-notes{font-family:Arial,sans-serif;font-size:14px;color:#6b6350;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px;}
   .record-del{position:absolute;top:10px;right:10px;background:none;border:none;color:#a08f6b;font-size:16px;cursor:pointer;padding:4px;}
   .record-edit{position:absolute;top:10px;right:34px;background:none;border:none;color:#a08f6b;font-size:14px;cursor:pointer;padding:4px;}
 
   .field{margin-bottom:12px;}
-  .field label{display:block;font-family:'Courier New',monospace;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#6b6350;margin-bottom:5px;}
+  .field label{display:block;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#6b6350;margin-bottom:5px;}
   .row2{display:flex;gap:10px;}
   .row2 > div{flex:1;}
 
@@ -157,13 +160,13 @@
 
   .modal-backdrop{position:fixed;inset:0;background:rgba(43,38,32,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;}
   .modal{background:var(--paper);width:100%;max-width:480px;border-top:3px solid var(--ink);border-radius:12px 12px 0 0;padding:20px 18px 28px;max-height:88vh;overflow-y:auto;}
-  .modal-title{font-size:22px;font-weight:700;margin:0 0 16px;font-family:Georgia,serif;}
+  .modal-title{font-size:22px;font-weight:700;margin:0 0 16px;font-family:Arial,sans-serif;}
   .modal-actions{display:flex;gap:10px;margin-top:18px;}
   .modal-actions .btn{flex:1;}
 
   .toast{
     position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);
-    padding:10px 18px;border-radius:20px;font-family:'Courier New',monospace;font-size:12px;
+    padding:10px 18px;border-radius:20px;font-family:Arial,sans-serif;font-size:12px;
     z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;max-width:85%;text-align:center;
   }
   .toast.show{opacity:1;}
@@ -175,6 +178,7 @@
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.44.0/tabler-icons.min.css">
 </head>
 <body>
 
@@ -193,27 +197,27 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
-      <button class="btn btn-grey btn-full" id="homeProfileBtn" style="padding:18px;font-size:16px;margin-bottom:12px;margin-top:8px;">👤 Cow Profile</button>
-      <button class="btn btn-pasture btn-full" id="homeMedsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐄 Medications</button>
-      <button class="btn btn-pink btn-full" id="homeCalvingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐮 Calving Records</button>
-      <button class="btn btn-purple btn-full" id="homeBreedingBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">🐂 Breeding Records</button>
-      <button class="btn btn-orange btn-full" id="homeWeightsBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">⚖️ Weights</button>
-      <button class="btn btn-blue btn-full" id="homeGeneralNotesBtn" style="padding:18px;font-size:16px;margin-bottom:12px;">📝 General Notes</button>
-      <button class="btn btn-yellow btn-full" id="homeHerdTallyBtn" style="padding:18px;font-size:16px;margin-bottom:24px;">🔢 Herd Tally</button>
-      <button class="btn btn-outline btn-full" id="homeMoreToolsBtn">⋯ More Tools</button>
+      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;margin-top:8px;"><i class="ti ti-user" style="font-size:20px;" aria-hidden="true"></i>Cow Profile</button>
+      <button class="btn btn-nav-section btn-full" id="homeMedsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><i class="ti ti-pill" style="font-size:20px;" aria-hidden="true"></i>Medications</button>
+      <button class="btn btn-nav-section btn-full" id="homeCalvingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><i class="ti ti-baby-carriage" style="font-size:20px;" aria-hidden="true"></i>Calving Records</button>
+      <button class="btn btn-nav-section btn-full" id="homeBreedingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><i class="ti ti-heart" style="font-size:20px;" aria-hidden="true"></i>Breeding Records</button>
+      <button class="btn btn-nav-section btn-full" id="homeWeightsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><i class="ti ti-scale" style="font-size:20px;" aria-hidden="true"></i>Weights</button>
+      <button class="btn btn-nav-section btn-full" id="homeGeneralNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><i class="ti ti-notes" style="font-size:20px;" aria-hidden="true"></i>General Notes</button>
+      <button class="btn btn-nav-section btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><i class="ti ti-hash" style="font-size:20px;" aria-hidden="true"></i>Herd Tally</button>
+      <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn"><i class="ti ti-dots" style="font-size:20px;" aria-hidden="true"></i>More Tools</button>
     </div>
   </div>
 
   <div class="view hidden" id="moreToolsView">
-    <button class="btn btn-outline btn-full" id="moreToolsHomeBtn" style="margin-bottom:24px;">🏠 Home</button>
-    <button class="btn btn-outline btn-full" id="exportEverythingBtn" style="margin-bottom:12px;">📦 Export Everything</button>
-    <button class="btn btn-outline btn-full" id="bulkEditBtn" style="margin-bottom:12px;">🔧 Bulk Edit Owner / Lot</button>
-    <button class="btn btn-outline btn-full" id="importDataBtn" style="margin-bottom:12px;">📥 Import Data</button>
-    <button class="btn btn-outline btn-full" id="headcountByOwnerBtn" style="margin-bottom:12px;">📊 Headcount by Owner</button>
-    <button class="btn btn-outline btn-full" id="soldDeceasedBtn" style="margin-bottom:12px;">📋 Sold / Deceased List</button>
-    <button class="btn btn-outline btn-full" id="globalSearchBtn" style="margin-bottom:12px;">🔎 Search Everything</button>
-    <button class="btn btn-outline btn-full" id="recentlyDeletedBtn" style="margin-bottom:12px;">🗑️ Recently Deleted</button>
-    <button class="btn btn-outline btn-full" id="biggestGainersBtn">📈 Biggest Gainers</button>
+    <button class="btn btn-outline btn-full" id="moreToolsHomeBtn" style="margin-bottom:24px;"><i class="ti ti-home" style="font-size:18px;color:#0274BA;" aria-hidden="true"></i>&nbsp; Home</button>
+    <button class="btn btn-nav-tool btn-full" id="exportEverythingBtn" style="margin-bottom:12px;"><i class="ti ti-download" style="font-size:20px;" aria-hidden="true"></i>Export Everything</button>
+    <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="margin-bottom:12px;"><i class="ti ti-edit" style="font-size:20px;" aria-hidden="true"></i>Bulk Edit Owner / Lot</button>
+    <button class="btn btn-nav-tool btn-full" id="importDataBtn" style="margin-bottom:12px;"><i class="ti ti-upload" style="font-size:20px;" aria-hidden="true"></i>Import Data</button>
+    <button class="btn btn-nav-tool btn-full" id="headcountByOwnerBtn" style="margin-bottom:12px;"><i class="ti ti-chart-bar" style="font-size:20px;" aria-hidden="true"></i>Headcount by Owner</button>
+    <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="margin-bottom:12px;"><i class="ti ti-list" style="font-size:20px;" aria-hidden="true"></i>Sold / Deceased List</button>
+    <button class="btn btn-nav-tool btn-full" id="globalSearchBtn" style="margin-bottom:12px;"><i class="ti ti-search" style="font-size:20px;" aria-hidden="true"></i>Search Everything</button>
+    <button class="btn btn-nav-tool btn-full" id="recentlyDeletedBtn" style="margin-bottom:12px;"><i class="ti ti-trash" style="font-size:20px;" aria-hidden="true"></i>Recently Deleted</button>
+    <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn"><i class="ti ti-trending-up" style="font-size:20px;" aria-hidden="true"></i>Biggest Gainers</button>
   </div>
 
   <div class="view hidden" id="importView">
@@ -1610,7 +1614,7 @@
     el.innerHTML = photos.map(p => `
       <div style="position:relative;width:100px;">
         <img src="${p.photo_url}" style="width:100px;height:100px;object-fit:cover;border-radius:4px;border:2px solid var(--ink);display:block;"/>
-        <div style="font-family:'Courier New',monospace;font-size:10px;text-align:center;margin-top:2px;color:#6b6350;">${fmtDateShort(p.taken_at)}</div>
+        <div style="font-family:Arial,sans-serif;font-size:10px;text-align:center;margin-top:2px;color:#6b6350;">${fmtDateShort(p.taken_at)}</div>
         <a href="${p.photo_url}" download="cow-${escapeHtml(num)}-${p.taken_at}.jpg" target="_blank" title="Download" class="photo-overlay-btn" style="position:absolute;top:3px;left:3px;background:rgba(255,255,255,.9);border-radius:3px;padding:1px 5px;font-size:12px;text-decoration:none;color:var(--ink);">⬇</a>
         <button class="photo-del-btn photo-overlay-btn" data-id="${p.id}" title="Delete" style="position:absolute;top:3px;right:3px;background:rgba(255,255,255,.9);border:none;border-radius:3px;padding:1px 6px;font-size:13px;cursor:pointer;color:var(--barn);">&times;</button>
       </div>
@@ -2104,7 +2108,7 @@
           <textarea id="newCowBulkNums" rows="4" placeholder="e.g. 214, 215, 216 or one per line"></textarea>
         </div>
       </div>
-      <a href="#" id="toggleBulkMode" style="display:block;font-family:'Courier New',monospace;font-size:12px;color:var(--barn);text-decoration:underline;margin-bottom:14px;">Add multiple cows at once</a>
+      <a href="#" id="toggleBulkMode" style="display:block;font-family:Arial,sans-serif;font-size:12px;color:var(--barn);text-decoration:underline;margin-bottom:14px;">Add multiple cows at once</a>
       ${fieldWithOther('newCowLot', 'Lot / Pasture / Group (optional)', LOT_OPTIONS, 'Type lot/pasture')}
       ${fieldWithOther('newCowOwner', 'Owner (optional)', OWNER_OPTIONS, 'Type owner name')}
       <div class="modal-actions">
@@ -2978,7 +2982,7 @@
 
     const modal = openModal(`
       <div class="modal-title">Headcount by Owner</div>
-      <div style="font-family:'Courier New',monospace;font-size:11px;color:#6b6350;margin-bottom:10px;">Active cattle only — Sold/Deceased not counted</div>
+      <div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;margin-bottom:10px;">Active cattle only — Sold/Deceased not counted</div>
       <div>${rowsHtml}</div>
       <div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;border-top:2px solid var(--ink);font-weight:700;font-size:17px;">
         <span>Total Active</span><span>${total}</span>
@@ -3124,18 +3128,18 @@
       <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);">
         <div>
           <div style="font-weight:700;font-size:16px;">#${escapeHtml(r.cow.number)}</div>
-          <div style="font-family:'Courier New',monospace;font-size:11px;color:#6b6350;">${fmtDateShort(r.firstDate)} → ${fmtDateShort(r.lastDate)} (${r.days}d)</div>
+          <div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;">${fmtDateShort(r.firstDate)} → ${fmtDateShort(r.lastDate)} (${r.days}d)</div>
         </div>
         <div style="text-align:right;">
           <div style="font-weight:700;color:${r.totalGain>=0?'var(--pasture)':'var(--barn)'};">${r.totalGain>=0?'+':''}${r.totalGain} lbs</div>
-          <div style="font-family:'Courier New',monospace;font-size:11px;color:#6b6350;">${r.adg.toFixed(2)} lbs/day</div>
+          <div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;">${r.adg.toFixed(2)} lbs/day</div>
         </div>
       </div>
     `).join('') || '<p class="empty" style="padding:14px 0;">No cows with at least 2 weigh-ins yet.</p>';
 
     const modal = openModal(`
       <div class="modal-title">Biggest Gainers</div>
-      <div style="font-family:'Courier New',monospace;font-size:11px;color:#6b6350;margin-bottom:10px;">Ranked by average daily gain — needs at least 2 weigh-ins per cow</div>
+      <div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;margin-bottom:10px;">Ranked by average daily gain — needs at least 2 weigh-ins per cow</div>
       <div style="max-height:400px;overflow-y:auto;">${rowsHtml}</div>
       <div class="modal-actions">
         <button class="btn btn-barn btn-full" id="closeGainersBtn">Close</button>
@@ -3156,7 +3160,7 @@
           <div class="cow-row-item" data-num="${escapeHtml(c.number)}" style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;">
             <div>
               <div style="font-weight:700;font-size:16px;">#${escapeHtml(c.number)}</div>
-              ${meta ? `<div style="font-family:'Courier New',monospace;font-size:11px;color:#6b6350;">${escapeHtml(meta)}</div>` : ''}
+              ${meta ? `<div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;">${escapeHtml(meta)}</div>` : ''}
             </div>
             <span class="chev">&rsaquo;</span>
           </div>
@@ -3197,7 +3201,7 @@
         return `
           <label style="display:flex;align-items:center;gap:8px;padding:6px 0;">
             <input type="checkbox" class="bulkCowCheck" value="${escapeHtml(c.number)}" ${missing ? 'checked' : ''} style="width:18px;height:18px;"/>
-            <span>#${escapeHtml(c.number)} <span style="color:#6b6350;font-family:'Courier New',monospace;font-size:12px;">(current: ${escapeHtml(currentVal)})</span></span>
+            <span>#${escapeHtml(c.number)} <span style="color:#6b6350;font-family:Arial,sans-serif;font-size:12px;">(current: ${escapeHtml(currentVal)})</span></span>
           </label>
         `;
       }).join('') || '<p class="empty" style="padding:10px 0;">No cattle yet.</p>';
@@ -3296,7 +3300,7 @@
       <div class="field" style="display:flex;gap:8px;align-items:center;" data-idx="${i}">
         <div style="flex:1;">
           <div style="font-weight:700;">${escapeHtml(r.name)}</div>
-          <div style="font-family:'Courier New',monospace;font-size:13px;color:#6b6350;">${escapeHtml(r.phone)}</div>
+          <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;">${escapeHtml(r.phone)}</div>
         </div>
         <button class="btn btn-outline btn-sm removeRecipientBtn" data-idx="${i}">Remove</button>
       </div>
@@ -3420,7 +3424,7 @@
     const recipOptionsHtml = recipients.map((r,i)=>`
       <label style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);">
         <input type="checkbox" class="recipCheck" data-idx="${i}" style="width:18px;height:18px;"/>
-        <span>${escapeHtml(r.name)} <span style="color:#6b6350;font-family:'Courier New',monospace;font-size:12px;">${escapeHtml(r.phone)}</span></span>
+        <span>${escapeHtml(r.name)} <span style="color:#6b6350;font-family:Arial,sans-serif;font-size:12px;">${escapeHtml(r.phone)}</span></span>
       </label>
     `).join('') || '<p class="empty" style="padding:14px 0;">No saved recipients yet — add one below.</p>';
 
@@ -3430,7 +3434,7 @@
       <div style="max-height:160px;overflow-y:auto;margin-bottom:10px;">${cowOptionsHtml}</div>
       <div class="section-label">Send To</div>
       <div>${recipOptionsHtml}</div>
-      <a href="#" id="manageRecipLink" style="display:block;font-family:'Courier New',monospace;font-size:12px;color:var(--barn);text-decoration:underline;margin:12px 0 16px;">Manage recipients</a>
+      <a href="#" id="manageRecipLink" style="display:block;font-family:Arial,sans-serif;font-size:12px;color:var(--barn);text-decoration:underline;margin:12px 0 16px;">Manage recipients</a>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelTextList">Cancel</button>
         <button class="btn btn-blue" id="sendTextListBtn">Open Messages</button>
