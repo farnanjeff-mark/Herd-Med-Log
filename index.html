@@ -3002,17 +3002,19 @@
       if(r.mowed) tasks.push('Mowed');
       if(r.raked) tasks.push('Raked');
       if(r.tedded) tasks.push('Tedded');
-      const details = [];
-      if(r.location) details.push(r.location);
-      if(r.total_bales != null) details.push(`${r.total_bales} bales`);
-      if(tasks.length) details.push(tasks.join(', '));
+      const subDetails = [];
+      if(r.location) subDetails.push(r.location);
+      if(tasks.length) subDetails.push(tasks.join(', '));
       return `
-        <div class="record">
+        <div class="record" style="background:transparent;border:none;border-left:none;border-radius:0;border-bottom:1px solid var(--line);padding:9px 40px 9px 0;margin-bottom:0;">
           <button class="record-del" data-id="${r.id}">&times;</button>
           <button class="record-edit" data-id="${r.id}">&#9998;</button>
-          <div class="record-date">${fmtDate(r.entry_date)}</div>
-          ${details.length ? `<div class="record-reason">${escapeHtml(details.join(' · '))}</div>` : ''}
-          ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:16px;">
+            <span style="font-weight:700;">${fmtDate(r.entry_date)}</span>
+            <span style="font-weight:700;">${r.total_bales != null ? r.total_bales + ' bales' : ''}</span>
+          </div>
+          ${subDetails.length ? `<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:3px;">${escapeHtml(subDetails.join(' · '))}</div>` : ''}
+          ${r.notes ? `<div style="font-size:13px;margin-top:3px;">${escapeHtml(r.notes)}</div>` : ''}
         </div>
       `;
     }).join('');
