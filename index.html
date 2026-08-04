@@ -290,6 +290,7 @@
       <select id="hayingYearFilter" style="flex:1;"></select>
     </div>
     <div id="hayingList"></div>
+    <div id="hayingTotalBales" style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;border-top:2px solid var(--ink);font-weight:700;font-size:17px;"></div>
     <div id="hayingEmptyState" class="empty hidden">No haying entries logged yet.</div>
   </div>
 
@@ -3018,6 +3019,12 @@
         </div>
       `;
     }).join('');
+
+    const totalBales = filtered.reduce((sum, r)=> sum + (r.total_bales || 0), 0);
+    const totalLabel = selectedYear ? `Total Bales (${selectedYear})` : 'Total Bales (All Years)';
+    document.getElementById('hayingTotalBales').innerHTML = sorted.length
+      ? `<span>${totalLabel}</span><span>${totalBales}</span>`
+      : '';
     listEl.querySelectorAll('.record-del').forEach(btn=>{
       btn.addEventListener('click', ()=> deleteHayingEntry(btn.dataset.id));
     });
