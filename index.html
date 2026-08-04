@@ -66,7 +66,7 @@
   }
   .btn:active{transform:translateY(1px);box-shadow:0 1px 2px rgba(43,38,32,.16);}
   .btn[disabled]{opacity:.5;cursor:default;}
-  .btn-outline{background:#FAF3E6;border-color:#C7BBA0;color:var(--ink);}
+  .btn-outline{background:#FFFFFF;border-color:#C7BBA0;color:var(--ink);}
   .btn-barn{background:var(--barn);color:var(--paper);border-color:var(--barn);}
   .btn-pasture{background:var(--pasture);color:var(--paper);border-color:var(--pasture);}
   .btn-pink{background:#D46A8C;color:var(--paper);border-color:#D46A8C;}
@@ -77,6 +77,8 @@
   .btn-yellow{background:var(--tag);color:var(--ink);border-color:var(--tag);}
   .btn-nav-section{background:#0274BA;color:#fff;border-color:#0274BA;text-align:left;display:flex;align-items:center;gap:10px;}
   .btn-nav-tool{background:#3C9142;color:#fff;border-color:#3C9142;text-align:left;display:flex;align-items:center;gap:10px;}
+  .btn-profile-nav{background:#0274BA;color:#fff;border-color:#0274BA;}
+  .btn-profile-tool{background:#3C9142;color:#fff;border-color:#3C9142;}
   .btn-full{width:100%;}
   .btn-sm{padding:7px 12px;font-size:13px;}
 
@@ -122,7 +124,7 @@
   .back{
     display:flex;align-items:center;gap:8px;font-family:Arial,sans-serif;font-size:13px;
     letter-spacing:.05em;color:var(--paper);text-transform:uppercase;font-weight:700;
-    background:var(--barn);border:2px solid var(--ink);border-radius:2px;
+    background:#3C9142;border:2px solid #3C9142;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);
     padding:12px 14px;cursor:pointer;width:100%;margin-bottom:16px;
   }
   .back:active{transform:translateY(1px);}
@@ -198,14 +200,14 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
-      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;margin-top:8px;">👤&nbsp;&nbsp;Cow Profile</button>
-      <button class="btn btn-nav-section btn-full" id="homeMedsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;">🐄&nbsp;&nbsp;Medications</button>
-      <button class="btn btn-nav-section btn-full" id="homeCalvingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;">🐮&nbsp;&nbsp;Calving Records</button>
-      <button class="btn btn-nav-section btn-full" id="homeBreedingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;">🐂&nbsp;&nbsp;Breeding Records</button>
-      <button class="btn btn-nav-section btn-full" id="homeWeightsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;">⚖️&nbsp;&nbsp;Weights</button>
-      <button class="btn btn-nav-section btn-full" id="homeGeneralNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;">📝&nbsp;&nbsp;General Notes</button>
-      <button class="btn btn-nav-section btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;">🔢&nbsp;&nbsp;Herd Tally</button>
-      <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn">⋯&nbsp;&nbsp;More Tools</button>
+      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;margin-top:8px;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile</button>
+      <button class="btn btn-nav-section btn-full" id="homeMedsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐄</span>&nbsp;&nbsp;Medications</button>
+      <button class="btn btn-nav-section btn-full" id="homeCalvingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐮</span>&nbsp;&nbsp;Calving Records</button>
+      <button class="btn btn-nav-section btn-full" id="homeBreedingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐂</span>&nbsp;&nbsp;Breeding Records</button>
+      <button class="btn btn-nav-section btn-full" id="homeWeightsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">⚖️</span>&nbsp;&nbsp;Weights</button>
+      <button class="btn btn-nav-section btn-full" id="homeGeneralNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;General Notes</button>
+      <button class="btn btn-nav-section btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
+      <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">⋯</span>&nbsp;&nbsp;More Tools</button>
     </div>
   </div>
 
@@ -216,7 +218,7 @@
     <button class="btn btn-nav-tool btn-full" id="importDataBtn" style="margin-bottom:12px;">📥&nbsp;&nbsp;Import Data</button>
     <button class="btn btn-nav-tool btn-full" id="headcountByOwnerBtn" style="margin-bottom:12px;">📊&nbsp;&nbsp;Headcount by Owner</button>
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="margin-bottom:12px;">📋&nbsp;&nbsp;Sold / Deceased List</button>
-    <button class="btn btn-outline btn-full" id="globalSearchBtn" style="margin-bottom:12px;">🔎&nbsp;&nbsp;Search Everything</button>
+    <button class="btn btn-nav-tool btn-full" id="globalSearchBtn" style="margin-bottom:12px;">🔎&nbsp;&nbsp;Search Everything</button>
     <button class="btn btn-nav-tool btn-full" id="recentlyDeletedBtn" style="margin-bottom:12px;">🗑️&nbsp;&nbsp;Recently Deleted</button>
     <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn">📈&nbsp;&nbsp;Biggest Gainers</button>
   </div>
@@ -311,7 +313,7 @@
 
     <button class="btn btn-outline btn-full" id="detailViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
-    <button class="btn btn-pasture btn-full" id="addRecordBtn">+ Log Medicine Given</button>
+    <button class="btn btn-profile-nav btn-full" id="addRecordBtn">+ Log Medicine Given</button>
 
     <div class="section-label">Treatment History</div>
     <div id="recordList"></div>
@@ -348,7 +350,7 @@
 
     <button class="btn btn-outline btn-full" id="calvingViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
-    <button class="btn btn-pasture btn-full" id="addCalvingBtn">+ Log Calving</button>
+    <button class="btn btn-profile-nav btn-full" id="addCalvingBtn">+ Log Calving</button>
 
     <div class="section-label">Calving History</div>
     <div id="calvingRecordList"></div>
@@ -386,7 +388,7 @@
 
     <button class="btn btn-outline btn-full" id="notesViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
-    <button class="btn btn-blue btn-full" id="addGeneralNoteBtn">+ Add Note</button>
+    <button class="btn btn-profile-nav btn-full" id="addGeneralNoteBtn">+ Add Note</button>
 
     <div class="section-label">Notes History</div>
     <div id="generalNoteList"></div>
@@ -426,29 +428,29 @@
 
     <div class="section-label">Meds &amp; Notes</div>
     <div id="profileMedsList"></div>
-    <button class="btn btn-pasture btn-full" id="profileGoMeds" style="margin-bottom:20px;">Go to Meds &amp; Notes →</button>
+    <button class="btn btn-profile-nav btn-full" id="profileGoMeds" style="margin-bottom:20px;">Go to Meds &amp; Notes →</button>
 
     <div class="section-label">Calving Records</div>
     <div id="profileCalvingList"></div>
-    <button class="btn btn-pink btn-full" id="profileGoCalving" style="margin-bottom:20px;">Go to Calving Records →</button>
+    <button class="btn btn-profile-nav btn-full" id="profileGoCalving" style="margin-bottom:20px;">Go to Calving Records →</button>
 
     <div class="section-label">General Notes</div>
     <div id="profileNotesList"></div>
-    <button class="btn btn-blue btn-full" id="profileGoNotes" style="margin-bottom:20px;">Go to General Notes →</button>
+    <button class="btn btn-profile-nav btn-full" id="profileGoNotes" style="margin-bottom:20px;">Go to General Notes →</button>
 
     <div class="section-label">Weights</div>
     <div id="profileWeightsList"></div>
-    <button class="btn btn-orange btn-full" id="profileGoWeights" style="margin-bottom:20px;">Go to Weights →</button>
+    <button class="btn btn-profile-nav btn-full" id="profileGoWeights" style="margin-bottom:20px;">Go to Weights →</button>
 
     <div class="section-label">Breeding Records</div>
     <div id="profileBreedingList"></div>
-    <button class="btn btn-purple btn-full" id="profileGoBreeding" style="margin-bottom:20px;">Go to Breeding Records →</button>
+    <button class="btn btn-profile-nav btn-full" id="profileGoBreeding" style="margin-bottom:20px;">Go to Breeding Records →</button>
 
     <div class="section-label">Manage Cow</div>
-    <button class="btn btn-outline btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set lot/pasture</button>
-    <button class="btn btn-outline btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
-    <button class="btn btn-outline btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
-    <button class="btn btn-outline btn-full" id="profileRemoveCowBtn">Remove Cow</button>
+    <button class="btn btn-profile-tool btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set lot/pasture</button>
+    <button class="btn btn-profile-tool btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
+    <button class="btn btn-profile-tool btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
+    <button class="btn btn-profile-tool btn-full" id="profileRemoveCowBtn">Remove Cow</button>
   </div>
 
   <div class="view hidden" id="weightsListView">
@@ -480,7 +482,7 @@
 
     <button class="btn btn-outline btn-full" id="weightsViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
-    <button class="btn btn-orange btn-full" id="addWeightBtn">+ Log Weight</button>
+    <button class="btn btn-profile-nav btn-full" id="addWeightBtn">+ Log Weight</button>
 
     <div class="section-label">Weight History</div>
     <div id="weightRecordList"></div>
@@ -516,7 +518,7 @@
 
     <button class="btn btn-outline btn-full" id="breedingViewProfile" style="margin-bottom:12px;">👤 View Full Profile</button>
 
-    <button class="btn btn-purple btn-full" id="addBreedingBtn">+ Log Breeding</button>
+    <button class="btn btn-profile-nav btn-full" id="addBreedingBtn">+ Log Breeding</button>
 
     <div class="section-label">Breeding History</div>
     <div id="breedingRecordList"></div>
