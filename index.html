@@ -285,7 +285,10 @@
   <div class="view hidden" id="hayingView">
     <button class="btn btn-outline btn-full" id="hayingHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
     <div class="modal-title" style="margin-bottom:14px;">Haying</div>
-    <button class="btn btn-nav-section btn-full" id="addHayingBtn" style="margin-bottom:18px;">+ Add Haying Entry</button>
+    <button class="btn btn-nav-section btn-full" id="addHayingBtn" style="margin-bottom:14px;">+ Add Haying Entry</button>
+    <div class="toolbar">
+      <select id="hayingYearFilter" style="flex:1;"></select>
+    </div>
     <div id="hayingList"></div>
     <div id="hayingEmptyState" class="empty hidden">No haying entries logged yet.</div>
   </div>
@@ -2708,6 +2711,7 @@
   document.getElementById('homeHayingBtn').addEventListener('click', showHaying);
   document.getElementById('hayingHomeBtn').addEventListener('click', showHome);
   document.getElementById('addHayingBtn').addEventListener('click', ()=> hayingModal(null));
+  document.getElementById('hayingYearFilter').addEventListener('change', renderHayingList);
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
   document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
@@ -2980,8 +2984,18 @@
   function renderHayingList(){
     const listEl = document.getElementById('hayingList');
     const emptyEl = document.getElementById('hayingEmptyState');
+    const yearFilterEl = document.getElementById('hayingYearFilter');
     if(!listEl) return;
-    const sorted = [...hayingLog].sort((a,b)=> b.entry_date.localeCompare(a.entry_date));
+
+    // Populate year filter with distinct years present in the data, newest first
+    const years = [...new Set(hayingLog.map(r=> r.entry_date.slice(0,4)))].sort((a,b)=> b.localeCompare(a));
+    const prevSelection = yearFilterEl.value;
+    yearFilterEl.innerHTML = '<option value="">All Years</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    if(years.includes(prevSelection)) yearFilterEl.value = prevSelection;
+
+    const selectedYear = yearFilterEl.value;
+    const filtered = selectedYear ? hayingLog.filter(r=> r.entry_date.slice(0,4) === selectedYear) : hayingLog;
+    const sorted = [...filtered].sort((a,b)=> b.entry_date.localeCompare(a.entry_date));
     emptyEl.classList.toggle('hidden', sorted.length !== 0);
     listEl.innerHTML = sorted.map(r=>{
       const tasks = [];
