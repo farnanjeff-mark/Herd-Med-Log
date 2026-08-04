@@ -416,7 +416,11 @@
   <div class="view hidden" id="profileListView">
     <button class="btn btn-outline btn-full" id="profileListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
-      <input type="text" id="profileSearchBox" placeholder="Search cow #..." autocomplete="off"/>
+      <input type="text" id="profileSearchBox" placeholder="Search cow #..." autocomplete="off" style="flex:2;"/>
+      <select id="profileSortBy" style="flex:1;">
+        <option value="number">Cow Number</option>
+        <option value="recent">Most Recent</option>
+      </select>
     </div>
     <div class="toolbar" id="profileLotFilterRow" style="display:none;">
       <select id="profileLotFilter"><option value="">All Lots / Groups</option></select>
@@ -465,10 +469,6 @@
     <button class="btn btn-profile-nav btn-full" id="profileGoBreeding" style="margin-bottom:20px;">Go to Breeding Records →</button>
 
     <div class="section-label">Manage Cow</div>
-    <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;margin-bottom:12px;cursor:pointer;font-weight:700;">
-      <input type="checkbox" id="profileNeedsEntry" style="width:20px;height:20px;flex-shrink:0;"/>
-      🚩 Needs Entry — flag this cow to finish logging later
-    </label>
     <button class="btn btn-profile-tool btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set lot/pasture</button>
     <button class="btn btn-profile-tool btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
     <button class="btn btn-profile-tool btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
@@ -862,10 +862,11 @@
       const card = document.createElement('div');
       card.className = 'cow-card ' + recentClass + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `${needsEntryCheckboxHtml(cow)}<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openCow(num));
       cowListEl.appendChild(card);
     });
+    wireNeedsEntryCheckboxes(cowListEl);
   }
 
   function setHeaderTitle(text, highlight){
@@ -1416,10 +1417,11 @@
       }
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `${needsEntryCheckboxHtml(cow)}<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openCalvingCow(num));
       listEl.appendChild(card);
     });
+    wireNeedsEntryCheckboxes(listEl);
   }
 
   function renderCalvingDetail(){
@@ -1513,10 +1515,11 @@
       }
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `${needsEntryCheckboxHtml(cow)}<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openNotesCow(num));
       listEl.appendChild(card);
     });
+    wireNeedsEntryCheckboxes(listEl);
   }
 
   function renderNotesDetail(){
@@ -1548,6 +1551,18 @@
     });
   }
 
+  function mostRecentActivityDate(num){
+    const dates = [
+      ...recordsFor(num).map(r=>r.date),
+      ...calvingsFor(num).map(r=>r.calving_date),
+      ...generalNotesFor(num).map(r=>r.note_date),
+      ...weightsFor(num).map(r=>r.weigh_date),
+      ...breedingFor(num).map(r=>r.breed_date)
+    ].filter(Boolean);
+    if(dates.length === 0) return null;
+    return dates.sort((a,b)=> b.localeCompare(a))[0];
+  }
+
   function renderProfileList(){
     const listEl = document.getElementById('profileCowList');
     const emptyEl = document.getElementById('profileEmptyState');
@@ -1555,7 +1570,20 @@
     populateLotFilter('profileLotFilterRow', 'profileLotFilter');
     const q = (profileSearchBox.value||'').trim().toLowerCase();
     const lotFilterVal = document.getElementById('profileLotFilter').value;
-    const sorted = [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const sortMode = document.getElementById('profileSortBy').value;
+    let sorted;
+    if(sortMode === 'recent'){
+      sorted = [...cows].sort((a,b)=>{
+        const da = mostRecentActivityDate(a.number);
+        const db = mostRecentActivityDate(b.number);
+        if(!da && !db) return a.number.localeCompare(b.number, undefined, {numeric:true});
+        if(!da) return 1;
+        if(!db) return -1;
+        return db.localeCompare(da);
+      });
+    } else {
+      sorted = [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+    }
     const filtered = sorted.filter(c=>{
       if(lotFilterVal && c.lot !== lotFilterVal) return false;
       return !q || c.number.toLowerCase().includes(q);
@@ -1575,10 +1603,11 @@
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `${needsEntryCheckboxHtml(cow)}<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openProfileCow(num));
       listEl.appendChild(card);
     });
+    wireNeedsEntryCheckboxes(listEl);
   }
 
   function compressImageFile(file, maxDim, quality){
@@ -1686,7 +1715,6 @@
     if(cow.lot) subParts.push(`Lot: ${cow.lot}`);
     if(cow.owner) subParts.push(`Owner: ${cow.owner}`);
     document.getElementById('profileSub').textContent = subParts.join(' · ') || 'No lot or owner set';
-    document.getElementById('profileNeedsEntry').checked = !!cow.needs_entry;
     renderProfilePhotos(num);
 
     // Meds & Notes
@@ -1820,10 +1848,11 @@
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `${needsEntryCheckboxHtml(cow)}<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openWeightsCow(num));
       listEl.appendChild(card);
     });
+    wireNeedsEntryCheckboxes(listEl);
   }
 
   function renderWeightsDetail(){
@@ -1917,10 +1946,11 @@
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
+      card.innerHTML = `${needsEntryCheckboxHtml(cow)}<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>`;
       card.addEventListener('click', ()=> openBreedingCow(num));
       listEl.appendChild(card);
     });
+    wireNeedsEntryCheckboxes(listEl);
   }
 
   function renderBreedingDetail(){
@@ -2357,6 +2387,7 @@
           });
           const idx = treatments.findIndex(t=>t.id===existingRecord.id);
           if(idx !== -1) treatments[idx] = updated[0];
+          await clearNeedsEntryIfFlagged(currentCow);
         } else {
           const inserted = await api('/treatments', {
             method:'POST',
@@ -2364,6 +2395,7 @@
             body: JSON.stringify(Object.assign({ cow_number: currentCow }, body))
           });
           treatments.push(inserted[0]);
+          await clearNeedsEntryIfFlagged(currentCow);
         }
         closeModal();
         renderDetail();
@@ -2447,6 +2479,7 @@
           });
           const idx = calvings.findIndex(c=>c.id===existingRecord.id);
           if(idx !== -1) calvings[idx] = updated[0];
+          await clearNeedsEntryIfFlagged(currentCalvingCow);
         } else {
           const inserted = await api('/calvings', {
             method:'POST',
@@ -2454,6 +2487,7 @@
             body: JSON.stringify(Object.assign({ cow_number: currentCalvingCow }, body))
           });
           calvings.push(inserted[0]);
+          await clearNeedsEntryIfFlagged(currentCalvingCow);
         }
         closeModal();
         renderCalvingDetail();
@@ -2510,6 +2544,7 @@
           });
           const idx = weights.findIndex(w=>w.id===existingRecord.id);
           if(idx !== -1) weights[idx] = updated[0];
+          await clearNeedsEntryIfFlagged(currentWeightsCow);
         } else {
           const inserted = await api('/weights', {
             method:'POST',
@@ -2517,6 +2552,7 @@
             body: JSON.stringify(Object.assign({ cow_number: currentWeightsCow }, body))
           });
           weights.push(inserted[0]);
+          await clearNeedsEntryIfFlagged(currentWeightsCow);
         }
         closeModal();
         renderWeightsDetail();
@@ -2612,6 +2648,7 @@
           });
           const idx = breedingRecords.findIndex(b=>b.id===existingRecord.id);
           if(idx !== -1) breedingRecords[idx] = updated[0];
+          await clearNeedsEntryIfFlagged(currentBreedingCow);
         } else {
           const inserted = await api('/breeding_records', {
             method:'POST',
@@ -2619,6 +2656,7 @@
             body: JSON.stringify(Object.assign({ cow_number: currentBreedingCow }, body))
           });
           breedingRecords.push(inserted[0]);
+          await clearNeedsEntryIfFlagged(currentBreedingCow);
         }
         closeModal();
         renderBreedingDetail();
@@ -2670,6 +2708,7 @@
           });
           const idx = generalNotes.findIndex(n=>n.id===existingRecord.id);
           if(idx !== -1) generalNotes[idx] = updated[0];
+          await clearNeedsEntryIfFlagged(currentNotesCow);
         } else {
           const inserted = await api('/general_notes', {
             method:'POST',
@@ -2677,6 +2716,7 @@
             body: JSON.stringify(Object.assign({ cow_number: currentNotesCow }, body))
           });
           generalNotes.push(inserted[0]);
+          await clearNeedsEntryIfFlagged(currentNotesCow);
         }
         closeModal();
         renderNotesDetail();
@@ -2738,6 +2778,7 @@
   document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
   document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
   document.getElementById('profileLotFilter').addEventListener('change', renderProfileList);
+  document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
   document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
   document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
   document.getElementById('profileGoNotes').addEventListener('click', ()=> openNotesCow(currentProfileCow));
@@ -2766,23 +2807,6 @@
   document.getElementById('profileOwnerBtn').addEventListener('click', editOwnerModal);
   document.getElementById('profileStatusBtn').addEventListener('click', editStatusModal);
   document.getElementById('profileRemoveCowBtn').addEventListener('click', deleteCowFromProfile);
-  document.getElementById('profileNeedsEntry').addEventListener('change', async (e)=>{
-    const checked = e.target.checked;
-    if(!currentProfileCow) return;
-    try{
-      const updated = await api('/cows?number=eq.' + encodeURIComponent(currentProfileCow), {
-        method:'PATCH',
-        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ needs_entry: checked })
-      });
-      const idx = cows.findIndex(c=>c.number===currentProfileCow);
-      if(idx !== -1) cows[idx] = updated[0];
-      showToast(checked ? 'Flagged — needs entry' : 'Flag cleared');
-    }catch(err){
-      e.target.checked = !checked;
-      showToast('Could not save — try again');
-    }
-  });
   document.getElementById('profilePrintBtn').addEventListener('click', ()=> window.print());
   document.getElementById('profileAddPhotoBtn').addEventListener('click', ()=>{
     document.getElementById('profilePhotoInput').click();
@@ -2832,6 +2856,44 @@
   }
   function statusBadgeHtml(cow){
     return (cow.status && cow.status !== 'Active') ? `<span class="status-badge">${escapeHtml(cow.status)}</span>` : '';
+  }
+  function needsEntryCheckboxHtml(cow){
+    return `<input type="checkbox" class="needs-entry-check" data-num="${escapeHtml(cow.number)}" ${cow.needs_entry ? 'checked' : ''} title="Needs entry" style="width:22px;height:22px;flex-shrink:0;margin-right:10px;"/>`;
+  }
+  function wireNeedsEntryCheckboxes(container){
+    container.querySelectorAll('.needs-entry-check').forEach(cb=>{
+      cb.addEventListener('click', e=> e.stopPropagation());
+      cb.addEventListener('change', e=>{
+        e.stopPropagation();
+        toggleNeedsEntry(cb.dataset.num, cb.checked);
+      });
+    });
+  }
+  async function toggleNeedsEntry(num, checked){
+    try{
+      const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ needs_entry: checked })
+      });
+      const idx = cows.findIndex(c=>c.number===num);
+      if(idx !== -1) cows[idx] = updated[0];
+    }catch(e){
+      showToast('Could not save — try again');
+    }
+  }
+  async function clearNeedsEntryIfFlagged(num){
+    const cow = cows.find(c=>c.number===num);
+    if(!cow || !cow.needs_entry) return;
+    try{
+      const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ needs_entry: false })
+      });
+      const idx = cows.findIndex(c=>c.number===num);
+      if(idx !== -1) cows[idx] = updated[0];
+    }catch(e){ /* non-critical, fail silently */ }
   }
 
   function editLotModal(){
