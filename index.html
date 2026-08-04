@@ -2535,6 +2535,12 @@
   function addWeightModal(){ weightModal(null); }
   function editWeightModal(record){ weightModal(record); }
 
+  const BULL_OPTIONS = [
+    'Acceleration', 'Alpha', 'Bullseye', 'Diligent', 'Discipline', 'Dominance', 'Draft Pick',
+    'Fireproof', 'Grand Slam', 'Heat Seeker', 'Jameson', 'Kinsman', 'Long Bow', 'Majority',
+    'Paramount', 'Powercat', 'Preeminent', 'Venice', 'Venice Diligent', 'Winchester', 'Wizard'
+  ];
+
   function breedingModal(existingRecord){
     const isEdit = !!existingRecord;
     const today = new Date().toISOString().slice(0,10);
@@ -2545,10 +2551,7 @@
         <label>Date</label>
         <input type="date" id="brdDate" value="${initialDate}"/>
       </div>
-      <div class="field">
-        <label>Bred To</label>
-        <input type="text" id="brdBredTo" placeholder="Bull name or ID" value="${isEdit ? escapeHtml(existingRecord.bred_to||'') : ''}"/>
-      </div>
+      ${fieldWithOther('brdBredTo', 'Bred To', BULL_OPTIONS, 'Type bull name or ID')}
       <div class="field">
         <label>Pregnancy Method</label>
         <select id="brdMethod">
@@ -2581,10 +2584,12 @@
       const val = modal.querySelector('#brdDate').value;
       modal.querySelector('#brdDueDisplay').value = val ? fmtDate(computeDueDate(val)) : '';
     });
+    wireFieldWithOther(modal, 'brdBredTo');
+    if(isEdit && existingRecord.bred_to) prefillFieldWithOther(modal, 'brdBredTo', existingRecord.bred_to, BULL_OPTIONS);
     modal.querySelector('#cancelBrd').addEventListener('click', closeModal);
     modal.querySelector('#confirmBrd').addEventListener('click', async ()=>{
       const dateVal = modal.querySelector('#brdDate').value;
-      const bredTo = modal.querySelector('#brdBredTo').value.trim();
+      const bredTo = valueOf(modal, 'brdBredTo');
       const method = modal.querySelector('#brdMethod').value;
       const sire = modal.querySelector('#brdSire').value.trim();
       const vet = modal.querySelector('#brdVet').value.trim();
