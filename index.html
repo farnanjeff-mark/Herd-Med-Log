@@ -418,14 +418,15 @@
   <div class="view hidden" id="profileListView">
     <button class="btn btn-outline btn-full" id="profileListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
-      <input type="text" id="profileSearchBox" placeholder="Search cow #..." autocomplete="off" style="flex:2;"/>
+      <input type="text" id="profileSearchBox" placeholder="Search cow #..." autocomplete="off" style="flex:1;"/>
       <select id="profileSortBy" style="flex:1;">
         <option value="number">Cow Number</option>
         <option value="recent">Most Recent</option>
       </select>
     </div>
-    <div class="toolbar" id="profileLotFilterRow" style="display:none;">
-      <select id="profileLotFilter"><option value="">All Lots / Groups</option></select>
+    <div class="toolbar" id="profileLotFilterRow">
+      <select id="profileLotFilter" style="flex:1;"><option value="">All Lots / Groups</option></select>
+      <select id="profileOwnerFilter" style="flex:1;"><option value="">All Owners</option></select>
     </div>
     <div id="profileCowList"></div>
     <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
@@ -797,6 +798,17 @@
       lots.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
     if(lots.includes(prevValue)) lotFilter.value = prevValue;
   }
+  function populateOwnerFilter(selectId){
+    const ownerFilter = document.getElementById(selectId);
+    if(!ownerFilter) return;
+    const usedOwners = [...new Set(cows.map(c=>c.owner).filter(Boolean))];
+    const extraOwners = usedOwners.filter(o=>!OWNER_OPTIONS.includes(o)).sort();
+    const owners = [...OWNER_OPTIONS, ...extraOwners];
+    const prevValue = ownerFilter.value;
+    ownerFilter.innerHTML = '<option value="">All Owners</option>' +
+      owners.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+    if(owners.includes(prevValue)) ownerFilter.value = prevValue;
+  }
 
   function latestRecordFor(num){
     const records = recordsFor(num);
@@ -885,6 +897,10 @@
     if(calvingSearchBox) calvingSearchBox.value = '';
     if(notesSearchBox) notesSearchBox.value = '';
     if(profileSearchBox) profileSearchBox.value = '';
+    const profileLotFilterEl = document.getElementById('profileLotFilter');
+    if(profileLotFilterEl) profileLotFilterEl.value = '';
+    const profileOwnerFilterEl = document.getElementById('profileOwnerFilter');
+    if(profileOwnerFilterEl) profileOwnerFilterEl.value = '';
     if(weightsSearchBox) weightsSearchBox.value = '';
     if(breedingSearchBox) breedingSearchBox.value = '';
     setHeaderTitle('Herd', 'Ledger');
@@ -1570,8 +1586,10 @@
     const emptyEl = document.getElementById('profileEmptyState');
     if(!listEl) return;
     populateLotFilter('profileLotFilterRow', 'profileLotFilter');
+    populateOwnerFilter('profileOwnerFilter');
     const q = (profileSearchBox.value||'').trim().toLowerCase();
     const lotFilterVal = document.getElementById('profileLotFilter').value;
+    const ownerFilterVal = document.getElementById('profileOwnerFilter').value;
     const sortMode = document.getElementById('profileSortBy').value;
     let sorted;
     if(sortMode === 'recent'){
@@ -1588,6 +1606,7 @@
     }
     const filtered = sorted.filter(c=>{
       if(lotFilterVal && c.lot !== lotFilterVal) return false;
+      if(ownerFilterVal && c.owner !== ownerFilterVal) return false;
       return !q || c.number.toLowerCase().includes(q);
     });
 
@@ -2780,6 +2799,7 @@
   document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
   document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
   document.getElementById('profileLotFilter').addEventListener('change', renderProfileList);
+  document.getElementById('profileOwnerFilter').addEventListener('change', renderProfileList);
   document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
   document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
   document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
