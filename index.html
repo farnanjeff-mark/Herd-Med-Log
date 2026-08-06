@@ -2868,7 +2868,7 @@
     return (cow.status && cow.status !== 'Active') ? `<span class="status-badge">${escapeHtml(cow.status)}</span>` : '';
   }
   function quickAddButtonHtml(num){
-    return `<button class="quick-add-btn" data-num="${escapeHtml(num)}" title="Quick add" style="width:26px;height:26px;border-radius:50%;background:#0274BA;color:#fff;border:none;font-size:17px;font-weight:700;line-height:1;cursor:pointer;flex-shrink:0;">+</button>`;
+    return `<button class="quick-add-btn" data-num="${escapeHtml(num)}" title="Quick add" style="width:36px;height:36px;border-radius:50%;background:#0274BA;color:#fff;border:none;font-size:22px;font-weight:700;line-height:1;cursor:pointer;flex-shrink:0;">+</button>`;
   }
   function wireQuickAddButtons(container, onQuickAdd){
     container.querySelectorAll('.quick-add-btn').forEach(btn=>{
