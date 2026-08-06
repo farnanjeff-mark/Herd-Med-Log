@@ -877,11 +877,12 @@
       const card = document.createElement('div');
       card.className = 'cow-card ' + recentClass + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}<span class="chev">&rsaquo;</span></div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
       card.addEventListener('click', ()=> openCow(num));
       cowListEl.appendChild(card);
     });
     wireNeedsEntryCheckboxes(cowListEl);
+    wireQuickAddButtons(cowListEl, (n)=>{ currentCow = n; recordModal(null); });
   }
 
   function setHeaderTitle(text, highlight){
@@ -1436,11 +1437,12 @@
       }
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}<span class="chev">&rsaquo;</span></div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
       card.addEventListener('click', ()=> openCalvingCow(num));
       listEl.appendChild(card);
     });
     wireNeedsEntryCheckboxes(listEl);
+    wireQuickAddButtons(listEl, (n)=>{ currentCalvingCow = n; calvingModal(null); });
   }
 
   function renderCalvingDetail(){
@@ -1534,11 +1536,12 @@
       }
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}<span class="chev">&rsaquo;</span></div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
       card.addEventListener('click', ()=> openNotesCow(num));
       listEl.appendChild(card);
     });
     wireNeedsEntryCheckboxes(listEl);
+    wireQuickAddButtons(listEl, (n)=>{ currentNotesCow = n; generalNoteModal(null); });
   }
 
   function renderNotesDetail(){
@@ -1870,11 +1873,12 @@
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}<span class="chev">&rsaquo;</span></div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
       card.addEventListener('click', ()=> openWeightsCow(num));
       listEl.appendChild(card);
     });
     wireNeedsEntryCheckboxes(listEl);
+    wireQuickAddButtons(listEl, (n)=>{ currentWeightsCow = n; weightModal(null); });
   }
 
   function renderWeightsDetail(){
@@ -1968,11 +1972,12 @@
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}<span class="chev">&rsaquo;</span></div>`;
+      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
       card.addEventListener('click', ()=> openBreedingCow(num));
       listEl.appendChild(card);
     });
     wireNeedsEntryCheckboxes(listEl);
+    wireQuickAddButtons(listEl, (n)=>{ currentBreedingCow = n; breedingModal(null); });
   }
 
   function renderBreedingDetail(){
@@ -2889,6 +2894,17 @@
       cb.addEventListener('change', e=>{
         e.stopPropagation();
         toggleNeedsEntry(cb.dataset.num, cb.checked);
+      });
+    });
+  }
+  function quickAddButtonHtml(num){
+    return `<button class="quick-add-btn" data-num="${escapeHtml(num)}" title="Quick add" style="width:26px;height:26px;border-radius:50%;background:#0274BA;color:#fff;border:none;font-size:17px;font-weight:700;line-height:1;cursor:pointer;flex-shrink:0;">+</button>`;
+  }
+  function wireQuickAddButtons(container, onQuickAdd){
+    container.querySelectorAll('.quick-add-btn').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        e.stopPropagation();
+        onQuickAdd(btn.dataset.num);
       });
     });
   }
