@@ -214,6 +214,8 @@
         <button class="btn btn-nav-section" id="homeHayingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🌾</span>&nbsp;Haying</button>
       </div>
       <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">⋯</span>&nbsp;&nbsp;More Tools</button>
+      <button id="voiceSearchBtn" title="Voice search" style="width:76px;height:76px;border-radius:50%;background:#0274BA;color:#fff;border:3px solid var(--ink);box-shadow:0 3px 8px rgba(43,38,32,.25);font-size:34px;margin:22px auto 4px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🎤</button>
+      <div id="voiceSearchStatus" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;min-height:16px;"></div>
     </div>
   </div>
 
@@ -2757,6 +2759,7 @@
   document.getElementById('exportEverythingBtn').addEventListener('click', exportEverything);
   document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
   document.getElementById('homeMoreToolsBtn').addEventListener('click', showMoreTools);
+  document.getElementById('voiceSearchBtn').addEventListener('click', startVoiceSearch);
   document.getElementById('moreToolsHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeHerdTallyBtn').addEventListener('click', showHerdTally);
   document.getElementById('herdTallyHomeBtn').addEventListener('click', showHome);
@@ -3372,6 +3375,76 @@
     }catch(e){
       console.error(e);
       showToast('Could not restore — the cow this belonged to may no longer exist');
+    }
+  }
+
+  function startVoiceSearch(){
+    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const statusEl = document.getElementById('voiceSearchStatus');
+    const btn = document.getElementById('voiceSearchBtn');
+    if(!SpeechRecognitionCtor){
+      showToast('Voice search is not supported on this browser');
+      return;
+    }
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    btn.style.background = 'var(--barn)';
+    statusEl.textContent = 'Listening… say a cow number';
+
+    recognition.onresult = (e)=>{
+      const transcript = (e.results[0][0].transcript || '').trim();
+      const match = transcript.match(/\d+/);
+      if(!match){
+        showToast(`Didn't catch a number in "${transcript}"`);
+        statusEl.textContent = '';
+        return;
+      }
+      const spokenNum = match[0];
+      const exact = cows.find(c=>c.number === spokenNum);
+      if(exact){
+        showToast(`Opening #${exact.number}`);
+        showHome();
+        openProfileCow(exact.number);
+        statusEl.textContent = '';
+        return;
+      }
+      const partial = cows.filter(c=>c.number.includes(spokenNum));
+      if(partial.length === 1){
+        showToast(`Opening #${partial[0].number}`);
+        showHome();
+        openProfileCow(partial[0].number);
+      } else if(partial.length > 1){
+        showToast(`Multiple matches for "${spokenNum}" — showing list`);
+        showProfileList();
+        profileSearchBox.value = spokenNum;
+        renderProfileList();
+      } else {
+        showToast(`No cow found matching "${spokenNum}"`);
+      }
+      statusEl.textContent = '';
+    };
+    recognition.onerror = (e)=>{
+      statusEl.textContent = '';
+      if(e.error === 'not-allowed'){
+        showToast('Microphone access denied — check your browser settings');
+      } else if(e.error === 'no-speech'){
+        showToast('No speech detected — try again');
+      } else {
+        showToast('Could not hear you — try again');
+      }
+    };
+    recognition.onend = ()=>{
+      btn.style.background = '#0274BA';
+    };
+    try{
+      recognition.start();
+    }catch(err){
+      statusEl.textContent = '';
+      btn.style.background = '#0274BA';
     }
   }
 
