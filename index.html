@@ -1066,6 +1066,7 @@
   }
   function openCalvingCow(num){
     currentCalvingCow = num;
+    homeView.classList.add('hidden');
     setHeaderTitle('Calving', 'Records');
     document.getElementById('calvingDetailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     calvingListView.classList.add('hidden');
@@ -1112,6 +1113,7 @@
   }
   function openNotesCow(num){
     currentNotesCow = num;
+    homeView.classList.add('hidden');
     setHeaderTitle('General', 'Notes');
     document.getElementById('notesDetailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     notesListView.classList.add('hidden');
@@ -1158,6 +1160,7 @@
   }
   function openProfileCow(num){
     currentProfileCow = num;
+    homeView.classList.add('hidden');
     setHeaderTitle('Cow', 'Profile');
     profileListView.classList.add('hidden');
     listView.classList.add('hidden');
@@ -1211,6 +1214,7 @@
   }
   function openWeightsCow(num){
     currentWeightsCow = num;
+    homeView.classList.add('hidden');
     setHeaderTitle('Weights', '');
     document.getElementById('weightsDetailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     weightsListView.classList.add('hidden');
@@ -1255,6 +1259,7 @@
   }
   function openBreedingCow(num){
     currentBreedingCow = num;
+    homeView.classList.add('hidden');
     setHeaderTitle('Breeding', 'Records');
     document.getElementById('breedingDetailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
     breedingListView.classList.add('hidden');
@@ -1279,6 +1284,7 @@
 
   function openCow(num){
     currentCow = num;
+    homeView.classList.add('hidden');
     searchBox.blur();
     setHeaderTitle('Med', 'Log');
     document.getElementById('detailNum').innerHTML = ownerNumHtml(num, (cows.find(c=>c.number===num)||{}).owner);
