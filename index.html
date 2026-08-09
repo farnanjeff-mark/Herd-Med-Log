@@ -180,6 +180,7 @@
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.44.0/tabler-icons.min.css">
 </head>
 <body>
@@ -1157,6 +1158,7 @@
     fabAdd.classList.remove('hidden');
     renderProfileList();
     window.scrollTo(0,0);
+    profileSearchBox.focus();
   }
   function openProfileCow(num){
     currentProfileCow = num;
@@ -3974,18 +3976,61 @@
 
   async function exportEverything(){
     await loadAll();
-    if(typeof XLSX === 'undefined'){
+    if(typeof ExcelJS === 'undefined'){
       showToast('Could not load spreadsheet library — check your connection and try again');
       return;
     }
     try{
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildMedsRows()), 'Meds & Notes');
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildCalvingRows()), 'Calving Records');
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildNotesRows()), 'General Notes');
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildWeightsRows()), 'Weights');
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(buildBreedingRows()), 'Breeding Records');
-      XLSX.writeFile(wb, 'herd-full-export-' + new Date().toISOString().slice(0,10) + '.xlsx');
+      const wb = new ExcelJS.Workbook();
+      const sheets = [
+        { name: 'Meds & Notes', rows: buildMedsRows() },
+        { name: 'Calving Records', rows: buildCalvingRows() },
+        { name: 'General Notes', rows: buildNotesRows() },
+        { name: 'Weights', rows: buildWeightsRows() },
+        { name: 'Breeding Records', rows: buildBreedingRows() }
+      ];
+      const colorA = 'FFFFFFFF'; // white
+      const colorB = 'FFE3EDF5'; // light blue-grey band
+
+      sheets.forEach(sheet=>{
+        const ws = wb.addWorksheet(sheet.name);
+        const [header, ...dataRows] = sheet.rows;
+        ws.addRow(header);
+        const headerRow = ws.getRow(1);
+        headerRow.font = { bold: true };
+        headerRow.eachCell({ includeEmpty:true }, cell=>{
+          cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
+        });
+
+        let lastCow = null;
+        let useColorB = false;
+        dataRows.forEach(rowData=>{
+          const row = ws.addRow(rowData);
+          const cowNum = rowData[0];
+          if(cowNum !== lastCow){
+            useColorB = !useColorB;
+            lastCow = cowNum;
+          }
+          const fillColor = useColorB ? colorB : colorA;
+          row.eachCell({ includeEmpty:true }, cell=>{
+            cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:fillColor } };
+          });
+        });
+
+        ws.columns.forEach(col=>{ col.width = 18; });
+      });
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'herd-full-export-' + new Date().toISOString().slice(0,10) + '.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
       localStorage.setItem('lastExportAt', Date.now().toString());
       document.getElementById('backupBanner').classList.add('hidden');
       showToast('Full spreadsheet downloaded');
