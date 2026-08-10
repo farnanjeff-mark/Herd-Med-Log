@@ -4000,6 +4000,12 @@
         headerRow.font = { bold: true };
         headerRow.eachCell({ includeEmpty:true }, cell=>{
           cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
+          cell.border = {
+            top: { style:'medium', color:{ argb:'FF2B2620' } },
+            bottom: { style:'medium', color:{ argb:'FF2B2620' } },
+            left: { style:'thin', color:{ argb:'FFB8B0A0' } },
+            right: { style:'thin', color:{ argb:'FFB8B0A0' } }
+          };
         });
 
         let lastCow = null;
@@ -4007,13 +4013,22 @@
         dataRows.forEach(rowData=>{
           const row = ws.addRow(rowData);
           const cowNum = rowData[0];
-          if(cowNum !== lastCow){
+          const isNewGroup = cowNum !== lastCow;
+          if(isNewGroup){
             useColorB = !useColorB;
             lastCow = cowNum;
           }
           const fillColor = useColorB ? colorB : colorA;
+          const thinGray = { style:'thin', color:{ argb:'FFB8B0A0' } };
+          const thickTop = { style:'medium', color:{ argb:'FF2B2620' } };
           row.eachCell({ includeEmpty:true }, cell=>{
             cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:fillColor } };
+            cell.border = {
+              top: isNewGroup ? thickTop : thinGray,
+              bottom: thinGray,
+              left: thinGray,
+              right: thinGray
+            };
           });
         });
 
