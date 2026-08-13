@@ -210,10 +210,11 @@
         <button class="btn btn-nav-section" id="homeWeightsBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">⚖️</span>&nbsp;Weights</button>
       </div>
       <button class="btn btn-nav-section btn-full" id="homeGeneralNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;General Notes</button>
-      <div style="display:flex;gap:10px;margin-bottom:24px;">
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
         <button class="btn btn-nav-section" id="homeHerdTallyBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🔢</span>&nbsp;Herd Tally</button>
         <button class="btn btn-nav-section" id="homeHayingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🌾</span>&nbsp;Haying</button>
       </div>
+      <button class="btn btn-nav-section btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
       <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">⋯</span>&nbsp;&nbsp;More Tools</button>
       <button id="voiceSearchBtn" title="Voice search" style="width:76px;height:76px;border-radius:50%;background:#0274BA;color:#fff;border:3px solid var(--ink);box-shadow:0 3px 8px rgba(43,38,32,.25);font-size:34px;margin:22px auto 4px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🎤</button>
       <div id="voiceSearchStatus" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;min-height:16px;"></div>
@@ -297,6 +298,36 @@
     <div id="hayingTotalBales" style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;border-top:2px solid var(--ink);font-weight:700;font-size:17px;"></div>
     <div id="hayingEmptyState" class="empty hidden">No haying entries logged yet.</div>
   </div>
+
+  <div class="view hidden" id="equipmentListView">
+    <button class="btn btn-outline btn-full" id="equipmentListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:14px;">Equipment Maintenance</div>
+    <div class="toolbar">
+      <input type="text" id="equipmentSearchBox" placeholder="Search equipment..." autocomplete="off"/>
+    </div>
+    <div id="equipmentList"></div>
+    <div id="equipmentEmptyState" class="empty hidden">No equipment logged yet.<br/>Tap the + button to add your first piece of equipment.</div>
+  </div>
+
+  <div class="view hidden" id="equipmentDetailView">
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-outline" id="equipmentDetailHomeBtn" style="flex:1;">🏠 Home</button>
+      <button class="back" id="equipmentBackBtn" style="margin-bottom:0;flex:1;">&larr; All Equipment</button>
+    </div>
+    <div class="detail-head">
+      <div>
+        <div class="detail-num" id="equipmentDetailName">—</div>
+        <div class="detail-sub" id="equipmentDetailSub">0 repairs logged</div>
+      </div>
+    </div>
+    <button class="btn btn-nav-section btn-full" id="addEquipmentRepairBtn" style="margin-bottom:12px;">+ Log Maintenance</button>
+    <div id="equipmentRepairList"></div>
+    <div id="noEquipmentRepairs" class="empty hidden">No repairs logged for this equipment yet.</div>
+    <div class="section-label">Manage Equipment</div>
+    <button class="btn btn-profile-tool btn-full" id="removeEquipmentBtn">Remove Equipment</button>
+  </div>
+
+  <button class="fab hidden" id="fabAddEquipment" title="Add equipment">+</button>
 
   <div class="view hidden" id="listView">
     <button class="btn btn-outline btn-full" id="listHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
@@ -581,6 +612,9 @@
   let deletedRecords = []; // [{id, table_name, record_data, cow_number, deleted_at}]
   let herdTally = []; // [{id, location, cows, calves, bulls}]
   let hayingLog = []; // [{id, entry_date, location, mowed, raked, tedded, total_bales, notes}]
+  let equipmentMaintenance = []; // [{id, equipment_name, maint_date, notes}]
+  let equipmentList = []; // [{id, name}]
+  let currentEquipment = null;
   let currentCow = null;
   let currentCalvingCow = null;
   let currentNotesCow = null;
@@ -609,7 +643,10 @@
   const recentlyDeletedView = document.getElementById('recentlyDeletedView');
   const herdTallyView = document.getElementById('herdTallyView');
   const hayingView = document.getElementById('hayingView');
+  const equipmentListView = document.getElementById('equipmentListView');
+  const equipmentDetailView = document.getElementById('equipmentDetailView');
   const fabAdd = document.getElementById('fabAdd');
+  const fabAddEquipment = document.getElementById('fabAddEquipment');
   const cowListEl = document.getElementById('cowList');
   const emptyState = document.getElementById('emptyState');
   const searchBox = document.getElementById('searchBox');
@@ -663,7 +700,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -672,7 +709,9 @@
         api('/breeding_records?select=*', { method:'GET' }),
         api('/cow_photos?select=*', { method:'GET' }),
         api('/herd_tally?select=*', { method:'GET' }),
-        api('/haying_log?select=*', { method:'GET' })
+        api('/haying_log?select=*', { method:'GET' }),
+        api('/equipment_maintenance?select=*', { method:'GET' }),
+        api('/equipment?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -683,11 +722,15 @@
       cowPhotos = photosRes || [];
       if(tallyRes) herdTally = tallyRes;
       hayingLog = hayingRes || [];
+      equipmentMaintenance = equipmentRes || [];
+      equipmentList = equipmentListRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = [];
     }
     renderHerdTally();
     renderHayingList();
+    renderEquipmentList();
+    if(currentEquipment) renderEquipmentDetail();
     renderList();
     renderCalvingList();
     if(currentCalvingCow) renderCalvingDetail();
@@ -926,7 +969,10 @@
     recentlyDeletedView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
+    equipmentListView.classList.add('hidden');
+    equipmentDetailView.classList.add('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showHerdTally(){
@@ -949,8 +995,11 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     hayingView.classList.add('hidden');
+    equipmentListView.classList.add('hidden');
+    equipmentDetailView.classList.add('hidden');
     herdTallyView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     renderHerdTally();
     window.scrollTo(0,0);
   }
@@ -974,9 +1023,61 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
+    equipmentListView.classList.add('hidden');
+    equipmentDetailView.classList.add('hidden');
     hayingView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     renderHayingList();
+    window.scrollTo(0,0);
+  }
+  function showEquipmentList(){
+    setHeaderTitle('Equipment', 'Maintenance');
+    homeView.classList.add('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    breedingListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
+    breedingDetailView.classList.add('hidden');
+    moreToolsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    herdTallyView.classList.add('hidden');
+    hayingView.classList.add('hidden');
+    equipmentDetailView.classList.add('hidden');
+    equipmentListView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.remove('hidden');
+    renderEquipmentList();
+    window.scrollTo(0,0);
+  }
+  function openEquipmentDetail(name){
+    currentEquipment = name;
+    setHeaderTitle('Equipment', 'Maintenance');
+    document.getElementById('equipmentDetailName').textContent = name;
+    homeView.classList.add('hidden');
+    equipmentListView.classList.add('hidden');
+    equipmentDetailView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    renderEquipmentDetail();
+    window.scrollTo(0,0);
+  }
+  function closeEquipmentDetail(){
+    currentEquipment = null;
+    equipmentDetailView.classList.add('hidden');
+    equipmentListView.classList.remove('hidden');
+    fabAddEquipment.classList.remove('hidden');
+    document.getElementById('equipmentSearchBox').value = '';
+    renderEquipmentList();
     window.scrollTo(0,0);
   }
   function showMoreTools(){
@@ -987,6 +1088,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showImportView(){
@@ -997,6 +1099,7 @@
     recentlyDeletedView.classList.add('hidden');
     importView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     setImportType('meds');
     window.scrollTo(0,0);
   }
@@ -1008,6 +1111,7 @@
     recentlyDeletedView.classList.add('hidden');
     globalSearchView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     globalSearchBox.value = '';
     document.getElementById('globalSearchResults').innerHTML = '';
     window.scrollTo(0,0);
@@ -1020,6 +1124,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     window.scrollTo(0,0);
     try{
       const thirtyDaysAgo = new Date(Date.now() - 30*86400000).toISOString();
@@ -1081,6 +1186,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     renderCalvingDetail();
     window.scrollTo(0,0);
   }
@@ -1128,6 +1234,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     renderNotesDetail();
     window.scrollTo(0,0);
   }
@@ -1181,6 +1288,7 @@
     recentlyDeletedView.classList.add('hidden');
     profileView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     renderProfile();
     updateProfileLotLabel();
     updateProfileOwnerLabel();
@@ -1227,6 +1335,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     renderWeightsDetail();
     window.scrollTo(0,0);
   }
@@ -1271,6 +1380,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     renderBreedingDetail();
     window.scrollTo(0,0);
   }
@@ -1301,6 +1411,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
     renderDetail();
     window.scrollTo(0,0);
   }
@@ -2774,6 +2885,14 @@
   document.getElementById('homeHayingBtn').addEventListener('click', showHaying);
   document.getElementById('hayingHomeBtn').addEventListener('click', showHome);
   document.getElementById('addHayingBtn').addEventListener('click', ()=> hayingModal(null));
+  document.getElementById('homeEquipmentBtn').addEventListener('click', showEquipmentList);
+  document.getElementById('equipmentListHomeBtn').addEventListener('click', showHome);
+  document.getElementById('equipmentDetailHomeBtn').addEventListener('click', showHome);
+  document.getElementById('equipmentBackBtn').addEventListener('click', closeEquipmentDetail);
+  document.getElementById('fabAddEquipment').addEventListener('click', addEquipmentModal);
+  document.getElementById('addEquipmentRepairBtn').addEventListener('click', ()=> equipmentModal(null));
+  document.getElementById('removeEquipmentBtn').addEventListener('click', removeEquipment);
+  document.getElementById('equipmentSearchBox').addEventListener('input', renderEquipmentList);
   document.getElementById('hayingYearFilter').addEventListener('change', renderHayingList);
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
@@ -3100,6 +3219,175 @@
         if(record) hayingModal(record);
       });
     });
+  }
+
+  function renderEquipmentList(){
+    const listEl = document.getElementById('equipmentList');
+    const emptyEl = document.getElementById('equipmentEmptyState');
+    if(!listEl) return;
+    const q = (document.getElementById('equipmentSearchBox').value||'').trim().toLowerCase();
+
+    const sorted = [...equipmentList].sort((a,b)=>a.name.localeCompare(b.name));
+    const filtered = sorted.filter(e=> !q || e.name.toLowerCase().includes(q));
+    emptyEl.classList.toggle('hidden', equipmentList.length !== 0);
+
+    listEl.innerHTML = filtered.map(equip=>{
+      const records = equipmentMaintenance.filter(r=>r.equipment_name===equip.name);
+      let meta = records.length === 0 ? 'No repairs logged' : `${records.length} repair${records.length!==1?'s':''} logged`;
+      if(records.length>0){
+        const last = [...records].sort((a,b)=>b.maint_date.localeCompare(a.maint_date))[0];
+        meta += ` · last ${fmtDate(last.maint_date)}`;
+      }
+      return `
+        <div class="cow-card" data-name="${escapeHtml(equip.name)}" style="cursor:pointer;">
+          <div><div class="cow-num">${escapeHtml(equip.name)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>
+        </div>
+      `;
+    }).join('');
+    listEl.querySelectorAll('[data-name]').forEach(card=>{
+      card.addEventListener('click', ()=> openEquipmentDetail(card.dataset.name));
+    });
+  }
+
+  function addEquipmentModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Equipment</div>
+      <div class="field">
+        <label>Equipment Name</label>
+        <input type="text" id="newEquipName" placeholder="e.g. Baler, Tractor 1" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddEquip">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddEquip">Add</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddEquip').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddEquip').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newEquipName').value.trim();
+      if(!name){ showToast('Enter an equipment name'); return; }
+      if(equipmentList.some(e=>e.name.toLowerCase()===name.toLowerCase())){ showToast('That equipment already exists'); return; }
+      const btn = modal.querySelector('#confirmAddEquip');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/equipment', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name })
+        });
+        equipmentList.push(inserted[0]);
+        closeModal();
+        renderEquipmentList();
+        showToast(`${name} added`);
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
+  async function removeEquipment(){
+    if(!currentEquipment) return;
+    const name = currentEquipment;
+    if(!confirm(`Remove "${name}" and all its repair history? This can't be undone.`)) return;
+    try{
+      const equip = equipmentList.find(e=>e.name===name);
+      if(equip) await api('/equipment?id=eq.' + encodeURIComponent(equip.id), { method:'DELETE' });
+      equipmentList = equipmentList.filter(e=>e.name!==name);
+      equipmentMaintenance = equipmentMaintenance.filter(r=>r.equipment_name!==name);
+      closeEquipmentDetail();
+      showToast('Equipment removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  function renderEquipmentDetail(){
+    const records = [...equipmentMaintenance.filter(r=>r.equipment_name===currentEquipment)].sort((a,b)=>b.maint_date.localeCompare(a.maint_date));
+    document.getElementById('equipmentDetailSub').textContent = records.length === 0 ? '0 repairs logged' : `${records.length} repair${records.length!==1?'s':''} logged`;
+    const listEl = document.getElementById('equipmentRepairList');
+    const emptyEl = document.getElementById('noEquipmentRepairs');
+    emptyEl.classList.toggle('hidden', records.length !== 0);
+    listEl.innerHTML = records.map(r=>`
+      <div class="record">
+        <button class="record-del" data-id="${r.id}">&times;</button>
+        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        <div class="record-date">${fmtDate(r.maint_date)}</div>
+        ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.record-del').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteEquipmentRecord(btn.dataset.id));
+    });
+    listEl.querySelectorAll('.record-edit').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const record = equipmentMaintenance.find(r=>r.id===btn.dataset.id);
+        if(record) equipmentModal(record);
+      });
+    });
+  }
+
+  function equipmentModal(existingRecord){
+    const isEdit = !!existingRecord;
+    const today = new Date().toISOString().slice(0,10);
+    const modal = openModal(`
+      <div class="modal-title">${isEdit ? 'Edit Maintenance' : 'Log Maintenance'} — ${escapeHtml(currentEquipment)}</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="equipDate" value="${isEdit ? existingRecord.maint_date : today}"/>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="equipNotes" rows="3" placeholder="What was repaired/serviced">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEquip">Cancel</button>
+        <button class="btn btn-barn" id="confirmEquip">${isEdit ? 'Save Changes' : 'Save Entry'}</button>
+      </div>
+    `);
+    modal.querySelector('#cancelEquip').addEventListener('click', closeModal);
+    modal.querySelector('#confirmEquip').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#equipDate').value;
+      const notes = modal.querySelector('#equipNotes').value.trim();
+      if(!dateVal){ showToast('Date is required'); return; }
+      const btn = modal.querySelector('#confirmEquip');
+      btn.disabled = true;
+      const body = { maint_date: dateVal, equipment_name: currentEquipment, notes: notes||null };
+      try{
+        if(isEdit){
+          const updated = await api('/equipment_maintenance?id=eq.' + encodeURIComponent(existingRecord.id), {
+            method:'PATCH',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          const idx = equipmentMaintenance.findIndex(r=>r.id===existingRecord.id);
+          if(idx !== -1) equipmentMaintenance[idx] = updated[0];
+        } else {
+          const inserted = await api('/equipment_maintenance', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          equipmentMaintenance.push(inserted[0]);
+        }
+        closeModal();
+        renderEquipmentDetail();
+        renderEquipmentList();
+        window.scrollTo(0,0);
+        showToast(isEdit ? 'Repair updated' : 'Repair logged');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
+  async function deleteEquipmentRecord(id){
+    if(!confirm('Remove this repair entry? This can\'t be undone.')) return;
+    try{
+      await api('/equipment_maintenance?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      equipmentMaintenance = equipmentMaintenance.filter(r=>r.id!==id);
+      renderEquipmentDetail();
+      renderEquipmentList();
+      showToast('Repair removed');
+    }catch(e){ showToast('Could not remove — try again'); }
   }
 
   const HAYING_LOCATIONS = [
@@ -4000,12 +4288,6 @@
         headerRow.font = { bold: true };
         headerRow.eachCell({ includeEmpty:true }, cell=>{
           cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
-          cell.border = {
-            top: { style:'medium', color:{ argb:'FF2B2620' } },
-            bottom: { style:'medium', color:{ argb:'FF2B2620' } },
-            left: { style:'thin', color:{ argb:'FFB8B0A0' } },
-            right: { style:'thin', color:{ argb:'FFB8B0A0' } }
-          };
         });
 
         let lastCow = null;
@@ -4013,22 +4295,13 @@
         dataRows.forEach(rowData=>{
           const row = ws.addRow(rowData);
           const cowNum = rowData[0];
-          const isNewGroup = cowNum !== lastCow;
-          if(isNewGroup){
+          if(cowNum !== lastCow){
             useColorB = !useColorB;
             lastCow = cowNum;
           }
           const fillColor = useColorB ? colorB : colorA;
-          const thinGray = { style:'thin', color:{ argb:'FFB8B0A0' } };
-          const thickTop = { style:'medium', color:{ argb:'FF2B2620' } };
           row.eachCell({ includeEmpty:true }, cell=>{
             cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:fillColor } };
-            cell.border = {
-              top: isNewGroup ? thickTop : thinGray,
-              bottom: thinGray,
-              left: thinGray,
-              right: thinGray
-            };
           });
         });
 
