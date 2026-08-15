@@ -210,11 +210,7 @@
         <button class="btn btn-nav-section" id="homeWeightsBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">⚖️</span>&nbsp;Weights</button>
       </div>
       <button class="btn btn-nav-section btn-full" id="homeGeneralNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;General Notes</button>
-      <div style="display:flex;gap:10px;margin-bottom:12px;">
-        <button class="btn btn-nav-section" id="homeHerdTallyBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🔢</span>&nbsp;Herd Tally</button>
-        <button class="btn btn-nav-section" id="homeHayingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🌾</span>&nbsp;Haying</button>
-      </div>
-      <button class="btn btn-nav-section btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
+      <button class="btn btn-nav-section btn-full" id="homeGlobalSearchBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
       <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">⋯</span>&nbsp;&nbsp;More Tools</button>
       <button id="voiceSearchBtn" title="Voice search" style="width:76px;height:76px;border-radius:50%;background:#0274BA;color:#fff;border:3px solid var(--ink);box-shadow:0 3px 8px rgba(43,38,32,.25);font-size:34px;margin:22px auto 4px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🎤</button>
       <div id="voiceSearchStatus" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;min-height:16px;"></div>
@@ -223,12 +219,15 @@
 
   <div class="view hidden" id="moreToolsView">
     <button class="btn btn-outline btn-full" id="moreToolsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
+    <div class="section-label" style="margin-top:0;">Extra</div>
+    <button class="btn btn-nav-tool btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
+    <button class="btn btn-nav-tool btn-full" id="homeHayingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Haying</button>
+    <button class="btn btn-nav-tool btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
     <div style="display:flex;gap:10px;margin-bottom:12px;">
       <button class="btn btn-nav-tool" id="exportEverythingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📦</span>&nbsp;Export</button>
       <button class="btn btn-nav-tool" id="importDataBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📥</span>&nbsp;Import</button>
     </div>
     <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Lot</button>
-    <button class="btn btn-nav-tool btn-full" id="globalSearchBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
     <div class="section-label">Reports</div>
     <button class="btn btn-nav-tool btn-full" id="headcountByOwnerBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Headcount by Owner</button>
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
@@ -2897,7 +2896,7 @@
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
   document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
-  document.getElementById('globalSearchBtn').addEventListener('click', showGlobalSearch);
+  document.getElementById('homeGlobalSearchBtn').addEventListener('click', showGlobalSearch);
   document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
   document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
