@@ -4348,12 +4348,16 @@
         let lastCow = null;
         let useColorB = false;
         dataRows.forEach(rowData=>{
-          const row = ws.addRow(rowData);
-          const cowNum = rowData[0];
-          if(cowNum !== lastCow){
+          const groupKey = rowData[0];
+          const isNewGroup = groupKey !== lastCow;
+          if(isNewGroup){
             useColorB = !useColorB;
-            lastCow = cowNum;
+            lastCow = groupKey;
+          } else {
+            rowData = [...rowData];
+            rowData[0] = '';
           }
+          const row = ws.addRow(rowData);
           const fillColor = useColorB ? colorB : colorA;
           row.eachCell({ includeEmpty:true }, cell=>{
             cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:fillColor } };
