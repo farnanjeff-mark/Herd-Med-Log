@@ -227,7 +227,7 @@
       <button class="btn btn-nav-tool" id="exportEverythingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📦</span>&nbsp;Export</button>
       <button class="btn btn-nav-tool" id="importDataBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📥</span>&nbsp;Import</button>
     </div>
-    <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Lot / Group</button>
+    <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Location / Group</button>
     <div class="section-label">Reports</div>
     <button class="btn btn-nav-tool btn-full" id="headcountByOwnerBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Headcount by Owner</button>
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
@@ -461,6 +461,9 @@
       <select id="profileLotFilter" style="flex:1;"><option value="">All Locations</option></select>
       <select id="profileOwnerFilter" style="flex:1;"><option value="">All Owners</option></select>
     </div>
+    <div class="toolbar">
+      <select id="profileGroupFilter" style="flex:1;"><option value="">All Groups</option></select>
+    </div>
     <div id="profileCowList"></div>
     <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
   </div>
@@ -505,7 +508,7 @@
     <button class="btn btn-profile-nav btn-full" id="profileGoBreeding" style="margin-bottom:20px;">Go to Breeding Records →</button>
 
     <div class="section-label">Manage Cow</div>
-    <button class="btn btn-profile-tool btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set lot/pasture</button>
+    <button class="btn btn-profile-tool btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set location</button>
     <button class="btn btn-profile-tool btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
     <button class="btn btn-profile-tool btn-full" id="profileGroupBtn" style="margin-bottom:12px;">Set group</button>
     <button class="btn btn-profile-tool btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
@@ -859,6 +862,17 @@
       owners.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
     if(owners.includes(prevValue)) ownerFilter.value = prevValue;
   }
+  function populateGroupFilter(selectId){
+    const groupFilter = document.getElementById(selectId);
+    if(!groupFilter) return;
+    const usedGroups = [...new Set(cows.map(c=>c.cow_group).filter(Boolean))];
+    const extraGroups = usedGroups.filter(g=>!GROUP_OPTIONS.includes(g)).sort();
+    const groups = [...GROUP_OPTIONS, ...extraGroups];
+    const prevValue = groupFilter.value;
+    groupFilter.innerHTML = '<option value="">All Groups</option>' +
+      groups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+    if(groups.includes(prevValue)) groupFilter.value = prevValue;
+  }
 
   function latestRecordFor(num){
     const records = recordsFor(num);
@@ -951,6 +965,8 @@
     if(profileLotFilterEl) profileLotFilterEl.value = '';
     const profileOwnerFilterEl = document.getElementById('profileOwnerFilter');
     if(profileOwnerFilterEl) profileOwnerFilterEl.value = '';
+    const profileGroupFilterEl = document.getElementById('profileGroupFilter');
+    if(profileGroupFilterEl) profileGroupFilterEl.value = '';
     if(weightsSearchBox) weightsSearchBox.value = '';
     if(breedingSearchBox) breedingSearchBox.value = '';
     setHeaderTitle('Herd', 'Ledger');
@@ -1431,22 +1447,22 @@
   function updateProfileLotLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileLotBtn');
-    el.textContent = (cow && cow.lot) ? `Lot: ${cow.lot} (tap to edit)` : 'Set lot/pasture';
+    el.textContent = (cow && cow.lot) ? `Location: ${cow.lot}` : 'Set location';
   }
   function updateProfileOwnerLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileOwnerBtn');
-    el.textContent = (cow && cow.owner) ? `Owner: ${cow.owner} (tap to edit)` : 'Set owner';
+    el.textContent = (cow && cow.owner) ? `Owner: ${cow.owner}` : 'Set owner';
   }
   function updateProfileGroupLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileGroupBtn');
-    el.textContent = (cow && cow.cow_group) ? `Group: ${cow.cow_group} (tap to edit)` : 'Set group';
+    el.textContent = (cow && cow.cow_group) ? `Group: ${cow.cow_group}` : 'Set group';
   }
   function updateProfileStatusLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileStatusBtn');
-    el.textContent = `Status: ${(cow && cow.status) || 'Active'} (tap to edit)`;
+    el.textContent = `Status: ${(cow && cow.status) || 'Active'}`;
   }
   function refreshOpenCowHeaders(){
     if(currentCow && !detailView.classList.contains('hidden')){
@@ -1719,9 +1735,11 @@
     if(!listEl) return;
     populateLotFilter('profileLotFilterRow', 'profileLotFilter');
     populateOwnerFilter('profileOwnerFilter');
+    populateGroupFilter('profileGroupFilter');
     const q = (profileSearchBox.value||'').trim().toLowerCase();
     const lotFilterVal = document.getElementById('profileLotFilter').value;
     const ownerFilterVal = document.getElementById('profileOwnerFilter').value;
+    const groupFilterVal = document.getElementById('profileGroupFilter').value;
     const sortMode = document.getElementById('profileSortBy').value;
     let sorted;
     if(sortMode === 'recent'){
@@ -1743,6 +1761,7 @@
         return false;
       }
       if(ownerFilterVal && c.owner !== ownerFilterVal) return false;
+      if(groupFilterVal && c.cow_group !== groupFilterVal) return false;
       return !q || c.number.toLowerCase().includes(q);
     });
 
@@ -1868,8 +1887,9 @@
     const cow = cows.find(c=>c.number===num) || {};
     document.getElementById('profileNum').innerHTML = ownerNumHtml(num, cow.owner);
     const subParts = [];
-    if(cow.lot) subParts.push(`Lot: ${cow.lot}`);
+    if(cow.lot) subParts.push(`Location: ${cow.lot}`);
     if(cow.owner) subParts.push(`Owner: ${cow.owner}`);
+    if(cow.cow_group) subParts.push(`Group: ${cow.cow_group}`);
     document.getElementById('profileSub').textContent = subParts.join(' · ') || 'No lot or owner set';
     renderProfilePhotos(num);
 
@@ -2345,7 +2365,7 @@
         </div>
       </div>
       <a href="#" id="toggleBulkMode" style="display:block;font-family:Arial,sans-serif;font-size:12px;color:var(--barn);text-decoration:underline;margin-bottom:14px;">Add multiple cows at once</a>
-      ${fieldWithOther('newCowLot', 'Lot / Pasture / Group (optional)', LOT_OPTIONS, 'Type lot/pasture')}
+      ${fieldWithOther('newCowLot', 'Location (optional)', LOT_OPTIONS, 'Type location')}
       ${fieldWithOther('newCowOwner', 'Owner (optional)', OWNER_OPTIONS, 'Type owner name')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelAddCow">Cancel</button>
@@ -2933,6 +2953,7 @@
   document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
   document.getElementById('profileLotFilter').addEventListener('change', renderProfileList);
   document.getElementById('profileOwnerFilter').addEventListener('change', renderProfileList);
+  document.getElementById('profileGroupFilter').addEventListener('change', renderProfileList);
   document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
   document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
   document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
@@ -2993,7 +3014,13 @@
 
   const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
   const OWNER_OPTIONS = ['JF','FCC','Kellan','Clint','LA'];
-  const GROUP_OPTIONS = ['5 Series Spring Calving Heifer', '5 Series Fall Calving Heifer'];
+  const GROUP_OPTIONS = [
+    '4 Series Fall Calving Heifers',
+    '5 Series Spring Calving Heifer',
+    '5 Series Fall Calving Heifer',
+    '6 Series Spring Calving Heifers',
+    '6 Series Fall Calving Heifers'
+  ];
   function ownerColor(owner){
     if(owner === 'JF') return '#D46A8C';
     if(owner === 'FCC') return '#D4B93C';
@@ -3030,8 +3057,8 @@
     const targetNum = getActiveCowNumber();
     const cow = cows.find(c=>c.number===targetNum);
     const modal = openModal(`
-      <div class="modal-title">Lot / Pasture — #${escapeHtml(targetNum)}</div>
-      ${fieldWithOther('editLot', 'Lot / Pasture / Group', LOT_OPTIONS, 'Type lot/pasture')}
+      <div class="modal-title">Location — #${escapeHtml(targetNum)}</div>
+      ${fieldWithOther('editLot', 'Location', LOT_OPTIONS, 'Type location')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelEditLot">Cancel</button>
         <button class="btn btn-barn" id="confirmEditLot">Save</button>
@@ -3060,7 +3087,7 @@
         renderWeightsList();
         renderBreedingList();
         renderProfileList();
-        showToast('Lot updated');
+        showToast('Location updated');
       }catch(e){
         btn.disabled = false;
         showToast('Could not save — try again');
@@ -3880,7 +3907,7 @@
     let field = 'owner'; // 'owner' | 'lot' | 'group'
     const FIELD_CONFIG = {
       owner: { options: OWNER_OPTIONS, label: 'Owner', dbKey: 'owner' },
-      lot: { options: LOT_OPTIONS, label: 'Lot / Pasture', dbKey: 'lot' },
+      lot: { options: LOT_OPTIONS, label: 'Location', dbKey: 'lot' },
       group: { options: GROUP_OPTIONS, label: 'Group', dbKey: 'cow_group' }
     };
 
@@ -3905,7 +3932,7 @@
         <div class="modal-title">Bulk Edit</div>
         <div class="row2" style="margin-bottom:8px;">
           <button class="btn ${field==='owner' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldOwner" style="flex:1;">Owner</button>
-          <button class="btn ${field==='lot' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldLot" style="flex:1;">Lot / Pasture</button>
+          <button class="btn ${field==='lot' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldLot" style="flex:1;">Location</button>
         </div>
         <button class="btn ${field==='group' ? 'btn-barn' : 'btn-outline'} btn-full" id="bulkFieldGroup" style="margin-bottom:14px;">Group</button>
         ${fieldWithOther('bulkValue', `Set ${label} To`, options, `Type ${label.toLowerCase()}`)}
@@ -4195,7 +4222,7 @@
   }
 
   function buildMedsRows(){
-    const rows = [['Cow Number','Status','Lot/Group','Owner','Date Given','Medicine','Reason','Notes']];
+    const rows = [['Cow Number','Status','Location','Owner','Date Given','Medicine','Reason','Notes']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -4220,7 +4247,7 @@
   }
 
   function buildCalvingRows(){
-    const rows = [['Cow Number','Status','Lot/Group','Owner','Calving Date','Calf Sex','Birth Weight (lbs)','Sire','Birth Assist','Notes']];
+    const rows = [['Cow Number','Status','Location','Owner','Calving Date','Calf Sex','Birth Weight (lbs)','Sire','Birth Assist','Notes']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -4245,7 +4272,7 @@
   }
 
   function buildNotesRows(){
-    const rows = [['Cow Number','Status','Lot/Group','Owner','Date','Note']];
+    const rows = [['Cow Number','Status','Location','Owner','Date','Note']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -4270,7 +4297,7 @@
   }
 
   function buildWeightsRows(){
-    const rows = [['Cow Number','Status','Lot/Group','Owner','Date','Weight (lbs)','Notes']];
+    const rows = [['Cow Number','Status','Location','Owner','Date','Weight (lbs)','Notes']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
@@ -4295,7 +4322,7 @@
   }
 
   function buildBreedingRows(){
-    const rows = [['Cow Number','Status','Lot/Group','Owner','Date','Bred To','Pregnancy Method','Natural Sire','Vet Calls','Expected Due Date','Notes']];
+    const rows = [['Cow Number','Status','Location','Owner','Date','Bred To','Pregnancy Method','Natural Sire','Vet Calls','Expected Due Date','Notes']];
     const cowMap = {};
     cows.forEach(c=> cowMap[c.number] = c);
 
