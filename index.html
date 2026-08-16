@@ -135,7 +135,6 @@
     font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
     color:var(--pasture);font-weight:700;margin:20px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px;
   }
-  #profileView .section-label{color:#0274BA;}
 
   .record{background:var(--paper-raised);border:1.5px solid var(--line);border-left:6px solid var(--line);border-radius:2px;padding:12px 14px;margin-bottom:8px;position:relative;}
   .record.note-entry{border-left-color:#3B6E8F;}
@@ -289,7 +288,7 @@
   <div class="view hidden" id="hayingView">
     <button class="btn btn-outline btn-full" id="hayingHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
     <div class="modal-title" style="margin-bottom:14px;">Haying</div>
-    <button class="btn btn-nav-section btn-full" id="addHayingBtn" style="margin-bottom:14px;">+ Add Haying Entry</button>
+    <button class="btn btn-nav-tool btn-full" id="addHayingBtn" style="margin-bottom:14px;">+ Add Haying Entry</button>
     <div class="toolbar">
       <select id="hayingYearFilter" style="flex:1;"></select>
     </div>
@@ -319,7 +318,7 @@
         <div class="detail-sub" id="equipmentDetailSub">0 repairs logged</div>
       </div>
     </div>
-    <button class="btn btn-nav-section btn-full" id="addEquipmentRepairBtn" style="margin-bottom:12px;">+ Log Maintenance</button>
+    <button class="btn btn-nav-tool btn-full" id="addEquipmentRepairBtn" style="margin-bottom:12px;">+ Log Maintenance</button>
     <div id="equipmentRepairList"></div>
     <div id="noEquipmentRepairs" class="empty hidden">No repairs logged for this equipment yet.</div>
     <div class="section-label">Manage Equipment</div>
@@ -476,7 +475,6 @@
     <div class="detail-head">
       <div>
         <div class="detail-num" id="profileNum">#000</div>
-        <div class="detail-sub" id="profileSub"></div>
       </div>
     </div>
 
@@ -1886,11 +1884,6 @@
     const num = currentProfileCow;
     const cow = cows.find(c=>c.number===num) || {};
     document.getElementById('profileNum').innerHTML = ownerNumHtml(num, cow.owner);
-    const subParts = [];
-    if(cow.lot) subParts.push(`Location: ${cow.lot}`);
-    if(cow.owner) subParts.push(`Owner: ${cow.owner}`);
-    if(cow.cow_group) subParts.push(`Group: ${cow.cow_group}`);
-    document.getElementById('profileSub').textContent = subParts.join(' · ') || 'No lot or owner set';
     renderProfilePhotos(num);
 
     // Meds & Notes
@@ -3233,7 +3226,7 @@
       const row = herdTally.find(t=>t.location===loc) || { cows:0, calves:0, bulls:0 };
       const color = HERD_TALLY_COLORS[i % HERD_TALLY_COLORS.length];
       return `
-        <div style="padding:10px 0;border-bottom:1px solid var(--line);">
+        <div style="padding:9px 0;border-bottom:1px solid var(--line);">
           <div style="font-weight:700;font-size:16px;color:${color};margin-bottom:8px;">${escapeHtml(loc)}</div>
           <div style="display:flex;gap:20px;">
             <span class="tally-box" data-loc="${escapeHtml(loc)}" data-field="cows" style="cursor:pointer;font-size:14px;"><b style="font-size:18px;">${row.cows}</b> Cows</span>
@@ -3320,8 +3313,8 @@
         meta += ` · last ${fmtDate(last.maint_date)}`;
       }
       return `
-        <div class="cow-card" data-name="${escapeHtml(equip.name)}" style="cursor:pointer;">
-          <div><div class="cow-num">${escapeHtml(equip.name)}</div><div class="cow-meta">${meta}</div></div><div class="chev">&rsaquo;</div>
+        <div data-name="${escapeHtml(equip.name)}" style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;">
+          <div><div style="font-weight:700;font-size:16px;">${escapeHtml(equip.name)}</div><div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:2px;">${meta}</div></div><div class="chev">&rsaquo;</div>
         </div>
       `;
     }).join('');
