@@ -2874,7 +2874,7 @@
   document.getElementById('calvingSearchBox').addEventListener('input', renderCalvingList);
   document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
   document.getElementById('homeGeneralNotesBtn').addEventListener('click', showNotesList);
-  document.getElementById('exportEverythingBtn').addEventListener('click', exportEverything);
+  document.getElementById('exportEverythingBtn').addEventListener('click', exportOptionsModal);
   document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
   document.getElementById('homeMoreToolsBtn').addEventListener('click', showMoreTools);
   document.getElementById('voiceSearchBtn').addEventListener('click', startVoiceSearch);
@@ -4242,6 +4242,34 @@
     return rows;
   }
 
+  function buildHayingRows(){
+    const rows = [['Date','Location','Total Bales','Mowed','Raked','Tedded','Notes']];
+    const sorted = [...hayingLog].sort((a,b)=> a.entry_date.localeCompare(b.entry_date));
+    sorted.forEach(r=>{
+      rows.push([r.entry_date, r.location||'', r.total_bales!=null ? r.total_bales : '', r.mowed?'Yes':'', r.raked?'Yes':'', r.tedded?'Yes':'', r.notes||'']);
+    });
+    return rows;
+  }
+
+  function buildEquipmentRows(){
+    const rows = [['Equipment','Date','Notes']];
+    const sorted = [...equipmentMaintenance].sort((a,b)=>{
+      const nameCmp = a.equipment_name.localeCompare(b.equipment_name);
+      if(nameCmp !== 0) return nameCmp;
+      return a.maint_date.localeCompare(b.maint_date);
+    });
+    sorted.forEach(r=>{
+      rows.push([r.equipment_name, r.maint_date, r.notes||'']);
+    });
+    const namedEquip = new Set(equipmentMaintenance.map(r=>r.equipment_name));
+    equipmentList.filter(e=>!namedEquip.has(e.name))
+        .sort((a,b)=>a.name.localeCompare(b.name))
+        .forEach(e=>{
+          rows.push([e.name, '', '']);
+        });
+    return rows;
+  }
+
   async function exportCsv(){
     // Refresh first so the export reflects the latest data, not a stale in-memory copy.
     await loadAll();
@@ -4261,7 +4289,33 @@
     showToast('Spreadsheet downloaded');
   }
 
-  async function exportEverything(){
+  function exportOptionsModal(){
+    const modal = openModal(`
+      <div class="modal-title">Export Everything</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Meds &amp; Notes, Calving, General Notes, Weights, and Breeding are always included. Also include:</div>
+      <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;margin-bottom:10px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" id="exportIncludeHaying" checked style="width:20px;height:20px;flex-shrink:0;"/>
+        🌾 Haying
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;margin-bottom:14px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" id="exportIncludeEquipment" checked style="width:20px;height:20px;flex-shrink:0;"/>
+        🔧 Equipment Maintenance
+      </label>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelExportOptions">Cancel</button>
+        <button class="btn btn-barn" id="confirmExportOptions">Export</button>
+      </div>
+    `);
+    modal.querySelector('#cancelExportOptions').addEventListener('click', closeModal);
+    modal.querySelector('#confirmExportOptions').addEventListener('click', ()=>{
+      const includeHaying = modal.querySelector('#exportIncludeHaying').checked;
+      const includeEquipment = modal.querySelector('#exportIncludeEquipment').checked;
+      closeModal();
+      exportEverything(includeHaying, includeEquipment);
+    });
+  }
+
+  async function exportEverything(includeHaying, includeEquipment){
     await loadAll();
     if(typeof ExcelJS === 'undefined'){
       showToast('Could not load spreadsheet library — check your connection and try again');
@@ -4276,6 +4330,8 @@
         { name: 'Weights', rows: buildWeightsRows() },
         { name: 'Breeding Records', rows: buildBreedingRows() }
       ];
+      if(includeHaying) sheets.push({ name: 'Haying', rows: buildHayingRows() });
+      if(includeEquipment) sheets.push({ name: 'Equipment Maintenance', rows: buildEquipmentRows() });
       const colorA = 'FFFFFFFF'; // white
       const colorB = 'FFE3EDF5'; // light blue-grey band
 
