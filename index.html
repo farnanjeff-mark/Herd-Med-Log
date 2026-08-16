@@ -3930,11 +3930,11 @@
 
       const modal = openModal(`
         <div class="modal-title">Bulk Edit</div>
-        <div class="row2" style="margin-bottom:8px;">
+        <div class="row2" style="margin-bottom:14px;">
           <button class="btn ${field==='owner' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldOwner" style="flex:1;">Owner</button>
           <button class="btn ${field==='lot' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldLot" style="flex:1;">Location</button>
+          <button class="btn ${field==='group' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldGroup" style="flex:1;">Group</button>
         </div>
-        <button class="btn ${field==='group' ? 'btn-barn' : 'btn-outline'} btn-full" id="bulkFieldGroup" style="margin-bottom:14px;">Group</button>
         ${fieldWithOther('bulkValue', `Set ${label} To`, options, `Type ${label.toLowerCase()}`)}
         <div class="section-label">Cows to Update <a href="#" id="bulkToggleAll" style="text-transform:none;letter-spacing:0;color:var(--barn);text-decoration:underline;">(select all)</a></div>
         <div style="max-height:220px;overflow-y:auto;margin-bottom:10px;">${cowOptionsHtml}</div>
