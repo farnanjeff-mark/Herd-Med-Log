@@ -227,7 +227,7 @@
       <button class="btn btn-nav-tool" id="exportEverythingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📦</span>&nbsp;Export</button>
       <button class="btn btn-nav-tool" id="importDataBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📥</span>&nbsp;Import</button>
     </div>
-    <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Lot</button>
+    <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Lot / Group</button>
     <div class="section-label">Reports</div>
     <button class="btn btn-nav-tool btn-full" id="headcountByOwnerBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Headcount by Owner</button>
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
@@ -458,7 +458,7 @@
       </select>
     </div>
     <div class="toolbar" id="profileLotFilterRow">
-      <select id="profileLotFilter" style="flex:1;"><option value="">All Lots / Groups</option></select>
+      <select id="profileLotFilter" style="flex:1;"><option value="">All Locations</option></select>
       <select id="profileOwnerFilter" style="flex:1;"><option value="">All Owners</option></select>
     </div>
     <div id="profileCowList"></div>
@@ -507,6 +507,7 @@
     <div class="section-label">Manage Cow</div>
     <button class="btn btn-profile-tool btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set lot/pasture</button>
     <button class="btn btn-profile-tool btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
+    <button class="btn btn-profile-tool btn-full" id="profileGroupBtn" style="margin-bottom:12px;">Set group</button>
     <button class="btn btn-profile-tool btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
     <button class="btn btn-profile-tool btn-full" id="profileRemoveCowBtn">Remove Cow</button>
   </div>
@@ -835,13 +836,17 @@
     const lotFilterRow = document.getElementById(rowId);
     const lotFilter = document.getElementById(selectId);
     const usedLots = [...new Set(cows.map(c=>c.lot).filter(Boolean))];
-    const extraLots = usedLots.filter(l=>!LOT_OPTIONS.includes(l)).sort();
-    const lots = [...LOT_OPTIONS, ...extraLots];
+    const hasOtherLots = usedLots.some(l=>!LOT_OPTIONS.includes(l));
     lotFilterRow.style.display = '';
     const prevValue = lotFilter.value;
-    lotFilter.innerHTML = '<option value="">All Lots / Groups</option>' +
-      lots.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
-    if(lots.includes(prevValue)) lotFilter.value = prevValue;
+    lotFilter.innerHTML = '<option value="">All Locations</option>' +
+      LOT_OPTIONS.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('') +
+      (hasOtherLots ? '<option value="__other__">Other</option>' : '');
+    if(prevValue === '__other__' && hasOtherLots){
+      lotFilter.value = '__other__';
+    } else if(LOT_OPTIONS.includes(prevValue)){
+      lotFilter.value = prevValue;
+    }
   }
   function populateOwnerFilter(selectId){
     const ownerFilter = document.getElementById(selectId);
@@ -1291,6 +1296,7 @@
     renderProfile();
     updateProfileLotLabel();
     updateProfileOwnerLabel();
+    updateProfileGroupLabel();
     updateProfileStatusLabel();
     window.scrollTo(0,0);
   }
@@ -1432,6 +1438,11 @@
     const el = document.getElementById('profileOwnerBtn');
     el.textContent = (cow && cow.owner) ? `Owner: ${cow.owner} (tap to edit)` : 'Set owner';
   }
+  function updateProfileGroupLabel(){
+    const cow = cows.find(c=>c.number===currentProfileCow);
+    const el = document.getElementById('profileGroupBtn');
+    el.textContent = (cow && cow.cow_group) ? `Group: ${cow.cow_group} (tap to edit)` : 'Set group';
+  }
   function updateProfileStatusLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileStatusBtn');
@@ -1457,6 +1468,7 @@
       document.getElementById('profileNum').innerHTML = ownerNumHtml(currentProfileCow, (cows.find(c=>c.number===currentProfileCow)||{}).owner);
       updateProfileLotLabel();
       updateProfileOwnerLabel();
+      updateProfileGroupLabel();
       updateProfileStatusLabel();
     }
   }
@@ -1725,7 +1737,11 @@
       sorted = [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
     }
     const filtered = sorted.filter(c=>{
-      if(lotFilterVal && c.lot !== lotFilterVal) return false;
+      if(lotFilterVal === '__other__'){
+        if(!c.lot || LOT_OPTIONS.includes(c.lot)) return false;
+      } else if(lotFilterVal && c.lot !== lotFilterVal){
+        return false;
+      }
       if(ownerFilterVal && c.owner !== ownerFilterVal) return false;
       return !q || c.number.toLowerCase().includes(q);
     });
@@ -2944,6 +2960,7 @@
   document.getElementById('profileGoBreeding').addEventListener('click', ()=> openBreedingCow(currentProfileCow));
   document.getElementById('profileLotBtn').addEventListener('click', editLotModal);
   document.getElementById('profileOwnerBtn').addEventListener('click', editOwnerModal);
+  document.getElementById('profileGroupBtn').addEventListener('click', editGroupModal);
   document.getElementById('profileStatusBtn').addEventListener('click', editStatusModal);
   document.getElementById('profileRemoveCowBtn').addEventListener('click', deleteCowFromProfile);
   document.getElementById('profilePrintBtn').addEventListener('click', ()=> window.print());
@@ -2976,6 +2993,7 @@
 
   const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
   const OWNER_OPTIONS = ['JF','FCC','Kellan','Clint','LA'];
+  const GROUP_OPTIONS = ['5 Series Spring Calving Heifer', '5 Series Fall Calving Heifer'];
   function ownerColor(owner){
     if(owner === 'JF') return '#D46A8C';
     if(owner === 'FCC') return '#D4B93C';
@@ -3085,6 +3103,43 @@
         renderBreedingList();
         renderProfileList();
         showToast('Owner updated');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
+  function editGroupModal(){
+    const targetNum = getActiveCowNumber();
+    const cow = cows.find(c=>c.number===targetNum);
+    const modal = openModal(`
+      <div class="modal-title">Group — #${escapeHtml(targetNum)}</div>
+      ${fieldWithOther('editGroup', 'Group', GROUP_OPTIONS, 'Type group name')}
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEditGroup">Cancel</button>
+        <button class="btn btn-barn" id="confirmEditGroup">Save</button>
+      </div>
+    `);
+    wireFieldWithOther(modal, 'editGroup');
+    if(cow && cow.cow_group) prefillFieldWithOther(modal, 'editGroup', cow.cow_group, GROUP_OPTIONS);
+    modal.querySelector('#cancelEditGroup').addEventListener('click', closeModal);
+    modal.querySelector('#confirmEditGroup').addEventListener('click', async ()=>{
+      const groupVal = valueOf(modal, 'editGroup');
+      const btn = modal.querySelector('#confirmEditGroup');
+      btn.disabled = true;
+      try{
+        const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
+          method:'PATCH',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ cow_group: groupVal||null })
+        });
+        const idx = cows.findIndex(c=>c.number===targetNum);
+        if(idx !== -1) cows[idx] = updated[0];
+        closeModal();
+        refreshOpenCowHeaders();
+        renderProfileList();
+        showToast('Group updated');
       }catch(e){
         btn.disabled = false;
         showToast('Could not save — try again');
@@ -3822,15 +3877,22 @@
   }
 
   function bulkEditModal(){
-    let field = 'owner'; // 'owner' | 'lot'
+    let field = 'owner'; // 'owner' | 'lot' | 'group'
+    const FIELD_CONFIG = {
+      owner: { options: OWNER_OPTIONS, label: 'Owner', dbKey: 'owner' },
+      lot: { options: LOT_OPTIONS, label: 'Lot / Pasture', dbKey: 'lot' },
+      group: { options: GROUP_OPTIONS, label: 'Group', dbKey: 'cow_group' }
+    };
 
     function render(){
-      const options = field === 'owner' ? OWNER_OPTIONS : LOT_OPTIONS;
-      const label = field === 'owner' ? 'Owner' : 'Lot / Pasture';
+      const cfg = FIELD_CONFIG[field];
+      const options = cfg.options;
+      const label = cfg.label;
       const sortedCows = [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
       const cowOptionsHtml = sortedCows.map(c=>{
-        const missing = field === 'owner' ? !c.owner : !c.lot;
-        const currentVal = field === 'owner' ? (c.owner||'—') : (c.lot||'—');
+        const currentRaw = field === 'owner' ? c.owner : field === 'lot' ? c.lot : c.cow_group;
+        const missing = !currentRaw;
+        const currentVal = currentRaw || '—';
         return `
           <label style="display:flex;align-items:center;gap:8px;padding:6px 0;">
             <input type="checkbox" class="bulkCowCheck" value="${escapeHtml(c.number)}" ${missing ? 'checked' : ''} style="width:18px;height:18px;"/>
@@ -3841,10 +3903,11 @@
 
       const modal = openModal(`
         <div class="modal-title">Bulk Edit</div>
-        <div class="row2" style="margin-bottom:14px;">
+        <div class="row2" style="margin-bottom:8px;">
           <button class="btn ${field==='owner' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldOwner" style="flex:1;">Owner</button>
           <button class="btn ${field==='lot' ? 'btn-barn' : 'btn-outline'}" id="bulkFieldLot" style="flex:1;">Lot / Pasture</button>
         </div>
+        <button class="btn ${field==='group' ? 'btn-barn' : 'btn-outline'} btn-full" id="bulkFieldGroup" style="margin-bottom:14px;">Group</button>
         ${fieldWithOther('bulkValue', `Set ${label} To`, options, `Type ${label.toLowerCase()}`)}
         <div class="section-label">Cows to Update <a href="#" id="bulkToggleAll" style="text-transform:none;letter-spacing:0;color:var(--barn);text-decoration:underline;">(select all)</a></div>
         <div style="max-height:220px;overflow-y:auto;margin-bottom:10px;">${cowOptionsHtml}</div>
@@ -3857,6 +3920,7 @@
       modal.querySelector('#cancelBulkEdit').addEventListener('click', closeModal);
       modal.querySelector('#bulkFieldOwner').addEventListener('click', ()=>{ closeModal(); field='owner'; render(); });
       modal.querySelector('#bulkFieldLot').addEventListener('click', ()=>{ closeModal(); field='lot'; render(); });
+      modal.querySelector('#bulkFieldGroup').addEventListener('click', ()=>{ closeModal(); field='group'; render(); });
       modal.querySelector('#bulkToggleAll').addEventListener('click', (e)=>{
         e.preventDefault();
         const boxes = [...modal.querySelectorAll('.bulkCowCheck')];
@@ -3876,7 +3940,7 @@
           const updated = await api('/cows?number=in.(' + filterList + ')', {
             method:'PATCH',
             headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-            body: JSON.stringify({ [field]: value })
+            body: JSON.stringify({ [cfg.dbKey]: value })
           });
           updated.forEach(u=>{
             const idx = cows.findIndex(c=>c.number===u.number);
@@ -3889,6 +3953,7 @@
           renderNotesList();
           renderWeightsList();
           renderBreedingList();
+          renderProfileList();
           showToast(`${selected.length} cow${selected.length>1?'s':''} updated`);
         }catch(e){
           btn.disabled = false;
@@ -4089,16 +4154,28 @@
         toggleAllLink.textContent = anyChecked ? '(select all)' : '(select none)';
       });
     }
-    modal.querySelector('#sendTextListBtn').addEventListener('click', ()=>{
+    modal.querySelector('#sendTextListBtn').addEventListener('click', async ()=>{
       const checkedRecips = [...modal.querySelectorAll('.recipCheck:checked')].map(cb=> recipients[parseInt(cb.dataset.idx,10)]);
       if(checkedRecips.length === 0){ showToast('Select at least one recipient'); return; }
       const checkedCows = new Set([...modal.querySelectorAll('.cowCheck:checked')].map(cb=>cb.value));
       if(checkedCows.size === 0){ showToast('Select at least one cow'); return; }
-      const phones = checkedRecips.map(r=> r.phone.replace(/[^\d+]/g,'')).join(',');
       const body = builders[section](checkedCows);
-      const smsUri = 'sms:' + phones + '?body=' + encodeURIComponent(body);
       closeModal();
-      window.location.href = smsUri;
+      if(checkedRecips.length === 1){
+        // A single recipient works reliably as a direct link on iOS.
+        const phone = checkedRecips[0].phone.replace(/[^\d+]/g,'');
+        window.location.href = 'sms:' + phone + '?body=' + encodeURIComponent(body);
+      } else {
+        // iOS does not reliably fill in multiple recipients from a web link
+        // (a known platform limitation, not something fixable from here) —
+        // copy the message instead so nothing silently gets left out.
+        try{
+          await navigator.clipboard.writeText(body);
+          showToast(`Message copied — open Messages, pick your group (${checkedRecips.map(r=>r.name).join(', ')}), and paste`);
+        }catch(e){
+          showToast('Could not copy automatically — select and copy the message manually');
+        }
+      }
     });
   }
 
