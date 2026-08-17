@@ -4072,7 +4072,7 @@
   function buildMedsListText(cowFilter){
     const lines = ['MEDS & NOTES'];
     const items = [];
-    treatments.filter(r=>isWithinLastWeek(r.date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    treatments.filter(r=>isWithinLastWeek((r.created_at||'').slice(0,10)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       const desc = r.medicine
         ? `${r.medicine}${r.reason ? ' / '+r.reason : ''}${r.notes ? ' — '+r.notes : ''}`
         : `NOTE: ${r.notes||''}`;
@@ -4080,13 +4080,13 @@
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
     items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
-    if(lines.length === 1) lines.push('(no activity in the last 7 days)');
+    if(lines.length === 1) lines.push('(nothing entered in the last 7 days)');
     return lines.join('\n');
   }
   function buildCalvingListText(cowFilter){
     const lines = ['CALVING RECORDS'];
     const items = [];
-    calvings.filter(r=>isWithinLastWeek(r.calving_date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    calvings.filter(r=>isWithinLastWeek((r.created_at||'').slice(0,10)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       const parts = [`${calfSexLabel(r.calf_sex)} calf`];
       if(r.birth_weight != null) parts.push(`${r.birth_weight} lbs`);
       if(r.sire) parts.push(`Sire: ${r.sire}`);
@@ -4096,31 +4096,32 @@
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
     items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
-    if(lines.length === 1) lines.push('(no activity in the last 7 days)');
+    if(lines.length === 1) lines.push('(nothing entered in the last 7 days)');
     return lines.join('\n');
   }
   function buildNotesListText(cowFilter){
     const lines = ['GENERAL NOTES'];
     const items = [];
-    generalNotes.filter(r=>isWithinLastWeek(r.note_date) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    generalNotes.filter(r=>isWithinLastWeek((r.created_at||'').slice(0,10)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       items.push({ date: r.note_date, cow: r.cow_number, text: r.note||'' });
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
     items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
-    if(lines.length === 1) lines.push('(no activity in the last 7 days)');
+    if(lines.length === 1) lines.push('(nothing entered in the last 7 days)');
     return lines.join('\n');
   }
 
   function cowsWithRecentActivity(section){
-    let dateField, source, dateKey;
+    let source, dateKey;
     if(section === 'meds'){ source = treatments; dateKey = 'date'; }
     else if(section === 'calving'){ source = calvings; dateKey = 'calving_date'; }
     else { source = generalNotes; dateKey = 'note_date'; }
 
     const latestByNum = {};
-    source.filter(r=>isWithinLastWeek(r[dateKey])).forEach(r=>{
-      if(!latestByNum[r.cow_number] || r[dateKey] > latestByNum[r.cow_number]){
-        latestByNum[r.cow_number] = r[dateKey];
+    source.filter(r=>isWithinLastWeek((r.created_at||'').slice(0,10))).forEach(r=>{
+      const enteredAt = r.created_at || r[dateKey];
+      if(!latestByNum[r.cow_number] || enteredAt > latestByNum[r.cow_number]){
+        latestByNum[r.cow_number] = enteredAt;
       }
     });
     return Object.keys(latestByNum)
