@@ -781,6 +781,14 @@
     const now = new Date(); now.setHours(0,0,0,0);
     return Math.round((now-d)/86400000);
   }
+  function localDateFromTimestamp(ts){
+    if(!ts) return '';
+    const d = new Date(ts); // parses the UTC timestamp correctly
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`; // in the browser's local timezone, not UTC
+  }
   function addDays(iso, days){
     const d = new Date(iso+'T00:00:00');
     d.setDate(d.getDate() + Number(days));
@@ -4072,7 +4080,7 @@
   function buildMedsListText(cowFilter){
     const lines = ['MEDS & NOTES'];
     const items = [];
-    treatments.filter(r=>isWithinLastWeek((r.created_at||'').slice(0,10)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    treatments.filter(r=>isWithinLastWeek(localDateFromTimestamp(r.created_at)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       const desc = r.medicine
         ? `${r.medicine}${r.reason ? ' / '+r.reason : ''}${r.notes ? ' — '+r.notes : ''}`
         : `NOTE: ${r.notes||''}`;
@@ -4086,7 +4094,7 @@
   function buildCalvingListText(cowFilter){
     const lines = ['CALVING RECORDS'];
     const items = [];
-    calvings.filter(r=>isWithinLastWeek((r.created_at||'').slice(0,10)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    calvings.filter(r=>isWithinLastWeek(localDateFromTimestamp(r.created_at)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       const parts = [`${calfSexLabel(r.calf_sex)} calf`];
       if(r.birth_weight != null) parts.push(`${r.birth_weight} lbs`);
       if(r.sire) parts.push(`Sire: ${r.sire}`);
@@ -4102,7 +4110,7 @@
   function buildNotesListText(cowFilter){
     const lines = ['GENERAL NOTES'];
     const items = [];
-    generalNotes.filter(r=>isWithinLastWeek((r.created_at||'').slice(0,10)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    generalNotes.filter(r=>isWithinLastWeek(localDateFromTimestamp(r.created_at)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       items.push({ date: r.note_date, cow: r.cow_number, text: r.note||'' });
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
@@ -4118,7 +4126,7 @@
     else { source = generalNotes; dateKey = 'note_date'; }
 
     const latestByNum = {};
-    source.filter(r=>isWithinLastWeek((r.created_at||'').slice(0,10))).forEach(r=>{
+    source.filter(r=>isWithinLastWeek(localDateFromTimestamp(r.created_at))).forEach(r=>{
       const enteredAt = r.created_at || r[dateKey];
       if(!latestByNum[r.cow_number] || enteredAt > latestByNum[r.cow_number]){
         latestByNum[r.cow_number] = enteredAt;
