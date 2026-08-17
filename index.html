@@ -1779,19 +1779,14 @@
 
     filtered.forEach(cow=>{
       const num = cow.number;
-      const medCount = recordsFor(num).length;
-      const calvCount = calvingsFor(num).length;
-      const noteCount = generalNotesFor(num).length;
-      const weightCount = weightsFor(num).length;
-      const breedingCount = breedingFor(num).length;
-      const meta = `${medCount} med entr${medCount===1?'y':'ies'} · ${calvCount} calving${calvCount!==1?'s':''} · ${noteCount} note${noteCount!==1?'s':''} · ${weightCount} weight${weightCount!==1?'s':''} · ${breedingCount} breeding${breedingCount!==1?'s':''}`;
       const card = document.createElement('div');
       card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
       const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;"><span class="chev">&rsaquo;</span></div>`;
+      card.innerHTML = `<div style="flex:1;"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><span class="chev">&rsaquo;</span></div>${profileQuickAddRowHtml(num)}</div>`;
       card.addEventListener('click', ()=> openProfileCow(num));
       listEl.appendChild(card);
     });
+    wireProfileQuickAddButtons(listEl);
   }
 
   function compressImageFile(file, maxDim, quality){
@@ -2578,6 +2573,7 @@
         closeModal();
         renderDetail();
         renderList();
+        renderProfileList();
         window.scrollTo(0,0);
         showToast(isEdit ? 'Entry updated' : 'Entry logged');
       }catch(e){
@@ -2668,6 +2664,7 @@
         closeModal();
         renderCalvingDetail();
         renderCalvingList();
+        renderProfileList();
         window.scrollTo(0,0);
         showToast(isEdit ? 'Calving updated' : 'Calving logged');
       }catch(e){
@@ -2731,6 +2728,7 @@
         closeModal();
         renderWeightsDetail();
         renderWeightsList();
+        renderProfileList();
         window.scrollTo(0,0);
         showToast(isEdit ? 'Weight updated' : 'Weight logged');
       }catch(e){
@@ -2833,6 +2831,7 @@
         closeModal();
         renderBreedingDetail();
         renderBreedingList();
+        renderProfileList();
         window.scrollTo(0,0);
         showToast(isEdit ? 'Breeding updated' : 'Breeding logged');
       }catch(e){
@@ -2891,6 +2890,7 @@
         closeModal();
         renderNotesDetail();
         renderNotesList();
+        renderProfileList();
         window.scrollTo(0,0);
         showToast(isEdit ? 'Note updated' : 'Note logged');
       }catch(e){
@@ -3053,6 +3053,37 @@
       btn.addEventListener('click', e=>{
         e.stopPropagation();
         onQuickAdd(btn.dataset.num);
+      });
+    });
+  }
+  const PROFILE_QUICK_ADD_TYPES = [
+    { type:'meds', icon:'🐄', title:'Log Medicine', label:'Meds' },
+    { type:'calving', icon:'🐮', title:'Log Calving', label:'Calving' },
+    { type:'weights', icon:'⚖️', title:'Log Weight', label:'Weight' },
+    { type:'breeding', icon:'🐂', title:'Log Breeding', label:'Breeding' },
+    { type:'notes', icon:'📝', title:'Add Note', label:'Note' }
+  ];
+  function profileQuickAddRowHtml(num){
+    return `<div style="display:flex;justify-content:space-between;margin-top:10px;">` +
+      PROFILE_QUICK_ADD_TYPES.map(t=>
+        `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="${t.type}" title="${t.title}" style="width:36px;height:36px;border-radius:50%;background:#0274BA;color:#fff;border:none;font-size:16px;line-height:1;cursor:pointer;flex-shrink:0;">${t.icon}</button>
+          <span style="font-family:Arial,sans-serif;font-size:10px;color:#6b6350;">${t.label}</span>
+        </div>`
+      ).join('') +
+    `</div>`;
+  }
+  function wireProfileQuickAddButtons(container){
+    container.querySelectorAll('.profile-quick-add-btn').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        e.stopPropagation();
+        const num = btn.dataset.num;
+        const type = btn.dataset.type;
+        if(type === 'meds'){ currentCow = num; recordModal(null); }
+        else if(type === 'calving'){ currentCalvingCow = num; calvingModal(null); }
+        else if(type === 'weights'){ currentWeightsCow = num; weightModal(null); }
+        else if(type === 'breeding'){ currentBreedingCow = num; breedingModal(null); }
+        else if(type === 'notes'){ currentNotesCow = num; generalNoteModal(null); }
       });
     });
   }
