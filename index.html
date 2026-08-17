@@ -4398,6 +4398,44 @@
     showToast('Spreadsheet downloaded');
   }
 
+  function buildAllRecordsRows(){
+    const cowMap = {};
+    cows.forEach(c=> cowMap[c.number] = c);
+    const rows = [['Cow Number','Status','Location','Owner','Date','Type','Details','Notes']];
+    const items = [];
+
+    treatments.forEach(t=>{
+      const details = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : '(note only)';
+      items.push({ cow: t.cow_number, date: t.date, type: 'Med', details, notes: t.notes||'' });
+    });
+    calvings.forEach(r=>{
+      const details = [calfSexLabel(r.calf_sex)+' calf', r.birth_weight!=null ? r.birth_weight+' lbs' : '', r.sire ? 'Sire: '+r.sire : '', r.birth_assist||''].filter(Boolean).join(' · ');
+      items.push({ cow: r.cow_number, date: r.calving_date, type: 'Calving', details, notes: r.notes||'' });
+    });
+    generalNotes.forEach(n=>{
+      items.push({ cow: n.cow_number, date: n.note_date, type: 'Note', details: '', notes: n.note||'' });
+    });
+    weights.forEach(w=>{
+      items.push({ cow: w.cow_number, date: w.weigh_date, type: 'Weight', details: w.weight!=null ? w.weight+' lbs' : '', notes: w.notes||'' });
+    });
+    breedingRecords.forEach(b=>{
+      const details = [b.bred_to, b.pregnancy_method, b.expected_due_date ? 'Due: '+b.expected_due_date : ''].filter(Boolean).join(' · ');
+      items.push({ cow: b.cow_number, date: b.breed_date, type: 'Breeding', details, notes: b.notes||'' });
+    });
+
+    items.sort((a,b)=>{
+      const numCmp = a.cow.localeCompare(b.cow, undefined, {numeric:true});
+      if(numCmp !== 0) return numCmp;
+      return a.date.localeCompare(b.date);
+    });
+
+    items.forEach(i=>{
+      const c = cowMap[i.cow] || {};
+      rows.push([i.cow, c.status||'Active', c.lot||'', c.owner||'', i.date, i.type, i.details, i.notes]);
+    });
+    return rows;
+  }
+
   function exportOptionsModal(){
     const modal = openModal(`
       <div class="modal-title">Export Everything</div>
@@ -4410,6 +4448,10 @@
         <input type="checkbox" id="exportIncludeEquipment" checked style="width:20px;height:20px;flex-shrink:0;"/>
         🔧 Equipment Maintenance
       </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;margin-bottom:14px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" id="exportIncludeAllRecords" style="width:20px;height:20px;flex-shrink:0;"/>
+        📋 All Records Combined (every entry, every cow, one sheet)
+      </label>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelExportOptions">Cancel</button>
         <button class="btn btn-barn" id="confirmExportOptions">Export</button>
@@ -4419,12 +4461,13 @@
     modal.querySelector('#confirmExportOptions').addEventListener('click', ()=>{
       const includeHaying = modal.querySelector('#exportIncludeHaying').checked;
       const includeEquipment = modal.querySelector('#exportIncludeEquipment').checked;
+      const includeAllRecords = modal.querySelector('#exportIncludeAllRecords').checked;
       closeModal();
-      exportEverything(includeHaying, includeEquipment);
+      exportEverything(includeHaying, includeEquipment, includeAllRecords);
     });
   }
 
-  async function exportEverything(includeHaying, includeEquipment){
+  async function exportEverything(includeHaying, includeEquipment, includeAllRecords){
     await loadAll();
     if(typeof ExcelJS === 'undefined'){
       showToast('Could not load spreadsheet library — check your connection and try again');
@@ -4432,13 +4475,15 @@
     }
     try{
       const wb = new ExcelJS.Workbook();
-      const sheets = [
+      const sheets = [];
+      if(includeAllRecords) sheets.push({ name: 'All Records', rows: buildAllRecordsRows() });
+      sheets.push(
         { name: 'Meds & Notes', rows: buildMedsRows() },
         { name: 'Calving Records', rows: buildCalvingRows() },
         { name: 'General Notes', rows: buildNotesRows() },
         { name: 'Weights', rows: buildWeightsRows() },
         { name: 'Breeding Records', rows: buildBreedingRows() }
-      ];
+      );
       if(includeHaying) sheets.push({ name: 'Haying', rows: buildHayingRows() });
       if(includeEquipment) sheets.push({ name: 'Equipment Maintenance', rows: buildEquipmentRows() });
       const colorA = 'FFFFFFFF'; // white
