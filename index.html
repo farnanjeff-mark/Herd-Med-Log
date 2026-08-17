@@ -4498,6 +4498,11 @@
         headerRow.eachCell({ includeEmpty:true }, cell=>{
           cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
         });
+        // Force column A to Text format so Excel doesn't strip leading zeros
+        // from tag numbers like "01" or "0765".
+        if(header[0] === 'Cow Number' || header[0] === 'Equipment'){
+          ws.getColumn(1).numFmt = '@';
+        }
 
         let lastCow = null;
         let useColorB = false;
@@ -4512,6 +4517,7 @@
             rowData[0] = '';
           }
           const row = ws.addRow(rowData);
+          row.getCell(1).numFmt = '@';
           const fillColor = useColorB ? colorB : colorA;
           row.eachCell({ includeEmpty:true }, cell=>{
             cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:fillColor } };
