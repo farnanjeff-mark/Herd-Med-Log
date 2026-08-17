@@ -789,6 +789,9 @@
     const day = String(d.getDate()).padStart(2,'0');
     return `${y}-${m}-${day}`; // in the browser's local timezone, not UTC
   }
+  function todayLocal(){
+    return localDateFromTimestamp(new Date());
+  }
   function addDays(iso, days){
     const d = new Date(iso+'T00:00:00');
     d.setDate(d.getDate() + Number(days));
@@ -1841,7 +1844,7 @@
         cow_number: cowNum,
         storage_path: path,
         photo_url: photoUrl,
-        taken_at: new Date().toISOString().slice(0,10)
+        taken_at: todayLocal()
       })
     });
     return inserted[0];
@@ -2518,7 +2521,7 @@
 
   function recordModal(existingRecord){
     const isEdit = !!existingRecord;
-    const today = new Date().toISOString().slice(0,10);
+    const today = todayLocal();
     const modal = openModal(`
       <div class="modal-title">${isEdit ? 'Edit Entry' : 'Log Entry'} — #${escapeHtml(currentCow)}</div>
       <div class="row2">
@@ -2590,7 +2593,7 @@
 
   function calvingModal(existingRecord){
     const isEdit = !!existingRecord;
-    const today = new Date().toISOString().slice(0,10);
+    const today = todayLocal();
     const modal = openModal(`
       <div class="modal-title">${isEdit ? 'Edit Calving' : 'Log Calving'} — #${escapeHtml(currentCalvingCow)}</div>
       <div class="field">
@@ -2678,7 +2681,7 @@
 
   function weightModal(existingRecord){
     const isEdit = !!existingRecord;
-    const today = new Date().toISOString().slice(0,10);
+    const today = todayLocal();
     const modal = openModal(`
       <div class="modal-title">${isEdit ? 'Edit Weight' : 'Log Weight'} — #${escapeHtml(currentWeightsCow)}</div>
       <div class="field">
@@ -2747,7 +2750,7 @@
 
   function breedingModal(existingRecord){
     const isEdit = !!existingRecord;
-    const today = new Date().toISOString().slice(0,10);
+    const today = todayLocal();
     const initialDate = isEdit ? existingRecord.breed_date : today;
     const modal = openModal(`
       <div class="modal-title">${isEdit ? 'Edit Breeding' : 'Log Breeding'} — #${escapeHtml(currentBreedingCow)}</div>
@@ -2843,7 +2846,7 @@
 
   function generalNoteModal(existingRecord){
     const isEdit = !!existingRecord;
-    const today = new Date().toISOString().slice(0,10);
+    const today = todayLocal();
     const modal = openModal(`
       <div class="modal-title">${isEdit ? 'Edit Note' : 'Add Note'} — #${escapeHtml(currentNotesCow)}</div>
       <div class="field">
@@ -3408,7 +3411,7 @@
 
   function equipmentModal(existingRecord){
     const isEdit = !!existingRecord;
-    const today = new Date().toISOString().slice(0,10);
+    const today = todayLocal();
     const modal = openModal(`
       <div class="modal-title">${isEdit ? 'Edit Maintenance' : 'Log Maintenance'} — ${escapeHtml(currentEquipment)}</div>
       <div class="field">
@@ -3480,7 +3483,7 @@
 
   function hayingModal(existingRecord){
     const isEdit = !!existingRecord;
-    const today = new Date().toISOString().slice(0,10);
+    const today = todayLocal();
     const modal = openModal(`
       <div class="modal-title">${isEdit ? 'Edit Haying Entry' : 'Add Haying Entry'}</div>
       <div class="field">
@@ -4214,7 +4217,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filenamePrefix + '-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.download = filenamePrefix + '-' + todayLocal() + '.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -4478,7 +4481,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'herd-full-export-' + new Date().toISOString().slice(0,10) + '.xlsx';
+      a.download = 'herd-full-export-' + todayLocal() + '.xlsx';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
