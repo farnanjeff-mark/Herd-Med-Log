@@ -199,20 +199,29 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
-      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;margin-top:8px;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile</button>
-      <div style="display:flex;gap:10px;margin-bottom:12px;">
-        <button class="btn btn-nav-section" id="homeMedsBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐄</span>&nbsp;Medications</button>
-        <button class="btn btn-nav-section" id="homeCalvingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐮</span>&nbsp;Calving</button>
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:12px;">
-        <button class="btn btn-nav-section" id="homeBreedingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">🐂</span>&nbsp;Breeding</button>
-        <button class="btn btn-nav-section" id="homeWeightsBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">⚖️</span>&nbsp;Weights</button>
-      </div>
-      <button class="btn btn-nav-section btn-full" id="homeGeneralNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;General Notes</button>
+      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile</button>
       <button class="btn btn-nav-section btn-full" id="homeGlobalSearchBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
       <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">⋯</span>&nbsp;&nbsp;More Tools</button>
       <button id="voiceSearchBtn" title="Voice search" style="width:76px;height:76px;border-radius:50%;background:#0274BA;color:#fff;border:3px solid var(--ink);box-shadow:0 3px 8px rgba(43,38,32,.25);font-size:34px;margin:22px auto 4px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🎤</button>
-      <div id="voiceSearchStatus" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;min-height:16px;"></div>
+      <div id="voiceSearchStatus" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;min-height:16px;margin-bottom:14px;"></div>
+      <div style="max-width:280px;margin:0 auto;">
+        <div id="homeQuickSearchDisplay" style="background:#fff;border:2px solid var(--ink);border-radius:10px;padding:12px;font-size:28px;font-weight:700;text-align:center;min-height:44px;margin-bottom:10px;letter-spacing:.05em;color:var(--ink);">&nbsp;</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
+          <button class="btn btn-outline keypad-digit" data-digit="1" style="font-size:22px;padding:14px 0;">1</button>
+          <button class="btn btn-outline keypad-digit" data-digit="2" style="font-size:22px;padding:14px 0;">2</button>
+          <button class="btn btn-outline keypad-digit" data-digit="3" style="font-size:22px;padding:14px 0;">3</button>
+          <button class="btn btn-outline keypad-digit" data-digit="4" style="font-size:22px;padding:14px 0;">4</button>
+          <button class="btn btn-outline keypad-digit" data-digit="5" style="font-size:22px;padding:14px 0;">5</button>
+          <button class="btn btn-outline keypad-digit" data-digit="6" style="font-size:22px;padding:14px 0;">6</button>
+          <button class="btn btn-outline keypad-digit" data-digit="7" style="font-size:22px;padding:14px 0;">7</button>
+          <button class="btn btn-outline keypad-digit" data-digit="8" style="font-size:22px;padding:14px 0;">8</button>
+          <button class="btn btn-outline keypad-digit" data-digit="9" style="font-size:22px;padding:14px 0;">9</button>
+          <button class="btn btn-outline" id="homeQuickSearchClearBtn" style="font-size:16px;padding:14px 0;">C</button>
+          <button class="btn btn-outline keypad-digit" data-digit="0" style="font-size:22px;padding:14px 0;">0</button>
+          <button class="btn btn-outline" id="homeQuickSearchBackBtn" style="font-size:20px;padding:14px 0;">⌫</button>
+        </div>
+        <button id="homeQuickSearchGoBtn" class="btn btn-nav-section" style="font-size:18px;padding:14px 40px;display:block;margin:0 auto;">Go</button>
+      </div>
     </div>
   </div>
 
@@ -1003,6 +1012,8 @@
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     window.scrollTo(0,0);
+    homeQuickSearchValue = '';
+    updateHomeQuickSearchDisplay();
   }
   function showHerdTally(){
     setHeaderTitle('Herd', 'Tally');
@@ -2903,21 +2914,24 @@
   function editGeneralNoteModal(record){ generalNoteModal(record); }
 
   document.getElementById('fabAdd').addEventListener('click', addCowModal);
-  document.getElementById('homeMedsBtn').addEventListener('click', showMedsNotes);
   document.getElementById('listHomeBtn').addEventListener('click', showHome);
   document.getElementById('detailHomeBtn').addEventListener('click', showHome);
-  document.getElementById('homeCalvingBtn').addEventListener('click', showCalvingList);
   document.getElementById('calvingListHomeBtn').addEventListener('click', showHome);
   document.getElementById('calvingDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('calvingBackBtn').addEventListener('click', closeCalvingCow);
   document.getElementById('addCalvingBtn').addEventListener('click', addCalvingModal);
   document.getElementById('calvingSearchBox').addEventListener('input', renderCalvingList);
   document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
-  document.getElementById('homeGeneralNotesBtn').addEventListener('click', showNotesList);
   document.getElementById('exportEverythingBtn').addEventListener('click', exportOptionsModal);
   document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
   document.getElementById('homeMoreToolsBtn').addEventListener('click', showMoreTools);
   document.getElementById('voiceSearchBtn').addEventListener('click', startVoiceSearch);
+  document.getElementById('homeQuickSearchGoBtn').addEventListener('click', runHomeQuickSearch);
+  document.getElementById('homeQuickSearchClearBtn').addEventListener('click', homeQuickSearchClear);
+  document.getElementById('homeQuickSearchBackBtn').addEventListener('click', homeQuickSearchBackspace);
+  document.querySelectorAll('.keypad-digit').forEach(btn=>{
+    btn.addEventListener('click', ()=> homeQuickSearchPressDigit(btn.dataset.digit));
+  });
   document.getElementById('moreToolsHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeHerdTallyBtn').addEventListener('click', showHerdTally);
   document.getElementById('herdTallyHomeBtn').addEventListener('click', showHome);
@@ -2965,7 +2979,6 @@
   document.getElementById('detailViewProfile').addEventListener('click', ()=> openProfileCow(currentCow));
   document.getElementById('calvingViewProfile').addEventListener('click', ()=> openProfileCow(currentCalvingCow));
   document.getElementById('notesViewProfile').addEventListener('click', ()=> openProfileCow(currentNotesCow));
-  document.getElementById('homeWeightsBtn').addEventListener('click', showWeightsList);
   document.getElementById('weightsListHomeBtn').addEventListener('click', showHome);
   document.getElementById('weightsDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('weightsBackBtn').addEventListener('click', closeWeightsCow);
@@ -2974,7 +2987,6 @@
   document.getElementById('weightsSearchBox').addEventListener('input', renderWeightsList);
   document.getElementById('weightsSortBy').addEventListener('change', renderWeightsList);
   document.getElementById('profileGoWeights').addEventListener('click', ()=> openWeightsCow(currentProfileCow));
-  document.getElementById('homeBreedingBtn').addEventListener('click', showBreedingList);
   document.getElementById('breedingListHomeBtn').addEventListener('click', showHome);
   document.getElementById('breedingDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('breedingBackBtn').addEventListener('click', closeBreedingCow);
@@ -3787,6 +3799,43 @@
     }catch(e){
       console.error(e);
       showToast('Could not restore — the cow this belonged to may no longer exist');
+    }
+  }
+
+  let homeQuickSearchValue = '';
+  function updateHomeQuickSearchDisplay(){
+    const el = document.getElementById('homeQuickSearchDisplay');
+    if(el) el.innerHTML = homeQuickSearchValue ? escapeHtml(homeQuickSearchValue) : '&nbsp;';
+  }
+  function homeQuickSearchPressDigit(d){
+    homeQuickSearchValue += d;
+    updateHomeQuickSearchDisplay();
+  }
+  function homeQuickSearchBackspace(){
+    homeQuickSearchValue = homeQuickSearchValue.slice(0, -1);
+    updateHomeQuickSearchDisplay();
+  }
+  function homeQuickSearchClear(){
+    homeQuickSearchValue = '';
+    updateHomeQuickSearchDisplay();
+  }
+  function runHomeQuickSearch(){
+    const num = homeQuickSearchValue.trim();
+    if(!num){ showToast('Enter a cow number'); return; }
+    const exact = cows.find(c=>c.number === num);
+    if(exact){
+      openProfileCow(exact.number);
+      return;
+    }
+    const partial = cows.filter(c=>c.number.includes(num));
+    if(partial.length === 1){
+      openProfileCow(partial[0].number);
+    } else if(partial.length > 1){
+      showProfileList();
+      profileSearchBox.value = num;
+      renderProfileList();
+    } else {
+      showToast(`No cow found matching "${num}"`);
     }
   }
 
