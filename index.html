@@ -205,7 +205,11 @@
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
       <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile</button>
-      <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:14px;"><span style="font-size:26px;">⋯</span>&nbsp;&nbsp;More Tools</button>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button class="btn btn-nav-tool" id="homeUtilitiesBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
+        <button class="btn btn-nav-tool" id="homeReportsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
+        <button class="btn btn-nav-tool" id="homeFarmOperationsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🚜</span>Farm Ops</button>
+      </div>
       <div id="voiceSearchStatus" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;min-height:16px;margin-bottom:14px;"></div>
       <div style="max-width:280px;margin:0 auto;">
         <div id="homeQuickSearchDisplay" style="background:#fff;border:2px solid var(--ink);border-radius:10px;padding:12px;font-size:28px;font-weight:700;text-align:center;min-height:44px;margin-bottom:10px;letter-spacing:.05em;color:var(--ink);">&nbsp;</div>
@@ -231,19 +235,18 @@
     </div>
   </div>
 
-  <div class="view hidden" id="moreToolsView">
-    <button class="btn btn-outline btn-full" id="moreToolsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
-    <div class="section-label" style="margin-top:0;">Extra</div>
-    <button class="btn btn-nav-tool btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
-    <button class="btn btn-nav-tool btn-full" id="homeHayingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Haying</button>
-    <button class="btn btn-nav-tool btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
+  <div class="view hidden" id="utilitiesView">
+    <button class="btn btn-outline btn-full" id="utilitiesHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
     <div style="display:flex;gap:10px;margin-bottom:12px;">
       <button class="btn btn-nav-tool" id="exportEverythingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📦</span>&nbsp;Export</button>
       <button class="btn btn-nav-tool" id="importDataBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📥</span>&nbsp;Import</button>
     </div>
     <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Location / Group</button>
-    <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
-    <div class="section-label">Reports</div>
+    <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
+  </div>
+
+  <div class="view hidden" id="reportsView">
+    <button class="btn btn-outline btn-full" id="reportsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
     <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
     <button class="btn btn-nav-tool btn-full" id="headcountByOwnerBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Headcount by Owner</button>
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
@@ -251,6 +254,13 @@
     <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📈</span>&nbsp;&nbsp;Biggest Gainers</button>
     <button class="btn btn-nav-tool btn-full" id="needsEntryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🚩</span>&nbsp;&nbsp;Needs Entry</button>
     <button class="btn btn-nav-tool btn-full" id="recentActivityBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">🕒</span>&nbsp;&nbsp;Recent Activity</button>
+  </div>
+
+  <div class="view hidden" id="farmOperationsView">
+    <button class="btn btn-outline btn-full" id="farmOperationsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
+    <button class="btn btn-nav-tool btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
+    <button class="btn btn-nav-tool btn-full" id="homeHayingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Haying</button>
+    <button class="btn btn-nav-tool btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
   </div>
 
   <div class="view hidden" id="importView">
@@ -658,7 +668,9 @@
   const weightsDetailView = document.getElementById('weightsDetailView');
   const breedingListView = document.getElementById('breedingListView');
   const breedingDetailView = document.getElementById('breedingDetailView');
-  const moreToolsView = document.getElementById('moreToolsView');
+  const utilitiesView = document.getElementById('utilitiesView');
+  const reportsView = document.getElementById('reportsView');
+  const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
   const globalSearchView = document.getElementById('globalSearchView');
   const recentlyDeletedView = document.getElementById('recentlyDeletedView');
@@ -1006,7 +1018,9 @@
     breedingListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
-    moreToolsView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1036,7 +1050,9 @@
     breedingListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
-    moreToolsView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1069,7 +1085,9 @@
     breedingListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
-    moreToolsView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1098,7 +1116,9 @@
     breedingListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
-    moreToolsView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1127,7 +1147,9 @@
     breedingListView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
-    moreToolsView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1162,10 +1184,40 @@
     renderEquipmentList();
     window.scrollTo(0,0);
   }
-  function showMoreTools(){
-    setHeaderTitle('More', 'Tools');
+  function showUtilities(){
+    setHeaderTitle('Utilities', '');
     homeView.classList.add('hidden');
-    moreToolsView.classList.remove('hidden');
+    utilitiesView.classList.remove('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    window.scrollTo(0,0);
+  }
+  function showReports(){
+    setHeaderTitle('Reports', '');
+    homeView.classList.add('hidden');
+    reportsView.classList.remove('hidden');
+    utilitiesView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    window.scrollTo(0,0);
+  }
+  function showFarmOperations(){
+    setHeaderTitle('Farm', 'Operations');
+    homeView.classList.add('hidden');
+    farmOperationsView.classList.remove('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1177,7 +1229,9 @@
   function showImportView(){
     setHeaderTitle('Import', 'Data');
     homeView.classList.add('hidden');
-    moreToolsView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     importView.classList.remove('hidden');
@@ -1190,7 +1244,9 @@
   function showGlobalSearch(){
     setHeaderTitle('Search', 'Everything');
     homeView.classList.add('hidden');
-    moreToolsView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     globalSearchView.classList.remove('hidden');
@@ -1204,7 +1260,9 @@
   async function showRecentlyDeleted(){
     setHeaderTitle('Recently', 'Deleted');
     homeView.classList.add('hidden');
-    moreToolsView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.remove('hidden');
@@ -1370,7 +1428,9 @@
     notesDetailView.classList.add('hidden');
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
-    moreToolsView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2985,7 +3045,9 @@
   document.getElementById('exportEverythingBtn').addEventListener('click', exportOptionsModal);
   document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
   document.getElementById('textListEntryBtn').addEventListener('click', textCategoryPickerModal);
-  document.getElementById('homeMoreToolsBtn').addEventListener('click', showMoreTools);
+  document.getElementById('homeUtilitiesBtn').addEventListener('click', showUtilities);
+  document.getElementById('homeReportsBtn').addEventListener('click', showReports);
+  document.getElementById('homeFarmOperationsBtn').addEventListener('click', showFarmOperations);
   document.getElementById('voiceSearchBtn').addEventListener('click', startVoiceSearch);
   document.getElementById('homeQuickSearchGoBtn').addEventListener('click', runHomeQuickSearch);
   document.getElementById('quickActionHomeBtn').addEventListener('click', showHome);
@@ -2994,7 +3056,9 @@
   document.querySelectorAll('.keypad-digit').forEach(btn=>{
     btn.addEventListener('click', ()=> homeQuickSearchPressDigit(btn.dataset.digit));
   });
-  document.getElementById('moreToolsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('utilitiesHomeBtn').addEventListener('click', showHome);
+  document.getElementById('reportsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('farmOperationsHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeHerdTallyBtn').addEventListener('click', showHerdTally);
   document.getElementById('herdTallyHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeHayingBtn').addEventListener('click', showHaying);
