@@ -490,11 +490,6 @@
     </div>
     <div class="toolbar" id="profileLotFilterRow">
       <select id="profileLocationGroupFilter" style="flex:1;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);"><option value="">All Locations / Groups / Owners</option></select>
-      <select id="profileActivityDaysFilter" title="Time frame for Recent Activity" style="flex:0 0 110px;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 6px;font-family:Arial,sans-serif;font-size:14px;color:var(--ink);">
-        <option value="0">Today</option>
-        <option value="7">1 Week</option>
-        <option value="30" selected>1 Month</option>
-      </select>
     </div>
     <div id="profileCowList"></div>
     <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
@@ -904,13 +899,6 @@
       '</optgroup>' +
       '<optgroup label="Owner">' +
         owners.map(o=>`<option value="own:${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') +
-      '</optgroup>' +
-      '<optgroup label="Recent Activity">' +
-        '<option value="act:Med">Med</option>' +
-        '<option value="act:Calving">Calving</option>' +
-        '<option value="act:Note">Note</option>' +
-        '<option value="act:Weight">Weight</option>' +
-        '<option value="act:Breeding">Breeding</option>' +
       '</optgroup>';
     if([...sel.options].some(o=>o.value===prevValue)) sel.value = prevValue;
   }
@@ -1005,8 +993,6 @@
     if(profileSearchBox) profileSearchBox.value = '';
     const profileLocationGroupFilterEl = document.getElementById('profileLocationGroupFilter');
     if(profileLocationGroupFilterEl) profileLocationGroupFilterEl.value = '';
-    const profileActivityDaysFilterEl = document.getElementById('profileActivityDaysFilter');
-    if(profileActivityDaysFilterEl) profileActivityDaysFilterEl.value = '30';
     if(weightsSearchBox) weightsSearchBox.value = '';
     if(breedingSearchBox) breedingSearchBox.value = '';
     setHeaderTitle('Herd', 'Ledger');
@@ -1901,9 +1887,6 @@
         if(c.cow_group !== filterValue) return false;
       } else if(filterKind === 'own'){
         if(c.owner !== filterValue) return false;
-      } else if(filterKind === 'act'){
-        const activityDays = parseInt(document.getElementById('profileActivityDaysFilter').value, 10);
-        if(!cowHasRecentActivityOfType(c.number, filterValue, activityDays)) return false;
       }
       return !q || c.number.toLowerCase().includes(q);
     });
@@ -3104,7 +3087,6 @@
   document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
   document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
   document.getElementById('profileLocationGroupFilter').addEventListener('change', renderProfileList);
-  document.getElementById('profileActivityDaysFilter').addEventListener('change', renderProfileList);
   document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
   document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
   document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
@@ -4259,6 +4241,7 @@
           <option value="0">Today</option>
           <option value="7">1 Week</option>
           <option value="30" selected>1 Month</option>
+          <option value="99999">All</option>
         </select>
         <select id="recentActivityTypeFilter" style="flex:1;">
           <option value="">All Types</option>
@@ -4481,6 +4464,7 @@
       <option value="0">Today</option>
       <option value="7" selected>1 Week</option>
       <option value="30">1 Month</option>
+      <option value="99999">All</option>
     `;
   }
   function cowHasRecentActivityOfType(num, type, days){
@@ -4585,7 +4569,7 @@
     const builders = { meds: buildMedsListText, calving: buildCalvingListText, notes: buildNotesListText };
     const activeCows = cowsWithRecentActivity(section, days);
     const recipients = getRecipients();
-    const dayLabel = days===0 ? 'today' : days===7 ? 'the last week' : 'the last month';
+    const dayLabel = days===0 ? 'today' : days===7 ? 'the last week' : days===30 ? 'the last month' : 'all time';
 
     const cowOptionsHtml = activeCows.map(num=>`
       <label style="display:flex;align-items:center;gap:8px;padding:6px 0;">
