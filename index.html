@@ -45,6 +45,11 @@
   .hidden{display:none !important;}
 
   .toolbar{display:flex;gap:8px;margin-bottom:14px;}
+  input[type="text"], input[type="date"], input[type="number"], input[type="tel"], select, textarea{
+    background:#fff;border:2px solid #C7BBA0;border-radius:10px;
+    box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;
+    font-family:Arial,sans-serif;font-size:15px;color:var(--ink);
+  }
   input, select, textarea{
     font-family:Arial,sans-serif;
     background:var(--paper-raised);
@@ -200,8 +205,7 @@
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
       <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile</button>
-      <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">⋯</span>&nbsp;&nbsp;More Tools</button>
-      <button id="voiceSearchBtn" title="Voice search" style="width:76px;height:76px;border-radius:50%;background:#0274BA;color:#fff;border:3px solid var(--ink);box-shadow:0 3px 8px rgba(43,38,32,.25);font-size:34px;margin:22px auto 4px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🎤</button>
+      <button class="btn btn-nav-tool btn-full" id="homeMoreToolsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:14px;"><span style="font-size:26px;">⋯</span>&nbsp;&nbsp;More Tools</button>
       <div id="voiceSearchStatus" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;min-height:16px;margin-bottom:14px;"></div>
       <div style="max-width:280px;margin:0 auto;">
         <div id="homeQuickSearchDisplay" style="background:#fff;border:2px solid var(--ink);border-radius:10px;padding:12px;font-size:28px;font-weight:700;text-align:center;min-height:44px;margin-bottom:10px;letter-spacing:.05em;color:var(--ink);">&nbsp;</div>
@@ -219,7 +223,10 @@
           <button class="btn btn-outline keypad-digit" data-digit="0" style="font-size:22px;padding:14px 0;">0</button>
           <button class="btn btn-outline" id="homeQuickSearchBackBtn" style="font-size:20px;padding:14px 0;">⌫</button>
         </div>
-        <button id="homeQuickSearchGoBtn" class="btn btn-nav-section" style="font-size:18px;padding:14px 40px;display:block;margin:0 auto;">Go</button>
+        <div style="display:flex;gap:8px;justify-content:center;">
+          <button id="voiceSearchBtn" title="Voice search" class="btn btn-nav-section" style="font-size:20px;padding:14px 55px;">🎤</button>
+          <button id="homeQuickSearchGoBtn" class="btn btn-nav-section" style="font-size:18px;padding:14px 55px;">Go</button>
+        </div>
       </div>
     </div>
   </div>
@@ -241,7 +248,8 @@
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
     <button class="btn btn-nav-tool btn-full" id="recentlyDeletedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🗑️</span>&nbsp;&nbsp;Recently Deleted</button>
     <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📈</span>&nbsp;&nbsp;Biggest Gainers</button>
-    <button class="btn btn-nav-tool btn-full" id="needsEntryBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">🚩</span>&nbsp;&nbsp;Needs Entry</button>
+    <button class="btn btn-nav-tool btn-full" id="needsEntryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🚩</span>&nbsp;&nbsp;Needs Entry</button>
+    <button class="btn btn-nav-tool btn-full" id="recentActivityBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">🕒</span>&nbsp;&nbsp;Recent Activity</button>
   </div>
 
   <div class="view hidden" id="importView">
@@ -465,18 +473,14 @@
   <div class="view hidden" id="profileListView">
     <button class="btn btn-outline btn-full" id="profileListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
-      <input type="text" id="profileSearchBox" placeholder="Search cow #..." autocomplete="off" style="flex:1;"/>
-      <select id="profileSortBy" style="flex:1;">
+      <input type="text" id="profileSearchBox" placeholder="Search cow #..." autocomplete="off" style="flex:1;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);"/>
+      <select id="profileSortBy" style="flex:1;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);">
         <option value="number">Cow Number</option>
         <option value="recent">Most Recent</option>
       </select>
     </div>
     <div class="toolbar" id="profileLotFilterRow">
-      <select id="profileLotFilter" style="flex:1;"><option value="">All Locations</option></select>
-      <select id="profileOwnerFilter" style="flex:1;"><option value="">All Owners</option></select>
-    </div>
-    <div class="toolbar">
-      <select id="profileGroupFilter" style="flex:1;"><option value="">All Groups</option></select>
+      <select id="profileLocationGroupFilter" style="flex:1;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);"><option value="">All Locations / Groups / Owners</option></select>
     </div>
     <div id="profileCowList"></div>
     <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
@@ -860,43 +864,32 @@
     return dates.some(d=> d && daysAgo(d) <= days && daysAgo(d) >= 0);
   }
 
-  function populateLotFilter(rowId, selectId){
-    const lotFilterRow = document.getElementById(rowId);
-    const lotFilter = document.getElementById(selectId);
+  function populateLocationGroupFilter(rowId, selectId){
+    const row = document.getElementById(rowId);
+    const sel = document.getElementById(selectId);
+    row.style.display = '';
     const usedLots = [...new Set(cows.map(c=>c.lot).filter(Boolean))];
     const hasOtherLots = usedLots.some(l=>!LOT_OPTIONS.includes(l));
-    lotFilterRow.style.display = '';
-    const prevValue = lotFilter.value;
-    lotFilter.innerHTML = '<option value="">All Locations</option>' +
-      LOT_OPTIONS.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('') +
-      (hasOtherLots ? '<option value="__other__">Other</option>' : '');
-    if(prevValue === '__other__' && hasOtherLots){
-      lotFilter.value = '__other__';
-    } else if(LOT_OPTIONS.includes(prevValue)){
-      lotFilter.value = prevValue;
-    }
-  }
-  function populateOwnerFilter(selectId){
-    const ownerFilter = document.getElementById(selectId);
-    if(!ownerFilter) return;
-    const usedOwners = [...new Set(cows.map(c=>c.owner).filter(Boolean))];
-    const extraOwners = usedOwners.filter(o=>!OWNER_OPTIONS.includes(o)).sort();
-    const owners = [...OWNER_OPTIONS, ...extraOwners];
-    const prevValue = ownerFilter.value;
-    ownerFilter.innerHTML = '<option value="">All Owners</option>' +
-      owners.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
-    if(owners.includes(prevValue)) ownerFilter.value = prevValue;
-  }
-  function populateGroupFilter(selectId){
-    const groupFilter = document.getElementById(selectId);
-    if(!groupFilter) return;
     const usedGroups = [...new Set(cows.map(c=>c.cow_group).filter(Boolean))];
     const extraGroups = usedGroups.filter(g=>!GROUP_OPTIONS.includes(g)).sort();
     const groups = [...GROUP_OPTIONS, ...extraGroups];
-    const prevValue = groupFilter.value;
-    groupFilter.innerHTML = '<option value="">All Groups</option>' +
-      groups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
-    if(groups.includes(prevValue)) groupFilter.value = prevValue;
+    const usedOwners = [...new Set(cows.map(c=>c.owner).filter(Boolean))];
+    const extraOwners = usedOwners.filter(o=>!OWNER_OPTIONS.includes(o)).sort();
+    const owners = [...OWNER_OPTIONS, ...extraOwners];
+
+    const prevValue = sel.value;
+    sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
+      '<optgroup label="Location">' +
+        LOT_OPTIONS.map(l=>`<option value="loc:${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('') +
+        (hasOtherLots ? '<option value="loc:__other__">Other Location</option>' : '') +
+      '</optgroup>' +
+      '<optgroup label="Group">' +
+        groups.map(g=>`<option value="grp:${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('') +
+      '</optgroup>' +
+      '<optgroup label="Owner">' +
+        owners.map(o=>`<option value="own:${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') +
+      '</optgroup>';
+    if([...sel.options].some(o=>o.value===prevValue)) sel.value = prevValue;
   }
 
   function latestRecordFor(num){
@@ -987,12 +980,8 @@
     if(calvingSearchBox) calvingSearchBox.value = '';
     if(notesSearchBox) notesSearchBox.value = '';
     if(profileSearchBox) profileSearchBox.value = '';
-    const profileLotFilterEl = document.getElementById('profileLotFilter');
-    if(profileLotFilterEl) profileLotFilterEl.value = '';
-    const profileOwnerFilterEl = document.getElementById('profileOwnerFilter');
-    if(profileOwnerFilterEl) profileOwnerFilterEl.value = '';
-    const profileGroupFilterEl = document.getElementById('profileGroupFilter');
-    if(profileGroupFilterEl) profileGroupFilterEl.value = '';
+    const profileLocationGroupFilterEl = document.getElementById('profileLocationGroupFilter');
+    if(profileLocationGroupFilterEl) profileLocationGroupFilterEl.value = '';
     if(weightsSearchBox) weightsSearchBox.value = '';
     if(breedingSearchBox) breedingSearchBox.value = '';
     setHeaderTitle('Herd', 'Ledger');
@@ -1810,13 +1799,9 @@
     const listEl = document.getElementById('profileCowList');
     const emptyEl = document.getElementById('profileEmptyState');
     if(!listEl) return;
-    populateLotFilter('profileLotFilterRow', 'profileLotFilter');
-    populateOwnerFilter('profileOwnerFilter');
-    populateGroupFilter('profileGroupFilter');
+    populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
     const q = (profileSearchBox.value||'').trim().toLowerCase();
-    const lotFilterVal = document.getElementById('profileLotFilter').value;
-    const ownerFilterVal = document.getElementById('profileOwnerFilter').value;
-    const groupFilterVal = document.getElementById('profileGroupFilter').value;
+    const locGroupVal = document.getElementById('profileLocationGroupFilter').value;
     const sortMode = document.getElementById('profileSortBy').value;
     let sorted;
     if(sortMode === 'recent'){
@@ -1831,14 +1816,19 @@
     } else {
       sorted = [...cows].sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
     }
+    const [filterKind, filterValue] = locGroupVal ? locGroupVal.split(/:(.*)/s) : [null, null];
     const filtered = sorted.filter(c=>{
-      if(lotFilterVal === '__other__'){
-        if(!c.lot || LOT_OPTIONS.includes(c.lot)) return false;
-      } else if(lotFilterVal && c.lot !== lotFilterVal){
-        return false;
+      if(filterKind === 'loc'){
+        if(filterValue === '__other__'){
+          if(!c.lot || LOT_OPTIONS.includes(c.lot)) return false;
+        } else if(c.lot !== filterValue){
+          return false;
+        }
+      } else if(filterKind === 'grp'){
+        if(c.cow_group !== filterValue) return false;
+      } else if(filterKind === 'own'){
+        if(c.owner !== filterValue) return false;
       }
-      if(ownerFilterVal && c.owner !== ownerFilterVal) return false;
-      if(groupFilterVal && c.cow_group !== groupFilterVal) return false;
       return !q || c.number.toLowerCase().includes(q);
     });
 
@@ -3017,6 +3007,7 @@
   document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
   document.getElementById('biggestGainersBtn').addEventListener('click', biggestGainersModal);
   document.getElementById('needsEntryBtn').addEventListener('click', needsEntryModal);
+  document.getElementById('recentActivityBtn').addEventListener('click', recentActivityModal);
   document.getElementById('recentlyDeletedHomeBtn').addEventListener('click', showHome);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
   document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
@@ -3031,9 +3022,7 @@
   document.getElementById('profileHomeBtn').addEventListener('click', showHome);
   document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
   document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
-  document.getElementById('profileLotFilter').addEventListener('change', renderProfileList);
-  document.getElementById('profileOwnerFilter').addEventListener('change', renderProfileList);
-  document.getElementById('profileGroupFilter').addEventListener('change', renderProfileList);
+  document.getElementById('profileLocationGroupFilter').addEventListener('change', renderProfileList);
   document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
   document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
   document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
@@ -4124,6 +4113,90 @@
     modal.querySelector('#closeNeedsEntryBtn').addEventListener('click', closeModal);
   }
 
+  function buildRecentActivityItems(){
+    const items = [];
+    treatments.forEach(t=>{
+      if(!isWithinLastMonth(t.date)) return;
+      const details = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : '(note only)';
+      items.push({ cow: t.cow_number, date: t.date, type: 'Med', typeColor: '#455B3D', details, notes: t.notes||'' });
+    });
+    calvings.forEach(r=>{
+      if(!isWithinLastMonth(r.calving_date)) return;
+      const details = [calfSexLabel(r.calf_sex)+' calf', r.birth_weight!=null ? r.birth_weight+' lbs' : ''].filter(Boolean).join(' · ');
+      items.push({ cow: r.cow_number, date: r.calving_date, type: 'Calving', typeColor: '#D46A8C', details, notes: r.notes||'' });
+    });
+    generalNotes.forEach(n=>{
+      if(!isWithinLastMonth(n.note_date)) return;
+      items.push({ cow: n.cow_number, date: n.note_date, type: 'Note', typeColor: '#3B6E8F', details: '', notes: n.note||'' });
+    });
+    weights.forEach(w=>{
+      if(!isWithinLastMonth(w.weigh_date)) return;
+      items.push({ cow: w.cow_number, date: w.weigh_date, type: 'Weight', typeColor: '#C4732B', details: w.weight!=null ? w.weight+' lbs' : '', notes: w.notes||'' });
+    });
+    breedingRecords.forEach(b=>{
+      if(!isWithinLastMonth(b.breed_date)) return;
+      const details = [b.bred_to, b.pregnancy_method].filter(Boolean).join(' · ');
+      items.push({ cow: b.cow_number, date: b.breed_date, type: 'Breeding', typeColor: '#7A5A9E', details, notes: b.notes||'' });
+    });
+    items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
+    return items;
+  }
+
+  function renderRecentActivityRows(items){
+    return items.map(i=>{
+      const summary = [i.details, i.notes].filter(Boolean).join(' — ');
+      return `
+        <div class="cow-row-item" data-num="${escapeHtml(i.cow)}" style="padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:700;font-size:15px;">${fmtDate(i.date)} — #${escapeHtml(i.cow)}</span>
+            <span style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#fff;background:${i.typeColor};padding:2px 8px;border-radius:10px;">${i.type}</span>
+          </div>
+          ${summary ? `<div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-top:2px;">${escapeHtml(summary)}</div>` : ''}
+        </div>
+      `;
+    }).join('') || '<p class="empty" style="padding:14px 0;">No entries match.</p>';
+  }
+  function wireRecentActivityRows(container){
+    container.querySelectorAll('.cow-row-item').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        const num = row.dataset.num;
+        closeModal();
+        openProfileCow(num);
+      });
+    });
+  }
+  function recentActivityModal(){
+    const allItems = buildRecentActivityItems();
+
+    const modal = openModal(`
+      <div class="modal-title">Recent Activity</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Every entry from the last 30 days, newest first.</div>
+      <div class="toolbar">
+        <select id="recentActivityTypeFilter" style="flex:1;">
+          <option value="">All Types</option>
+          <option value="Med">Med</option>
+          <option value="Calving">Calving</option>
+          <option value="Note">Note</option>
+          <option value="Weight">Weight</option>
+          <option value="Breeding">Breeding</option>
+        </select>
+      </div>
+      <div id="recentActivityRows">${renderRecentActivityRows(allItems)}</div>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeRecentActivityBtn">Close</button>
+      </div>
+    `);
+    wireRecentActivityRows(modal.querySelector('#recentActivityRows'));
+    modal.querySelector('#recentActivityTypeFilter').addEventListener('change', (e)=>{
+      const type = e.target.value;
+      const filtered = type ? allItems.filter(i=>i.type===type) : allItems;
+      const rowsEl = modal.querySelector('#recentActivityRows');
+      rowsEl.innerHTML = renderRecentActivityRows(filtered);
+      wireRecentActivityRows(rowsEl);
+    });
+    modal.querySelector('#closeRecentActivityBtn').addEventListener('click', closeModal);
+  }
+
   function bulkEditModal(){
     let field = 'owner'; // 'owner' | 'lot' | 'group'
     const FIELD_CONFIG = {
@@ -4295,6 +4368,10 @@
   function isWithinLastWeek(dateStr){
     const ago = daysAgo(dateStr);
     return ago >= 0 && ago <= 7;
+  }
+  function isWithinLastMonth(dateStr){
+    const ago = daysAgo(dateStr);
+    return ago >= 0 && ago <= 30;
   }
 
   function buildMedsListText(cowFilter){
