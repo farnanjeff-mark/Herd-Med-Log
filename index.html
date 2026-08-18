@@ -242,6 +242,7 @@
       <button class="btn btn-nav-tool" id="importDataBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📥</span>&nbsp;Import</button>
     </div>
     <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Location / Group</button>
+    <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
     <div class="section-label">Reports</div>
     <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
     <button class="btn btn-nav-tool btn-full" id="headcountByOwnerBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Headcount by Owner</button>
@@ -2983,6 +2984,7 @@
   document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
   document.getElementById('exportEverythingBtn').addEventListener('click', exportOptionsModal);
   document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
+  document.getElementById('textListEntryBtn').addEventListener('click', textCategoryPickerModal);
   document.getElementById('homeMoreToolsBtn').addEventListener('click', showMoreTools);
   document.getElementById('voiceSearchBtn').addEventListener('click', startVoiceSearch);
   document.getElementById('homeQuickSearchGoBtn').addEventListener('click', runHomeQuickSearch);
@@ -4453,6 +4455,31 @@
     });
     return Object.keys(latestByNum)
       .sort((a,b)=> latestByNum[b].localeCompare(latestByNum[a]) || a.localeCompare(b, undefined, {numeric:true}));
+  }
+
+  function textCategoryPickerModal(){
+    const modal = openModal(`
+      <div class="modal-title">Text a List</div>
+      <div class="field">
+        <label>Category</label>
+        <select id="textCategorySelect">
+          <option value="meds">Meds &amp; Notes</option>
+          <option value="calving">Calving Records</option>
+          <option value="notes">General Notes</option>
+        </select>
+      </div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:16px;">Pulls the last 7 days of entries for whichever category you pick.</div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelTextCategory">Cancel</button>
+        <button class="btn btn-blue" id="continueTextCategory">Continue</button>
+      </div>
+    `);
+    modal.querySelector('#cancelTextCategory').addEventListener('click', closeModal);
+    modal.querySelector('#continueTextCategory').addEventListener('click', ()=>{
+      const section = modal.querySelector('#textCategorySelect').value;
+      closeModal();
+      textListModal(section);
+    });
   }
 
   function textListModal(section){
