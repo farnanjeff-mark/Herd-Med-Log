@@ -2398,16 +2398,15 @@
   // ---- Modals ----
   function openModal(html){
     const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
-    backdrop.id = 'activeModal';
+    backdrop.className = 'modal-backdrop modal-stack-item';
     backdrop.innerHTML = `<div class="modal">${html}</div>`;
     backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) closeModal(); });
     document.body.appendChild(backdrop);
     return backdrop;
   }
   function closeModal(){
-    const m = document.getElementById('activeModal');
-    if(m) m.remove();
+    const stack = document.querySelectorAll('.modal-stack-item');
+    if(stack.length > 0) stack[stack.length - 1].remove();
   }
 
   function addCowModal(){
@@ -4103,29 +4102,21 @@
 
   function needsEntryModal(){
     const flagged = cows.filter(c=>c.needs_entry).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
-    const rows = flagged.map(c=>{
-      const meta = [c.lot, c.owner].filter(Boolean).join(' · ');
-      return `
-        <div class="cow-row-item" data-num="${escapeHtml(c.number)}" style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;">
-          <div>
-            <div style="font-weight:700;font-size:16px;">#${escapeHtml(c.number)}</div>
-            ${meta ? `<div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;">${escapeHtml(meta)}</div>` : ''}
-          </div>
-          <span class="chev">&rsaquo;</span>
-        </div>
-      `;
-    }).join('') || '<p class="empty" style="padding:14px 0;">No cows flagged right now.</p>';
+    const cardsHtml = flagged.map(c=> quickAddCardHtml(c)).join('') || '<p class="empty" style="padding:14px 0;">No cows flagged right now.</p>';
 
     const modal = openModal(`
       <div class="modal-title">Needs Entry (${flagged.length})</div>
-      <div>${rows}</div>
+      <div>${cardsHtml}</div>
       <div class="modal-actions">
         <button class="btn btn-barn btn-full" id="closeNeedsEntryBtn">Close</button>
       </div>
     `);
-    modal.querySelectorAll('.cow-row-item').forEach(row=>{
-      row.addEventListener('click', ()=>{
-        const num = row.dataset.num;
+    wireProfileQuickAddButtons(modal);
+    wireNeedsEntryCheckboxes(modal);
+    modal.querySelectorAll('[data-open-num]').forEach(el=>{
+      el.addEventListener('click', e=>{
+        e.stopPropagation();
+        const num = el.dataset.openNum;
         closeModal();
         openProfileCow(num);
       });
