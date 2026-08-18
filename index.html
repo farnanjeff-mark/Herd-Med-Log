@@ -888,6 +888,13 @@
       '</optgroup>' +
       '<optgroup label="Owner">' +
         owners.map(o=>`<option value="own:${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') +
+      '</optgroup>' +
+      '<optgroup label="Recent Activity (last 30 days)">' +
+        '<option value="act:Med">Med</option>' +
+        '<option value="act:Calving">Calving</option>' +
+        '<option value="act:Note">Note</option>' +
+        '<option value="act:Weight">Weight</option>' +
+        '<option value="act:Breeding">Breeding</option>' +
       '</optgroup>';
     if([...sel.options].some(o=>o.value===prevValue)) sel.value = prevValue;
   }
@@ -1828,6 +1835,8 @@
         if(c.cow_group !== filterValue) return false;
       } else if(filterKind === 'own'){
         if(c.owner !== filterValue) return false;
+      } else if(filterKind === 'act'){
+        if(!cowHasRecentActivityOfType(c.number, filterValue)) return false;
       }
       return !q || c.number.toLowerCase().includes(q);
     });
@@ -4183,6 +4192,7 @@
       </div>
       <div id="recentActivityRows">${renderRecentActivityRows(allItems)}</div>
       <div class="modal-actions">
+        <button class="btn btn-outline btn-full" id="homeFromRecentActivityBtn">🏠 Home</button>
         <button class="btn btn-barn btn-full" id="closeRecentActivityBtn">Close</button>
       </div>
     `);
@@ -4193,6 +4203,10 @@
       const rowsEl = modal.querySelector('#recentActivityRows');
       rowsEl.innerHTML = renderRecentActivityRows(filtered);
       wireRecentActivityRows(rowsEl);
+    });
+    modal.querySelector('#homeFromRecentActivityBtn').addEventListener('click', ()=>{
+      closeModal();
+      showHome();
     });
     modal.querySelector('#closeRecentActivityBtn').addEventListener('click', closeModal);
   }
@@ -4372,6 +4386,14 @@
   function isWithinLastMonth(dateStr){
     const ago = daysAgo(dateStr);
     return ago >= 0 && ago <= 30;
+  }
+  function cowHasRecentActivityOfType(num, type){
+    if(type === 'Med') return treatments.some(t=>t.cow_number===num && isWithinLastMonth(t.date));
+    if(type === 'Calving') return calvings.some(c=>c.cow_number===num && isWithinLastMonth(c.calving_date));
+    if(type === 'Note') return generalNotes.some(n=>n.cow_number===num && isWithinLastMonth(n.note_date));
+    if(type === 'Weight') return weights.some(w=>w.cow_number===num && isWithinLastMonth(w.weigh_date));
+    if(type === 'Breeding') return breedingRecords.some(b=>b.cow_number===num && isWithinLastMonth(b.breed_date));
+    return false;
   }
 
   function buildMedsListText(cowFilter){
