@@ -237,10 +237,8 @@
 
   <div class="view hidden" id="utilitiesView">
     <button class="btn btn-outline btn-full" id="utilitiesHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
-    <div style="display:flex;gap:10px;margin-bottom:12px;">
-      <button class="btn btn-nav-tool" id="exportEverythingBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📦</span>&nbsp;Export</button>
-      <button class="btn btn-nav-tool" id="importDataBtn" style="flex:1;padding:10px 8px;font-size:13px;justify-content:flex-start;"><span style="font-size:20px;">📥</span>&nbsp;Import</button>
-    </div>
+    <button class="btn btn-nav-tool btn-full" id="exportEverythingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📦</span>&nbsp;&nbsp;Export</button>
+    <button class="btn btn-nav-tool btn-full" id="importDataBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📥</span>&nbsp;&nbsp;Import</button>
     <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Location / Group</button>
     <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
   </div>
@@ -492,6 +490,11 @@
     </div>
     <div class="toolbar" id="profileLotFilterRow">
       <select id="profileLocationGroupFilter" style="flex:1;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);"><option value="">All Locations / Groups / Owners</option></select>
+      <select id="profileActivityDaysFilter" title="Time frame for Recent Activity" style="flex:0 0 110px;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 6px;font-family:Arial,sans-serif;font-size:14px;color:var(--ink);">
+        <option value="0">Today</option>
+        <option value="7">1 Week</option>
+        <option value="30" selected>1 Month</option>
+      </select>
     </div>
     <div id="profileCowList"></div>
     <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
@@ -902,7 +905,7 @@
       '<optgroup label="Owner">' +
         owners.map(o=>`<option value="own:${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') +
       '</optgroup>' +
-      '<optgroup label="Recent Activity (last 30 days)">' +
+      '<optgroup label="Recent Activity">' +
         '<option value="act:Med">Med</option>' +
         '<option value="act:Calving">Calving</option>' +
         '<option value="act:Note">Note</option>' +
@@ -1002,6 +1005,8 @@
     if(profileSearchBox) profileSearchBox.value = '';
     const profileLocationGroupFilterEl = document.getElementById('profileLocationGroupFilter');
     if(profileLocationGroupFilterEl) profileLocationGroupFilterEl.value = '';
+    const profileActivityDaysFilterEl = document.getElementById('profileActivityDaysFilter');
+    if(profileActivityDaysFilterEl) profileActivityDaysFilterEl.value = '30';
     if(weightsSearchBox) weightsSearchBox.value = '';
     if(breedingSearchBox) breedingSearchBox.value = '';
     setHeaderTitle('Herd', 'Ledger');
@@ -1897,7 +1902,8 @@
       } else if(filterKind === 'own'){
         if(c.owner !== filterValue) return false;
       } else if(filterKind === 'act'){
-        if(!cowHasRecentActivityOfType(c.number, filterValue)) return false;
+        const activityDays = parseInt(document.getElementById('profileActivityDaysFilter').value, 10);
+        if(!cowHasRecentActivityOfType(c.number, filterValue, activityDays)) return false;
       }
       return !q || c.number.toLowerCase().includes(q);
     });
@@ -3098,6 +3104,7 @@
   document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
   document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
   document.getElementById('profileLocationGroupFilter').addEventListener('change', renderProfileList);
+  document.getElementById('profileActivityDaysFilter').addEventListener('change', renderProfileList);
   document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
   document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
   document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
@@ -3157,11 +3164,11 @@
   const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
   const OWNER_OPTIONS = ['JF','FCC','Kellan','Clint','LA'];
   const GROUP_OPTIONS = [
-    '4 Series Fall Calving Heifers',
-    '5 Series Spring Calving Heifer',
-    '5 Series Fall Calving Heifer',
-    '6 Series Spring Calving Heifers',
-    '6 Series Fall Calving Heifers'
+    '2024 Fall Heifers',
+    '2025 Spring Heifers',
+    '2025 Fall Heifers',
+    '2026 Spring Heifers',
+    '2026 Fall Heifers'
   ];
   function ownerColor(owner){
     if(owner === 'JF') return '#D46A8C';
@@ -4188,28 +4195,28 @@
     modal.querySelector('#closeNeedsEntryBtn').addEventListener('click', closeModal);
   }
 
-  function buildRecentActivityItems(){
+  function buildRecentActivityItems(days){
     const items = [];
     treatments.forEach(t=>{
-      if(!isWithinLastMonth(t.date)) return;
+      if(!isWithinDays(t.date, days)) return;
       const details = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : '(note only)';
       items.push({ cow: t.cow_number, date: t.date, type: 'Med', typeColor: '#455B3D', details, notes: t.notes||'' });
     });
     calvings.forEach(r=>{
-      if(!isWithinLastMonth(r.calving_date)) return;
+      if(!isWithinDays(r.calving_date, days)) return;
       const details = [calfSexLabel(r.calf_sex)+' calf', r.birth_weight!=null ? r.birth_weight+' lbs' : ''].filter(Boolean).join(' · ');
       items.push({ cow: r.cow_number, date: r.calving_date, type: 'Calving', typeColor: '#D46A8C', details, notes: r.notes||'' });
     });
     generalNotes.forEach(n=>{
-      if(!isWithinLastMonth(n.note_date)) return;
+      if(!isWithinDays(n.note_date, days)) return;
       items.push({ cow: n.cow_number, date: n.note_date, type: 'Note', typeColor: '#3B6E8F', details: '', notes: n.note||'' });
     });
     weights.forEach(w=>{
-      if(!isWithinLastMonth(w.weigh_date)) return;
+      if(!isWithinDays(w.weigh_date, days)) return;
       items.push({ cow: w.cow_number, date: w.weigh_date, type: 'Weight', typeColor: '#C4732B', details: w.weight!=null ? w.weight+' lbs' : '', notes: w.notes||'' });
     });
     breedingRecords.forEach(b=>{
-      if(!isWithinLastMonth(b.breed_date)) return;
+      if(!isWithinDays(b.breed_date, days)) return;
       const details = [b.bred_to, b.pregnancy_method].filter(Boolean).join(' · ');
       items.push({ cow: b.cow_number, date: b.breed_date, type: 'Breeding', typeColor: '#7A5A9E', details, notes: b.notes||'' });
     });
@@ -4241,12 +4248,18 @@
     });
   }
   function recentActivityModal(){
-    const allItems = buildRecentActivityItems();
+    let currentDays = 30;
+    let allItems = buildRecentActivityItems(currentDays);
 
     const modal = openModal(`
       <div class="modal-title">Recent Activity</div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Every entry from the last 30 days, newest first.</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Newest first.</div>
       <div class="toolbar">
+        <select id="recentActivityDaysFilter" style="flex:1;">
+          <option value="0">Today</option>
+          <option value="7">1 Week</option>
+          <option value="30" selected>1 Month</option>
+        </select>
         <select id="recentActivityTypeFilter" style="flex:1;">
           <option value="">All Types</option>
           <option value="Med">Med</option>
@@ -4263,13 +4276,19 @@
       </div>
     `);
     wireRecentActivityRows(modal.querySelector('#recentActivityRows'));
-    modal.querySelector('#recentActivityTypeFilter').addEventListener('change', (e)=>{
-      const type = e.target.value;
+    function refreshRows(){
+      const type = modal.querySelector('#recentActivityTypeFilter').value;
       const filtered = type ? allItems.filter(i=>i.type===type) : allItems;
       const rowsEl = modal.querySelector('#recentActivityRows');
       rowsEl.innerHTML = renderRecentActivityRows(filtered);
       wireRecentActivityRows(rowsEl);
+    }
+    modal.querySelector('#recentActivityDaysFilter').addEventListener('change', (e)=>{
+      currentDays = parseInt(e.target.value, 10);
+      allItems = buildRecentActivityItems(currentDays);
+      refreshRows();
     });
+    modal.querySelector('#recentActivityTypeFilter').addEventListener('change', refreshRows);
     modal.querySelector('#homeFromRecentActivityBtn').addEventListener('click', ()=>{
       closeModal();
       showHome();
@@ -4453,19 +4472,30 @@
     const ago = daysAgo(dateStr);
     return ago >= 0 && ago <= 30;
   }
-  function cowHasRecentActivityOfType(num, type){
-    if(type === 'Med') return treatments.some(t=>t.cow_number===num && isWithinLastMonth(t.date));
-    if(type === 'Calving') return calvings.some(c=>c.cow_number===num && isWithinLastMonth(c.calving_date));
-    if(type === 'Note') return generalNotes.some(n=>n.cow_number===num && isWithinLastMonth(n.note_date));
-    if(type === 'Weight') return weights.some(w=>w.cow_number===num && isWithinLastMonth(w.weigh_date));
-    if(type === 'Breeding') return breedingRecords.some(b=>b.cow_number===num && isWithinLastMonth(b.breed_date));
+  function isWithinDays(dateStr, days){
+    const ago = daysAgo(dateStr);
+    return ago >= 0 && ago <= days;
+  }
+  function dayRangeOptionsHtml(){
+    return `
+      <option value="0">Today</option>
+      <option value="7" selected>1 Week</option>
+      <option value="30">1 Month</option>
+    `;
+  }
+  function cowHasRecentActivityOfType(num, type, days){
+    if(type === 'Med') return treatments.some(t=>t.cow_number===num && isWithinDays(t.date, days));
+    if(type === 'Calving') return calvings.some(c=>c.cow_number===num && isWithinDays(c.calving_date, days));
+    if(type === 'Note') return generalNotes.some(n=>n.cow_number===num && isWithinDays(n.note_date, days));
+    if(type === 'Weight') return weights.some(w=>w.cow_number===num && isWithinDays(w.weigh_date, days));
+    if(type === 'Breeding') return breedingRecords.some(b=>b.cow_number===num && isWithinDays(b.breed_date, days));
     return false;
   }
 
-  function buildMedsListText(cowFilter){
+  function buildMedsListText(cowFilter, days){
     const lines = ['MEDS & NOTES'];
     const items = [];
-    treatments.filter(r=>isWithinLastWeek(localDateFromTimestamp(r.created_at)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    treatments.filter(r=>isWithinDays(localDateFromTimestamp(r.created_at), days) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       const desc = r.medicine
         ? `${r.medicine}${r.reason ? ' / '+r.reason : ''}${r.notes ? ' — '+r.notes : ''}`
         : `NOTE: ${r.notes||''}`;
@@ -4473,13 +4503,13 @@
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
     items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
-    if(lines.length === 1) lines.push('(nothing entered in the last 7 days)');
+    if(lines.length === 1) lines.push('(nothing entered in that time frame)');
     return lines.join('\n');
   }
-  function buildCalvingListText(cowFilter){
+  function buildCalvingListText(cowFilter, days){
     const lines = ['CALVING RECORDS'];
     const items = [];
-    calvings.filter(r=>isWithinLastWeek(localDateFromTimestamp(r.created_at)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    calvings.filter(r=>isWithinDays(localDateFromTimestamp(r.created_at), days) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       const parts = [`${calfSexLabel(r.calf_sex)} calf`];
       if(r.birth_weight != null) parts.push(`${r.birth_weight} lbs`);
       if(r.sire) parts.push(`Sire: ${r.sire}`);
@@ -4489,29 +4519,29 @@
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
     items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
-    if(lines.length === 1) lines.push('(nothing entered in the last 7 days)');
+    if(lines.length === 1) lines.push('(nothing entered in that time frame)');
     return lines.join('\n');
   }
-  function buildNotesListText(cowFilter){
+  function buildNotesListText(cowFilter, days){
     const lines = ['GENERAL NOTES'];
     const items = [];
-    generalNotes.filter(r=>isWithinLastWeek(localDateFromTimestamp(r.created_at)) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    generalNotes.filter(r=>isWithinDays(localDateFromTimestamp(r.created_at), days) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       items.push({ date: r.note_date, cow: r.cow_number, text: r.note||'' });
     });
     items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
     items.forEach(i=> lines.push(`${fmtDateShort(i.date)} - #${i.cow}: ${i.text}`));
-    if(lines.length === 1) lines.push('(nothing entered in the last 7 days)');
+    if(lines.length === 1) lines.push('(nothing entered in that time frame)');
     return lines.join('\n');
   }
 
-  function cowsWithRecentActivity(section){
+  function cowsWithRecentActivity(section, days){
     let source, dateKey;
     if(section === 'meds'){ source = treatments; dateKey = 'date'; }
     else if(section === 'calving'){ source = calvings; dateKey = 'calving_date'; }
     else { source = generalNotes; dateKey = 'note_date'; }
 
     const latestByNum = {};
-    source.filter(r=>isWithinLastWeek(localDateFromTimestamp(r.created_at))).forEach(r=>{
+    source.filter(r=>isWithinDays(localDateFromTimestamp(r.created_at), days)).forEach(r=>{
       const enteredAt = r.created_at || r[dateKey];
       if(!latestByNum[r.cow_number] || enteredAt > latestByNum[r.cow_number]){
         latestByNum[r.cow_number] = enteredAt;
@@ -4532,7 +4562,11 @@
           <option value="notes">General Notes</option>
         </select>
       </div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:16px;">Pulls the last 7 days of entries for whichever category you pick.</div>
+      <div class="field">
+        <label>Time Frame</label>
+        <select id="textDaysSelect">${dayRangeOptionsHtml()}</select>
+      </div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:16px;">Pulls entries from that time frame for whichever category you pick.</div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelTextCategory">Cancel</button>
         <button class="btn btn-blue" id="continueTextCategory">Continue</button>
@@ -4541,22 +4575,24 @@
     modal.querySelector('#cancelTextCategory').addEventListener('click', closeModal);
     modal.querySelector('#continueTextCategory').addEventListener('click', ()=>{
       const section = modal.querySelector('#textCategorySelect').value;
+      const days = parseInt(modal.querySelector('#textDaysSelect').value, 10);
       closeModal();
-      textListModal(section);
+      textListModal(section, days);
     });
   }
 
-  function textListModal(section){
+  function textListModal(section, days){
     const builders = { meds: buildMedsListText, calving: buildCalvingListText, notes: buildNotesListText };
-    const activeCows = cowsWithRecentActivity(section);
+    const activeCows = cowsWithRecentActivity(section, days);
     const recipients = getRecipients();
+    const dayLabel = days===0 ? 'today' : days===7 ? 'the last week' : 'the last month';
 
     const cowOptionsHtml = activeCows.map(num=>`
       <label style="display:flex;align-items:center;gap:8px;padding:6px 0;">
         <input type="checkbox" class="cowCheck" value="${escapeHtml(num)}" style="width:18px;height:18px;"/>
         <span>#${escapeHtml(num)}</span>
       </label>
-    `).join('') || '<p class="empty" style="padding:10px 0;">No recent activity in the last 7 days.</p>';
+    `).join('') || `<p class="empty" style="padding:10px 0;">No recent activity in ${dayLabel}.</p>`;
 
     const recipOptionsHtml = recipients.map((r,i)=>`
       <label style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);">
@@ -4581,7 +4617,7 @@
     modal.querySelector('#manageRecipLink').addEventListener('click', (e)=>{
       e.preventDefault();
       closeModal();
-      manageRecipientsModal(()=> textListModal(section));
+      manageRecipientsModal(()=> textListModal(section, days));
     });
     const toggleAllLink = modal.querySelector('#toggleAllCows');
     if(toggleAllLink){
@@ -4598,7 +4634,7 @@
       if(checkedRecips.length === 0){ showToast('Select at least one recipient'); return; }
       const checkedCows = new Set([...modal.querySelectorAll('.cowCheck:checked')].map(cb=>cb.value));
       if(checkedCows.size === 0){ showToast('Select at least one cow'); return; }
-      const body = builders[section](checkedCows);
+      const body = builders[section](checkedCows, days);
       closeModal();
       if(checkedRecips.length === 1){
         // A single recipient works reliably as a direct link on iOS.
