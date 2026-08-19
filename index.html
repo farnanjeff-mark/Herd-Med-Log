@@ -3529,14 +3529,27 @@
     { type:'breeding', title:'Log Breeding', label:'Breed' },
     { type:'notes', title:'Add Note', label:'Note' }
   ];
+  function latestActiveCalfFor(num){
+    const active = calvingsFor(num).filter(c=>!c.promoted_to_cow_number);
+    if(active.length === 0) return null;
+    return [...active].sort((a,b)=>b.calving_date.localeCompare(a.calving_date))[0];
+  }
   function profileQuickAddRowHtml(num){
-    return `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">` +
+    const activeCalf = latestActiveCalfFor(num);
+    const cols = activeCalf ? 6 : 5;
+    const calfBtn = activeCalf
+      ? `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="calf" data-calving-id="${escapeHtml(activeCalf.id)}" title="Calf Record" style="background:#8A5A2E;border:none;border-radius:8px;padding:10px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <span style="color:#fff;font-size:18px;line-height:1;">🐄</span>
+          <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#fff;">Calf</span>
+        </button>`
+      : '';
+    return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;">` +
       PROFILE_QUICK_ADD_TYPES.map(t=>
         `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="${t.type}" title="${t.title}" style="background:#3C9142;border:none;border-radius:8px;padding:10px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
           <span style="color:#fff;font-size:20px;font-weight:700;line-height:1;">+</span>
           <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#fff;">${t.label}</span>
         </button>`
-      ).join('') +
+      ).join('') + calfBtn +
     `</div>`;
   }
   function quickAddCardHtml(cow){
@@ -3571,6 +3584,11 @@
         else if(type === 'weights'){ currentWeightsCow = num; weightModal(null); }
         else if(type === 'breeding'){ currentBreedingCow = num; breedingModal(null); }
         else if(type === 'notes'){ currentNotesCow = num; generalNoteModal(null); }
+        else if(type === 'calf'){
+          const calvingId = btn.dataset.calvingId;
+          const calvingRecord = calvings.find(c=>c.id===calvingId);
+          if(calvingRecord) calfRecordModal(calvingRecord);
+        }
       });
     });
   }
