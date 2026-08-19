@@ -3662,6 +3662,8 @@
         e.stopPropagation();
         await toggleNeedsEntry(cb.dataset.num, cb.checked);
         updatePrintFlaggedButton();
+        const filterRow = document.getElementById('profileLotFilterRow');
+        if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
       });
     });
   }
