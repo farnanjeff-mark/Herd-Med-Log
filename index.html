@@ -643,6 +643,8 @@
   let hayingLog = []; // [{id, entry_date, location, mowed, raked, tedded, total_bales, notes}]
   let equipmentMaintenance = []; // [{id, equipment_name, maint_date, notes}]
   let equipmentList = []; // [{id, name}]
+  let calfTreatments = []; // [{id, calving_id, date, medicine, reason, notes}]
+  let calfWeights = []; // [{id, calving_id, weigh_date, weight, notes}]
   let currentEquipment = null;
   let currentCow = null;
   let currentCalvingCow = null;
@@ -732,7 +734,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -743,7 +745,9 @@
         api('/herd_tally?select=*', { method:'GET' }),
         api('/haying_log?select=*', { method:'GET' }),
         api('/equipment_maintenance?select=*', { method:'GET' }),
-        api('/equipment?select=*', { method:'GET' })
+        api('/equipment?select=*', { method:'GET' }),
+        api('/calf_treatments?select=*', { method:'GET' }),
+        api('/calf_weights?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -756,8 +760,10 @@
       hayingLog = hayingRes || [];
       equipmentMaintenance = equipmentRes || [];
       equipmentList = equipmentListRes || [];
+      calfTreatments = calfTreatRes || [];
+      calfWeights = calfWeightRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = [];
     }
     renderHerdTally();
     renderHayingList();
@@ -1735,7 +1741,14 @@
         <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
         ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
         ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+        ${r.promoted_to_cow_number
+          ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(r.promoted_to_cow_number)}</div>`
+          : `<button class="btn btn-nav-tool btn-sm calf-record-btn" data-id="${r.id}" style="margin-top:8px;">🐄 Calf Record</button>`}
       `;
+      div.querySelector('.calf-record-btn')?.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        calfRecordModal(r);
+      });
       div.querySelector('.record-del').addEventListener('click', (e)=>{
         e.stopPropagation();
         deleteCalvingRecord(r.id);
@@ -2788,6 +2801,295 @@
   }
   function addCalvingModal(){ calvingModal(null); }
   function editCalvingModal(record){ calvingModal(record); }
+
+  function calfRecordSectionsHtml(calvingRecord){
+    const meds = calfTreatments.filter(t=>t.calving_id===calvingRecord.id).sort((a,b)=>b.date.localeCompare(a.date));
+    const weightsList = calfWeights.filter(w=>w.calving_id===calvingRecord.id).sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date));
+    const medsHtml = meds.map(t=>{
+      const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : '(note only)';
+      return `
+        <div class="record" style="padding:8px 30px 8px 10px;">
+          <button class="record-del calf-med-del" data-id="${t.id}" style="top:6px;right:6px;">&times;</button>
+          <div class="record-date" style="font-size:13px;">${fmtDate(t.date)}</div>
+          <div class="record-med" style="font-size:13px;">${escapeHtml(desc)}</div>
+          ${t.notes ? `<div class="record-notes" style="font-size:12px;">${escapeHtml(t.notes)}</div>` : ''}
+        </div>
+      `;
+    }).join('') || '<p class="empty" style="padding:6px 0;font-size:13px;">No meds/notes logged yet.</p>';
+    const weightsHtml = weightsList.map(w=>`
+      <div class="record" style="padding:8px 30px 8px 10px;">
+        <button class="record-del calf-weight-del" data-id="${w.id}" style="top:6px;right:6px;">&times;</button>
+        <div class="record-date" style="font-size:13px;">${fmtDate(w.weigh_date)} — ${w.weight!=null?w.weight+' lbs':''}</div>
+        ${w.notes ? `<div class="record-notes" style="font-size:12px;">${escapeHtml(w.notes)}</div>` : ''}
+      </div>
+    `).join('') || '<p class="empty" style="padding:6px 0;font-size:13px;">No weights logged yet.</p>';
+    return { medsHtml, weightsHtml };
+  }
+
+  function refreshCalfRecordModal(modal, calvingRecord){
+    const { medsHtml, weightsHtml } = calfRecordSectionsHtml(calvingRecord);
+    const medsEl = modal.querySelector('#calfMedsList');
+    const weightsEl = modal.querySelector('#calfWeightsList');
+    medsEl.innerHTML = medsHtml;
+    weightsEl.innerHTML = weightsHtml;
+    medsEl.querySelectorAll('.calf-med-del').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteCalfTreatment(btn.dataset.id, modal, calvingRecord));
+    });
+    weightsEl.querySelectorAll('.calf-weight-del').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteCalfWeight(btn.dataset.id, modal, calvingRecord));
+    });
+  }
+
+  function calfRecordModal(calvingRecord){
+    const cow = cows.find(c=>c.number===calvingRecord.cow_number) || {};
+    const { medsHtml, weightsHtml } = calfRecordSectionsHtml(calvingRecord);
+    const summaryParts = [calfSexLabel(calvingRecord.calf_sex)+' calf'];
+    if(calvingRecord.birth_weight != null) summaryParts.push(`${calvingRecord.birth_weight} lbs at birth`);
+    if(calvingRecord.sire) summaryParts.push(`Sire: ${calvingRecord.sire}`);
+
+    const modal = openModal(`
+      <div class="modal-title">Calf Record</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Born ${fmtDate(calvingRecord.calving_date)} to #${escapeHtml(calvingRecord.cow_number)} · ${escapeHtml(summaryParts.join(' · '))}</div>
+
+      <div class="section-label" style="margin-top:0;">Meds &amp; Notes</div>
+      <button class="btn btn-nav-tool btn-full" id="calfAddMedBtn" style="margin-bottom:10px;">+ Log Med / Note</button>
+      <div id="calfMedsList">${medsHtml}</div>
+
+      <div class="section-label">Weights</div>
+      <button class="btn btn-nav-tool btn-full" id="calfAddWeightBtn" style="margin-bottom:10px;">+ Log Weight</button>
+      <div id="calfWeightsList">${weightsHtml}</div>
+
+      <div class="section-label">Manage</div>
+      ${calvingRecord.promoted_to_cow_number
+        ? `<div style="padding:12px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(calvingRecord.promoted_to_cow_number)}</div>`
+        : `<button class="btn btn-profile-tool btn-full" id="calfPromoteBtn">Make This Calf a Cow</button>`}
+
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeCalfRecordBtn">Close</button>
+      </div>
+    `);
+    modal.querySelector('#calfAddMedBtn').addEventListener('click', ()=> calfMedEntryModal(calvingRecord, null, modal));
+    modal.querySelector('#calfAddWeightBtn').addEventListener('click', ()=> calfWeightEntryModal(calvingRecord, null, modal));
+    const promoteBtn = modal.querySelector('#calfPromoteBtn');
+    if(promoteBtn) promoteBtn.addEventListener('click', ()=> promoteCalfModal(calvingRecord, modal));
+    refreshCalfRecordModal(modal, calvingRecord);
+    modal.querySelector('#closeCalfRecordBtn').addEventListener('click', closeModal);
+  }
+
+  function calfMedEntryModal(calvingRecord, existingEntry, parentModal){
+    const isEdit = !!existingEntry;
+    const today = todayLocal();
+    const modal = openModal(`
+      <div class="modal-title">${isEdit ? 'Edit' : 'Log'} Calf Med / Note</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="calfMedDate" value="${isEdit ? existingEntry.date : today}"/>
+      </div>
+      ${fieldWithOther('calfMedMedicine', 'Medicine (optional)', MEDICINE_OPTIONS, 'Type medicine')}
+      ${fieldWithOther('calfMedReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="calfMedNotes" rows="2">${isEdit ? escapeHtml(existingEntry.notes||'') : ''}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelCalfMed">Cancel</button>
+        <button class="btn btn-barn" id="confirmCalfMed">Save</button>
+      </div>
+    `);
+    wireFieldWithOther(modal, 'calfMedMedicine');
+    wireFieldWithOther(modal, 'calfMedReason');
+    if(isEdit && existingEntry.medicine) prefillFieldWithOther(modal, 'calfMedMedicine', existingEntry.medicine, MEDICINE_OPTIONS);
+    if(isEdit && existingEntry.reason) prefillFieldWithOther(modal, 'calfMedReason', existingEntry.reason, REASON_OPTIONS);
+    modal.querySelector('#cancelCalfMed').addEventListener('click', closeModal);
+    modal.querySelector('#confirmCalfMed').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#calfMedDate').value;
+      if(!dateVal){ showToast('Date is required'); return; }
+      const btn = modal.querySelector('#confirmCalfMed');
+      btn.disabled = true;
+      const body = {
+        calving_id: calvingRecord.id,
+        date: dateVal,
+        medicine: valueOf(modal, 'calfMedMedicine')||null,
+        reason: valueOf(modal, 'calfMedReason')||null,
+        notes: modal.querySelector('#calfMedNotes').value.trim()||null
+      };
+      try{
+        if(isEdit){
+          const updated = await api('/calf_treatments?id=eq.' + encodeURIComponent(existingEntry.id), {
+            method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}), body: JSON.stringify(body)
+          });
+          const idx = calfTreatments.findIndex(t=>t.id===existingEntry.id);
+          if(idx !== -1) calfTreatments[idx] = updated[0];
+        } else {
+          const inserted = await api('/calf_treatments', {
+            method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}), body: JSON.stringify(body)
+          });
+          calfTreatments.push(inserted[0]);
+        }
+        closeModal();
+        refreshCalfRecordModal(parentModal, calvingRecord);
+        showToast('Saved');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
+  function calfWeightEntryModal(calvingRecord, existingEntry, parentModal){
+    const isEdit = !!existingEntry;
+    const today = todayLocal();
+    const modal = openModal(`
+      <div class="modal-title">${isEdit ? 'Edit' : 'Log'} Calf Weight</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="calfWeightDate" value="${isEdit ? existingEntry.weigh_date : today}"/>
+      </div>
+      <div class="field">
+        <label>Weight (lbs)</label>
+        <input type="number" id="calfWeightValue" value="${isEdit && existingEntry.weight!=null ? existingEntry.weight : ''}"/>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="calfWeightNotes" rows="2">${isEdit ? escapeHtml(existingEntry.notes||'') : ''}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelCalfWeight">Cancel</button>
+        <button class="btn btn-barn" id="confirmCalfWeight">Save</button>
+      </div>
+    `);
+    modal.querySelector('#cancelCalfWeight').addEventListener('click', closeModal);
+    modal.querySelector('#confirmCalfWeight').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#calfWeightDate').value;
+      if(!dateVal){ showToast('Date is required'); return; }
+      const weightRaw = modal.querySelector('#calfWeightValue').value;
+      const btn = modal.querySelector('#confirmCalfWeight');
+      btn.disabled = true;
+      const body = {
+        calving_id: calvingRecord.id,
+        weigh_date: dateVal,
+        weight: weightRaw ? parseFloat(weightRaw) : null,
+        notes: modal.querySelector('#calfWeightNotes').value.trim()||null
+      };
+      try{
+        if(isEdit){
+          const updated = await api('/calf_weights?id=eq.' + encodeURIComponent(existingEntry.id), {
+            method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}), body: JSON.stringify(body)
+          });
+          const idx = calfWeights.findIndex(w=>w.id===existingEntry.id);
+          if(idx !== -1) calfWeights[idx] = updated[0];
+        } else {
+          const inserted = await api('/calf_weights', {
+            method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}), body: JSON.stringify(body)
+          });
+          calfWeights.push(inserted[0]);
+        }
+        closeModal();
+        refreshCalfRecordModal(parentModal, calvingRecord);
+        showToast('Saved');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
+  async function deleteCalfTreatment(id, modal, calvingRecord){
+    if(!confirm('Remove this entry?')) return;
+    try{
+      await api('/calf_treatments?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      calfTreatments = calfTreatments.filter(t=>t.id!==id);
+      refreshCalfRecordModal(modal, calvingRecord);
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+  async function deleteCalfWeight(id, modal, calvingRecord){
+    if(!confirm('Remove this entry?')) return;
+    try{
+      await api('/calf_weights?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      calfWeights = calfWeights.filter(w=>w.id!==id);
+      refreshCalfRecordModal(modal, calvingRecord);
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  function promoteCalfModal(calvingRecord, parentModal){
+    const mother = cows.find(c=>c.number===calvingRecord.cow_number) || {};
+    const modal = openModal(`
+      <div class="modal-title">Make This Calf a Cow</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Creates a new cow record for this calf, carrying over her meds and weights logged so far. This can't be undone.</div>
+      <div class="field">
+        <label>New Tag Number</label>
+        <input type="text" id="promoteTagNumber" placeholder="e.g. 214" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelPromote">Cancel</button>
+        <button class="btn btn-barn" id="confirmPromote">Create Cow</button>
+      </div>
+    `);
+    modal.querySelector('#cancelPromote').addEventListener('click', closeModal);
+    modal.querySelector('#confirmPromote').addEventListener('click', async ()=>{
+      const newNum = modal.querySelector('#promoteTagNumber').value.trim();
+      if(!newNum){ showToast('Enter a tag number'); return; }
+      if(cows.some(c=>c.number===newNum)){ showToast('That tag number is already in use'); return; }
+      const btn = modal.querySelector('#confirmPromote');
+      btn.disabled = true;
+      try{
+        const lineageParts = [`Born ${fmtDate(calvingRecord.calving_date)} to #${calvingRecord.cow_number}`];
+        if(calvingRecord.sire) lineageParts.push(`Sire: ${calvingRecord.sire}`);
+        if(calvingRecord.birth_weight != null) lineageParts.push(`Birth weight: ${calvingRecord.birth_weight} lbs`);
+        const lineageNote = lineageParts.join(' · ');
+
+        const insertedCow = await api('/cows', {
+          method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ number: newNum, lot: mother.lot||null, owner: mother.owner||null, added_at: todayLocal() })
+        });
+        cows.push(insertedCow[0]);
+
+        await api('/general_notes', {
+          method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ cow_number: newNum, note_date: calvingRecord.calving_date, note: lineageNote })
+        }).then(inserted=> generalNotes.push(inserted[0]));
+
+        const medsToMove = calfTreatments.filter(t=>t.calving_id===calvingRecord.id);
+        for(const t of medsToMove){
+          const inserted = await api('/treatments', {
+            method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify({ cow_number: newNum, date: t.date, medicine: t.medicine, reason: t.reason, notes: t.notes })
+          });
+          treatments.push(inserted[0]);
+          await api('/calf_treatments?id=eq.' + encodeURIComponent(t.id), { method:'DELETE' });
+        }
+        calfTreatments = calfTreatments.filter(t=>t.calving_id!==calvingRecord.id);
+
+        const weightsToMove = calfWeights.filter(w=>w.calving_id===calvingRecord.id);
+        for(const w of weightsToMove){
+          const inserted = await api('/weights', {
+            method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify({ cow_number: newNum, weigh_date: w.weigh_date, weight: w.weight, notes: w.notes })
+          });
+          weights.push(inserted[0]);
+          await api('/calf_weights?id=eq.' + encodeURIComponent(w.id), { method:'DELETE' });
+        }
+        calfWeights = calfWeights.filter(w=>w.calving_id!==calvingRecord.id);
+
+        const updatedCalving = await api('/calvings?id=eq.' + encodeURIComponent(calvingRecord.id), {
+          method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ promoted_to_cow_number: newNum })
+        });
+        const cIdx = calvings.findIndex(c=>c.id===calvingRecord.id);
+        if(cIdx !== -1) calvings[cIdx] = updatedCalving[0];
+
+        closeModal();
+        closeModal();
+        renderCalvingDetail();
+        renderCalvingList();
+        renderProfileList();
+        showToast(`#${newNum} created`);
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not complete — try again');
+      }
+    });
+  }
 
   function weightModal(existingRecord){
     const isEdit = !!existingRecord;
