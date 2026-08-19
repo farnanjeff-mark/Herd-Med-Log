@@ -907,6 +907,7 @@
     const usedOwners = [...new Set(cows.map(c=>c.owner).filter(Boolean))];
     const extraOwners = usedOwners.filter(o=>!OWNER_OPTIONS.includes(o)).sort();
     const owners = [...OWNER_OPTIONS, ...extraOwners];
+    const hasUnassigned = cows.some(c=>!c.owner);
 
     const prevValue = sel.value;
     sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
@@ -919,6 +920,7 @@
       '</optgroup>' +
       '<optgroup label="Owner">' +
         owners.map(o=>`<option value="own:${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') +
+        (hasUnassigned ? '<option value="own:__unassigned__">Unassigned</option>' : '') +
       '</optgroup>';
     if([...sel.options].some(o=>o.value===prevValue)) sel.value = prevValue;
   }
@@ -1960,7 +1962,11 @@
       } else if(filterKind === 'grp'){
         if(c.cow_group !== filterValue) return false;
       } else if(filterKind === 'own'){
-        if(c.owner !== filterValue) return false;
+        if(filterValue === '__unassigned__'){
+          if(c.owner) return false;
+        } else if(c.owner !== filterValue){
+          return false;
+        }
       }
       return !q || c.number.toLowerCase().includes(q);
     });
