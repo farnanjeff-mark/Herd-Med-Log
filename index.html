@@ -258,7 +258,8 @@
     <button class="btn btn-outline btn-full" id="farmOperationsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
     <button class="btn btn-nav-tool btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
     <button class="btn btn-nav-tool btn-full" id="homeHayingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Haying</button>
-    <button class="btn btn-nav-tool btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
+    <button class="btn btn-nav-tool btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
+    <button class="btn btn-nav-tool btn-full" id="homeFarmNotesBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;Farm Notes</button>
   </div>
 
   <div class="view hidden" id="importView">
@@ -322,6 +323,14 @@
     <div id="hayingList"></div>
     <div id="hayingTotalBales" style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;border-top:2px solid var(--ink);font-weight:700;font-size:17px;"></div>
     <div id="hayingEmptyState" class="empty hidden">No haying entries logged yet.</div>
+  </div>
+
+  <div class="view hidden" id="farmNotesView">
+    <button class="btn btn-outline btn-full" id="farmNotesHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:14px;">Farm Notes</div>
+    <button class="btn btn-nav-tool btn-full" id="addFarmNoteBtn" style="margin-bottom:14px;">+ Add Farm Note</button>
+    <div id="farmNotesList"></div>
+    <div id="farmNotesEmptyState" class="empty hidden">No farm notes logged yet.</div>
   </div>
 
   <div class="view hidden" id="equipmentListView">
@@ -641,6 +650,7 @@
   let deletedRecords = []; // [{id, table_name, record_data, cow_number, deleted_at}]
   let herdTally = []; // [{id, location, cows, calves, bulls}]
   let hayingLog = []; // [{id, entry_date, location, mowed, raked, tedded, total_bales, notes}]
+  let farmNotes = []; // [{id, note_date, note}]
   let equipmentMaintenance = []; // [{id, equipment_name, maint_date, notes}]
   let equipmentList = []; // [{id, name}]
   let calfTreatments = []; // [{id, calving_id, date, medicine, reason, notes}]
@@ -676,6 +686,7 @@
   const recentlyDeletedView = document.getElementById('recentlyDeletedView');
   const herdTallyView = document.getElementById('herdTallyView');
   const hayingView = document.getElementById('hayingView');
+  const farmNotesView = document.getElementById('farmNotesView');
   const equipmentListView = document.getElementById('equipmentListView');
   const equipmentDetailView = document.getElementById('equipmentDetailView');
   const quickActionView = document.getElementById('quickActionView');
@@ -734,7 +745,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -747,7 +758,8 @@
         api('/equipment_maintenance?select=*', { method:'GET' }),
         api('/equipment?select=*', { method:'GET' }),
         api('/calf_treatments?select=*', { method:'GET' }),
-        api('/calf_weights?select=*', { method:'GET' })
+        api('/calf_weights?select=*', { method:'GET' }),
+        api('/farm_notes?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -762,11 +774,13 @@
       equipmentList = equipmentListRes || [];
       calfTreatments = calfTreatRes || [];
       calfWeights = calfWeightRes || [];
+      farmNotes = farmNotesRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = [];
     }
     renderHerdTally();
     renderHayingList();
+    renderFarmNotesList();
     renderEquipmentList();
     if(currentEquipment) renderEquipmentDetail();
     renderList();
@@ -1021,6 +1035,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
@@ -1053,6 +1068,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
@@ -1088,6 +1104,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
     equipmentDetailView.classList.add('hidden');
@@ -1119,6 +1136,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
     equipmentDetailView.classList.add('hidden');
@@ -1127,6 +1145,38 @@
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
     renderHayingList();
+    window.scrollTo(0,0);
+  }
+  function showFarmNotes(){
+    setHeaderTitle('Farm', 'Notes');
+    homeView.classList.add('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    breedingListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
+    breedingDetailView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    herdTallyView.classList.add('hidden');
+    hayingView.classList.add('hidden');
+    equipmentListView.classList.add('hidden');
+    equipmentDetailView.classList.add('hidden');
+    farmNotesView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    renderFarmNotesList();
     window.scrollTo(0,0);
   }
   function showEquipmentList(){
@@ -1150,6 +1200,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentDetailView.classList.add('hidden');
@@ -1190,6 +1241,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1204,6 +1256,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1218,6 +1271,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1231,6 +1285,7 @@
     farmOperationsView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     importView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
@@ -1246,6 +1301,7 @@
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     globalSearchView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
@@ -1326,6 +1382,7 @@
     breedingDetailView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1375,6 +1432,7 @@
     breedingDetailView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1430,6 +1488,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     profileView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
@@ -1480,6 +1539,7 @@
     profileView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1526,6 +1586,7 @@
     profileView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1558,6 +1619,7 @@
     breedingDetailView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -3354,6 +3416,9 @@
   document.getElementById('homeHayingBtn').addEventListener('click', showHaying);
   document.getElementById('hayingHomeBtn').addEventListener('click', showHome);
   document.getElementById('addHayingBtn').addEventListener('click', ()=> hayingModal(null));
+  document.getElementById('homeFarmNotesBtn').addEventListener('click', showFarmNotes);
+  document.getElementById('farmNotesHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addFarmNoteBtn').addEventListener('click', ()=> farmNoteModal(null));
   document.getElementById('homeEquipmentBtn').addEventListener('click', showEquipmentList);
   document.getElementById('equipmentListHomeBtn').addEventListener('click', showHome);
   document.getElementById('equipmentDetailHomeBtn').addEventListener('click', showHome);
@@ -3840,6 +3905,96 @@
         if(record) hayingModal(record);
       });
     });
+  }
+
+  function renderFarmNotesList(){
+    const listEl = document.getElementById('farmNotesList');
+    const emptyEl = document.getElementById('farmNotesEmptyState');
+    if(!listEl) return;
+    const sorted = [...farmNotes].sort((a,b)=> b.note_date.localeCompare(a.note_date));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(r=>`
+      <div class="record" style="background:transparent;border:none;border-left:none;border-radius:0;border-bottom:1px solid var(--line);padding:9px 40px 9px 0;margin-bottom:0;">
+        <button class="record-del" data-id="${r.id}">&times;</button>
+        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        <div style="font-weight:700;font-size:16px;">${fmtDate(r.note_date)}</div>
+        <div style="font-size:14px;margin-top:3px;">${escapeHtml(r.note)}</div>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.record-del').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteFarmNote(btn.dataset.id));
+    });
+    listEl.querySelectorAll('.record-edit').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const record = farmNotes.find(r=>r.id===btn.dataset.id);
+        if(record) farmNoteModal(record);
+      });
+    });
+  }
+
+  function farmNoteModal(existingRecord){
+    const isEdit = !!existingRecord;
+    const today = todayLocal();
+    const modal = openModal(`
+      <div class="modal-title">${isEdit ? 'Edit Farm Note' : 'Add Farm Note'}</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="farmNoteDate" value="${isEdit ? existingRecord.note_date : today}"/>
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <textarea id="farmNoteText" rows="3" placeholder="e.g. Turned bulls in with the spring heifers">${isEdit ? escapeHtml(existingRecord.note||'') : ''}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelFarmNote">Cancel</button>
+        <button class="btn btn-barn" id="confirmFarmNote">${isEdit ? 'Save Changes' : 'Save Note'}</button>
+      </div>
+    `);
+    modal.querySelector('#cancelFarmNote').addEventListener('click', closeModal);
+    modal.querySelector('#confirmFarmNote').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#farmNoteDate').value;
+      const noteVal = modal.querySelector('#farmNoteText').value.trim();
+      if(!dateVal){ showToast('Date is required'); return; }
+      if(!noteVal){ showToast('Note is required'); return; }
+      const btn = modal.querySelector('#confirmFarmNote');
+      btn.disabled = true;
+      const body = { note_date: dateVal, note: noteVal };
+      try{
+        if(isEdit){
+          const updated = await api('/farm_notes?id=eq.' + encodeURIComponent(existingRecord.id), {
+            method:'PATCH',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          const idx = farmNotes.findIndex(r=>r.id===existingRecord.id);
+          if(idx !== -1) farmNotes[idx] = updated[0];
+        } else {
+          const inserted = await api('/farm_notes', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(body)
+          });
+          farmNotes.push(inserted[0]);
+        }
+        closeModal();
+        renderFarmNotesList();
+        window.scrollTo(0,0);
+        showToast(isEdit ? 'Farm note updated' : 'Farm note logged');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
+
+  async function deleteFarmNote(id){
+    if(!confirm('Remove this farm note? This can\'t be undone.')) return;
+    try{
+      await api('/farm_notes?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      farmNotes = farmNotes.filter(r=>r.id!==id);
+      renderFarmNotesList();
+      showToast('Farm note removed');
+    }catch(e){ showToast('Could not remove — try again'); }
   }
 
   function renderEquipmentList(){
