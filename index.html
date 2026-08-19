@@ -253,7 +253,8 @@
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
     <button class="btn btn-nav-tool btn-full" id="recentlyDeletedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🗑️</span>&nbsp;&nbsp;Recently Deleted</button>
     <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📈</span>&nbsp;&nbsp;Biggest Gainers</button>
-    <button class="btn btn-nav-tool btn-full" id="needsEntryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🚩</span>&nbsp;&nbsp;Needs Entry</button>
+    <button class="btn btn-nav-tool btn-full" id="needsEntryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🚩</span>&nbsp;&nbsp;Flagged Cows</button>
+    <button class="btn btn-nav-tool btn-full hidden" id="reportsPrintFlaggedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🖨️</span>&nbsp;&nbsp;Print Flagged Cows</button>
     <button class="btn btn-nav-tool btn-full" id="recentActivityBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">🕒</span>&nbsp;&nbsp;Recent Activity</button>
   </div>
 
@@ -801,6 +802,7 @@
     const homeTotalEl = document.getElementById('homeTotalCattle');
     if(homeTotalEl) homeTotalEl.textContent = cows.filter(isActiveStatus).length;
     checkBackupReminder();
+    updatePrintFlaggedButton();
   }
 
   function fmtDate(iso){
@@ -912,6 +914,7 @@
     const extraOwners = usedOwners.filter(o=>!OWNER_OPTIONS.includes(o)).sort();
     const owners = [...OWNER_OPTIONS, ...extraOwners];
     const hasUnassigned = cows.some(c=>!c.owner);
+    const hasFlagged = cows.some(c=>c.needs_entry);
 
     const prevValue = sel.value;
     sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
@@ -925,7 +928,8 @@
       '<optgroup label="Owner">' +
         owners.map(o=>`<option value="own:${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') +
         (hasUnassigned ? '<option value="own:__unassigned__">Unassigned</option>' : '') +
-      '</optgroup>';
+      '</optgroup>' +
+      (hasFlagged ? '<optgroup label="Status"><option value="flag:1">🚩 Flagged</option></optgroup>' : '');
     if([...sel.options].some(o=>o.value===prevValue)) sel.value = prevValue;
   }
 
@@ -1266,6 +1270,7 @@
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
+    updatePrintFlaggedButton();
     window.scrollTo(0,0);
   }
   function showFarmOperations(){
@@ -1971,6 +1976,8 @@
         } else if(c.owner !== filterValue){
           return false;
         }
+      } else if(filterKind === 'flag'){
+        if(!c.needs_entry) return false;
       }
       return !q || c.number.toLowerCase().includes(q);
     });
@@ -1983,13 +1990,24 @@
     wireNeedsEntryCheckboxes(listEl);
     document.getElementById('profilePrintListBtn').textContent = `🖨️ Print This List (${filtered.length})`;
   }
+  function updatePrintFlaggedButton(){
+    const btn = document.getElementById('reportsPrintFlaggedBtn');
+    if(!btn) return;
+    const flaggedCount = cows.filter(c=>c.needs_entry).length;
+    if(flaggedCount > 0){
+      btn.classList.remove('hidden');
+      btn.textContent = `🖨️ Print Flagged Cows (${flaggedCount})`;
+    } else {
+      btn.classList.add('hidden');
+    }
+  }
 
-  function printListModal(){
-    const count = lastFilteredProfileCows.length;
-    if(count === 0){ showToast('No cows in the current list to print'); return; }
+  function printListModal(cowList, title){
+    const count = cowList.length;
+    if(count === 0){ showToast('No cows to print'); return; }
     const modal = openModal(`
-      <div class="modal-title">Print This List</div>
-      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Prints the ${count} cow${count!==1?'s':''} currently showing. Tag number is always included — also add each cow's most recent:</div>
+      <div class="modal-title">${title || 'Print This List'}</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Prints ${count} cow${count!==1?'s':''}. Tag number is always included — also add each cow's most recent:</div>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;margin-bottom:8px;cursor:pointer;font-weight:700;">
         <input type="checkbox" id="printIncludeMeds" style="width:20px;height:20px;flex-shrink:0;"/> Med
       </label>
@@ -2020,12 +2038,12 @@
         breeding: modal.querySelector('#printIncludeBreeding').checked
       };
       closeModal();
-      buildAndPrintCowList(opts);
+      buildAndPrintCowList(cowList, opts);
     });
   }
 
-  function buildAndPrintCowList(opts){
-    const rowsHtml = lastFilteredProfileCows.map(cow=>{
+  function buildAndPrintCowList(cowList, opts){
+    const rowsHtml = cowList.map(cow=>{
       const parts = [];
       if(opts.meds){
         const latest = [...recordsFor(cow.number)].sort((a,b)=>b.date.localeCompare(a.date))[0];
@@ -2062,7 +2080,7 @@
     document.getElementById('printListOutput').innerHTML = `
       <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
         <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Cow List</h2>
-        <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${lastFilteredProfileCows.length} cow${lastFilteredProfileCows.length!==1?'s':''}</div>
+        <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${cowList.length} cow${cowList.length!==1?'s':''}</div>
         ${rowsHtml}
       </div>
     `;
@@ -2847,7 +2865,6 @@
           });
           const idx = treatments.findIndex(t=>t.id===existingRecord.id);
           if(idx !== -1) treatments[idx] = updated[0];
-          await clearNeedsEntryIfFlagged(currentCow);
         } else {
           const inserted = await api('/treatments', {
             method:'POST',
@@ -2855,7 +2872,6 @@
             body: JSON.stringify(Object.assign({ cow_number: currentCow }, body))
           });
           treatments.push(inserted[0]);
-          await clearNeedsEntryIfFlagged(currentCow);
         }
         closeModal();
         renderDetail();
@@ -2940,7 +2956,6 @@
           });
           const idx = calvings.findIndex(c=>c.id===existingRecord.id);
           if(idx !== -1) calvings[idx] = updated[0];
-          await clearNeedsEntryIfFlagged(currentCalvingCow);
         } else {
           const inserted = await api('/calvings', {
             method:'POST',
@@ -2948,7 +2963,6 @@
             body: JSON.stringify(Object.assign({ cow_number: currentCalvingCow }, body))
           });
           calvings.push(inserted[0]);
-          await clearNeedsEntryIfFlagged(currentCalvingCow);
         }
         closeModal();
         renderCalvingDetail();
@@ -3295,7 +3309,6 @@
           });
           const idx = weights.findIndex(w=>w.id===existingRecord.id);
           if(idx !== -1) weights[idx] = updated[0];
-          await clearNeedsEntryIfFlagged(currentWeightsCow);
         } else {
           const inserted = await api('/weights', {
             method:'POST',
@@ -3303,7 +3316,6 @@
             body: JSON.stringify(Object.assign({ cow_number: currentWeightsCow }, body))
           });
           weights.push(inserted[0]);
-          await clearNeedsEntryIfFlagged(currentWeightsCow);
         }
         closeModal();
         renderWeightsDetail();
@@ -3400,7 +3412,6 @@
           });
           const idx = breedingRecords.findIndex(b=>b.id===existingRecord.id);
           if(idx !== -1) breedingRecords[idx] = updated[0];
-          await clearNeedsEntryIfFlagged(currentBreedingCow);
         } else {
           const inserted = await api('/breeding_records', {
             method:'POST',
@@ -3408,7 +3419,6 @@
             body: JSON.stringify(Object.assign({ cow_number: currentBreedingCow }, body))
           });
           breedingRecords.push(inserted[0]);
-          await clearNeedsEntryIfFlagged(currentBreedingCow);
         }
         closeModal();
         renderBreedingDetail();
@@ -3461,7 +3471,6 @@
           });
           const idx = generalNotes.findIndex(n=>n.id===existingRecord.id);
           if(idx !== -1) generalNotes[idx] = updated[0];
-          await clearNeedsEntryIfFlagged(currentNotesCow);
         } else {
           const inserted = await api('/general_notes', {
             method:'POST',
@@ -3469,7 +3478,6 @@
             body: JSON.stringify(Object.assign({ cow_number: currentNotesCow }, body))
           });
           generalNotes.push(inserted[0]);
-          await clearNeedsEntryIfFlagged(currentNotesCow);
         }
         closeModal();
         renderNotesDetail();
@@ -3554,7 +3562,11 @@
   document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
   document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
   document.getElementById('profileLocationGroupFilter').addEventListener('change', renderProfileList);
-  document.getElementById('profilePrintListBtn').addEventListener('click', printListModal);
+  document.getElementById('profilePrintListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Print This List'));
+  document.getElementById('reportsPrintFlaggedBtn').addEventListener('click', ()=>{
+    const flaggedCows = cows.filter(c=>c.needs_entry);
+    printListModal(flaggedCows, 'Print Flagged Cows');
+  });
   document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
   document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
   document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
@@ -3641,14 +3653,15 @@
     return (cow.status && cow.status !== 'Active') ? `<span class="status-badge">${escapeHtml(cow.status)}</span>` : '';
   }
   function needsEntryCheckboxHtml(cow){
-    return `<input type="checkbox" class="needs-entry-check" data-num="${escapeHtml(cow.number)}" ${cow.needs_entry ? 'checked' : ''} title="Needs entry" style="width:22px;height:22px;flex-shrink:0;"/>`;
+    return `<input type="checkbox" class="needs-entry-check" data-num="${escapeHtml(cow.number)}" ${cow.needs_entry ? 'checked' : ''} title="Flag this cow" style="width:22px;height:22px;flex-shrink:0;"/>`;
   }
   function wireNeedsEntryCheckboxes(container){
     container.querySelectorAll('.needs-entry-check').forEach(cb=>{
       cb.addEventListener('click', e=> e.stopPropagation());
-      cb.addEventListener('change', e=>{
+      cb.addEventListener('change', async e=>{
         e.stopPropagation();
-        toggleNeedsEntry(cb.dataset.num, cb.checked);
+        await toggleNeedsEntry(cb.dataset.num, cb.checked);
+        updatePrintFlaggedButton();
       });
     });
   }
@@ -3664,19 +3677,6 @@
     }catch(e){
       showToast('Could not save — try again');
     }
-  }
-  async function clearNeedsEntryIfFlagged(num){
-    const cow = cows.find(c=>c.number===num);
-    if(!cow || !cow.needs_entry) return;
-    try{
-      const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
-        method:'PATCH',
-        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ needs_entry: false })
-      });
-      const idx = cows.findIndex(c=>c.number===num);
-      if(idx !== -1) cows[idx] = updated[0];
-    }catch(e){ /* non-critical, fail silently */ }
   }
   function quickAddButtonHtml(num){
     return `<button class="quick-add-btn" data-num="${escapeHtml(num)}" title="Quick add" style="width:36px;height:36px;border-radius:50%;background:#0274BA;color:#fff;border:none;font-size:22px;font-weight:700;line-height:1;cursor:pointer;flex-shrink:0;">+</button>`;
@@ -4734,7 +4734,7 @@
     const cardsHtml = flagged.map(c=> quickAddCardHtml(c)).join('') || '<p class="empty" style="padding:14px 0;">No cows flagged right now.</p>';
 
     const modal = openModal(`
-      <div class="modal-title">Needs Entry (${flagged.length})</div>
+      <div class="modal-title">Flagged Cows (${flagged.length})</div>
       <div>${cardsHtml}</div>
       <div class="modal-actions">
         <button class="btn btn-barn btn-full" id="closeNeedsEntryBtn">Close</button>
