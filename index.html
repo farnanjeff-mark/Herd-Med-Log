@@ -213,7 +213,6 @@
         <button class="btn btn-nav-tool" id="homeReportsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
         <button class="btn btn-nav-tool" id="homeFarmOperationsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🚜</span>Farm Ops</button>
       </div>
-      <div id="voiceSearchStatus" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;min-height:16px;margin-bottom:14px;"></div>
       <div style="max-width:280px;margin:0 auto;">
         <div id="homeQuickSearchDisplay" style="background:#fff;border:2px solid var(--ink);border-radius:10px;padding:12px;font-size:28px;font-weight:700;text-align:center;min-height:44px;margin-bottom:10px;letter-spacing:.05em;color:var(--ink);">&nbsp;</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
@@ -230,10 +229,7 @@
           <button class="btn btn-outline keypad-digit" data-digit="0" style="font-size:22px;padding:14px 0;">0</button>
           <button class="btn btn-outline" id="homeQuickSearchBackBtn" style="font-size:20px;padding:14px 0;">⌫</button>
         </div>
-        <div style="display:flex;gap:8px;justify-content:center;">
-          <button id="voiceSearchBtn" title="Voice search" class="btn btn-nav-section" style="font-size:20px;padding:14px 55px;">🎤</button>
-          <button id="homeQuickSearchGoBtn" class="btn btn-nav-section" style="font-size:18px;padding:14px 55px;">Go</button>
-        </div>
+        <button id="homeQuickSearchGoBtn" class="btn btn-nav-section" style="font-size:18px;padding:14px 60px;display:block;margin:0 auto;">Go</button>
       </div>
     </div>
   </div>
@@ -253,9 +249,7 @@
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
     <button class="btn btn-nav-tool btn-full" id="recentlyDeletedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🗑️</span>&nbsp;&nbsp;Recently Deleted</button>
     <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📈</span>&nbsp;&nbsp;Biggest Gainers</button>
-    <button class="btn btn-nav-tool btn-full" id="needsEntryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🚩</span>&nbsp;&nbsp;Flagged Cows</button>
-    <button class="btn btn-nav-tool btn-full hidden" id="reportsPrintFlaggedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🖨️</span>&nbsp;&nbsp;Print Flagged Cows</button>
-    <button class="btn btn-nav-tool btn-full" id="recentActivityBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">🕒</span>&nbsp;&nbsp;Recent Activity</button>
+    <button class="btn btn-nav-tool btn-full hidden" id="reportsPrintFlaggedBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">🖨️</span>&nbsp;&nbsp;Print Flagged Cows</button>
   </div>
 
   <div class="view hidden" id="farmOperationsView">
@@ -3535,7 +3529,6 @@
   document.getElementById('homeUtilitiesBtn').addEventListener('click', showUtilities);
   document.getElementById('homeReportsBtn').addEventListener('click', showReports);
   document.getElementById('homeFarmOperationsBtn').addEventListener('click', showFarmOperations);
-  document.getElementById('voiceSearchBtn').addEventListener('click', startVoiceSearch);
   document.getElementById('homeQuickSearchGoBtn').addEventListener('click', runHomeQuickSearch);
   document.getElementById('quickActionHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeQuickSearchClearBtn').addEventListener('click', homeQuickSearchClear);
@@ -3571,8 +3564,6 @@
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
   document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
   document.getElementById('biggestGainersBtn').addEventListener('click', biggestGainersModal);
-  document.getElementById('needsEntryBtn').addEventListener('click', needsEntryModal);
-  document.getElementById('recentActivityBtn').addEventListener('click', recentActivityModal);
   document.getElementById('recentlyDeletedHomeBtn').addEventListener('click', showHome);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
   document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
@@ -4757,132 +4748,6 @@
     modal.querySelector('#closeSoldDeceasedBtn').addEventListener('click', closeModal);
   }
 
-  function needsEntryModal(){
-    const flagged = cows.filter(c=>c.needs_entry).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
-    const cardsHtml = flagged.map(c=> quickAddCardHtml(c)).join('') || '<p class="empty" style="padding:14px 0;">No cows flagged right now.</p>';
-
-    const modal = openModal(`
-      <div class="modal-title">Flagged Cows (${flagged.length})</div>
-      <div>${cardsHtml}</div>
-      <div class="modal-actions">
-        <button class="btn btn-barn btn-full" id="closeNeedsEntryBtn">Close</button>
-      </div>
-    `);
-    wireProfileQuickAddButtons(modal);
-    wireNeedsEntryCheckboxes(modal);
-    modal.querySelectorAll('[data-open-num]').forEach(el=>{
-      el.addEventListener('click', e=>{
-        e.stopPropagation();
-        const num = el.dataset.openNum;
-        closeModal();
-        openProfileCow(num);
-      });
-    });
-    modal.querySelector('#closeNeedsEntryBtn').addEventListener('click', closeModal);
-  }
-
-  function buildRecentActivityItems(days){
-    const items = [];
-    treatments.forEach(t=>{
-      if(!isWithinDays(t.date, days)) return;
-      const details = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : '(note only)';
-      items.push({ cow: t.cow_number, date: t.date, type: 'Med', typeColor: '#455B3D', details, notes: t.notes||'' });
-    });
-    calvings.forEach(r=>{
-      if(!isWithinDays(r.calving_date, days)) return;
-      const details = [calfSexLabel(r.calf_sex)+' calf', r.birth_weight!=null ? r.birth_weight+' lbs' : ''].filter(Boolean).join(' · ');
-      items.push({ cow: r.cow_number, date: r.calving_date, type: 'Calving', typeColor: '#D46A8C', details, notes: r.notes||'' });
-    });
-    generalNotes.forEach(n=>{
-      if(!isWithinDays(n.note_date, days)) return;
-      items.push({ cow: n.cow_number, date: n.note_date, type: 'Note', typeColor: '#3B6E8F', details: '', notes: n.note||'' });
-    });
-    weights.forEach(w=>{
-      if(!isWithinDays(w.weigh_date, days)) return;
-      items.push({ cow: w.cow_number, date: w.weigh_date, type: 'Weight', typeColor: '#C4732B', details: w.weight!=null ? w.weight+' lbs' : '', notes: w.notes||'' });
-    });
-    breedingRecords.forEach(b=>{
-      if(!isWithinDays(b.breed_date, days)) return;
-      const details = [b.bred_to, b.pregnancy_method].filter(Boolean).join(' · ');
-      items.push({ cow: b.cow_number, date: b.breed_date, type: 'Breeding', typeColor: '#7A5A9E', details, notes: b.notes||'' });
-    });
-    items.sort((a,b)=> b.date.localeCompare(a.date) || a.cow.localeCompare(b.cow, undefined, {numeric:true}));
-    return items;
-  }
-
-  function renderRecentActivityRows(items){
-    return items.map(i=>{
-      const summary = [i.details, i.notes].filter(Boolean).join(' — ');
-      return `
-        <div class="cow-row-item" data-num="${escapeHtml(i.cow)}" style="padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-weight:700;font-size:15px;">${fmtDate(i.date)} — #${escapeHtml(i.cow)}</span>
-            <span style="font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#fff;background:${i.typeColor};padding:2px 8px;border-radius:10px;">${i.type}</span>
-          </div>
-          ${summary ? `<div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-top:2px;">${escapeHtml(summary)}</div>` : ''}
-        </div>
-      `;
-    }).join('') || '<p class="empty" style="padding:14px 0;">No entries match.</p>';
-  }
-  function wireRecentActivityRows(container){
-    container.querySelectorAll('.cow-row-item').forEach(row=>{
-      row.addEventListener('click', ()=>{
-        const num = row.dataset.num;
-        closeModal();
-        openProfileCow(num);
-      });
-    });
-  }
-  function recentActivityModal(){
-    let currentDays = 30;
-    let allItems = buildRecentActivityItems(currentDays);
-
-    const modal = openModal(`
-      <div class="modal-title">Recent Activity</div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Newest first.</div>
-      <div class="toolbar">
-        <select id="recentActivityDaysFilter" style="flex:1;">
-          <option value="0">Today</option>
-          <option value="7">1 Week</option>
-          <option value="30" selected>1 Month</option>
-          <option value="99999">All</option>
-        </select>
-        <select id="recentActivityTypeFilter" style="flex:1;">
-          <option value="">All Types</option>
-          <option value="Med">Med</option>
-          <option value="Calving">Calving</option>
-          <option value="Note">Note</option>
-          <option value="Weight">Weight</option>
-          <option value="Breeding">Breeding</option>
-        </select>
-      </div>
-      <div id="recentActivityRows">${renderRecentActivityRows(allItems)}</div>
-      <div class="modal-actions">
-        <button class="btn btn-outline btn-full" id="homeFromRecentActivityBtn">🏠 Home</button>
-        <button class="btn btn-barn btn-full" id="closeRecentActivityBtn">Close</button>
-      </div>
-    `);
-    wireRecentActivityRows(modal.querySelector('#recentActivityRows'));
-    function refreshRows(){
-      const type = modal.querySelector('#recentActivityTypeFilter').value;
-      const filtered = type ? allItems.filter(i=>i.type===type) : allItems;
-      const rowsEl = modal.querySelector('#recentActivityRows');
-      rowsEl.innerHTML = renderRecentActivityRows(filtered);
-      wireRecentActivityRows(rowsEl);
-    }
-    modal.querySelector('#recentActivityDaysFilter').addEventListener('change', (e)=>{
-      currentDays = parseInt(e.target.value, 10);
-      allItems = buildRecentActivityItems(currentDays);
-      refreshRows();
-    });
-    modal.querySelector('#recentActivityTypeFilter').addEventListener('change', refreshRows);
-    modal.querySelector('#homeFromRecentActivityBtn').addEventListener('click', ()=>{
-      closeModal();
-      showHome();
-    });
-    modal.querySelector('#closeRecentActivityBtn').addEventListener('click', closeModal);
-  }
-
   function bulkEditModal(){
     let field = 'owner'; // 'owner' | 'lot' | 'group'
     const FIELD_CONFIG = {
@@ -5097,7 +4962,7 @@
   function buildCalvingListText(cowFilter, days){
     const lines = ['CALVING RECORDS'];
     const items = [];
-    calvings.filter(r=>isWithinDays(localDateFromTimestamp(r.created_at), days) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
+    calvings.filter(r=>isWithinDays(r.calving_date, days) && (!cowFilter || cowFilter.has(r.cow_number))).forEach(r=>{
       const parts = [`${calfSexLabel(r.calf_sex)} calf`];
       if(r.birth_weight != null) parts.push(`${r.birth_weight} lbs`);
       if(r.sire) parts.push(`Sire: ${r.sire}`);
@@ -5128,11 +4993,12 @@
     else if(section === 'calving'){ source = calvings; dateKey = 'calving_date'; }
     else { source = generalNotes; dateKey = 'note_date'; }
 
+    const useEntryDate = section !== 'calving';
     const latestByNum = {};
-    source.filter(r=>isWithinDays(localDateFromTimestamp(r.created_at), days)).forEach(r=>{
-      const enteredAt = r.created_at || r[dateKey];
-      if(!latestByNum[r.cow_number] || enteredAt > latestByNum[r.cow_number]){
-        latestByNum[r.cow_number] = enteredAt;
+    source.filter(r=>isWithinDays(useEntryDate ? localDateFromTimestamp(r.created_at) : r[dateKey], days)).forEach(r=>{
+      const compareVal = useEntryDate ? (r.created_at || r[dateKey]) : r[dateKey];
+      if(!latestByNum[r.cow_number] || compareVal > latestByNum[r.cow_number]){
+        latestByNum[r.cow_number] = compareVal;
       }
     });
     return Object.keys(latestByNum)
