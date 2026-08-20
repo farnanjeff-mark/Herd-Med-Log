@@ -249,7 +249,8 @@
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
     <button class="btn btn-nav-tool btn-full" id="recentlyDeletedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🗑️</span>&nbsp;&nbsp;Recently Deleted</button>
     <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📈</span>&nbsp;&nbsp;Biggest Gainers</button>
-    <button class="btn btn-nav-tool btn-full hidden" id="reportsPrintFlaggedBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">🖨️</span>&nbsp;&nbsp;Print Flagged Cows</button>
+    <button class="btn btn-nav-tool btn-full hidden" id="reportsPrintFlaggedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🖨️</span>&nbsp;&nbsp;Print Flagged Cows</button>
+    <button class="btn btn-nav-tool btn-full hidden" id="reportsExportFlaggedBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Export Flagged Cows</button>
   </div>
 
   <div class="view hidden" id="farmOperationsView">
@@ -2005,22 +2006,30 @@
   }
   function updatePrintFlaggedButton(){
     const btn = document.getElementById('reportsPrintFlaggedBtn');
+    const exportBtn = document.getElementById('reportsExportFlaggedBtn');
     if(!btn) return;
     const flaggedCount = cows.filter(c=>c.needs_entry).length;
     if(flaggedCount > 0){
       btn.classList.remove('hidden');
       btn.textContent = `🖨️ Print Flagged Cows (${flaggedCount})`;
+      if(exportBtn){
+        exportBtn.classList.remove('hidden');
+        exportBtn.textContent = `📊 Export Flagged Cows (${flaggedCount})`;
+      }
     } else {
       btn.classList.add('hidden');
+      if(exportBtn) exportBtn.classList.add('hidden');
     }
   }
 
-  function printListModal(cowList, title){
+  function printListModal(cowList, title, action){
+    action = action || 'print';
     const count = cowList.length;
-    if(count === 0){ showToast('No cows to print'); return; }
+    if(count === 0){ showToast(`No cows to ${action}`); return; }
+    const actionLabel = action === 'export' ? 'Export' : 'Print';
     const modal = openModal(`
-      <div class="modal-title">${title || 'Print This List'}</div>
-      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Prints ${count} cow${count!==1?'s':''}. Tag number is always included — also add each cow's most recent:</div>
+      <div class="modal-title">${title || (actionLabel + ' This List')}</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">${actionLabel}s ${count} cow${count!==1?'s':''}. Tag number is always included — also add each cow's most recent:</div>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;margin-bottom:8px;cursor:pointer;font-weight:700;">
         <input type="checkbox" id="printIncludeMeds" style="width:20px;height:20px;flex-shrink:0;"/> Med
       </label>
@@ -2038,7 +2047,7 @@
       </label>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelPrintList">Cancel</button>
-        <button class="btn btn-barn" id="confirmPrintList">Print</button>
+        <button class="btn btn-barn" id="confirmPrintList">${actionLabel}</button>
       </div>
     `);
     modal.querySelector('#cancelPrintList').addEventListener('click', closeModal);
@@ -2051,7 +2060,8 @@
         breeding: modal.querySelector('#printIncludeBreeding').checked
       };
       closeModal();
-      buildAndPrintCowList(cowList, opts);
+      if(action === 'export') buildAndExportCowList(cowList, opts);
+      else buildAndPrintCowList(cowList, opts);
     });
   }
 
@@ -2110,6 +2120,75 @@
   window.addEventListener('afterprint', ()=>{
     document.body.classList.remove('printing-list');
   });
+
+  async function buildAndExportCowList(cowList, opts){
+    if(typeof ExcelJS === 'undefined'){
+      showToast('Could not load spreadsheet library — check your connection and try again');
+      return;
+    }
+    try{
+      const header = ['Cow Number', 'Location', 'Owner'];
+      if(opts.meds) header.push('Med Date', 'Med Details');
+      if(opts.calving) header.push('Calving Date', 'Calving Details');
+      if(opts.notes) header.push('Note Date', 'Note');
+      if(opts.weights) header.push('Weight Date', 'Weight (lbs)');
+      if(opts.breeding) header.push('Breeding Date', 'Breeding Details');
+
+      const rows = [header];
+      cowList.forEach(cow=>{
+        const row = [cow.number, cow.lot||'', cow.owner||''];
+        if(opts.meds){
+          const latest = [...recordsFor(cow.number)].sort((a,b)=>b.date.localeCompare(a.date))[0];
+          const desc = latest ? (latest.medicine ? `${latest.medicine}${latest.reason ? ' / '+latest.reason : ''}` : '(note only)') : '';
+          row.push(latest ? latest.date : '', desc);
+        }
+        if(opts.calving){
+          const latest = [...calvingsFor(cow.number)].sort((a,b)=>b.calving_date.localeCompare(a.calving_date))[0];
+          row.push(latest ? latest.calving_date : '', latest ? `${calfSexLabel(latest.calf_sex)} calf` : '');
+        }
+        if(opts.notes){
+          const latest = [...generalNotesFor(cow.number)].sort((a,b)=>b.note_date.localeCompare(a.note_date))[0];
+          row.push(latest ? latest.note_date : '', latest ? (latest.note||'') : '');
+        }
+        if(opts.weights){
+          const latest = [...weightsFor(cow.number)].sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date))[0];
+          row.push(latest ? latest.weigh_date : '', latest && latest.weight!=null ? latest.weight : '');
+        }
+        if(opts.breeding){
+          const latest = [...breedingFor(cow.number)].sort((a,b)=>b.breed_date.localeCompare(a.breed_date))[0];
+          row.push(latest ? latest.breed_date : '', latest ? (latest.bred_to||'') : '');
+        }
+        rows.push(row);
+      });
+
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Cow List');
+      ws.addRow(header);
+      const headerRow = ws.getRow(1);
+      headerRow.font = { bold: true };
+      headerRow.eachCell({ includeEmpty:true }, cell=>{
+        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
+      });
+      ws.getColumn(1).numFmt = '@';
+      rows.slice(1).forEach(r=> ws.addRow(r));
+      ws.columns.forEach(col=>{ col.width = 18; });
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cow-list-export-' + todayLocal() + '.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Cow list exported');
+    }catch(e){
+      console.error(e);
+      showToast('Export failed — try again');
+    }
+  }
 
   function compressImageFile(file, maxDim, quality){
     maxDim = maxDim || 1600;
@@ -3579,10 +3658,14 @@
   document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
   document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
   document.getElementById('profileLocationGroupFilter').addEventListener('change', renderProfileList);
-  document.getElementById('profilePrintListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Print This List'));
+  document.getElementById('profilePrintListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Print This List', 'print'));
   document.getElementById('reportsPrintFlaggedBtn').addEventListener('click', ()=>{
     const flaggedCows = cows.filter(c=>c.needs_entry);
-    printListModal(flaggedCows, 'Print Flagged Cows');
+    printListModal(flaggedCows, 'Print Flagged Cows', 'print');
+  });
+  document.getElementById('reportsExportFlaggedBtn').addEventListener('click', ()=>{
+    const flaggedCows = cows.filter(c=>c.needs_entry);
+    printListModal(flaggedCows, 'Export Flagged Cows', 'export');
   });
   document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
   document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
