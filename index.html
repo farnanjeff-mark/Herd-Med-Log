@@ -3724,14 +3724,14 @@
     const activeCalf = latestActiveCalfFor(num);
     const cols = activeCalf ? 6 : 5;
     const calfBtn = activeCalf
-      ? `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="calf" data-calving-id="${escapeHtml(activeCalf.id)}" title="Calf Record" style="background:#8A5A2E;border:none;border-radius:8px;padding:10px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
+      ? `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="calf" data-calving-id="${escapeHtml(activeCalf.id)}" title="Calf Record" style="background:#8A5A2E;border:none;border-radius:10px;padding:10px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 2px 5px rgba(0,0,0,.18);">
           <span style="color:#fff;font-size:18px;line-height:1;">🐄</span>
           <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#fff;">Calf</span>
         </button>`
       : '';
-    return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;">` +
+    return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:8px;">` +
       PROFILE_QUICK_ADD_TYPES.map(t=>
-        `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="${t.type}" title="${t.title}" style="background:#3C9142;border:none;border-radius:8px;padding:10px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
+        `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="${t.type}" title="${t.title}" style="background:#3C9142;border:none;border-radius:10px;padding:10px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 2px 5px rgba(0,0,0,.18);">
           <span style="color:#fff;font-size:20px;font-weight:700;line-height:1;">+</span>
           <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#fff;">${t.label}</span>
         </button>`
@@ -3740,12 +3740,12 @@
   }
   function quickAddCardHtml(cow){
     return `
-      <div style="background:#fff;border-radius:14px;box-shadow:0 3px 10px rgba(43,38,32,.18);overflow:hidden;margin-bottom:12px;">
-        <div style="background:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid var(--line);" data-open-num="${escapeHtml(cow.number)}">
-          <span style="font-family:Arial,sans-serif;font-size:22px;font-weight:700;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
+      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(43,38,32,.10), 0 6px 16px rgba(43,38,32,.14);overflow:hidden;margin-bottom:18px;">
+        <div style="background:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid #eee;" data-open-num="${escapeHtml(cow.number)}">
+          <span style="font-family:Arial,sans-serif;font-size:23px;font-weight:700;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
           ${needsEntryCheckboxHtml(cow)}
         </div>
-        <div style="background:#0274BA;padding:16px;">
+        <div style="background:linear-gradient(180deg, #0A82C4 0%, #0274BA 100%);padding:18px;">
           ${profileQuickAddRowHtml(cow.number)}
         </div>
       </div>
