@@ -502,6 +502,7 @@
     <div id="profileCowList"></div>
     <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
     <button class="btn btn-outline btn-full" id="profilePrintListBtn" style="margin-top:8px;">🖨️ Print This List</button>
+    <button class="btn btn-outline btn-full" id="profileExportListBtn" style="margin-top:8px;">📊 Export This List</button>
   </div>
 
   <div class="view hidden" id="profileView">
@@ -3659,6 +3660,7 @@
   document.getElementById('profileSearchBox').addEventListener('input', renderProfileList);
   document.getElementById('profileLocationGroupFilter').addEventListener('change', renderProfileList);
   document.getElementById('profilePrintListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Print This List', 'print'));
+  document.getElementById('profileExportListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Export This List', 'export'));
   document.getElementById('reportsPrintFlaggedBtn').addEventListener('click', ()=>{
     const flaggedCows = cows.filter(c=>c.needs_entry);
     printListModal(flaggedCows, 'Print Flagged Cows', 'print');
