@@ -5487,12 +5487,6 @@
       rows.push([t.cow_number, c.status||'Active', c.lot||'', c.owner||'', t.date, t.medicine || '(note only)', t.reason || '', t.notes||'']);
     });
 
-    const treatedCows = new Set(treatments.map(t=>t.cow_number));
-    cows.filter(c=>!treatedCows.has(c.number))
-        .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
-        .forEach(c=>{
-          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '', '', '']);
-        });
     return rows;
   }
 
@@ -5512,12 +5506,6 @@
       rows.push([r.cow_number, c.status||'Active', c.lot||'', c.owner||'', r.calving_date, calfSexLabel(r.calf_sex), r.birth_weight!=null ? r.birth_weight : '', r.sire||'', r.birth_assist||'', r.notes||'']);
     });
 
-    const calvedCows = new Set(calvings.map(c=>c.cow_number));
-    cows.filter(c=>!calvedCows.has(c.number))
-        .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
-        .forEach(c=>{
-          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '', '', '', '', '']);
-        });
     return rows;
   }
 
@@ -5537,12 +5525,6 @@
       rows.push([n.cow_number, c.status||'Active', c.lot||'', c.owner||'', n.note_date, n.note||'']);
     });
 
-    const notedCows = new Set(generalNotes.map(n=>n.cow_number));
-    cows.filter(c=>!notedCows.has(c.number))
-        .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
-        .forEach(c=>{
-          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '']);
-        });
     return rows;
   }
 
@@ -5562,12 +5544,6 @@
       rows.push([w.cow_number, c.status||'Active', c.lot||'', c.owner||'', w.weigh_date, w.weight!=null ? w.weight : '', w.notes||'']);
     });
 
-    const weighedCows = new Set(weights.map(w=>w.cow_number));
-    cows.filter(c=>!weighedCows.has(c.number))
-        .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
-        .forEach(c=>{
-          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '', '']);
-        });
     return rows;
   }
 
@@ -5587,12 +5563,6 @@
       rows.push([r.cow_number, c.status||'Active', c.lot||'', c.owner||'', r.breed_date, r.bred_to||'', r.pregnancy_method||'', r.natural_sire||'', r.vet_calls||'', r.expected_due_date||'', r.notes||'']);
     });
 
-    const bredCows = new Set(breedingRecords.map(r=>r.cow_number));
-    cows.filter(c=>!bredCows.has(c.number))
-        .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}))
-        .forEach(c=>{
-          rows.push([c.number, c.status||'Active', c.lot||'', c.owner||'', '', '', '', '', '', '', '']);
-        });
     return rows;
   }
 
