@@ -1067,7 +1067,7 @@
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
     equipmentDetailView.classList.add('hidden');
-    fabAdd.classList.add('hidden');
+    fabAdd.classList.remove('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
     window.scrollTo(0,0);
@@ -1493,7 +1493,7 @@
     weightsDetailView.classList.add('hidden');
     breedingDetailView.classList.add('hidden');
     profileListView.classList.remove('hidden');
-    fabAdd.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
     renderProfileList();
     window.scrollTo(0,0);
   }
@@ -5341,8 +5341,8 @@
   }
   function dayRangeOptionsHtml(){
     return `
-      <option value="0">Today</option>
-      <option value="7" selected>1 Week</option>
+      <option value="0" selected>Today</option>
+      <option value="7">1 Week</option>
       <option value="30">1 Month</option>
       <option value="99999">All</option>
     `;
@@ -5422,8 +5422,8 @@
       <div class="field">
         <label>Category</label>
         <select id="textCategorySelect">
+          <option value="calving" selected>Calving Records</option>
           <option value="meds">Meds &amp; Notes</option>
-          <option value="calving">Calving Records</option>
           <option value="notes">General Notes</option>
         </select>
       </div>
