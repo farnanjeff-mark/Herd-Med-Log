@@ -4173,7 +4173,7 @@
     { type:'notes', title:'Add Note', label:'Note' }
   ];
   function latestActiveCalfFor(num){
-    const active = calvingsFor(num).filter(c=>!c.promoted_to_cow_number);
+    const active = calvingsFor(num).filter(c=>!c.promoted_to_cow_number && !c.calf_outcome);
     if(active.length === 0) return null;
     return [...active].sort((a,b)=>b.calving_date.localeCompare(a.calving_date))[0];
   }
