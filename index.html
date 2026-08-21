@@ -3280,10 +3280,7 @@
         <label>Birth Weight (lbs)</label>
         <input type="number" id="calvWeight" step="0.1" min="0" placeholder="e.g. 75" value="${isEdit && existingRecord.birth_weight!=null ? existingRecord.birth_weight : ''}"/>
       </div>
-      <div class="field">
-        <label>Sire</label>
-        <input type="text" id="calvSire" placeholder="Bull name or ID" value="${isEdit ? escapeHtml(existingRecord.sire||'') : ''}"/>
-      </div>
+      ${fieldWithOther('calvSire', 'Sire', BULL_OPTIONS, 'Type bull name or ID')}
       <div class="field">
         <label>Birth Assist</label>
         <select id="calvAssist">
@@ -3299,12 +3296,14 @@
         <button class="btn btn-barn" id="confirmCalv">${isEdit ? 'Save Changes' : 'Save Entry'}</button>
       </div>
     `);
+    wireFieldWithOther(modal, 'calvSire');
+    if(isEdit && existingRecord.sire) prefillFieldWithOther(modal, 'calvSire', existingRecord.sire, BULL_OPTIONS);
     modal.querySelector('#cancelCalv').addEventListener('click', closeModal);
     modal.querySelector('#confirmCalv').addEventListener('click', async ()=>{
       const dateVal = modal.querySelector('#calvDate').value;
       const sex = modal.querySelector('#calvSex').value;
       const weightRaw = modal.querySelector('#calvWeight').value;
-      const sire = modal.querySelector('#calvSire').value.trim();
+      const sire = valueOf(modal, 'calvSire');
       const assist = modal.querySelector('#calvAssist').value;
       const notes = modal.querySelector('#calvNotes').value.trim();
       if(!dateVal){ showToast('Calving date is required'); return; }
