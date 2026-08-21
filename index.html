@@ -503,7 +503,7 @@
     <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
     <button class="btn btn-outline btn-full" id="profilePrintListBtn" style="margin-top:8px;">🖨️ Print This List</button>
     <button class="btn btn-outline btn-full" id="profileExportListBtn" style="margin-top:8px;">📊 Export This List</button>
-    <button class="btn btn-nav-tool btn-full" id="profileBulkLogBtn" style="margin-top:8px;">📋 Bulk Log Entry</button>
+    <button class="btn btn-outline btn-full" id="profileBulkLogBtn" style="margin-top:8px;">📋 Bulk Log Entry</button>
   </div>
 
   <div class="view hidden" id="profileView">
@@ -912,6 +912,7 @@
     const owners = [...OWNER_OPTIONS, ...extraOwners];
     const hasUnassigned = cows.some(c=>!c.owner);
     const hasFlagged = cows.some(c=>c.needs_entry);
+    const hasTagNeeded = cows.some(c=>c.tag_needed);
 
     const prevValue = sel.value;
     const activityTypes = [
@@ -929,6 +930,8 @@
         `<option value="act:${t.type}:99999">All</option>` +
       `</optgroup>`
     ).join('');
+    const statusOptions = (hasFlagged ? '<option value="flag:1">🚩 Flagged</option>' : '') +
+      (hasTagNeeded ? '<option value="tag:1">🏷️ Tag Needed</option>' : '');
     sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
       '<optgroup label="Location">' +
         LOT_OPTIONS.map(l=>`<option value="loc:${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('') +
@@ -941,7 +944,7 @@
         owners.map(o=>`<option value="own:${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') +
         (hasUnassigned ? '<option value="own:__unassigned__">Unassigned</option>' : '') +
       '</optgroup>' +
-      (hasFlagged ? '<optgroup label="Status"><option value="flag:1">🚩 Flagged</option></optgroup>' : '') +
+      (statusOptions ? `<optgroup label="Status">${statusOptions}</optgroup>` : '') +
       activityOptgroups;
     if([...sel.options].some(o=>o.value===prevValue)) sel.value = prevValue;
   }
@@ -1104,6 +1107,7 @@
     wireQuickAddCardOpen(listEl);
     wireProfileQuickAddButtons(listEl);
     wireNeedsEntryCheckboxes(listEl);
+    wireTagNeededCheckboxes(listEl);
     window.scrollTo(0,0);
   }
   function showHerdTally(){
@@ -1991,6 +1995,8 @@
         }
       } else if(filterKind === 'flag'){
         if(!c.needs_entry) return false;
+      } else if(filterKind === 'tag'){
+        if(!c.tag_needed) return false;
       } else if(filterKind === 'act'){
         const [actType, actDaysStr] = filterValue.split(':');
         if(!cowHasRecentActivityOfType(c.number, actType, parseInt(actDaysStr, 10))) return false;
@@ -2004,6 +2010,7 @@
     wireQuickAddCardOpen(listEl);
     wireProfileQuickAddButtons(listEl);
     wireNeedsEntryCheckboxes(listEl);
+    wireTagNeededCheckboxes(listEl);
     document.getElementById('profilePrintListBtn').textContent = `🖨️ Print This List (${filtered.length})`;
   }
   function updatePrintFlaggedButton(){
@@ -4045,6 +4052,33 @@
       showToast('Could not save — try again');
     }
   }
+  function tagNeededCheckboxHtml(cow){
+    return `<input type="checkbox" class="tag-needed-check" data-num="${escapeHtml(cow.number)}" ${cow.tag_needed ? 'checked' : ''} title="Tag Needed" style="width:22px;height:22px;flex-shrink:0;accent-color:#C4732B;"/>`;
+  }
+  function wireTagNeededCheckboxes(container){
+    container.querySelectorAll('.tag-needed-check').forEach(cb=>{
+      cb.addEventListener('click', e=> e.stopPropagation());
+      cb.addEventListener('change', async e=>{
+        e.stopPropagation();
+        await toggleTagNeeded(cb.dataset.num, cb.checked);
+        const filterRow = document.getElementById('profileLotFilterRow');
+        if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
+      });
+    });
+  }
+  async function toggleTagNeeded(num, checked){
+    try{
+      const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ tag_needed: checked })
+      });
+      const idx = cows.findIndex(c=>c.number===num);
+      if(idx !== -1) cows[idx] = updated[0];
+    }catch(e){
+      showToast('Could not save — try again');
+    }
+  }
   function quickAddButtonHtml(num){
     return `<button class="quick-add-btn" data-num="${escapeHtml(num)}" title="Quick add" style="width:36px;height:36px;border-radius:50%;background:#0274BA;color:#fff;border:none;font-size:22px;font-weight:700;line-height:1;cursor:pointer;flex-shrink:0;">+</button>`;
   }
@@ -4091,7 +4125,16 @@
       <div style="background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(43,38,32,.10), 0 6px 16px rgba(43,38,32,.14);overflow:hidden;margin-bottom:18px;">
         <div style="background:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid #eee;" data-open-num="${escapeHtml(cow.number)}">
           <span style="font-family:Arial,sans-serif;font-size:23px;font-weight:700;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
-          ${needsEntryCheckboxHtml(cow)}
+          <div style="display:flex;align-items:flex-end;gap:12px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+              ${tagNeededCheckboxHtml(cow)}
+              <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Tag</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+              ${needsEntryCheckboxHtml(cow)}
+              <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Flagged</span>
+            </div>
+          </div>
         </div>
         <div style="background:linear-gradient(180deg, #0A82C4 0%, #0274BA 100%);padding:18px;">
           ${profileQuickAddRowHtml(cow.number)}
