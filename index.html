@@ -1826,6 +1826,7 @@
       if(r.birth_weight != null) details.push(`${r.birth_weight} lbs`);
       if(r.sire) details.push(`Sire: ${escapeHtml(r.sire)}`);
       if(r.birth_assist && r.birth_assist !== 'None') details.push(escapeHtml(r.birth_assist));
+      const outcomeLabel = r.calf_outcome === 'sold' ? 'Sold' : r.calf_outcome === 'died' ? 'Died' : null;
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
         <button class="record-edit" data-id="${r.id}">&#9998;</button>
@@ -1835,7 +1836,7 @@
         ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
         ${r.promoted_to_cow_number
           ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(r.promoted_to_cow_number)}</div>`
-          : `<button class="btn btn-nav-tool btn-sm calf-record-btn" data-id="${r.id}" style="margin-top:8px;">🐄 Calf Record</button>`}
+          : `${outcomeLabel ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#A05A2C;">${outcomeLabel}</div>` : ''}<button class="btn btn-nav-tool btn-sm calf-record-btn" data-id="${r.id}" style="margin-top:8px;">🐄 Calf Record</button>`}
       `;
       div.querySelector('.calf-record-btn')?.addEventListener('click', (e)=>{
         e.stopPropagation();
@@ -3272,7 +3273,7 @@
 
   const BIRTH_ASSIST_OPTIONS = ['None','Easy Pull','Hard Pull','C-Section'];
 
-  function calvingModal(existingRecord){
+  function calvingModal(existingRecord, onSaved){
     const isEdit = !!existingRecord;
     const today = todayLocal();
     const modal = openModal(`
@@ -3329,6 +3330,7 @@
         birth_assist: assist||null
       };
       try{
+        let savedRecord;
         if(isEdit){
           const updated = await api('/calvings?id=eq.' + encodeURIComponent(existingRecord.id), {
             method:'PATCH',
@@ -3337,6 +3339,7 @@
           });
           const idx = calvings.findIndex(c=>c.id===existingRecord.id);
           if(idx !== -1) calvings[idx] = updated[0];
+          savedRecord = updated[0];
         } else {
           const inserted = await api('/calvings', {
             method:'POST',
@@ -3344,12 +3347,17 @@
             body: JSON.stringify(Object.assign({ cow_number: currentCalvingCow }, body))
           });
           calvings.push(inserted[0]);
+          savedRecord = inserted[0];
         }
         closeModal();
-        renderCalvingDetail();
-        renderCalvingList();
-        renderProfileList();
-        window.scrollTo(0,0);
+        if(onSaved){
+          onSaved(savedRecord);
+        } else {
+          renderCalvingDetail();
+          renderCalvingList();
+          renderProfileList();
+          window.scrollTo(0,0);
+        }
         showToast(isEdit ? 'Calving updated' : 'Calving logged');
       }catch(e){
         btn.disabled = false;
@@ -3407,7 +3415,8 @@
 
     const modal = openModal(`
       <div class="modal-title">Calf Record</div>
-      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Born ${fmtDate(calvingRecord.calving_date)} to #${escapeHtml(calvingRecord.cow_number)} · ${escapeHtml(summaryParts.join(' · '))}</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;">Born ${fmtDate(calvingRecord.calving_date)} to #${escapeHtml(calvingRecord.cow_number)} · ${escapeHtml(summaryParts.join(' · '))}</div>
+      <button class="btn btn-outline btn-full" id="calfEditCalvingBtn" style="margin-bottom:14px;">✏️ Edit Calving Details</button>
 
       <div class="section-label" style="margin-top:0;">Meds &amp; Notes</div>
       <button class="btn btn-nav-tool btn-full" id="calfAddMedBtn" style="margin-bottom:10px;">+ Log Med / Note</button>
@@ -3420,18 +3429,64 @@
       <div class="section-label">Manage</div>
       ${calvingRecord.promoted_to_cow_number
         ? `<div style="padding:12px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(calvingRecord.promoted_to_cow_number)}</div>`
-        : `<button class="btn btn-profile-tool btn-full" id="calfPromoteBtn">Make This Calf a Cow</button>`}
+        : `<div class="field">
+             <label>Outcome</label>
+             <select id="calfOutcomeSelect">
+               <option value="" ${!calvingRecord.calf_outcome ? 'selected' : ''}>Still Active</option>
+               <option value="__promote__">Keeping (Promote to Cow)</option>
+               <option value="sold" ${calvingRecord.calf_outcome==='sold' ? 'selected' : ''}>Sold</option>
+               <option value="died" ${calvingRecord.calf_outcome==='died' ? 'selected' : ''}>Died</option>
+             </select>
+           </div>`}
 
       <div class="modal-actions">
         <button class="btn btn-barn btn-full" id="closeCalfRecordBtn">Close</button>
       </div>
     `);
+    modal.querySelector('#calfEditCalvingBtn').addEventListener('click', ()=>{
+      currentCalvingCow = calvingRecord.cow_number;
+      calvingModal(calvingRecord, (updatedRecord)=>{
+        closeModal();
+        calfRecordModal(updatedRecord);
+      });
+    });
     modal.querySelector('#calfAddMedBtn').addEventListener('click', ()=> calfMedEntryModal(calvingRecord, null, modal));
     modal.querySelector('#calfAddWeightBtn').addEventListener('click', ()=> calfWeightEntryModal(calvingRecord, null, modal));
-    const promoteBtn = modal.querySelector('#calfPromoteBtn');
-    if(promoteBtn) promoteBtn.addEventListener('click', ()=> promoteCalfModal(calvingRecord, modal));
+    const outcomeSelect = modal.querySelector('#calfOutcomeSelect');
+    if(outcomeSelect){
+      outcomeSelect.addEventListener('change', async ()=>{
+        const val = outcomeSelect.value;
+        if(val === '__promote__'){
+          outcomeSelect.value = calvingRecord.calf_outcome || '';
+          promoteCalfModal(calvingRecord, modal);
+          return;
+        }
+        await setCalfOutcome(calvingRecord, val || null);
+        closeModal();
+        calfRecordModal(calvingRecord);
+      });
+    }
     refreshCalfRecordModal(modal, calvingRecord);
     modal.querySelector('#closeCalfRecordBtn').addEventListener('click', closeModal);
+  }
+
+  async function setCalfOutcome(calvingRecord, outcome){
+    try{
+      const updated = await api('/calvings?id=eq.' + encodeURIComponent(calvingRecord.id), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ calf_outcome: outcome })
+      });
+      const idx = calvings.findIndex(c=>c.id===calvingRecord.id);
+      if(idx !== -1){
+        calvings[idx] = updated[0];
+        Object.assign(calvingRecord, updated[0]);
+      }
+      renderProfileList();
+      showToast(outcome ? `Marked as ${outcome}` : 'Marked as still active');
+    }catch(e){
+      showToast('Could not save — try again');
+    }
   }
 
   function calfMedEntryModal(calvingRecord, existingEntry, parentModal){
