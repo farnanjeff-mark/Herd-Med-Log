@@ -503,6 +503,7 @@
     <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
     <button class="btn btn-outline btn-full" id="profilePrintListBtn" style="margin-top:8px;">🖨️ Print This List</button>
     <button class="btn btn-outline btn-full" id="profileExportListBtn" style="margin-top:8px;">📊 Export This List</button>
+    <button class="btn btn-nav-tool btn-full" id="profileBulkLogBtn" style="margin-top:8px;">📋 Bulk Log Entry</button>
   </div>
 
   <div class="view hidden" id="profileView">
@@ -2122,20 +2123,88 @@
     document.body.classList.remove('printing-list');
   });
 
+  const ALL_EXPORT_CATEGORIES = { meds:true, calving:true, notes:true, weights:true, breeding:true };
   async function buildAndExportCowList(cowList, opts){
     if(typeof ExcelJS === 'undefined'){
       showToast('Could not load spreadsheet library — check your connection and try again');
       return;
     }
     try{
-      const header = ['Cow Number', 'Location', 'Owner'];
-      if(opts.meds) header.push('Med Date', 'Med Details');
-      if(opts.calving) header.push('Calving Date', 'Calving Details');
-      if(opts.notes) header.push('Note Date', 'Note');
-      if(opts.weights) header.push('Weight Date', 'Weight (lbs)');
-      if(opts.breeding) header.push('Breeding Date', 'Breeding Details');
+      const wb = new ExcelJS.Workbook();
 
-      const rows = [header];
+      function styleSheet(ws, header){
+        ws.addRow(header);
+        const headerRow = ws.getRow(1);
+        headerRow.font = { bold: true };
+        headerRow.eachCell({ includeEmpty:true }, cell=>{
+          cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
+        });
+        ws.getColumn(1).numFmt = '@';
+        ws.columns.forEach(col=>{ col.width = 18; });
+      }
+
+      // Per-category sheets — only cows that actually have that record type
+      if(opts.meds){
+        const ws = wb.addWorksheet('Meds');
+        const header = ['Cow Number', 'Location', 'Owner', 'Med Date', 'Med Details'];
+        styleSheet(ws, header);
+        cowList.forEach(cow=>{
+          const latest = [...recordsFor(cow.number)].sort((a,b)=>b.date.localeCompare(a.date))[0];
+          if(!latest) return;
+          const desc = latest.medicine ? `${latest.medicine}${latest.reason ? ' / '+latest.reason : ''}` : '(note only)';
+          ws.addRow([cow.number, cow.lot||'', cow.owner||'', latest.date, desc]);
+        });
+      }
+      if(opts.calving){
+        const ws = wb.addWorksheet('Calving');
+        const header = ['Cow Number', 'Location', 'Owner', 'Calving Date', 'Calving Details'];
+        styleSheet(ws, header);
+        cowList.forEach(cow=>{
+          const latest = [...calvingsFor(cow.number)].sort((a,b)=>b.calving_date.localeCompare(a.calving_date))[0];
+          if(!latest) return;
+          ws.addRow([cow.number, cow.lot||'', cow.owner||'', latest.calving_date, `${calfSexLabel(latest.calf_sex)} calf`]);
+        });
+      }
+      if(opts.notes){
+        const ws = wb.addWorksheet('Notes');
+        const header = ['Cow Number', 'Location', 'Owner', 'Note Date', 'Note'];
+        styleSheet(ws, header);
+        cowList.forEach(cow=>{
+          const latest = [...generalNotesFor(cow.number)].sort((a,b)=>b.note_date.localeCompare(a.note_date))[0];
+          if(!latest) return;
+          ws.addRow([cow.number, cow.lot||'', cow.owner||'', latest.note_date, latest.note||'']);
+        });
+      }
+      if(opts.weights){
+        const ws = wb.addWorksheet('Weights');
+        const header = ['Cow Number', 'Location', 'Owner', 'Weight Date', 'Weight (lbs)'];
+        styleSheet(ws, header);
+        cowList.forEach(cow=>{
+          const latest = [...weightsFor(cow.number)].sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date))[0];
+          if(!latest) return;
+          ws.addRow([cow.number, cow.lot||'', cow.owner||'', latest.weigh_date, latest.weight!=null ? latest.weight : '']);
+        });
+      }
+      if(opts.breeding){
+        const ws = wb.addWorksheet('Breeding');
+        const header = ['Cow Number', 'Location', 'Owner', 'Breeding Date', 'Breeding Details'];
+        styleSheet(ws, header);
+        cowList.forEach(cow=>{
+          const latest = [...breedingFor(cow.number)].sort((a,b)=>b.breed_date.localeCompare(a.breed_date))[0];
+          if(!latest) return;
+          ws.addRow([cow.number, cow.lot||'', cow.owner||'', latest.breed_date, latest.bred_to||'']);
+        });
+      }
+
+      // All Records — every cow in the list, one row each, blanks where a category has no data
+      const allHeader = ['Cow Number', 'Location', 'Owner'];
+      if(opts.meds) allHeader.push('Med Date', 'Med Details');
+      if(opts.calving) allHeader.push('Calving Date', 'Calving Details');
+      if(opts.notes) allHeader.push('Note Date', 'Note');
+      if(opts.weights) allHeader.push('Weight Date', 'Weight (lbs)');
+      if(opts.breeding) allHeader.push('Breeding Date', 'Breeding Details');
+      const allWs = wb.addWorksheet('All Records');
+      styleSheet(allWs, allHeader);
       cowList.forEach(cow=>{
         const row = [cow.number, cow.lot||'', cow.owner||''];
         if(opts.meds){
@@ -2159,20 +2228,8 @@
           const latest = [...breedingFor(cow.number)].sort((a,b)=>b.breed_date.localeCompare(a.breed_date))[0];
           row.push(latest ? latest.breed_date : '', latest ? (latest.bred_to||'') : '');
         }
-        rows.push(row);
+        allWs.addRow(row);
       });
-
-      const wb = new ExcelJS.Workbook();
-      const ws = wb.addWorksheet('Cow List');
-      ws.addRow(header);
-      const headerRow = ws.getRow(1);
-      headerRow.font = { bold: true };
-      headerRow.eachCell({ includeEmpty:true }, cell=>{
-        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
-      });
-      ws.getColumn(1).numFmt = '@';
-      rows.slice(1).forEach(r=> ws.addRow(r));
-      ws.columns.forEach(col=>{ col.width = 18; });
 
       const buffer = await wb.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/octet-stream' });
@@ -2189,6 +2246,211 @@
       console.error(e);
       showToast('Export failed — try again');
     }
+  }
+
+  function bulkLogEntryModal(){
+    const count = lastFilteredProfileCows.length;
+    if(count === 0){ showToast('No cows in the current list'); return; }
+    const modal = openModal(`
+      <div class="modal-title">Bulk Log Entry</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:16px;">Logs the same entry for all ${count} cow${count!==1?'s':''} currently showing. Choose what to log:</div>
+      <button class="btn btn-nav-tool btn-full" id="bulkPickMeds" style="margin-bottom:10px;">🐄 Med — for all ${count} cows</button>
+      <button class="btn btn-nav-tool btn-full" id="bulkPickNote" style="margin-bottom:10px;">📝 Note — for all ${count} cows</button>
+      <button class="btn btn-nav-tool btn-full" id="bulkPickBreeding" style="margin-bottom:16px;">🐂 Breeding — for all ${count} cows</button>
+      <div class="modal-actions">
+        <button class="btn btn-outline btn-full" id="cancelBulkLog">Cancel</button>
+      </div>
+    `);
+    modal.querySelector('#cancelBulkLog').addEventListener('click', closeModal);
+    modal.querySelector('#bulkPickMeds').addEventListener('click', ()=>{ closeModal(); bulkMedFormModal(); });
+    modal.querySelector('#bulkPickNote').addEventListener('click', ()=>{ closeModal(); bulkNoteFormModal(); });
+    modal.querySelector('#bulkPickBreeding').addEventListener('click', ()=>{ closeModal(); bulkBreedingFormModal(); });
+  }
+
+  function bulkMedFormModal(){
+    const targetCows = lastFilteredProfileCows;
+    const count = targetCows.length;
+    const today = todayLocal();
+    const modal = openModal(`
+      <div class="modal-title">Bulk Log Med — ${count} Cows</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="bulkMedDate" value="${today}"/>
+      </div>
+      ${fieldWithOther('bulkMed', 'Medicine (optional)', MEDICINE_OPTIONS, 'Type medicine name')}
+      ${fieldWithOther('bulkReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="bulkMedNotes" rows="2" placeholder="Dosage, observations, or just a general note"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelBulkMed">Cancel</button>
+        <button class="btn btn-barn" id="confirmBulkMed">Log for ${count} Cows</button>
+      </div>
+    `);
+    wireFieldWithOther(modal, 'bulkMed');
+    wireFieldWithOther(modal, 'bulkReason');
+    modal.querySelector('#cancelBulkMed').addEventListener('click', closeModal);
+    modal.querySelector('#confirmBulkMed').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#bulkMedDate').value;
+      const med = valueOf(modal, 'bulkMed');
+      const reason = valueOf(modal, 'bulkReason');
+      const notes = modal.querySelector('#bulkMedNotes').value.trim();
+      if(!dateVal){ showToast('Date is required'); return; }
+      if(!med && !reason && !notes){ showToast('Enter at least a medicine/reason or a note'); return; }
+      const btn = modal.querySelector('#confirmBulkMed');
+      btn.disabled = true;
+      const body = { date: dateVal, medicine: med||null, reason: reason||null, notes: notes||null };
+      try{
+        const results = await Promise.all(targetCows.map(cow=>
+          api('/treatments', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(Object.assign({ cow_number: cow.number }, body))
+          })
+        ));
+        results.forEach(r=> treatments.push(r[0]));
+        closeModal();
+        renderProfileList();
+        window.scrollTo(0,0);
+        showToast(`Logged for ${targetCows.length} cows`);
+      }catch(e){
+        btn.disabled = false;
+        showToast('Some entries may not have saved — check and try again');
+      }
+    });
+  }
+
+  function bulkNoteFormModal(){
+    const targetCows = lastFilteredProfileCows;
+    const count = targetCows.length;
+    const today = todayLocal();
+    const modal = openModal(`
+      <div class="modal-title">Bulk Log Note — ${count} Cows</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="bulkNoteDate" value="${today}"/>
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <textarea id="bulkNoteText" rows="3" placeholder="General observation or note"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelBulkNote">Cancel</button>
+        <button class="btn btn-blue" id="confirmBulkNote">Log for ${count} Cows</button>
+      </div>
+    `);
+    modal.querySelector('#cancelBulkNote').addEventListener('click', closeModal);
+    modal.querySelector('#confirmBulkNote').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#bulkNoteDate').value;
+      const noteText = modal.querySelector('#bulkNoteText').value.trim();
+      if(!dateVal){ showToast('Date is required'); return; }
+      if(!noteText){ showToast('Enter a note'); return; }
+      const btn = modal.querySelector('#confirmBulkNote');
+      btn.disabled = true;
+      const body = { note_date: dateVal, note: noteText };
+      try{
+        const results = await Promise.all(targetCows.map(cow=>
+          api('/general_notes', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(Object.assign({ cow_number: cow.number }, body))
+          })
+        ));
+        results.forEach(r=> generalNotes.push(r[0]));
+        closeModal();
+        renderProfileList();
+        window.scrollTo(0,0);
+        showToast(`Logged for ${targetCows.length} cows`);
+      }catch(e){
+        btn.disabled = false;
+        showToast('Some entries may not have saved — check and try again');
+      }
+    });
+  }
+
+  function bulkBreedingFormModal(){
+    const targetCows = lastFilteredProfileCows;
+    const count = targetCows.length;
+    const today = todayLocal();
+    const modal = openModal(`
+      <div class="modal-title">Bulk Log Breeding — ${count} Cows</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="bulkBrdDate" value="${today}"/>
+      </div>
+      ${fieldWithOther('bulkBrdBredTo', 'Bred To', BULL_OPTIONS, 'Type bull name or ID')}
+      <div class="field">
+        <label>Pregnancy Method</label>
+        <select id="bulkBrdMethod">
+          <option value="">-- Select --</option>
+          ${PREGNANCY_METHOD_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Natural Sire</label>
+        <input type="text" id="bulkBrdSire" placeholder="Natural sire name or ID (if applicable)"/>
+      </div>
+      <div class="field">
+        <label>Vet Calls</label>
+        <textarea id="bulkBrdVet" rows="2" placeholder="Vet check notes, preg check results, etc."></textarea>
+      </div>
+      <div class="field">
+        <label>Expected Due Date</label>
+        <input type="text" id="bulkBrdDueDisplay" value="${fmtDate(computeDueDate(today))}" disabled style="background:#e5ded0;"/>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="bulkBrdNotes" rows="2" placeholder="Any other notes about this breeding"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelBulkBrd">Cancel</button>
+        <button class="btn btn-barn" id="confirmBulkBrd">Log for ${count} Cows</button>
+      </div>
+    `);
+    modal.querySelector('#bulkBrdDate').addEventListener('input', ()=>{
+      const val = modal.querySelector('#bulkBrdDate').value;
+      modal.querySelector('#bulkBrdDueDisplay').value = val ? fmtDate(computeDueDate(val)) : '';
+    });
+    wireFieldWithOther(modal, 'bulkBrdBredTo');
+    modal.querySelector('#cancelBulkBrd').addEventListener('click', closeModal);
+    modal.querySelector('#confirmBulkBrd').addEventListener('click', async ()=>{
+      const dateVal = modal.querySelector('#bulkBrdDate').value;
+      const bredTo = valueOf(modal, 'bulkBrdBredTo');
+      const method = modal.querySelector('#bulkBrdMethod').value;
+      const sire = modal.querySelector('#bulkBrdSire').value.trim();
+      const vet = modal.querySelector('#bulkBrdVet').value.trim();
+      const notes = modal.querySelector('#bulkBrdNotes').value.trim();
+      if(!dateVal){ showToast('Date is required'); return; }
+      const btn = modal.querySelector('#confirmBulkBrd');
+      btn.disabled = true;
+      const body = {
+        breed_date: dateVal,
+        bred_to: bredTo||null,
+        pregnancy_method: method||null,
+        natural_sire: sire||null,
+        vet_calls: vet||null,
+        expected_due_date: computeDueDate(dateVal),
+        notes: notes||null
+      };
+      try{
+        const results = await Promise.all(targetCows.map(cow=>
+          api('/breeding_records', {
+            method:'POST',
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(Object.assign({ cow_number: cow.number }, body))
+          })
+        ));
+        results.forEach(r=> breedingRecords.push(r[0]));
+        closeModal();
+        renderProfileList();
+        window.scrollTo(0,0);
+        showToast(`Logged for ${targetCows.length} cows`);
+      }catch(e){
+        btn.disabled = false;
+        showToast('Some entries may not have saved — check and try again');
+      }
+    });
   }
 
   function compressImageFile(file, maxDim, quality){
@@ -3603,7 +3865,7 @@
   document.getElementById('addCalvingBtn').addEventListener('click', addCalvingModal);
   document.getElementById('calvingSearchBox').addEventListener('input', renderCalvingList);
   document.getElementById('calvingSortBy').addEventListener('change', renderCalvingList);
-  document.getElementById('exportEverythingBtn').addEventListener('click', exportOptionsModal);
+  document.getElementById('exportEverythingBtn').addEventListener('click', ()=> exportEverything(true, true, true));
   document.getElementById('bulkEditBtn').addEventListener('click', bulkEditModal);
   document.getElementById('textListEntryBtn').addEventListener('click', textCategoryPickerModal);
   document.getElementById('homeUtilitiesBtn').addEventListener('click', showUtilities);
@@ -3661,6 +3923,7 @@
   document.getElementById('profileLocationGroupFilter').addEventListener('change', renderProfileList);
   document.getElementById('profilePrintListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Print This List', 'print'));
   document.getElementById('profileExportListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Export This List', 'export'));
+  document.getElementById('profileBulkLogBtn').addEventListener('click', bulkLogEntryModal);
   document.getElementById('reportsPrintFlaggedBtn').addEventListener('click', ()=>{
     const flaggedCows = cows.filter(c=>c.needs_entry);
     printListModal(flaggedCows, 'Print Flagged Cows', 'print');
