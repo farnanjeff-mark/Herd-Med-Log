@@ -5198,16 +5198,32 @@
     });
     modal.querySelector('#printGainersBtn').addEventListener('click', ()=>{
       const printRowsHtml = results.map(r=>`
-        <div style="padding:8px 0;border-bottom:1px solid #ccc;">
-          <div style="font-weight:700;font-size:16px;">#${escapeHtml(r.cow.number)}</div>
-          <div style="font-size:13px;color:#333;margin-top:2px;">${fmtDateShort(r.firstDate)} → ${fmtDateShort(r.lastDate)} (${r.days}d) · ${r.totalGain>=0?'+':''}${r.totalGain} lbs · ${r.adg.toFixed(2)} lbs/day</div>
-        </div>
+        <tr>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(r.cow.number)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${fmtDateShort(r.firstDate)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${fmtDateShort(r.lastDate)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${r.days}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${r.totalGain>=0?'+':''}${r.totalGain}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${r.adg.toFixed(2)}</td>
+        </tr>
       `).join('');
       document.getElementById('printListOutput').innerHTML = `
         <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
           <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Biggest Gainers</h2>
           <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${results.length} cow${results.length!==1?'s':''}</div>
-          ${printRowsHtml}
+          <table style="border-collapse:collapse;font-size:12px;width:100%;">
+            <thead>
+              <tr>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Cow #</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">First Weigh</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Last Weigh</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Days</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Total Gain</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">ADG (lbs/day)</th>
+              </tr>
+            </thead>
+            <tbody>${printRowsHtml}</tbody>
+          </table>
         </div>
       `;
       document.body.classList.add('printing-list');
@@ -5266,23 +5282,33 @@
       });
     });
     modal.querySelector('#printDeadCalvesBtn').addEventListener('click', ()=>{
-      const printRowsHtml = dead.map(r=>{
-        const details = [calfSexLabel(r.calf_sex)+' calf'];
-        if(r.birth_weight != null) details.push(`${r.birth_weight} lbs at birth`);
-        if(r.sire) details.push(`Sire: ${r.sire}`);
-        return `
-          <div style="padding:8px 0;border-bottom:1px solid #ccc;">
-            <div style="font-weight:700;font-size:16px;">${fmtDate(r.calving_date)} — #${escapeHtml(r.cow_number)}</div>
-            <div style="font-size:13px;color:#333;margin-top:2px;">${escapeHtml(details.join(' · '))}</div>
-            ${r.notes ? `<div style="font-size:13px;margin-top:4px;">${escapeHtml(r.notes)}</div>` : ''}
-          </div>
-        `;
-      }).join('');
+      const printRowsHtml = dead.map(r=>`
+        <tr>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${fmtDateShort(r.calving_date)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(r.cow_number)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${calfSexLabel(r.calf_sex)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${r.birth_weight != null ? r.birth_weight : ''}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(r.sire||'')}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(r.notes||'')}</td>
+        </tr>
+      `).join('');
       document.getElementById('printListOutput').innerHTML = `
         <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
           <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Dead Calves</h2>
           <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${dead.length} calf${dead.length!==1?'ves':''}</div>
-          ${printRowsHtml}
+          <table style="border-collapse:collapse;font-size:12px;width:100%;">
+            <thead>
+              <tr>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Date</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Cow #</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Sex</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Birth Wt</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Sire</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Notes</th>
+              </tr>
+            </thead>
+            <tbody>${printRowsHtml}</tbody>
+          </table>
         </div>
       `;
       document.body.classList.add('printing-list');
@@ -5364,24 +5390,38 @@
     modal.querySelector('#printCalvingReportBtn').addEventListener('click', ()=>{
       const printRowsHtml = filtered.map(r=>{
         const badge = calvingOutcomeBadge(r);
-        const details = [calfSexLabel(r.calf_sex)+' calf'];
-        if(r.birth_weight != null) details.push(`${r.birth_weight} lbs at birth`);
-        if(r.sire) details.push(`Sire: ${r.sire}`);
-        if(r.birth_assist) details.push(r.birth_assist);
-        details.push(badge.label);
         return `
-          <div style="padding:8px 0;border-bottom:1px solid #ccc;">
-            <div style="font-weight:700;font-size:16px;">${fmtDate(r.calving_date)} — #${escapeHtml(r.cow_number)}</div>
-            <div style="font-size:13px;color:#333;margin-top:2px;">${escapeHtml(details.join(' · '))}</div>
-            ${r.notes ? `<div style="font-size:13px;margin-top:4px;">${escapeHtml(r.notes)}</div>` : ''}
-          </div>
+          <tr>
+            <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${fmtDateShort(r.calving_date)}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(r.cow_number)}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${calfSexLabel(r.calf_sex)}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${r.birth_weight != null ? r.birth_weight : ''}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(r.sire||'')}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(r.birth_assist||'')}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${badge.label}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(r.notes||'')}</td>
+          </tr>
         `;
       }).join('');
       document.getElementById('printListOutput').innerHTML = `
         <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
           <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Calving Report</h2>
           <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${filtered.length} calving${filtered.length!==1?'s':''}</div>
-          ${printRowsHtml}
+          <table style="border-collapse:collapse;font-size:12px;width:100%;">
+            <thead>
+              <tr>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Date</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Cow #</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Sex</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Birth Wt</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Sire</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Assist</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Outcome</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Notes</th>
+              </tr>
+            </thead>
+            <tbody>${printRowsHtml}</tbody>
+          </table>
         </div>
       `;
       document.body.classList.add('printing-list');
@@ -5437,16 +5477,28 @@
     });
     modal.querySelector('#printSoldDeceasedBtn').addEventListener('click', ()=>{
       const printRowsHtml = inactive.map(c=>`
-        <div style="padding:8px 0;border-bottom:1px solid #ccc;">
-          <div style="font-weight:700;font-size:16px;">#${escapeHtml(c.number)} — ${escapeHtml(c.status)}</div>
-          <div style="font-size:13px;color:#333;margin-top:2px;">${escapeHtml([c.lot, c.owner].filter(Boolean).join(' · '))}</div>
-        </div>
+        <tr>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(c.number)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(c.status)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(c.lot||'')}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid #ccc;">${escapeHtml(c.owner||'')}</td>
+        </tr>
       `).join('');
       document.getElementById('printListOutput').innerHTML = `
         <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
           <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Sold / Deceased List</h2>
           <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${inactive.length} cow${inactive.length!==1?'s':''}</div>
-          ${printRowsHtml}
+          <table style="border-collapse:collapse;font-size:12px;width:100%;">
+            <thead>
+              <tr>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Cow #</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Status</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Location</th>
+                <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #000;">Owner</th>
+              </tr>
+            </thead>
+            <tbody>${printRowsHtml}</tbody>
+          </table>
         </div>
       `;
       document.body.classList.add('printing-list');
