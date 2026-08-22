@@ -5274,6 +5274,7 @@
       </div>
       <div class="modal-actions">
         <button class="btn btn-outline btn-full" id="printDeadCalvesBtn">🖨️ Print</button>
+        <button class="btn btn-outline btn-full" id="exportDeadCalvesBtn">📊 Export</button>
         <button class="btn btn-barn btn-full" id="closeDeadCalvesBtn">Close</button>
       </div>
     `);
@@ -5283,6 +5284,42 @@
         closeModal();
         openProfileCow(num);
       });
+    });
+    modal.querySelector('#exportDeadCalvesBtn').addEventListener('click', async ()=>{
+      if(typeof ExcelJS === 'undefined'){
+        showToast('Could not load spreadsheet library — check your connection and try again');
+        return;
+      }
+      try{
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Dead Calves');
+        const header = ['Date','Cow Number','Sex','Birth Weight','Sire','Notes'];
+        ws.addRow(header);
+        const headerRow = ws.getRow(1);
+        headerRow.font = { bold: true };
+        headerRow.eachCell({ includeEmpty:true }, cell=>{
+          cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
+        });
+        ws.getColumn(2).numFmt = '@';
+        dead.forEach(r=>{
+          ws.addRow([r.calving_date, r.cow_number, calfSexLabel(r.calf_sex), r.birth_weight!=null ? r.birth_weight : '', r.sire||'', r.notes||'']);
+        });
+        ws.columns.forEach(col=>{ col.width = 18; });
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'dead-calves-' + todayLocal() + '.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Exported');
+      }catch(e){
+        console.error(e);
+        showToast('Export failed — try again');
+      }
     });
     modal.querySelector('#printDeadCalvesBtn').addEventListener('click', ()=>{
       const printRowsHtml = dead.map(r=>`
@@ -5380,6 +5417,7 @@
       </div>
       <div class="modal-actions">
         <button class="btn btn-outline btn-full" id="printCalvingReportBtn">🖨️ Print</button>
+        <button class="btn btn-outline btn-full" id="exportCalvingReportBtn">📊 Export</button>
         <button class="btn btn-barn btn-full" id="closeCalvingReportBtn">Close</button>
       </div>
     `);
@@ -5389,6 +5427,43 @@
       filtered = result.filtered;
       modal.querySelector('#calvingReportTbody').innerHTML = result.rowsHtml || `<tr><td colspan="8" style="padding:14px 10px;font-style:italic;color:#a89f8c;">No calvings in this time frame.</td></tr>`;
       modal.querySelector('#calvingReportSummary').textContent = `${filtered.length} calving${filtered.length!==1?'s':''}`;
+    });
+    modal.querySelector('#exportCalvingReportBtn').addEventListener('click', async ()=>{
+      if(typeof ExcelJS === 'undefined'){
+        showToast('Could not load spreadsheet library — check your connection and try again');
+        return;
+      }
+      try{
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Calving Report');
+        const header = ['Date','Cow Number','Sex','Birth Weight','Sire','Birth Assist','Outcome','Notes'];
+        ws.addRow(header);
+        const headerRow = ws.getRow(1);
+        headerRow.font = { bold: true };
+        headerRow.eachCell({ includeEmpty:true }, cell=>{
+          cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
+        });
+        ws.getColumn(2).numFmt = '@';
+        filtered.forEach(r=>{
+          const badge = calvingOutcomeBadge(r);
+          ws.addRow([r.calving_date, r.cow_number, calfSexLabel(r.calf_sex), r.birth_weight!=null ? r.birth_weight : '', r.sire||'', r.birth_assist||'', badge.label, r.notes||'']);
+        });
+        ws.columns.forEach(col=>{ col.width = 18; });
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'calving-report-' + todayLocal() + '.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Exported');
+      }catch(e){
+        console.error(e);
+        showToast('Export failed — try again');
+      }
     });
     modal.querySelector('#printCalvingReportBtn').addEventListener('click', ()=>{
       const printRowsHtml = filtered.map(r=>{
@@ -5780,30 +5855,58 @@
           <option value="calving" selected>Calving Records</option>
           <option value="meds">Meds &amp; Notes</option>
           <option value="notes">General Notes</option>
+          <option value="tagneeded">Tag Needed</option>
         </select>
       </div>
-      <div class="field">
+      <div class="field" id="textDaysField">
         <label>Time Frame</label>
         <select id="textDaysSelect">${dayRangeOptionsHtml()}</select>
       </div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:16px;">Pulls entries from that time frame for whichever category you pick.</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:16px;" id="textCategoryHint">Pulls entries from that time frame for whichever category you pick.</div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelTextCategory">Cancel</button>
         <button class="btn btn-blue" id="continueTextCategory">Continue</button>
       </div>
     `);
+    const categorySelect = modal.querySelector('#textCategorySelect');
+    const daysField = modal.querySelector('#textDaysField');
+    const hintEl = modal.querySelector('#textCategoryHint');
+    function refreshCategoryUI(){
+      if(categorySelect.value === 'tagneeded'){
+        daysField.classList.add('hidden');
+        hintEl.textContent = 'Every cow currently flagged Tag Needed, regardless of when it was flagged.';
+      } else {
+        daysField.classList.remove('hidden');
+        hintEl.textContent = 'Pulls entries from that time frame for whichever category you pick.';
+      }
+    }
+    categorySelect.addEventListener('change', refreshCategoryUI);
+    refreshCategoryUI();
     modal.querySelector('#cancelTextCategory').addEventListener('click', closeModal);
     modal.querySelector('#continueTextCategory').addEventListener('click', ()=>{
-      const section = modal.querySelector('#textCategorySelect').value;
+      const section = categorySelect.value;
       const days = parseInt(modal.querySelector('#textDaysSelect').value, 10);
       closeModal();
       textListModal(section, days);
     });
   }
 
+  function buildTagNeededListText(cowFilter){
+    const lines = ['TAG NEEDED'];
+    const items = cows.filter(c=>c.tag_needed && (!cowFilter || cowFilter.has(c.number)))
+      .sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+    items.forEach(c=>{
+      const meta = [c.lot, c.owner].filter(Boolean).join(' · ');
+      lines.push(`#${c.number}${meta ? ' — '+meta : ''}`);
+    });
+    if(lines.length === 1) lines.push('(no cows currently flagged)');
+    return lines.join('\n');
+  }
   function textListModal(section, days){
-    const builders = { meds: buildMedsListText, calving: buildCalvingListText, notes: buildNotesListText };
-    const activeCows = cowsWithRecentActivity(section, days);
+    const builders = { meds: buildMedsListText, calving: buildCalvingListText, notes: buildNotesListText, tagneeded: buildTagNeededListText };
+    const activeCows = section === 'tagneeded'
+      ? cows.filter(c=>c.tag_needed).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true})).map(c=>c.number)
+      : cowsWithRecentActivity(section, days);
     const recipients = getRecipients();
     const dayLabel = days===0 ? 'today' : days===7 ? 'the last week' : days===30 ? 'the last month' : 'all time';
 
@@ -5812,7 +5915,9 @@
         <input type="checkbox" class="cowCheck" value="${escapeHtml(num)}" style="width:18px;height:18px;"/>
         <span>#${escapeHtml(num)}</span>
       </label>
-    `).join('') || `<p class="empty" style="padding:10px 0;">No recent activity in ${dayLabel}.</p>`;
+    `).join('') || (section === 'tagneeded'
+      ? '<p class="empty" style="padding:10px 0;">No cows currently flagged Tag Needed.</p>'
+      : `<p class="empty" style="padding:10px 0;">No recent activity in ${dayLabel}.</p>`);
 
     const recipOptionsHtml = recipients.map((r,i)=>`
       <label style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);">
