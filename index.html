@@ -249,6 +249,7 @@
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
     <button class="btn btn-nav-tool btn-full" id="recentlyDeletedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🗑️</span>&nbsp;&nbsp;Recently Deleted</button>
     <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📈</span>&nbsp;&nbsp;Biggest Gainers</button>
+    <button class="btn btn-nav-tool btn-full" id="deadCalvesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">💔</span>&nbsp;&nbsp;Dead Calves</button>
     <button class="btn btn-nav-tool btn-full hidden" id="reportsPrintFlaggedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🖨️</span>&nbsp;&nbsp;Print Flagged Cows</button>
     <button class="btn btn-nav-tool btn-full hidden" id="reportsExportFlaggedBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Export Flagged Cows</button>
   </div>
@@ -3987,6 +3988,7 @@
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
   document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
   document.getElementById('biggestGainersBtn').addEventListener('click', biggestGainersModal);
+  document.getElementById('deadCalvesBtn').addEventListener('click', deadCalvesModal);
   document.getElementById('recentlyDeletedHomeBtn').addEventListener('click', showHome);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
   document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
@@ -5172,6 +5174,71 @@
       </div>
     `);
     modal.querySelector('#closeGainersBtn').addEventListener('click', closeModal);
+  }
+
+  function deadCalvesModal(){
+    const dead = calvings.filter(c=>c.calf_outcome==='died')
+      .sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
+
+    const rowsHtml = dead.map(r=>{
+      const details = [calfSexLabel(r.calf_sex)+' calf'];
+      if(r.birth_weight != null) details.push(`${r.birth_weight} lbs at birth`);
+      if(r.sire) details.push(`Sire: ${r.sire}`);
+      return `
+        <div class="cow-row-item" data-num="${escapeHtml(r.cow_number)}" style="padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:700;font-size:16px;">${fmtDate(r.calving_date)} — #${escapeHtml(r.cow_number)}</span>
+          </div>
+          <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:2px;">${escapeHtml(details.join(' · '))}</div>
+          ${r.notes ? `<div style="font-family:Arial,sans-serif;font-size:13px;margin-top:4px;">${escapeHtml(r.notes)}</div>` : '<div style="font-family:Arial,sans-serif;font-size:12px;color:#a89f8c;margin-top:4px;font-style:italic;">No notes recorded</div>'}
+        </div>
+      `;
+    }).join('') || '<p class="empty" style="padding:14px 0;">No calf deaths recorded.</p>';
+
+    const modal = openModal(`
+      <div class="modal-title">Dead Calves (${dead.length})</div>
+      <div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;margin-bottom:10px;">Every calving marked Died, newest first. Tap a cow to open her profile.</div>
+      <div style="max-height:450px;overflow-y:auto;">${rowsHtml}</div>
+      <div class="modal-actions">
+        <button class="btn btn-outline btn-full" id="printDeadCalvesBtn">🖨️ Print</button>
+        <button class="btn btn-barn btn-full" id="closeDeadCalvesBtn">Close</button>
+      </div>
+    `);
+    modal.querySelectorAll('.cow-row-item').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        const num = row.dataset.num;
+        closeModal();
+        openProfileCow(num);
+      });
+    });
+    modal.querySelector('#printDeadCalvesBtn').addEventListener('click', ()=>{
+      const printRowsHtml = dead.map(r=>{
+        const details = [calfSexLabel(r.calf_sex)+' calf'];
+        if(r.birth_weight != null) details.push(`${r.birth_weight} lbs at birth`);
+        if(r.sire) details.push(`Sire: ${r.sire}`);
+        return `
+          <div style="padding:8px 0;border-bottom:1px solid #ccc;">
+            <div style="font-weight:700;font-size:16px;">${fmtDate(r.calving_date)} — #${escapeHtml(r.cow_number)}</div>
+            <div style="font-size:13px;color:#333;margin-top:2px;">${escapeHtml(details.join(' · '))}</div>
+            ${r.notes ? `<div style="font-size:13px;margin-top:4px;">${escapeHtml(r.notes)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+      document.getElementById('printListOutput').innerHTML = `
+        <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+          <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Dead Calves</h2>
+          <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${dead.length} calf${dead.length!==1?'ves':''}</div>
+          ${printRowsHtml}
+        </div>
+      `;
+      document.body.classList.add('printing-list');
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          window.print();
+        });
+      });
+    });
+    modal.querySelector('#closeDeadCalvesBtn').addEventListener('click', closeModal);
   }
 
   function soldDeceasedModal(){
