@@ -933,19 +933,19 @@
         `<option value="act:${t.type}:99999">All</option>` +
       `</optgroup>`
     ).join('');
-    const statusOptions = (hasFlagged ? '<option value="flag:1">🚩 Flagged</option>' : '') +
-      (hasTagNeeded ? '<option value="tag:1">🏷️ Tag Needed</option>' : '');
+    const statusOptions = (hasFlagged ? '<option value="flag:1">Flagged</option>' : '') +
+      (hasTagNeeded ? '<option value="tag:1">Tag Needed</option>' : '');
     sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
       '<optgroup label="📍 Location">' +
-        LOT_OPTIONS.map(l=>`<option value="loc:${escapeHtml(l)}">📍 ${escapeHtml(l)}</option>`).join('') +
-        (hasOtherLots ? '<option value="loc:__other__">📍 Other Location</option>' : '') +
+        LOT_OPTIONS.map(l=>`<option value="loc:${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('') +
+        (hasOtherLots ? '<option value="loc:__other__">Other Location</option>' : '') +
       '</optgroup>' +
       '<optgroup label="🐮 Group">' +
-        groups.map(g=>`<option value="grp:${escapeHtml(g)}">🐮 ${escapeHtml(g)}</option>`).join('') +
+        groups.map(g=>`<option value="grp:${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('') +
       '</optgroup>' +
       '<optgroup label="👤 Owner">' +
-        owners.map(o=>`<option value="own:${escapeHtml(o)}">👤 ${escapeHtml(o)}</option>`).join('') +
-        (hasUnassigned ? '<option value="own:__unassigned__">👤 Unassigned</option>' : '') +
+        owners.map(o=>`<option value="own:${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') +
+        (hasUnassigned ? '<option value="own:__unassigned__">Unassigned</option>' : '') +
       '</optgroup>' +
       (statusOptions ? `<optgroup label="✅ Status">${statusOptions}</optgroup>` : '') +
       activityOptgroups;
