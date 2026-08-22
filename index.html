@@ -250,6 +250,7 @@
     <button class="btn btn-nav-tool btn-full" id="recentlyDeletedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🗑️</span>&nbsp;&nbsp;Recently Deleted</button>
     <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📈</span>&nbsp;&nbsp;Biggest Gainers</button>
     <button class="btn btn-nav-tool btn-full" id="deadCalvesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">💔</span>&nbsp;&nbsp;Dead Calves</button>
+    <button class="btn btn-nav-tool btn-full" id="calvingReportBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐮</span>&nbsp;&nbsp;Calving Report</button>
     <button class="btn btn-nav-tool btn-full hidden" id="reportsPrintFlaggedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🖨️</span>&nbsp;&nbsp;Print Flagged Cows</button>
     <button class="btn btn-nav-tool btn-full hidden" id="reportsExportFlaggedBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Export Flagged Cows</button>
   </div>
@@ -3990,6 +3991,7 @@
   document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
   document.getElementById('biggestGainersBtn').addEventListener('click', biggestGainersModal);
   document.getElementById('deadCalvesBtn').addEventListener('click', deadCalvesModal);
+  document.getElementById('calvingReportBtn').addEventListener('click', calvingReportModal);
   document.getElementById('recentlyDeletedHomeBtn').addEventListener('click', showHome);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
   document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
@@ -5153,27 +5155,68 @@
     });
     results.sort((a,b)=> b.adg - a.adg);
 
-    const rowsHtml = results.map(r=>`
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);">
-        <div>
-          <div style="font-weight:700;font-size:16px;">#${escapeHtml(r.cow.number)}</div>
-          <div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;">${fmtDateShort(r.firstDate)} → ${fmtDateShort(r.lastDate)} (${r.days}d)</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-weight:700;color:${r.totalGain>=0?'var(--pasture)':'var(--barn)'};">${r.totalGain>=0?'+':''}${r.totalGain} lbs</div>
-          <div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;">${r.adg.toFixed(2)} lbs/day</div>
-        </div>
-      </div>
-    `).join('') || '<p class="empty" style="padding:14px 0;">No cows with at least 2 weigh-ins yet.</p>';
+    const rowsHtml = results.map((r,i)=>`
+      <tr class="gainers-row" data-num="${escapeHtml(r.cow.number)}" style="border-bottom:1px solid #ddd;cursor:pointer;${i%2===1?'background:#faf7f0;':''}">
+        <td style="padding:8px 10px;">${escapeHtml(r.cow.number)}</td>
+        <td style="padding:8px 10px;">${fmtDateShort(r.firstDate)}</td>
+        <td style="padding:8px 10px;">${fmtDateShort(r.lastDate)}</td>
+        <td style="padding:8px 10px;">${r.days}</td>
+        <td style="padding:8px 10px;color:${r.totalGain>=0?'#3C9142':'#A05A2C'};font-weight:700;">${r.totalGain>=0?'+':''}${r.totalGain}</td>
+        <td style="padding:8px 10px;">${r.adg.toFixed(2)}</td>
+      </tr>
+    `).join('');
 
     const modal = openModal(`
       <div class="modal-title">Biggest Gainers</div>
-      <div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;margin-bottom:10px;">Ranked by average daily gain — needs at least 2 weigh-ins per cow</div>
-      <div style="max-height:400px;overflow-y:auto;">${rowsHtml}</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Ranked by average daily gain — needs at least 2 weigh-ins per cow · tap a row to open that cow's profile</div>
+      <div style="overflow-x:auto;background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.15);">
+        <table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px;white-space:nowrap;width:100%;">
+          <thead>
+            <tr style="background:#EFE8D8;">
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Cow #</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">First Weigh</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Last Weigh</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Days</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Total Gain</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">ADG (lbs/day)</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml || `<tr><td colspan="6" style="padding:14px 10px;font-style:italic;color:#a89f8c;">No cows with at least 2 weigh-ins yet.</td></tr>`}</tbody>
+        </table>
+      </div>
       <div class="modal-actions">
+        <button class="btn btn-outline btn-full" id="printGainersBtn">🖨️ Print</button>
         <button class="btn btn-barn btn-full" id="closeGainersBtn">Close</button>
       </div>
     `);
+    modal.querySelectorAll('.gainers-row').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        const num = row.dataset.num;
+        closeModal();
+        openProfileCow(num);
+      });
+    });
+    modal.querySelector('#printGainersBtn').addEventListener('click', ()=>{
+      const printRowsHtml = results.map(r=>`
+        <div style="padding:8px 0;border-bottom:1px solid #ccc;">
+          <div style="font-weight:700;font-size:16px;">#${escapeHtml(r.cow.number)}</div>
+          <div style="font-size:13px;color:#333;margin-top:2px;">${fmtDateShort(r.firstDate)} → ${fmtDateShort(r.lastDate)} (${r.days}d) · ${r.totalGain>=0?'+':''}${r.totalGain} lbs · ${r.adg.toFixed(2)} lbs/day</div>
+        </div>
+      `).join('');
+      document.getElementById('printListOutput').innerHTML = `
+        <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+          <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Biggest Gainers</h2>
+          <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${results.length} cow${results.length!==1?'s':''}</div>
+          ${printRowsHtml}
+        </div>
+      `;
+      document.body.classList.add('printing-list');
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          window.print();
+        });
+      });
+    });
     modal.querySelector('#closeGainersBtn').addEventListener('click', closeModal);
   }
 
@@ -5181,31 +5224,41 @@
     const dead = calvings.filter(c=>c.calf_outcome==='died')
       .sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
 
-    const rowsHtml = dead.map(r=>{
-      const details = [calfSexLabel(r.calf_sex)+' calf'];
-      if(r.birth_weight != null) details.push(`${r.birth_weight} lbs at birth`);
-      if(r.sire) details.push(`Sire: ${r.sire}`);
-      return `
-        <div class="cow-row-item" data-num="${escapeHtml(r.cow_number)}" style="padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-weight:700;font-size:16px;">${fmtDate(r.calving_date)} — #${escapeHtml(r.cow_number)}</span>
-          </div>
-          <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:2px;">${escapeHtml(details.join(' · '))}</div>
-          ${r.notes ? `<div style="font-family:Arial,sans-serif;font-size:13px;margin-top:4px;">${escapeHtml(r.notes)}</div>` : '<div style="font-family:Arial,sans-serif;font-size:12px;color:#a89f8c;margin-top:4px;font-style:italic;">No notes recorded</div>'}
-        </div>
-      `;
-    }).join('') || '<p class="empty" style="padding:14px 0;">No calf deaths recorded.</p>';
+    const rowsHtml = dead.map((r,i)=>`
+      <tr class="dead-calf-row" data-num="${escapeHtml(r.cow_number)}" style="border-bottom:1px solid #ddd;cursor:pointer;${i%2===1?'background:#faf7f0;':''}">
+        <td style="padding:8px 10px;">${fmtDateShort(r.calving_date)}</td>
+        <td style="padding:8px 10px;">${escapeHtml(r.cow_number)}</td>
+        <td style="padding:8px 10px;">${calfSexLabel(r.calf_sex)}</td>
+        <td style="padding:8px 10px;">${r.birth_weight != null ? r.birth_weight : ''}</td>
+        <td style="padding:8px 10px;">${escapeHtml(r.sire||'')}</td>
+        <td style="padding:8px 10px;">${escapeHtml(r.notes||'')}</td>
+      </tr>
+    `).join('');
 
     const modal = openModal(`
-      <div class="modal-title">Dead Calves (${dead.length})</div>
-      <div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;margin-bottom:10px;">Every calving marked Died, newest first. Tap a cow to open her profile.</div>
-      <div style="max-height:450px;overflow-y:auto;">${rowsHtml}</div>
+      <div class="modal-title">Dead Calves</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">${dead.length} calf${dead.length!==1?'ves':''} · tap a row to open that cow's profile</div>
+      <div style="overflow-x:auto;background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.15);">
+        <table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px;white-space:nowrap;width:100%;">
+          <thead>
+            <tr style="background:#EFE8D8;">
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Date</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Cow #</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Sex</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Birth Wt</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Sire</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Notes</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml || `<tr><td colspan="6" style="padding:14px 10px;font-style:italic;color:#a89f8c;">No calf deaths recorded.</td></tr>`}</tbody>
+        </table>
+      </div>
       <div class="modal-actions">
         <button class="btn btn-outline btn-full" id="printDeadCalvesBtn">🖨️ Print</button>
         <button class="btn btn-barn btn-full" id="closeDeadCalvesBtn">Close</button>
       </div>
     `);
-    modal.querySelectorAll('.cow-row-item').forEach(row=>{
+    modal.querySelectorAll('.dead-calf-row').forEach(row=>{
       row.addEventListener('click', ()=>{
         const num = row.dataset.num;
         closeModal();
@@ -5242,41 +5295,165 @@
     modal.querySelector('#closeDeadCalvesBtn').addEventListener('click', closeModal);
   }
 
-  function soldDeceasedModal(){
-    const inactive = cows.filter(c=>!isActiveStatus(c));
-    const sold = inactive.filter(c=>c.status==='Sold').sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
-    const deceased = inactive.filter(c=>c.status==='Deceased').sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+  function calvingOutcomeBadge(r){
+    if(r.promoted_to_cow_number) return { label:'Keeping', color:'#3C9142', textColor:'#fff' };
+    if(r.calf_outcome === 'sold') return { label:'Sold', color:'#eee', textColor:'#6b6350' };
+    if(r.calf_outcome === 'died') return { label:'Died', color:'#A05A2C', textColor:'#fff' };
+    return { label:'Active', color:'#eee', textColor:'#6b6350' };
+  }
+  function renderCalvingReportRows(days){
+    const filtered = calvings.filter(c=>isWithinDays(c.calving_date, days))
+      .sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
+    const rowsHtml = filtered.map((r,i)=>{
+      const badge = calvingOutcomeBadge(r);
+      return `
+        <tr style="border-bottom:1px solid #ddd;${i%2===1?'background:#faf7f0;':''}">
+          <td style="padding:8px 10px;">${fmtDateShort(r.calving_date)}</td>
+          <td style="padding:8px 10px;">${escapeHtml(r.cow_number)}</td>
+          <td style="padding:8px 10px;">${calfSexLabel(r.calf_sex)}</td>
+          <td style="padding:8px 10px;">${r.birth_weight != null ? r.birth_weight : ''}</td>
+          <td style="padding:8px 10px;">${escapeHtml(r.sire||'')}</td>
+          <td style="padding:8px 10px;">${escapeHtml(r.birth_assist||'')}</td>
+          <td style="padding:8px 10px;"><span style="font-size:11px;font-weight:700;color:${badge.textColor};background:${badge.color};padding:2px 8px;border-radius:10px;white-space:nowrap;">${badge.label}</span></td>
+          <td style="padding:8px 10px;">${escapeHtml(r.notes||'')}</td>
+        </tr>
+      `;
+    }).join('');
+    return { filtered, rowsHtml };
+  }
+  function calvingReportModal(){
+    let currentDays = 0;
+    let { filtered, rowsHtml } = renderCalvingReportRows(currentDays);
 
-    function rowsFor(list){
-      return list.map(c=>{
-        const meta = [c.lot, c.owner].filter(Boolean).join(' · ');
+    const modal = openModal(`
+      <div class="modal-title">Calving Report</div>
+      <div class="field">
+        <label>Time Frame</label>
+        <select id="calvingReportDays">${dayRangeOptionsHtml()}</select>
+      </div>
+      <div id="calvingReportSummary" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">${filtered.length} calving${filtered.length!==1?'s':''}</div>
+      <div style="overflow-x:auto;background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.15);">
+        <table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px;white-space:nowrap;width:100%;">
+          <thead>
+            <tr style="background:#EFE8D8;">
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Date</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Cow #</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Sex</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Birth Wt</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Sire</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Assist</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Outcome</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Notes</th>
+            </tr>
+          </thead>
+          <tbody id="calvingReportTbody">${rowsHtml || `<tr><td colspan="8" style="padding:14px 10px;font-style:italic;color:#a89f8c;">No calvings in this time frame.</td></tr>`}</tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline btn-full" id="printCalvingReportBtn">🖨️ Print</button>
+        <button class="btn btn-barn btn-full" id="closeCalvingReportBtn">Close</button>
+      </div>
+    `);
+    modal.querySelector('#calvingReportDays').addEventListener('change', (e)=>{
+      currentDays = parseInt(e.target.value, 10);
+      const result = renderCalvingReportRows(currentDays);
+      filtered = result.filtered;
+      modal.querySelector('#calvingReportTbody').innerHTML = result.rowsHtml || `<tr><td colspan="8" style="padding:14px 10px;font-style:italic;color:#a89f8c;">No calvings in this time frame.</td></tr>`;
+      modal.querySelector('#calvingReportSummary').textContent = `${filtered.length} calving${filtered.length!==1?'s':''}`;
+    });
+    modal.querySelector('#printCalvingReportBtn').addEventListener('click', ()=>{
+      const printRowsHtml = filtered.map(r=>{
+        const badge = calvingOutcomeBadge(r);
+        const details = [calfSexLabel(r.calf_sex)+' calf'];
+        if(r.birth_weight != null) details.push(`${r.birth_weight} lbs at birth`);
+        if(r.sire) details.push(`Sire: ${r.sire}`);
+        if(r.birth_assist) details.push(r.birth_assist);
+        details.push(badge.label);
         return `
-          <div class="cow-row-item" data-num="${escapeHtml(c.number)}" style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;">
-            <div>
-              <div style="font-weight:700;font-size:16px;">#${escapeHtml(c.number)}</div>
-              ${meta ? `<div style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;">${escapeHtml(meta)}</div>` : ''}
-            </div>
-            <span class="chev">&rsaquo;</span>
+          <div style="padding:8px 0;border-bottom:1px solid #ccc;">
+            <div style="font-weight:700;font-size:16px;">${fmtDate(r.calving_date)} — #${escapeHtml(r.cow_number)}</div>
+            <div style="font-size:13px;color:#333;margin-top:2px;">${escapeHtml(details.join(' · '))}</div>
+            ${r.notes ? `<div style="font-size:13px;margin-top:4px;">${escapeHtml(r.notes)}</div>` : ''}
           </div>
         `;
-      }).join('') || '<p class="empty" style="padding:10px 0;">None.</p>';
-    }
+      }).join('');
+      document.getElementById('printListOutput').innerHTML = `
+        <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+          <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Calving Report</h2>
+          <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${filtered.length} calving${filtered.length!==1?'s':''}</div>
+          ${printRowsHtml}
+        </div>
+      `;
+      document.body.classList.add('printing-list');
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          window.print();
+        });
+      });
+    });
+    modal.querySelector('#closeCalvingReportBtn').addEventListener('click', closeModal);
+  }
+
+  function soldDeceasedModal(){
+    const inactive = cows.filter(c=>!isActiveStatus(c))
+      .sort((a,b)=> a.status.localeCompare(b.status) || a.number.localeCompare(b.number, undefined, {numeric:true}));
+
+    const rowsHtml = inactive.map((c,i)=>`
+      <tr class="sold-deceased-row" data-num="${escapeHtml(c.number)}" style="border-bottom:1px solid #ddd;cursor:pointer;${i%2===1?'background:#faf7f0;':''}">
+        <td style="padding:8px 10px;">${escapeHtml(c.number)}</td>
+        <td style="padding:8px 10px;">${escapeHtml(c.status)}</td>
+        <td style="padding:8px 10px;">${escapeHtml(c.lot||'')}</td>
+        <td style="padding:8px 10px;">${escapeHtml(c.owner||'')}</td>
+      </tr>
+    `).join('');
 
     const modal = openModal(`
       <div class="modal-title">Sold / Deceased List</div>
-      <div class="section-label">Sold (${sold.length})</div>
-      <div>${rowsFor(sold)}</div>
-      <div class="section-label" style="margin-top:16px;">Deceased (${deceased.length})</div>
-      <div>${rowsFor(deceased)}</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">${inactive.length} cow${inactive.length!==1?'s':''} · tap a row to open that cow's profile</div>
+      <div style="overflow-x:auto;background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.15);">
+        <table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px;white-space:nowrap;width:100%;">
+          <thead>
+            <tr style="background:#EFE8D8;">
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Cow #</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Status</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Location</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #2B2620;">Owner</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml || `<tr><td colspan="4" style="padding:14px 10px;font-style:italic;color:#a89f8c;">None.</td></tr>`}</tbody>
+        </table>
+      </div>
       <div class="modal-actions">
+        <button class="btn btn-outline btn-full" id="printSoldDeceasedBtn">🖨️ Print</button>
         <button class="btn btn-barn btn-full" id="closeSoldDeceasedBtn">Close</button>
       </div>
     `);
-    modal.querySelectorAll('.cow-row-item').forEach(row=>{
+    modal.querySelectorAll('.sold-deceased-row').forEach(row=>{
       row.addEventListener('click', ()=>{
         const num = row.dataset.num;
         closeModal();
         openProfileCow(num);
+      });
+    });
+    modal.querySelector('#printSoldDeceasedBtn').addEventListener('click', ()=>{
+      const printRowsHtml = inactive.map(c=>`
+        <div style="padding:8px 0;border-bottom:1px solid #ccc;">
+          <div style="font-weight:700;font-size:16px;">#${escapeHtml(c.number)} — ${escapeHtml(c.status)}</div>
+          <div style="font-size:13px;color:#333;margin-top:2px;">${escapeHtml([c.lot, c.owner].filter(Boolean).join(' · '))}</div>
+        </div>
+      `).join('');
+      document.getElementById('printListOutput').innerHTML = `
+        <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+          <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Sold / Deceased List</h2>
+          <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${inactive.length} cow${inactive.length!==1?'s':''}</div>
+          ${printRowsHtml}
+        </div>
+      `;
+      document.body.classList.add('printing-list');
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          window.print();
+        });
       });
     });
     modal.querySelector('#closeSoldDeceasedBtn').addEventListener('click', closeModal);
