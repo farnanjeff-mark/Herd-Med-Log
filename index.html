@@ -50,6 +50,43 @@
     box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;
     font-family:Arial,sans-serif;font-size:15px;color:var(--ink);
   }
+  .loan-calc{
+    --lc-bg:#f7f5f0; --lc-card:#ffffff; --lc-ink:#1f2320; --lc-muted:#6b6f6a;
+    --lc-accent:#2f5233; --lc-accent-light:#e8efe9; --lc-border:#dcd8cf;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color:var(--lc-ink);
+  }
+  .loan-calc h1{font-size:1.4rem;margin-bottom:4px;}
+  .loan-calc p.sub{color:var(--lc-muted);margin-top:0;margin-bottom:20px;font-size:0.9rem;}
+  .loan-calc .card{
+    background:var(--lc-card);border:1px solid var(--lc-border);
+    border-radius:10px;padding:20px;margin-bottom:16px;
+  }
+  .loan-calc .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .loan-calc label{display:block;font-size:0.82rem;color:var(--lc-muted);margin-bottom:4px;}
+  .loan-calc input, .loan-calc select{
+    width:100%;padding:9px 10px;border:1px solid var(--lc-border);border-radius:6px;
+    font-size:1rem;color:var(--lc-ink);background:#fff;box-shadow:none;
+  }
+  .loan-calc input:focus, .loan-calc select:focus{outline:2px solid var(--lc-accent);outline-offset:1px;}
+  .loan-calc .field{margin-bottom:4px;}
+  .loan-calc .toggle-row{display:flex;gap:8px;margin-bottom:16px;}
+  .loan-calc .toggle-btn{
+    flex:1;padding:9px 10px;border:1px solid var(--lc-border);border-radius:6px;
+    background:#fff;color:var(--lc-muted);font-size:0.88rem;font-weight:600;
+    cursor:pointer;text-align:center;
+  }
+  .loan-calc .toggle-btn.active{background:var(--lc-accent);border-color:var(--lc-accent);color:#fff;}
+  .loan-calc .results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px;}
+  .loan-calc .stat{background:var(--lc-accent-light);border-radius:8px;padding:12px;text-align:center;}
+  .loan-calc .stat .lc-label{font-size:0.75rem;color:var(--lc-muted);margin-bottom:4px;}
+  .loan-calc .stat .lc-value{font-size:1.15rem;font-weight:600;color:var(--lc-accent);}
+  .loan-calc table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+  .loan-calc th, .loan-calc td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--lc-border);}
+  .loan-calc th:first-child, .loan-calc td:first-child{text-align:left;}
+  .loan-calc th{color:var(--lc-muted);font-weight:600;position:sticky;top:0;background:var(--lc-card);}
+  .loan-calc .table-scroll{max-height:320px;overflow-y:auto;border:1px solid var(--lc-border);border-radius:8px;}
+  .loan-calc details summary{cursor:pointer;font-size:0.9rem;color:var(--lc-accent);font-weight:600;margin-bottom:10px;}
   input, select, textarea{
     font-family:Arial,sans-serif;
     background:var(--paper-raised);
@@ -261,7 +298,8 @@
     <button class="btn btn-nav-tool btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
     <button class="btn btn-nav-tool btn-full" id="homeHayingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Haying</button>
     <button class="btn btn-nav-tool btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
-    <button class="btn btn-nav-tool btn-full" id="homeFarmNotesBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;Farm Notes</button>
+    <button class="btn btn-nav-tool btn-full" id="homeFarmNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;Farm Notes</button>
+    <button class="btn btn-nav-tool btn-full" id="homeLoanCalcBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">💰</span>&nbsp;&nbsp;Loan Calculator</button>
   </div>
 
   <div class="view hidden" id="importView">
@@ -334,6 +372,70 @@
     <input type="text" id="farmNotesSearchBox" placeholder="Search farm notes..." autocomplete="off" style="width:100%;margin-bottom:14px;"/>
     <div id="farmNotesList"></div>
     <div id="farmNotesEmptyState" class="empty hidden">No farm notes logged yet.</div>
+  </div>
+
+  <div class="view hidden loan-calc" id="loanCalculatorView">
+    <button class="btn btn-outline btn-full" id="loanCalcHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <h1>Loan Calculator</h1>
+    <p class="sub">Enter loan details to see your payment, total interest, and full payoff schedule.</p>
+
+    <div class="card">
+      <div class="toggle-row">
+        <button type="button" class="toggle-btn active" id="lcBtnMonthly">Monthly Payments</button>
+        <button type="button" class="toggle-btn" id="lcBtnYearly">Yearly Payments</button>
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label for="lcPrincipal">Loan Amount ($)</label>
+          <input type="number" id="lcPrincipal" value="25000" step="100">
+        </div>
+        <div class="field">
+          <label for="lcRate">Annual Interest Rate (%)</label>
+          <input type="number" id="lcRate" value="6.5" step="0.01">
+        </div>
+        <div class="field">
+          <label for="lcYears">Loan Term (years)</label>
+          <input type="number" id="lcYears" value="5" step="1">
+        </div>
+        <div class="field">
+          <label for="lcExtra" id="lcExtraLabel">Extra Monthly Payment ($, optional)</label>
+          <input type="number" id="lcExtra" value="0" step="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="results">
+        <div class="stat">
+          <div class="lc-label" id="lcPaymentLabel">Monthly Payment</div>
+          <div class="lc-value" id="lcOutPayment">$0</div>
+        </div>
+        <div class="stat">
+          <div class="lc-label">Total Interest</div>
+          <div class="lc-value" id="lcOutInterest">$0</div>
+        </div>
+        <div class="stat">
+          <div class="lc-label">Payoff Time</div>
+          <div class="lc-value" id="lcOutTime">0 mo</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>View amortization schedule</summary>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th id="lcPeriodHeader">Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th>
+              </tr>
+            </thead>
+            <tbody id="lcSchedBody"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
   </div>
 
   <div class="view hidden" id="equipmentListView">
@@ -693,6 +795,7 @@
   const herdTallyView = document.getElementById('herdTallyView');
   const hayingView = document.getElementById('hayingView');
   const farmNotesView = document.getElementById('farmNotesView');
+  const loanCalculatorView = document.getElementById('loanCalculatorView');
   const equipmentListView = document.getElementById('equipmentListView');
   const equipmentDetailView = document.getElementById('equipmentDetailView');
   const quickActionView = document.getElementById('quickActionView');
@@ -1068,6 +1171,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
@@ -1102,6 +1206,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
@@ -1139,6 +1244,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
     equipmentDetailView.classList.add('hidden');
@@ -1171,6 +1277,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
     equipmentDetailView.classList.add('hidden');
@@ -1206,6 +1313,7 @@
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
     equipmentDetailView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     farmNotesView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
@@ -1215,6 +1323,122 @@
     renderFarmNotesList();
     window.scrollTo(0,0);
   }
+  function showLoanCalculator(){
+    setHeaderTitle('Loan', 'Calculator');
+    homeView.classList.add('hidden');
+    listView.classList.add('hidden');
+    detailView.classList.add('hidden');
+    calvingListView.classList.add('hidden');
+    calvingDetailView.classList.add('hidden');
+    notesListView.classList.add('hidden');
+    notesDetailView.classList.add('hidden');
+    profileListView.classList.add('hidden');
+    profileView.classList.add('hidden');
+    weightsListView.classList.add('hidden');
+    breedingListView.classList.add('hidden');
+    weightsDetailView.classList.add('hidden');
+    breedingDetailView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    herdTallyView.classList.add('hidden');
+    hayingView.classList.add('hidden');
+    equipmentListView.classList.add('hidden');
+    equipmentDetailView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.remove('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    loanCalcRecalculate();
+    window.scrollTo(0,0);
+  }
+
+  let loanCalcFrequency = 'monthly'; // 'monthly' or 'yearly'
+
+  function loanCalcFmt(n){
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function loanCalcSetFrequency(freq){
+    loanCalcFrequency = freq;
+    document.getElementById('lcBtnMonthly').classList.toggle('active', freq === 'monthly');
+    document.getElementById('lcBtnYearly').classList.toggle('active', freq === 'yearly');
+    document.getElementById('lcPaymentLabel').textContent = freq === 'monthly' ? 'Monthly Payment' : 'Yearly Payment';
+    document.getElementById('lcExtraLabel').textContent = freq === 'monthly'
+      ? 'Extra Monthly Payment ($, optional)'
+      : 'Extra Yearly Payment ($, optional)';
+    document.getElementById('lcPeriodHeader').textContent = freq === 'monthly' ? 'Month' : 'Year';
+    loanCalcRecalculate();
+  }
+
+  function loanCalcRecalculate(){
+    const principal = parseFloat(document.getElementById('lcPrincipal').value) || 0;
+    const annualRate = parseFloat(document.getElementById('lcRate').value) || 0;
+    const years = parseFloat(document.getElementById('lcYears').value) || 0;
+    const extra = parseFloat(document.getElementById('lcExtra').value) || 0;
+
+    const periodsPerYear = loanCalcFrequency === 'monthly' ? 12 : 1;
+    const periodRate = annualRate / 100 / periodsPerYear;
+    const numPayments = Math.round(years * periodsPerYear);
+
+    let basePayment;
+    if(periodRate === 0){
+      basePayment = numPayments > 0 ? principal / numPayments : 0;
+    } else {
+      basePayment = principal * (periodRate * Math.pow(1 + periodRate, numPayments)) /
+                    (Math.pow(1 + periodRate, numPayments) - 1);
+    }
+
+    let balance = principal;
+    let totalInterest = 0;
+    let period = 0;
+    const rows = [];
+    const maxPeriods = loanCalcFrequency === 'monthly' ? 1200 : 100;
+
+    while(balance > 0.005 && period < maxPeriods){
+      period++;
+      const interestPortion = balance * periodRate;
+      let payment = basePayment + extra;
+      let principalPortion = payment - interestPortion;
+
+      if(principalPortion > balance){
+        principalPortion = balance;
+        payment = principalPortion + interestPortion;
+      }
+
+      balance -= principalPortion;
+      totalInterest += interestPortion;
+
+      rows.push({ period, payment, principalPortion, interestPortion, balance: Math.max(balance, 0) });
+    }
+
+    document.getElementById('lcOutPayment').textContent = loanCalcFmt(basePayment + extra);
+    document.getElementById('lcOutInterest').textContent = loanCalcFmt(totalInterest);
+
+    if(loanCalcFrequency === 'monthly'){
+      const yrs = Math.floor(period / 12);
+      const mos = period % 12;
+      document.getElementById('lcOutTime').textContent = (yrs > 0 ? yrs + 'y ' : '') + mos + 'mo';
+    } else {
+      document.getElementById('lcOutTime').textContent = period + 'y';
+    }
+
+    const tbody = document.getElementById('lcSchedBody');
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.period}</td>
+        <td>${loanCalcFmt(r.payment)}</td>
+        <td>${loanCalcFmt(r.principalPortion)}</td>
+        <td>${loanCalcFmt(r.interestPortion)}</td>
+        <td>${loanCalcFmt(r.balance)}</td>
+      </tr>
+    `).join('');
+  }
+
   function showEquipmentList(){
     setHeaderTitle('Equipment', 'Maintenance');
     homeView.classList.add('hidden');
@@ -1237,6 +1461,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentDetailView.classList.add('hidden');
@@ -1278,6 +1503,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1293,6 +1519,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1309,6 +1536,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1323,6 +1551,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     importView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
@@ -1339,6 +1568,7 @@
     importView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     globalSearchView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
@@ -1420,6 +1650,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1470,6 +1701,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1526,6 +1758,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     profileView.classList.remove('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
@@ -1577,6 +1810,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1624,6 +1858,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1657,6 +1892,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -3977,6 +4213,13 @@
   document.getElementById('homeFarmNotesBtn').addEventListener('click', showFarmNotes);
   document.getElementById('farmNotesHomeBtn').addEventListener('click', showHome);
   document.getElementById('addFarmNoteBtn').addEventListener('click', ()=> farmNoteModal(null));
+  document.getElementById('homeLoanCalcBtn').addEventListener('click', showLoanCalculator);
+  document.getElementById('loanCalcHomeBtn').addEventListener('click', showHome);
+  document.getElementById('lcBtnMonthly').addEventListener('click', ()=> loanCalcSetFrequency('monthly'));
+  document.getElementById('lcBtnYearly').addEventListener('click', ()=> loanCalcSetFrequency('yearly'));
+  ['lcPrincipal','lcRate','lcYears','lcExtra'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', loanCalcRecalculate);
+  });
   document.getElementById('farmNotesSearchBox').addEventListener('input', renderFarmNotesList);
   document.getElementById('homeEquipmentBtn').addEventListener('click', showEquipmentList);
   document.getElementById('equipmentListHomeBtn').addEventListener('click', showHome);
