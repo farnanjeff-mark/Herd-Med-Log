@@ -6113,14 +6113,12 @@
     if(!q){ showToast('Enter a cow number'); return; }
     const exact = cows.find(c=>c.number===q);
     if(exact){
-      openProfileCow(exact.number);
+      showQuickAction([exact]);
       return;
     }
     const partial = cows.filter(c=>c.number.includes(q)).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
     if(partial.length === 0){
       showToast(`No cow found matching "${q}"`);
-    } else if(partial.length === 1){
-      openProfileCow(partial[0].number);
     } else {
       showQuickAction(partial);
     }
