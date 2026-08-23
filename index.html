@@ -5297,8 +5297,8 @@
   function reportTableModal(title, headerCells, rowsHtml, cowListForActions){
     const modal = openModal(`
       <div class="modal-title">${title}</div>
-      <div style="max-height:60vh;overflow-y:auto;margin-bottom:14px;">
-        <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;">
+      <div style="max-height:60vh;overflow-y:auto;overflow-x:auto;margin-bottom:14px;">
+        <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
           <thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>
@@ -5419,7 +5419,7 @@
           <option value="99999">All</option>
         </select>
       </div>
-      <div id="calvingReportResults" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div id="calvingReportResults" style="max-height:50vh;overflow-y:auto;overflow-x:auto;margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="calvingReportPrintBtn">🖨️ Print</button>
         <button class="btn btn-outline" id="calvingReportExportBtn">📊 Export</button>
@@ -5433,7 +5433,7 @@
       const list = calvings.filter(c=> daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
       return { list, headerCells: ['Date','Cow #','Sex','Birth Wt','Sire','Assist','Outcome','Notes'], rowsHtml: list.map((c,i)=>{
         const outcome = c.promoted_to_cow_number ? `Kept (#${c.promoted_to_cow_number})` : (c.calf_outcome === 'sold' ? 'Sold' : c.calf_outcome === 'died' ? 'Died' : 'Active');
-        return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${fmtDateShort(c.calving_date)}</td><td style="padding:8px;">#${escapeHtml(c.cow_number)}</td><td style="padding:8px;">${calfSexLabel(c.calf_sex)}</td><td style="padding:8px;">${c.birth_weight!=null ? c.birth_weight+' lbs' : ''}</td><td style="padding:8px;">${escapeHtml(c.sire||'')}</td><td style="padding:8px;">${escapeHtml(c.birth_assist||'')}</td><td style="padding:8px;">${outcome}</td><td style="padding:8px;">${escapeHtml(c.notes||'')}</td></tr>`;
+        return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${fmtDateShort(c.calving_date)}</td><td style="padding:8px;">#${escapeHtml(c.cow_number)}</td><td style="padding:8px;">${calfSexLabel(c.calf_sex)}</td><td style="padding:8px;">${c.birth_weight!=null ? c.birth_weight : ''}</td><td style="padding:8px;">${escapeHtml(c.sire||'')}</td><td style="padding:8px;">${escapeHtml(c.birth_assist||'')}</td><td style="padding:8px;">${outcome}</td><td style="padding:8px;">${escapeHtml(c.notes||'')}</td></tr>`;
       }).join('') };
     }
     function refresh(){
@@ -5442,7 +5442,7 @@
       if(list.length === 0){
         resultsEl.innerHTML = '<p class="empty">No calvings in this timeframe.</p>';
       } else {
-        resultsEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;"><thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table>`;
+        resultsEl.innerHTML = `<table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;"><thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table>`;
       }
     }
     refresh();
