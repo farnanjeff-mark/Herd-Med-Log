@@ -5683,45 +5683,6 @@
     return { title, entries };
   }
 
-  function textListSelectionModal(category, days){
-    const { title, entries } = computeTextListEntries(category, days);
-    if(entries.length === 0){ showToast('Nothing to send for that selection'); return; }
-    const modal = openModal(`
-      <div class="modal-title">${title}</div>
-      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;">Uncheck any you don't want to include.</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button class="btn btn-outline btn-sm" id="textListSelectAll">Select All</button>
-        <button class="btn btn-outline btn-sm" id="textListSelectNone">Select None</button>
-      </div>
-      <div id="textListEntryChecklist" style="max-height:48vh;overflow-y:auto;margin-bottom:14px;">
-        ${entries.map(e=>`
-          <label style="display:flex;align-items:flex-start;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer;font-family:Arial,sans-serif;font-size:13px;">
-            <input type="checkbox" class="text-list-entry-check" data-id="${escapeHtml(String(e.id))}" checked style="width:20px;height:20px;flex-shrink:0;margin-top:1px;"/>
-            <span>${escapeHtml(e.line)}</span>
-          </label>
-        `).join('')}
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-outline" id="cancelTextListSelection">Cancel</button>
-        <button class="btn btn-barn" id="confirmTextListSelection">Continue</button>
-      </div>
-    `);
-    modal.querySelector('#textListSelectAll').addEventListener('click', ()=>{
-      modal.querySelectorAll('.text-list-entry-check').forEach(cb=> cb.checked = true);
-    });
-    modal.querySelector('#textListSelectNone').addEventListener('click', ()=>{
-      modal.querySelectorAll('.text-list-entry-check').forEach(cb=> cb.checked = false);
-    });
-    modal.querySelector('#cancelTextListSelection').addEventListener('click', closeModal);
-    modal.querySelector('#confirmTextListSelection').addEventListener('click', ()=>{
-      const checkedIds = new Set([...modal.querySelectorAll('.text-list-entry-check')].filter(cb=>cb.checked).map(cb=>cb.dataset.id));
-      const selectedLines = entries.filter(e=> checkedIds.has(String(e.id))).map(e=>e.line);
-      if(selectedLines.length === 0){ showToast('Select at least one entry'); return; }
-      closeModal();
-      showTextListFinalPreview(title, selectedLines);
-    });
-  }
-
   const RECIPIENTS_STORAGE_KEY = 'herdLedgerTextRecipients';
   function getRecipients(){
     try{
@@ -5788,8 +5749,9 @@
     });
   }
 
-  function showTextListFinalPreview(title, lines){
-    const bodyText = `${title} (${fmtDate(todayLocal())})\n\n` + lines.join('\n');
+  function textListSelectionModal(category, days){
+    const { title, entries } = computeTextListEntries(category, days);
+    if(entries.length === 0){ showToast('Nothing to send for that selection'); return; }
     const recipients = getRecipients();
     const recipOptionsHtml = recipients.map((r,i)=>`
       <label style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-family:Arial,sans-serif;font-size:13px;">
@@ -5799,23 +5761,36 @@
     `).join('') || '<p class="empty" style="padding:10px 0;">No saved recipients yet — add one below, or send with no number and pick the contact right in Messages.</p>';
     const modal = openModal(`
       <div class="modal-title">${title}</div>
-      <textarea id="textListPreviewArea" rows="10" style="width:100%;font-family:Arial,sans-serif;font-size:13px;margin-bottom:14px;" readonly>${escapeHtml(bodyText)}</textarea>
-      <div class="section-label" style="margin-top:0;">Send To</div>
+      <div class="section-label" style="margin-top:0;">Entries to Include</div>
+      <div id="textListEntryChecklist" style="max-height:40vh;overflow-y:auto;margin-bottom:14px;">
+        ${entries.map(e=>`
+          <label style="display:flex;align-items:flex-start;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer;font-family:Arial,sans-serif;font-size:13px;">
+            <input type="checkbox" class="text-list-entry-check" data-id="${escapeHtml(String(e.id))}" checked style="width:20px;height:20px;flex-shrink:0;margin-top:1px;"/>
+            <span>${escapeHtml(e.line)}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div class="section-label">Send To</div>
       <div id="recipCheckWrap">${recipOptionsHtml}</div>
       <a href="#" id="manageRecipLink" style="display:block;font-family:Arial,sans-serif;font-size:12px;color:var(--barn);text-decoration:underline;margin:12px 0 16px;">Manage recipients</a>
       <div class="modal-actions">
-        <button class="btn btn-outline" id="closeTextPreview">Close</button>
-        <button class="btn btn-barn" id="sendTextPreview">Open in Messages</button>
+        <button class="btn btn-outline" id="cancelTextListSelection">Cancel</button>
+        <button class="btn btn-barn" id="sendTextListBtn">Open in Messages</button>
       </div>
     `);
-    modal.querySelector('#closeTextPreview').addEventListener('click', closeModal);
+    modal.querySelector('#cancelTextListSelection').addEventListener('click', closeModal);
     modal.querySelector('#manageRecipLink').addEventListener('click', (e)=>{
       e.preventDefault();
       closeModal();
-      manageRecipientsModal(()=> showTextListFinalPreview(title, lines));
+      manageRecipientsModal(()=> textListSelectionModal(category, days));
     });
-    modal.querySelector('#sendTextPreview').addEventListener('click', async ()=>{
+    modal.querySelector('#sendTextListBtn').addEventListener('click', async ()=>{
+      const checkedIds = new Set([...modal.querySelectorAll('.text-list-entry-check')].filter(cb=>cb.checked).map(cb=>cb.dataset.id));
+      const selectedLines = entries.filter(e=> checkedIds.has(String(e.id))).map(e=>e.line);
+      if(selectedLines.length === 0){ showToast('Select at least one entry'); return; }
+      const bodyText = `${title} (${fmtDate(todayLocal())})\n\n` + selectedLines.join('\n');
       const checkedRecips = [...modal.querySelectorAll('.recipCheck:checked')].map(cb=> recipients[parseInt(cb.dataset.idx, 10)]);
+      closeModal();
       if(checkedRecips.length === 0){
         // No recipient selected — open Messages blank, same as before recipients existed.
         window.location.href = 'sms:&body=' + encodeURIComponent(bodyText);
