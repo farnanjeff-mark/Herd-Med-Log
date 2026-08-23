@@ -350,7 +350,9 @@
   <div class="view hidden" id="herdTallyView">
     <button class="btn btn-outline btn-full" id="herdTallyHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
     <div class="modal-title" style="margin-bottom:14px;">Herd Tally</div>
+    <button class="btn btn-nav-tool btn-full" id="addHerdTallyLocationBtn" style="margin-bottom:14px;">+ Add Location</button>
     <div id="herdTallyContent"></div>
+    <div id="herdTallyEmptyState" class="empty hidden">No locations added yet.<br/>Tap "+ Add Location" to get started.</div>
   </div>
 
   <div class="view hidden" id="hayingView">
@@ -4225,6 +4227,7 @@
   document.getElementById('farmOperationsHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeHerdTallyBtn').addEventListener('click', showHerdTally);
   document.getElementById('herdTallyHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addHerdTallyLocationBtn').addEventListener('click', addHerdTallyLocationModal);
   document.getElementById('homeHayingBtn').addEventListener('click', showHaying);
   document.getElementById('hayingHomeBtn').addEventListener('click', showHome);
   document.getElementById('addHayingBtn').addEventListener('click', ()=> hayingModal(null));
@@ -4740,14 +4743,17 @@
     });
   }
 
-  const HERD_TALLY_LOCATIONS = ["Olin's", 'Ballard Corner', "Chase's", 'Ford City'];
   function renderHerdTally(){
     const el = document.getElementById('herdTallyContent');
+    const emptyEl = document.getElementById('herdTallyEmptyState');
     if(!el) return;
-    el.innerHTML = HERD_TALLY_LOCATIONS.map(loc=>{
-      const entry = herdTally.find(t=>t.location===loc) || { cows:0, calves:0, bulls:0 };
+    const sorted = [...herdTally].sort((a,b)=> a.location.localeCompare(b.location));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    el.innerHTML = sorted.map(entry=>{
+      const loc = entry.location;
       return `
-        <div class="farm-tally-card">
+        <div class="farm-tally-card" style="position:relative;">
+          <button class="record-del herd-tally-remove-btn" data-loc="${escapeHtml(loc)}" title="Remove location" style="top:12px;right:12px;">&times;</button>
           <div class="farm-tally-name">${escapeHtml(loc)}</div>
           <div class="farm-tally-numbers">
             <div class="farm-tally-item" data-loc="${escapeHtml(loc)}" data-field="cows">
@@ -4769,6 +4775,61 @@
     el.querySelectorAll('.farm-tally-item').forEach(item=>{
       item.addEventListener('click', ()=> editHerdTallyFieldModal(item.dataset.loc, item.dataset.field));
     });
+    el.querySelectorAll('.herd-tally-remove-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        removeHerdTallyLocation(btn.dataset.loc);
+      });
+    });
+  }
+  function addHerdTallyLocationModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Location</div>
+      <div class="field">
+        <label>Location Name</label>
+        <input type="text" id="newHerdTallyLoc" placeholder="e.g. Back Forty" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddHerdTallyLoc">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddHerdTallyLoc">Add Location</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddHerdTallyLoc').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddHerdTallyLoc').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newHerdTallyLoc').value.trim();
+      if(!name){ showToast('Enter a location name'); return; }
+      if(herdTally.some(t=>t.location.toLowerCase()===name.toLowerCase())){ showToast('That location already exists'); return; }
+      const btn = modal.querySelector('#confirmAddHerdTallyLoc');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/herd_tally', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ location: name, cows:0, calves:0, bulls:0 })
+        });
+        herdTally.push(inserted[0]);
+        closeModal();
+        renderHerdTally();
+        showToast('Location added');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not add — try again');
+      }
+    });
+  }
+  async function removeHerdTallyLocation(loc){
+    if(!confirm(`Remove "${loc}" from Herd Tally? This can't be undone.`)) return;
+    try{
+      const existing = herdTally.find(t=>t.location===loc);
+      if(existing){
+        await api('/herd_tally?id=eq.' + encodeURIComponent(existing.id), { method:'DELETE' });
+        herdTally = herdTally.filter(t=>t.id!==existing.id);
+      }
+      renderHerdTally();
+      showToast('Location removed');
+    }catch(e){
+      showToast('Could not remove — try again');
+    }
   }
   function editHerdTallyFieldModal(loc, field){
     const entry = herdTally.find(t=>t.location===loc) || { cows:0, calves:0, bulls:0 };
