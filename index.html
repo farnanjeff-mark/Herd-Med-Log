@@ -338,6 +338,7 @@
       <input type="text" id="globalSearchBox" placeholder="Search cow #, medicine, sire, notes..." autocomplete="off"/>
     </div>
     <div id="globalSearchResults" style="margin-top:14px;"></div>
+    <button class="btn btn-outline btn-full hidden" id="globalSearchPrintBtn" style="margin-top:10px;">🖨️ Print</button>
   </div>
 
   <div class="view hidden" id="recentlyDeletedView">
@@ -1609,6 +1610,7 @@
     quickActionView.classList.add('hidden');
     globalSearchBox.value = '';
     document.getElementById('globalSearchResults').innerHTML = '';
+    document.getElementById('globalSearchPrintBtn').classList.add('hidden');
     window.scrollTo(0,0);
   }
   async function showRecentlyDeleted(){
@@ -4257,6 +4259,7 @@
   document.getElementById('homeGlobalSearchBtn').addEventListener('click', showGlobalSearch);
   document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
+  document.getElementById('globalSearchPrintBtn').addEventListener('click', printGlobalSearchResults);
   document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
   document.getElementById('biggestGainersBtn').addEventListener('click', biggestGainersModal);
   document.getElementById('deadCalvesBtn').addEventListener('click', deadCalvesModal);
@@ -5240,30 +5243,115 @@
     }catch(e){ showToast('Could not remove — try again'); }
   }
 
+  let lastGlobalSearchRows = []; // for print
+  let lastGlobalSearchQuery = '';
   function renderGlobalSearchResults(){
     const q = (globalSearchBox.value||'').trim().toLowerCase();
     const resultsEl = document.getElementById('globalSearchResults');
-    if(!q){ resultsEl.innerHTML = ''; return; }
-    const matchedCows = cows.filter(c=>{
-      if(c.number.toLowerCase().includes(q)) return true;
-      if(recordsFor(c.number).some(r=> (r.medicine||'').toLowerCase().includes(q) || (r.reason||'').toLowerCase().includes(q) || (r.notes||'').toLowerCase().includes(q))) return true;
-      if(calvingsFor(c.number).some(r=> (r.sire||'').toLowerCase().includes(q) || (r.notes||'').toLowerCase().includes(q))) return true;
-      if(generalNotesFor(c.number).some(n=> (n.note||'').toLowerCase().includes(q))) return true;
-      if(weightsFor(c.number).some(w=> (w.notes||'').toLowerCase().includes(q))) return true;
-      if(breedingFor(c.number).some(b=> (b.bred_to||'').toLowerCase().includes(q) || (b.natural_sire||'').toLowerCase().includes(q) || (b.vet_calls||'').toLowerCase().includes(q))) return true;
-      return false;
-    }).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
-    if(matchedCows.length === 0){
+    const printBtn = document.getElementById('globalSearchPrintBtn');
+    lastGlobalSearchQuery = globalSearchBox.value.trim();
+    if(!q){ resultsEl.innerHTML = ''; printBtn.classList.add('hidden'); lastGlobalSearchRows = []; return; }
+
+    const matches = []; // [{date, num, owner, lot, type, details}]
+    cows.forEach(c=>{
+      let anyRecordMatched = false;
+      recordsFor(c.number).forEach(r=>{
+        const desc = r.medicine ? `${r.medicine}${r.reason ? ' / '+r.reason : ''}${r.notes ? ' — '+r.notes : ''}` : (r.notes||'');
+        if(desc.toLowerCase().includes(q)){
+          matches.push({ date: r.date, num: c.number, owner: c.owner, lot: c.lot, type: 'Med', details: desc });
+          anyRecordMatched = true;
+        }
+      });
+      calvingsFor(c.number).forEach(r=>{
+        const desc = [r.sire ? 'Sire: '+r.sire : '', r.notes||''].filter(Boolean).join(' — ');
+        if(desc.toLowerCase().includes(q)){
+          matches.push({ date: r.calving_date, num: c.number, owner: c.owner, lot: c.lot, type: 'Calving', details: `${calfSexLabel(r.calf_sex)} calf${desc ? ' — '+desc : ''}` });
+          anyRecordMatched = true;
+        }
+      });
+      generalNotesFor(c.number).forEach(n=>{
+        if((n.note||'').toLowerCase().includes(q)){
+          matches.push({ date: n.note_date, num: c.number, owner: c.owner, lot: c.lot, type: 'Note', details: n.note||'' });
+          anyRecordMatched = true;
+        }
+      });
+      weightsFor(c.number).forEach(w=>{
+        if((w.notes||'').toLowerCase().includes(q)){
+          matches.push({ date: w.weigh_date, num: c.number, owner: c.owner, lot: c.lot, type: 'Weight', details: w.notes||'' });
+          anyRecordMatched = true;
+        }
+      });
+      breedingFor(c.number).forEach(b=>{
+        const desc = [b.bred_to ? 'Bred to: '+b.bred_to : '', b.natural_sire ? 'Sire: '+b.natural_sire : '', b.vet_calls||''].filter(Boolean).join(' — ');
+        if(desc.toLowerCase().includes(q)){
+          matches.push({ date: b.breed_date, num: c.number, owner: c.owner, lot: c.lot, type: 'Breeding', details: desc });
+          anyRecordMatched = true;
+        }
+      });
+      if(!anyRecordMatched && c.number.toLowerCase().includes(q)){
+        matches.push({ date: null, num: c.number, owner: c.owner, lot: c.lot, type: 'Cow #', details: [c.lot, c.owner].filter(Boolean).join(' · ') });
+      }
+    });
+
+    if(matches.length === 0){
       resultsEl.innerHTML = '<p class="empty">No matches found.</p>';
+      printBtn.classList.add('hidden');
+      lastGlobalSearchRows = [];
       return;
     }
-    resultsEl.innerHTML = matchedCows.map(cow=>{
-      const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      return `<div class="cow-card" data-num="${escapeHtml(cow.number)}"><div><div class="cow-num">${ownerNumHtml(cow.number, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div></div><span class="chev">&rsaquo;</span></div>`;
-    }).join('');
-    resultsEl.querySelectorAll('.cow-card').forEach(card=>{
-      card.addEventListener('click', ()=> openProfileCow(card.dataset.num));
+
+    matches.sort((a,b)=>{
+      if(!a.date && !b.date) return a.num.localeCompare(b.num, undefined, {numeric:true});
+      if(!a.date) return 1;
+      if(!b.date) return -1;
+      return b.date.localeCompare(a.date);
     });
+
+    lastGlobalSearchRows = matches;
+    printBtn.classList.remove('hidden');
+    resultsEl.innerHTML = `
+      <div style="overflow-x:auto;">
+        <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+          <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Type</th><th style="text-align:left;padding:8px;">Details</th></tr></thead>
+          <tbody>
+            ${matches.map((m,i)=>`
+              <tr class="global-search-row" data-num="${escapeHtml(m.num)}" style="background:${i%2===0?'#fff':'#F7F2E6'};cursor:pointer;">
+                <td style="padding:8px;">${m.date ? fmtDateShort(m.date) : ''}</td>
+                <td style="padding:8px;">${ownerNumHtml(m.num, m.owner)}</td>
+                <td style="padding:8px;">${escapeHtml(m.type)}</td>
+                <td style="padding:8px;white-space:normal;">${escapeHtml(m.details)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    resultsEl.querySelectorAll('.global-search-row').forEach(row=>{
+      row.addEventListener('click', ()=> openProfileCow(row.dataset.num));
+    });
+  }
+  function printGlobalSearchResults(){
+    if(lastGlobalSearchRows.length === 0){ showToast('Nothing to print'); return; }
+    const rowsHtml = lastGlobalSearchRows.map((m,i)=>`
+      <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+        <td style="padding:6px;">${m.date ? fmtDateShort(m.date) : ''}</td>
+        <td style="padding:6px;">#${escapeHtml(m.num)}</td>
+        <td style="padding:6px;">${escapeHtml(m.type)}</td>
+        <td style="padding:6px;">${escapeHtml(m.details)}</td>
+      </tr>
+    `).join('');
+    document.getElementById('printListOutput').innerHTML = `
+      <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+        <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Search Results</h2>
+        <div style="font-size:13px;color:#555;margin-bottom:16px;">"${escapeHtml(lastGlobalSearchQuery)}" · Printed ${fmtDate(todayLocal())} · ${lastGlobalSearchRows.length} match${lastGlobalSearchRows.length!==1?'es':''}</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Date</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Type</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Details</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    `;
+    document.body.classList.add('printing-list');
+    requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
   }
 
   function renderRecentlyDeleted(){
