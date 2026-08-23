@@ -5653,46 +5653,188 @@
       const category = categorySelect.value;
       const days = parseInt(modal.querySelector('#textTimeframeSelect').value, 10);
       closeModal();
-      buildTextListPreview(category, days);
+      textListSelectionModal(category, days);
     });
   }
 
-  function buildTextListPreview(category, days){
-    let lines = [];
+  function computeTextListEntries(category, days){
     let title = '';
+    let entries = []; // [{id, line}]
     if(category === 'calving'){
       title = 'Calving Records';
       const list = calvings.filter(c=> daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
-      lines = list.map(c=> `#${c.cow_number} — ${fmtDateShort(c.calving_date)} — ${calfSexLabel(c.calf_sex)} calf${c.birth_weight!=null ? ', '+c.birth_weight+' lbs' : ''}${c.sire ? ', sire '+c.sire : ''}`);
+      entries = list.map(c=> ({ id: c.id, line: `#${c.cow_number} — ${fmtDateShort(c.calving_date)} — ${calfSexLabel(c.calf_sex)} calf${c.birth_weight!=null ? ', '+c.birth_weight+' lbs' : ''}${c.sire ? ', sire '+c.sire : ''}` }));
     } else if(category === 'meds'){
       title = 'Meds & Notes';
       const list = treatments.filter(t=> daysAgo(t.date) <= days && daysAgo(t.date) >= 0).sort((a,b)=>b.date.localeCompare(a.date));
-      lines = list.map(t=>{
+      entries = list.map(t=>{
         const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
-        return `#${t.cow_number} — ${fmtDateShort(t.date)} — ${desc}`;
+        return { id: t.id, line: `#${t.cow_number} — ${fmtDateShort(t.date)} — ${desc}` };
       });
     } else if(category === 'notes'){
       title = 'General Notes';
       const list = generalNotes.filter(n=> daysAgo(n.note_date) <= days && daysAgo(n.note_date) >= 0).sort((a,b)=>b.note_date.localeCompare(a.note_date));
-      lines = list.map(n=> `#${n.cow_number} — ${fmtDateShort(n.note_date)} — ${n.note||''}`);
+      entries = list.map(n=> ({ id: n.id, line: `#${n.cow_number} — ${fmtDateShort(n.note_date)} — ${n.note||''}` }));
     } else if(category === 'tagneeded'){
       title = 'Tag Needed';
       const list = cows.filter(c=>c.tag_needed).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
-      lines = list.map(c=> `#${c.number}${c.lot ? ' — '+c.lot : ''}`);
+      entries = list.map(c=> ({ id: c.number, line: `#${c.number}${c.lot ? ' — '+c.lot : ''}` }));
     }
-    if(lines.length === 0){ showToast('Nothing to send for that selection'); return; }
-    const bodyText = `${title} (${fmtDate(todayLocal())})\n\n` + lines.join('\n');
+    return { title, entries };
+  }
+
+  function textListSelectionModal(category, days){
+    const { title, entries } = computeTextListEntries(category, days);
+    if(entries.length === 0){ showToast('Nothing to send for that selection'); return; }
     const modal = openModal(`
       <div class="modal-title">${title}</div>
-      <textarea id="textListPreviewArea" rows="12" style="width:100%;font-family:Arial,sans-serif;font-size:13px;" readonly>${escapeHtml(bodyText)}</textarea>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;">Uncheck any you don't want to include.</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="btn btn-outline btn-sm" id="textListSelectAll">Select All</button>
+        <button class="btn btn-outline btn-sm" id="textListSelectNone">Select None</button>
+      </div>
+      <div id="textListEntryChecklist" style="max-height:48vh;overflow-y:auto;margin-bottom:14px;">
+        ${entries.map(e=>`
+          <label style="display:flex;align-items:flex-start;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer;font-family:Arial,sans-serif;font-size:13px;">
+            <input type="checkbox" class="text-list-entry-check" data-id="${escapeHtml(String(e.id))}" checked style="width:20px;height:20px;flex-shrink:0;margin-top:1px;"/>
+            <span>${escapeHtml(e.line)}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelTextListSelection">Cancel</button>
+        <button class="btn btn-barn" id="confirmTextListSelection">Continue</button>
+      </div>
+    `);
+    modal.querySelector('#textListSelectAll').addEventListener('click', ()=>{
+      modal.querySelectorAll('.text-list-entry-check').forEach(cb=> cb.checked = true);
+    });
+    modal.querySelector('#textListSelectNone').addEventListener('click', ()=>{
+      modal.querySelectorAll('.text-list-entry-check').forEach(cb=> cb.checked = false);
+    });
+    modal.querySelector('#cancelTextListSelection').addEventListener('click', closeModal);
+    modal.querySelector('#confirmTextListSelection').addEventListener('click', ()=>{
+      const checkedIds = new Set([...modal.querySelectorAll('.text-list-entry-check')].filter(cb=>cb.checked).map(cb=>cb.dataset.id));
+      const selectedLines = entries.filter(e=> checkedIds.has(String(e.id))).map(e=>e.line);
+      if(selectedLines.length === 0){ showToast('Select at least one entry'); return; }
+      closeModal();
+      showTextListFinalPreview(title, selectedLines);
+    });
+  }
+
+  const RECIPIENTS_STORAGE_KEY = 'herdLedgerTextRecipients';
+  function getRecipients(){
+    try{
+      const raw = localStorage.getItem(RECIPIENTS_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function saveRecipientsList(list){
+    localStorage.setItem(RECIPIENTS_STORAGE_KEY, JSON.stringify(list));
+  }
+  function manageRecipientsModal(onDone){
+    const modal = openModal(`
+      <div class="modal-title">Manage Recipients</div>
+      <div id="recipientsListWrap" style="margin-bottom:16px;"></div>
+      <div class="section-label" style="margin-top:0;">Add Recipient</div>
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="newRecipName" placeholder="e.g. Mark"/>
+      </div>
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="tel" id="newRecipPhone" placeholder="e.g. 555-123-4567"/>
+      </div>
+      <button class="btn btn-nav-tool btn-full" id="addRecipientBtn" style="margin-bottom:16px;">+ Add Recipient</button>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="doneRecipientsBtn">Done</button>
+      </div>
+    `);
+    function refreshList(){
+      const recipients = getRecipients();
+      const wrap = modal.querySelector('#recipientsListWrap');
+      wrap.innerHTML = recipients.length === 0
+        ? '<p class="empty" style="padding:10px 0;">No saved recipients yet — add one below.</p>'
+        : recipients.map((r,i)=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);font-family:Arial,sans-serif;">
+              <span>${escapeHtml(r.name)} <span style="color:#6b6350;font-size:12px;">${escapeHtml(r.phone)}</span></span>
+              <button class="remove-recipient-btn" data-idx="${i}" style="background:none;border:none;color:#a08f6b;font-size:16px;cursor:pointer;padding:4px 8px;">&times;</button>
+            </div>
+          `).join('');
+      wrap.querySelectorAll('.remove-recipient-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const list = getRecipients();
+          list.splice(parseInt(btn.dataset.idx, 10), 1);
+          saveRecipientsList(list);
+          refreshList();
+        });
+      });
+    }
+    refreshList();
+    modal.querySelector('#addRecipientBtn').addEventListener('click', ()=>{
+      const name = modal.querySelector('#newRecipName').value.trim();
+      const phone = modal.querySelector('#newRecipPhone').value.trim();
+      if(!name || !phone){ showToast('Enter a name and phone number'); return; }
+      const list = getRecipients();
+      list.push({ name, phone });
+      saveRecipientsList(list);
+      modal.querySelector('#newRecipName').value = '';
+      modal.querySelector('#newRecipPhone').value = '';
+      refreshList();
+    });
+    modal.querySelector('#doneRecipientsBtn').addEventListener('click', ()=>{
+      closeModal();
+      if(onDone) onDone();
+    });
+  }
+
+  function showTextListFinalPreview(title, lines){
+    const bodyText = `${title} (${fmtDate(todayLocal())})\n\n` + lines.join('\n');
+    const recipients = getRecipients();
+    const recipOptionsHtml = recipients.map((r,i)=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-family:Arial,sans-serif;font-size:13px;">
+        <input type="checkbox" class="recipCheck" data-idx="${i}" style="width:18px;height:18px;flex-shrink:0;"/>
+        <span>${escapeHtml(r.name)} <span style="color:#6b6350;font-size:12px;">${escapeHtml(r.phone)}</span></span>
+      </label>
+    `).join('') || '<p class="empty" style="padding:10px 0;">No saved recipients yet — add one below, or send with no number and pick the contact right in Messages.</p>';
+    const modal = openModal(`
+      <div class="modal-title">${title}</div>
+      <textarea id="textListPreviewArea" rows="10" style="width:100%;font-family:Arial,sans-serif;font-size:13px;margin-bottom:14px;" readonly>${escapeHtml(bodyText)}</textarea>
+      <div class="section-label" style="margin-top:0;">Send To</div>
+      <div id="recipCheckWrap">${recipOptionsHtml}</div>
+      <a href="#" id="manageRecipLink" style="display:block;font-family:Arial,sans-serif;font-size:12px;color:var(--barn);text-decoration:underline;margin:12px 0 16px;">Manage recipients</a>
       <div class="modal-actions">
         <button class="btn btn-outline" id="closeTextPreview">Close</button>
         <button class="btn btn-barn" id="sendTextPreview">Open in Messages</button>
       </div>
     `);
     modal.querySelector('#closeTextPreview').addEventListener('click', closeModal);
-    modal.querySelector('#sendTextPreview').addEventListener('click', ()=>{
-      window.location.href = 'sms:&body=' + encodeURIComponent(bodyText);
+    modal.querySelector('#manageRecipLink').addEventListener('click', (e)=>{
+      e.preventDefault();
+      closeModal();
+      manageRecipientsModal(()=> showTextListFinalPreview(title, lines));
+    });
+    modal.querySelector('#sendTextPreview').addEventListener('click', async ()=>{
+      const checkedRecips = [...modal.querySelectorAll('.recipCheck:checked')].map(cb=> recipients[parseInt(cb.dataset.idx, 10)]);
+      if(checkedRecips.length === 0){
+        // No recipient selected — open Messages blank, same as before recipients existed.
+        window.location.href = 'sms:&body=' + encodeURIComponent(bodyText);
+        return;
+      }
+      if(checkedRecips.length === 1){
+        // A single recipient works reliably as a direct link on iOS.
+        const phone = checkedRecips[0].phone.replace(/[^\d+]/g,'');
+        window.location.href = 'sms:' + phone + '?body=' + encodeURIComponent(bodyText);
+      } else {
+        // iOS does not reliably fill in multiple recipients from a web link —
+        // copy the message instead so nothing silently gets left out.
+        try{
+          await navigator.clipboard.writeText(bodyText);
+          showToast(`Message copied — open Messages, pick your group (${checkedRecips.map(r=>r.name).join(', ')}), and paste`);
+        }catch(e){
+          showToast('Could not copy — try selecting just one recipient');
+        }
+      }
     });
   }
 
