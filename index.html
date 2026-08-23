@@ -653,6 +653,7 @@
     <button class="btn btn-profile-tool btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
     <button class="btn btn-profile-tool btn-full" id="profileGroupBtn" style="margin-bottom:12px;">Set group</button>
     <button class="btn btn-profile-tool btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
+    <button class="btn btn-profile-tool btn-full" id="profileHerdSeasonBtn" style="margin-bottom:12px;">Herd Season: Not Set</button>
     <button class="btn btn-profile-tool btn-full" id="profileRemoveCowBtn" style="margin-bottom:12px;">Remove Cow</button>
     <button class="btn btn-profile-tool btn-full" id="profilePrintBtn">🖨️ Print Summary</button>
   </div>
@@ -1021,6 +1022,8 @@
     const hasUnassigned = cows.some(c=>!c.owner);
     const hasFlagged = cows.some(c=>c.needs_entry);
     const hasTagNeeded = cows.some(c=>c.tag_needed);
+    const hasSpring = cows.some(c=>c.herd_season==='Spring');
+    const hasFall = cows.some(c=>c.herd_season==='Fall');
 
     const prevValue = sel.value;
     const activityTypes = [
@@ -1040,7 +1043,9 @@
       `</optgroup>`
     ).join('');
     const statusOptions = (hasFlagged ? '<option value="flag:1">Flagged</option>' : '') +
-      (hasTagNeeded ? '<option value="tag:1">Tag Needed</option>' : '');
+      (hasTagNeeded ? '<option value="tag:1">Tag Needed</option>' : '') +
+      (hasSpring ? '<option value="herd:Spring">Spring Herd</option>' : '') +
+      (hasFall ? '<option value="herd:Fall">Fall Herd</option>' : '');
     sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
       (statusOptions ? `<optgroup label="✅ Status">${statusOptions}</optgroup>` : '') +
       '<optgroup label="📍 Location">' +
@@ -1768,6 +1773,7 @@
     updateProfileOwnerLabel();
     updateProfileGroupLabel();
     updateProfileStatusLabel();
+    updateProfileHerdSeasonLabel();
     window.scrollTo(0,0);
   }
   function closeProfileCow(){
@@ -1927,6 +1933,11 @@
     const el = document.getElementById('profileStatusBtn');
     el.textContent = `Status: ${(cow && cow.status) || 'Active'}`;
   }
+  function updateProfileHerdSeasonLabel(){
+    const cow = cows.find(c=>c.number===currentProfileCow);
+    const el = document.getElementById('profileHerdSeasonBtn');
+    el.textContent = `Herd Season: ${(cow && cow.herd_season) || 'Not Set'}`;
+  }
   function refreshOpenCowHeaders(){
     if(currentCow && !detailView.classList.contains('hidden')){
       document.getElementById('detailNum').innerHTML = ownerNumHtml(currentCow, (cows.find(c=>c.number===currentCow)||{}).owner);
@@ -1949,6 +1960,7 @@
       updateProfileOwnerLabel();
       updateProfileGroupLabel();
       updateProfileStatusLabel();
+      updateProfileHerdSeasonLabel();
     }
   }
   function closeCow(){
@@ -2243,6 +2255,8 @@
         if(!c.needs_entry) return false;
       } else if(filterKind === 'tag'){
         if(!c.tag_needed) return false;
+      } else if(filterKind === 'herd'){
+        if(c.herd_season !== filterValue) return false;
       } else if(filterKind === 'act'){
         const [actType, actDaysStr] = filterValue.split(':');
         if(!cowHasRecentActivityOfType(c.number, actType, parseInt(actDaysStr, 10))) return false;
@@ -4294,6 +4308,7 @@
   document.getElementById('profileOwnerBtn').addEventListener('click', editOwnerModal);
   document.getElementById('profileGroupBtn').addEventListener('click', editGroupModal);
   document.getElementById('profileStatusBtn').addEventListener('click', editStatusModal);
+  document.getElementById('profileHerdSeasonBtn').addEventListener('click', editHerdSeasonModal);
   document.getElementById('profileRemoveCowBtn').addEventListener('click', deleteCowFromProfile);
   document.getElementById('profilePrintBtn').addEventListener('click', ()=> window.print());
   document.getElementById('profileAddPhotoBtn').addEventListener('click', ()=>{
@@ -4401,6 +4416,19 @@
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
         body: JSON.stringify({ tag_needed: checked })
+      });
+      const idx = cows.findIndex(c=>c.number===num);
+      if(idx !== -1) cows[idx] = updated[0];
+    }catch(e){
+      showToast('Could not save — try again');
+    }
+  }
+  async function toggleHerdSeason(num, season){
+    try{
+      const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ herd_season: season })
       });
       const idx = cows.findIndex(c=>c.number===num);
       if(idx !== -1) cows[idx] = updated[0];
@@ -4671,6 +4699,42 @@
     });
   }
 
+  const HERD_SEASON_OPTIONS = ['Spring', 'Fall'];
+  function editHerdSeasonModal(){
+    const targetNum = getActiveCowNumber();
+    const cow = cows.find(c=>c.number===targetNum);
+    const currentSeason = (cow && cow.herd_season) || '';
+    const modal = openModal(`
+      <div class="modal-title">Herd Season — #${escapeHtml(targetNum)}</div>
+      <div class="field">
+        <label>Herd Season</label>
+        <select id="editHerdSeasonSelect">
+          <option value="" ${currentSeason==='' ? 'selected' : ''}>Not Set</option>
+          ${HERD_SEASON_OPTIONS.map(s=>`<option value="${s}" ${s===currentSeason?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEditHerdSeason">Cancel</button>
+        <button class="btn btn-barn" id="confirmEditHerdSeason">Save</button>
+      </div>
+    `);
+    modal.querySelector('#cancelEditHerdSeason').addEventListener('click', closeModal);
+    modal.querySelector('#confirmEditHerdSeason').addEventListener('click', async ()=>{
+      const season = modal.querySelector('#editHerdSeasonSelect').value;
+      const btn = modal.querySelector('#confirmEditHerdSeason');
+      btn.disabled = true;
+      try{
+        await toggleHerdSeason(targetNum, season||null);
+        closeModal();
+        refreshOpenCowHeaders();
+        renderProfileList();
+        showToast('Herd season updated');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
+    });
+  }
 
   const HERD_TALLY_LOCATIONS = ["Olin's", 'Ballard Corner', "Chase's", 'Ford City'];
   function renderHerdTally(){
@@ -5574,8 +5638,8 @@
     return { header, rows };
   }
   function buildCowsRows(){
-    const header = ['Cow Number','Location','Owner','Group','Status','Flagged','Tag Needed'];
-    const rows = cows.map(c=> [c.number, c.lot||'', c.owner||'', c.cow_group||'', c.status||'Active', c.needs_entry?'Yes':'', c.tag_needed?'Yes':'']);
+    const header = ['Cow Number','Location','Owner','Group','Status','Flagged','Tag Needed','Herd Season'];
+    const rows = cows.map(c=> [c.number, c.lot||'', c.owner||'', c.cow_group||'', c.status||'Active', c.needs_entry?'Yes':'', c.tag_needed?'Yes':'', c.herd_season||'']);
     return { header, rows };
   }
   function buildHayingRows(){
