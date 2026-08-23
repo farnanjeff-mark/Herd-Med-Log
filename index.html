@@ -5443,7 +5443,7 @@
   function bulkEditModal(){
     const modal = openModal(`
       <div class="modal-title">Bulk Edit</div>
-      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:16px;">Update Owner, Location, or Group for a group of cows at once.</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:16px;">Update Owner, Location, Group, or Herd Season for a group of cows at once.</div>
       ${fieldWithOther('bulkEditFilterLoc', 'Filter by Current Location (optional)', LOT_OPTIONS, 'Type location')}
       <div class="field">
         <label>Cow Numbers (leave blank to use location filter above)</label>
@@ -5453,6 +5453,15 @@
       ${fieldWithOther('bulkEditLot', 'New Location (optional)', LOT_OPTIONS, 'Type location')}
       ${fieldWithOther('bulkEditOwner', 'New Owner (optional)', OWNER_OPTIONS, 'Type owner name')}
       ${fieldWithOther('bulkEditGroup', 'New Group (optional)', GROUP_OPTIONS, 'Type group name')}
+      <div class="field">
+        <label>New Herd Season (optional)</label>
+        <select id="bulkEditHerdSeasonSelect">
+          <option value="">-- No Change --</option>
+          <option value="Spring">Spring</option>
+          <option value="Fall">Fall</option>
+          <option value="__clear__">Clear (Not Set)</option>
+        </select>
+      </div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelBulkEdit">Cancel</button>
         <button class="btn btn-barn" id="confirmBulkEdit">Apply</button>
@@ -5469,6 +5478,7 @@
       const newLot = valueOf(modal, 'bulkEditLot');
       const newOwner = valueOf(modal, 'bulkEditOwner');
       const newGroup = valueOf(modal, 'bulkEditGroup');
+      const newHerdSeasonRaw = modal.querySelector('#bulkEditHerdSeasonSelect').value;
 
       let targetCows;
       if(numsRaw){
@@ -5480,7 +5490,7 @@
         showToast('Enter cow numbers or a location filter'); return;
       }
       if(targetCows.length === 0){ showToast('No matching cows found'); return; }
-      if(!newLot && !newOwner && !newGroup){ showToast('Set at least one new value'); return; }
+      if(!newLot && !newOwner && !newGroup && !newHerdSeasonRaw){ showToast('Set at least one new value'); return; }
 
       const btn = modal.querySelector('#confirmBulkEdit');
       btn.disabled = true;
@@ -5488,6 +5498,7 @@
       if(newLot) patchBody.lot = newLot;
       if(newOwner) patchBody.owner = newOwner;
       if(newGroup) patchBody.cow_group = newGroup;
+      if(newHerdSeasonRaw) patchBody.herd_season = newHerdSeasonRaw === '__clear__' ? null : newHerdSeasonRaw;
       try{
         const results = await Promise.all(targetCows.map(cow=>
           api('/cows?number=eq.' + encodeURIComponent(cow.number), {
