@@ -244,7 +244,7 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
-      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;position:relative;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile<span id="homeTagNeededBadge" class="hidden" style="position:absolute;top:-8px;right:-8px;background:#C4732B;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;padding:0 4px;">0</span></button>
+      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;position:relative;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile<span id="homeTagNeededBadge" class="hidden" style="position:absolute;top:-12px;right:-12px;background:#C4732B;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;padding:0 6px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.25);">0</span></button>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <button class="btn btn-nav-tool" id="homeUtilitiesBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
         <button class="btn btn-nav-tool" id="homeReportsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
@@ -784,6 +784,7 @@
   let hayingLog = []; // [{id, entry_date, location, mowed, raked, tedded, total_bales, notes}]
   let farmNotes = []; // [{id, note_date, note}]
   let lastFilteredProfileCows = [];
+  let pendingProfileFilterOverride = null;
   let vetPregSessionEntries = []; // [{cowNum, daysAlong, dueDate, usedVetCheck}]
   let equipmentMaintenance = []; // [{id, equipment_name, maint_date, notes}]
   let equipmentList = []; // [{id, name}]
@@ -1854,6 +1855,10 @@
     renderProfileList();
     window.scrollTo(0,0);
   }
+  function showProfileListTagNeeded(){
+    pendingProfileFilterOverride = 'tag:1';
+    showProfileList();
+  }
   function openProfileCow(num){
     currentProfileCow = num;
     homeView.classList.add('hidden');
@@ -2333,6 +2338,11 @@
     const emptyEl = document.getElementById('profileEmptyState');
     if(!listEl) return;
     populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
+    if(pendingProfileFilterOverride !== null){
+      const filterSel = document.getElementById('profileLocationGroupFilter');
+      if([...filterSel.options].some(o=>o.value===pendingProfileFilterOverride)) filterSel.value = pendingProfileFilterOverride;
+      pendingProfileFilterOverride = null;
+    }
     const q = (profileSearchBox.value||'').trim().toLowerCase();
     const locGroupVal = document.getElementById('profileLocationGroupFilter').value;
     const sortMode = document.getElementById('profileSortBy').value;
@@ -4431,6 +4441,10 @@
   document.getElementById('importParseBtn').addEventListener('click', parseAndPreviewImport);
   document.getElementById('importConfirmBtn').addEventListener('click', confirmImport);
   document.getElementById('homeProfileBtn').addEventListener('click', showProfileList);
+  document.getElementById('homeTagNeededBadge').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    showProfileListTagNeeded();
+  });
   document.getElementById('profileListHomeBtn').addEventListener('click', showHome);
   document.getElementById('profileHomeBtn').addEventListener('click', showHome);
   document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
@@ -5809,15 +5823,16 @@
       const alreadyCalved = calvingsFor(cow.number).some(c=> c.calving_date >= latest.breed_date);
       if(alreadyCalved) return;
       const dueDate = new Date(latest.expected_due_date+'T00:00:00');
-      if(dueDate >= today){
-        entries.push({ cow, breeding: latest, dueDate });
-      }
+      entries.push({ cow, breeding: latest, dueDate });
     });
     entries.sort((a,b)=> a.dueDate - b.dueDate);
     if(entries.length === 0){ showToast('No upcoming calvings'); return; }
     const rows = entries.map((e,i)=>{
       const daysUntil = Math.round((e.dueDate - today)/86400000);
-      return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(e.cow.number)}</td><td style="padding:8px;">${fmtDateShort(e.breeding.expected_due_date)}</td><td style="padding:8px;">${daysUntil}</td><td style="padding:8px;">${escapeHtml(e.breeding.bred_to||'')}</td><td style="padding:8px;">${escapeHtml(e.breeding.pregnancy_method||'')}</td></tr>`;
+      const daysUntilHtml = daysUntil < 0
+        ? `<span style="color:var(--barn);font-weight:700;">${daysUntil}</span>`
+        : daysUntil;
+      return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(e.cow.number)}</td><td style="padding:8px;">${fmtDateShort(e.breeding.expected_due_date)}</td><td style="padding:8px;">${daysUntilHtml}</td><td style="padding:8px;">${escapeHtml(e.breeding.bred_to||'')}</td><td style="padding:8px;">${escapeHtml(e.breeding.pregnancy_method||'')}</td></tr>`;
     }).join('');
     reportTableModal('Upcoming Calvings', ['Cow #','Due Date','Days Until','Bred To','Method'], rows);
   }
