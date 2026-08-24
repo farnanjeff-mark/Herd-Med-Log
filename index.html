@@ -992,6 +992,31 @@
     d.setDate(d.getDate() + 283); // average bovine gestation
     return d.toISOString().slice(0,10);
   }
+  function computeVetAdjustedDueDate(vetCheckDateStr, daysAlong){
+    const d = new Date(vetCheckDateStr+'T00:00:00');
+    d.setDate(d.getDate() + (283 - Number(daysAlong)));
+    return d.toISOString().slice(0,10);
+  }
+  function parseDaysAlongFromVetCalls(text){
+    if(!text) return null;
+    const match = text.match(/\d+/);
+    return match ? parseInt(match[0], 10) : null;
+  }
+  function resolveExpectedDueDate(breedDate, vetCallsText){
+    const breedBased = computeDueDate(breedDate);
+    const daysAlong = parseDaysAlongFromVetCalls(vetCallsText);
+    if(daysAlong == null){
+      return { dueDate: breedBased, usedVetCheck: false, diffDays: 0 };
+    }
+    // The vet call is assumed to describe how far along she is as of today,
+    // the day this note is being entered/updated.
+    const vetBased = computeVetAdjustedDueDate(todayLocal(), daysAlong);
+    const diffDays = Math.round((new Date(vetBased+'T00:00:00') - new Date(breedBased+'T00:00:00')) / 86400000);
+    if(Math.abs(diffDays) > 10){
+      return { dueDate: vetBased, usedVetCheck: true, diffDays };
+    }
+    return { dueDate: breedBased, usedVetCheck: false, diffDays };
+  }
   const PREGNANCY_METHOD_OPTIONS = ['ET','AI','BB'];
 
   function calfSexLabel(sex){
@@ -2679,11 +2704,12 @@
       </div>
       <div class="field">
         <label>Vet Calls</label>
-        <textarea id="bulkBrdVet" rows="2" placeholder="Vet check notes, preg check results, etc."></textarea>
+        <textarea id="bulkBrdVet" rows="2" placeholder="e.g. 60 (days along, per vet)"></textarea>
       </div>
       <div class="field">
         <label>Expected Due Date</label>
         <input type="text" id="bulkBrdDueDisplay" value="${fmtDate(computeDueDate(today))}" disabled style="background:#e5ded0;"/>
+        <div id="bulkBrdDueNote" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:4px;"></div>
       </div>
       <div class="field">
         <label>Notes</label>
@@ -2694,10 +2720,16 @@
         <button class="btn btn-barn" id="confirmBulkBrd">Log for ${count} Cows</button>
       </div>
     `);
-    modal.querySelector('#bulkBrdDate').addEventListener('input', ()=>{
-      const val = modal.querySelector('#bulkBrdDate').value;
-      modal.querySelector('#bulkBrdDueDisplay').value = val ? fmtDate(computeDueDate(val)) : '';
-    });
+    function refreshBulkDueDateDisplay(){
+      const dateVal = modal.querySelector('#bulkBrdDate').value;
+      const vetText = modal.querySelector('#bulkBrdVet').value;
+      if(!dateVal){ modal.querySelector('#bulkBrdDueDisplay').value = ''; modal.querySelector('#bulkBrdDueNote').textContent = ''; return; }
+      const resolved = resolveExpectedDueDate(dateVal, vetText);
+      modal.querySelector('#bulkBrdDueDisplay').value = fmtDate(resolved.dueDate);
+      modal.querySelector('#bulkBrdDueNote').textContent = resolved.usedVetCheck ? `Adjusted from vet call — ${Math.abs(resolved.diffDays)} days off from the breed-date estimate.` : '';
+    }
+    modal.querySelector('#bulkBrdDate').addEventListener('input', refreshBulkDueDateDisplay);
+    modal.querySelector('#bulkBrdVet').addEventListener('input', refreshBulkDueDateDisplay);
     wireFieldWithOther(modal, 'bulkBrdBredTo');
     modal.querySelector('#cancelBulkBrd').addEventListener('click', closeModal);
     modal.querySelector('#confirmBulkBrd').addEventListener('click', async ()=>{
@@ -2710,13 +2742,14 @@
       if(!dateVal){ showToast('Date is required'); return; }
       const btn = modal.querySelector('#confirmBulkBrd');
       btn.disabled = true;
+      const resolved = resolveExpectedDueDate(dateVal, vet);
       const body = {
         breed_date: dateVal,
         bred_to: bredTo||null,
         pregnancy_method: method||null,
         natural_sire: sire||null,
         vet_calls: vet||null,
-        expected_due_date: computeDueDate(dateVal),
+        expected_due_date: resolved.dueDate,
         notes: notes||null
       };
       try{
@@ -4050,6 +4083,8 @@
     const isEdit = !!existingRecord;
     const today = todayLocal();
     const initialDate = isEdit ? existingRecord.breed_date : today;
+    const initialVetCalls = isEdit ? (existingRecord.vet_calls||'') : '';
+    const initialResolved = resolveExpectedDueDate(initialDate, initialVetCalls);
     const modal = openModal(`
       <div class="modal-title">${isEdit ? 'Edit Breeding' : 'Log Breeding'} — #${escapeHtml(currentBreedingCow)}</div>
       <div class="field">
@@ -4070,11 +4105,12 @@
       </div>
       <div class="field">
         <label>Vet Calls</label>
-        <textarea id="brdVet" rows="2" placeholder="Vet check notes, preg check results, etc.">${isEdit ? escapeHtml(existingRecord.vet_calls||'') : ''}</textarea>
+        <textarea id="brdVet" rows="2" placeholder="e.g. 60 (days along, per vet)">${escapeHtml(initialVetCalls)}</textarea>
       </div>
       <div class="field">
         <label>Expected Due Date</label>
-        <input type="text" id="brdDueDisplay" value="${fmtDate(computeDueDate(initialDate))}" disabled style="background:#e5ded0;"/>
+        <input type="text" id="brdDueDisplay" value="${fmtDate(initialResolved.dueDate)}" disabled style="background:#e5ded0;"/>
+        <div id="brdDueNote" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:4px;">${initialResolved.usedVetCheck ? `Adjusted from vet call — ${Math.abs(initialResolved.diffDays)} days off from the breed-date estimate.` : ''}</div>
       </div>
       <div class="field">
         <label>Notes</label>
@@ -4085,10 +4121,16 @@
         <button class="btn btn-barn" id="confirmBrd">${isEdit ? 'Save Changes' : 'Save Entry'}</button>
       </div>
     `);
-    modal.querySelector('#brdDate').addEventListener('input', ()=>{
-      const val = modal.querySelector('#brdDate').value;
-      modal.querySelector('#brdDueDisplay').value = val ? fmtDate(computeDueDate(val)) : '';
-    });
+    function refreshDueDateDisplay(){
+      const dateVal = modal.querySelector('#brdDate').value;
+      const vetText = modal.querySelector('#brdVet').value;
+      if(!dateVal){ modal.querySelector('#brdDueDisplay').value = ''; modal.querySelector('#brdDueNote').textContent = ''; return; }
+      const resolved = resolveExpectedDueDate(dateVal, vetText);
+      modal.querySelector('#brdDueDisplay').value = fmtDate(resolved.dueDate);
+      modal.querySelector('#brdDueNote').textContent = resolved.usedVetCheck ? `Adjusted from vet call — ${Math.abs(resolved.diffDays)} days off from the breed-date estimate.` : '';
+    }
+    modal.querySelector('#brdDate').addEventListener('input', refreshDueDateDisplay);
+    modal.querySelector('#brdVet').addEventListener('input', refreshDueDateDisplay);
     wireFieldWithOther(modal, 'brdBredTo');
     if(isEdit && existingRecord.bred_to) prefillFieldWithOther(modal, 'brdBredTo', existingRecord.bred_to, getBullOptionsWithExtras());
     modal.querySelector('#cancelBrd').addEventListener('click', closeModal);
@@ -4102,6 +4144,7 @@
       if(!dateVal){ showToast('Date is required'); return; }
       const btn = modal.querySelector('#confirmBrd');
       btn.disabled = true;
+      const resolved = resolveExpectedDueDate(dateVal, vet);
       const body = {
         breed_date: dateVal,
         bred_to: bredTo||null,
@@ -4109,7 +4152,7 @@
         natural_sire: sire||null,
         vet_calls: vet||null,
         notes: notes||null,
-        expected_due_date: computeDueDate(dateVal)
+        expected_due_date: resolved.dueDate
       };
       try{
         if(isEdit){
@@ -5648,6 +5691,10 @@
       const list = breedingFor(cow.number).filter(b=>b.expected_due_date);
       if(list.length === 0) return;
       const latest = [...list].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+      // If she's already calved since this breeding, that pregnancy is accounted
+      // for — don't keep showing her as still due.
+      const alreadyCalved = calvingsFor(cow.number).some(c=> c.calving_date >= latest.breed_date);
+      if(alreadyCalved) return;
       const dueDate = new Date(latest.expected_due_date+'T00:00:00');
       if(dueDate >= today){
         entries.push({ cow, breeding: latest, dueDate });
