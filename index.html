@@ -5489,10 +5489,79 @@
   }
 
   function deadCalvesModal(){
-    const dead = calvings.filter(c=>c.calf_outcome === 'died').sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
-    if(dead.length === 0){ showToast('No dead calves logged'); return; }
-    const rows = dead.map((c,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${fmtDateShort(c.calving_date)}</td><td style="padding:8px;">#${escapeHtml(c.cow_number)}</td><td style="padding:8px;">${calfSexLabel(c.calf_sex)}</td><td style="padding:8px;">${c.birth_weight!=null ? c.birth_weight+' lbs' : ''}</td><td style="padding:8px;">${escapeHtml(c.sire||'')}</td><td style="padding:8px;">${escapeHtml(c.notes||'')}</td></tr>`).join('');
-    reportTableModal('Dead Calves', ['Date','Cow #','Sex','Birth Wt','Sire','Notes'], rows);
+    const modal = openModal(`
+      <div class="modal-title">Dead Calves</div>
+      <div class="field">
+        <label>Time Frame</label>
+        <select id="deadCalvesTimeframe">
+          <option value="0">Today</option>
+          <option value="7">1 Week</option>
+          <option value="30">1 Month</option>
+          <option value="99999" selected>All</option>
+        </select>
+      </div>
+      <div id="deadCalvesResults" style="max-height:50vh;overflow-y:auto;overflow-x:auto;margin-bottom:14px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="deadCalvesPrintBtn">🖨️ Print</button>
+        <button class="btn btn-outline" id="deadCalvesExportBtn">📊 Export</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeDeadCalvesBtn">Close</button>
+      </div>
+    `);
+    function currentRows(){
+      const days = parseInt(modal.querySelector('#deadCalvesTimeframe').value, 10);
+      const list = calvings.filter(c=> c.calf_outcome === 'died' && daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
+      return { list, headerCells: ['Date','Cow #','Sex','Birth Wt','Sire','Notes'], rowsHtml: list.map((c,i)=>
+        `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${fmtDateShort(c.calving_date)}</td><td style="padding:8px;">#${escapeHtml(c.cow_number)}</td><td style="padding:8px;">${calfSexLabel(c.calf_sex)}</td><td style="padding:8px;">${c.birth_weight!=null ? c.birth_weight : ''}</td><td style="padding:8px;">${escapeHtml(c.sire||'')}</td><td style="padding:8px;">${escapeHtml(c.notes||'')}</td></tr>`
+      ).join('') };
+    }
+    function refresh(){
+      const { list, headerCells, rowsHtml } = currentRows();
+      const resultsEl = modal.querySelector('#deadCalvesResults');
+      if(list.length === 0){
+        resultsEl.innerHTML = '<p class="empty">No dead calves in this timeframe.</p>';
+      } else {
+        resultsEl.innerHTML = `<table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;"><thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table>`;
+      }
+    }
+    refresh();
+    modal.querySelector('#deadCalvesTimeframe').addEventListener('change', refresh);
+    modal.querySelector('#closeDeadCalvesBtn').addEventListener('click', closeModal);
+    modal.querySelector('#deadCalvesPrintBtn').addEventListener('click', ()=>{
+      const { headerCells, rowsHtml } = currentRows();
+      document.getElementById('printListOutput').innerHTML = `
+        <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+          <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Dead Calves</h2>
+          <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())}</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>${headerCells.map(h=>`<th style="text-align:left;padding:6px;border-bottom:2px solid #000;">${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table>
+        </div>
+      `;
+      document.body.classList.add('printing-list');
+      requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
+    });
+    modal.querySelector('#deadCalvesExportBtn').addEventListener('click', async ()=>{
+      if(typeof ExcelJS === 'undefined'){ showToast('Could not load spreadsheet library'); return; }
+      try{
+        const { headerCells, rowsHtml } = currentRows();
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Dead Calves');
+        ws.addRow(headerCells);
+        ws.getRow(1).font = { bold:true };
+        const tmp = document.createElement('table');
+        tmp.innerHTML = rowsHtml;
+        [...tmp.querySelectorAll('tr')].forEach(tr=> ws.addRow([...tr.querySelectorAll('td')].map(td=>td.textContent)));
+        ws.columns.forEach(col=>{ col.width = 16; });
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'dead-calves-' + todayLocal() + '.xlsx';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Exported');
+      }catch(e){ showToast('Export failed — try again'); }
+    });
   }
 
   function calvingReportModal(){
