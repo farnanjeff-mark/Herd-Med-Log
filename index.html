@@ -244,7 +244,7 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
-      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;position:relative;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile<span id="homeTagNeededBadge" class="hidden" style="position:absolute;top:-12px;right:-12px;background:#C4732B;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;padding:0 6px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.25);">0</span><span id="homeCalvedBadge" class="hidden" style="position:absolute;top:-12px;left:-12px;background:#3C9142;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;padding:0 6px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.25);">0</span></button>
+      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">👤</span>Cow Profile</span><span style="display:flex;gap:8px;"><span id="homeTagNeededBadge" class="hidden" style="background:#C4732B;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span id="homeCalvedBadge" class="hidden" style="background:#3C9142;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span id="homeFlaggedBadge" class="hidden" style="background:#3B6E8F;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span></span></button>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <button class="btn btn-nav-tool" id="homeUtilitiesBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
         <button class="btn btn-nav-tool" id="homeReportsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
@@ -938,6 +938,7 @@
     updatePrintFlaggedButton();
     updateTagNeededBadge();
     updateCalvedBadge();
+    updateFlaggedBadge();
   }
 
   function fmtDate(iso){
@@ -1275,6 +1276,7 @@
     updateHomeQuickSearchDisplay();
     updateTagNeededBadge();
     updateCalvedBadge();
+    updateFlaggedBadge();
   }
   function showQuickAction(matchedCows){
     setHeaderTitle('Quick', 'Entry');
@@ -1871,6 +1873,10 @@
     pendingProfileFilterOverride = 'calved:1';
     showProfileList();
   }
+  function showProfileListFlagged(){
+    pendingProfileFilterOverride = 'flag:1';
+    showProfileList();
+  }
   function openProfileCow(num){
     currentProfileCow = num;
     homeView.classList.add('hidden');
@@ -2402,6 +2408,17 @@
     const badge = document.getElementById('homeCalvedBadge');
     if(!badge) return;
     const count = cows.filter(c=>c.calved).length;
+    if(count > 0){
+      badge.classList.remove('hidden');
+      badge.textContent = count > 99 ? '99+' : count;
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+  function updateFlaggedBadge(){
+    const badge = document.getElementById('homeFlaggedBadge');
+    if(!badge) return;
+    const count = cows.filter(c=>c.needs_entry).length;
     if(count > 0){
       badge.classList.remove('hidden');
       badge.textContent = count > 99 ? '99+' : count;
@@ -4474,6 +4491,10 @@
     e.stopPropagation();
     showProfileListCalved();
   });
+  document.getElementById('homeFlaggedBadge').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    showProfileListFlagged();
+  });
   document.getElementById('profileListHomeBtn').addEventListener('click', showHome);
   document.getElementById('profileHomeBtn').addEventListener('click', showHome);
   document.getElementById('profileBackBtn').addEventListener('click', closeProfileCow);
@@ -4586,6 +4607,7 @@
         e.stopPropagation();
         await toggleNeedsEntry(cb.dataset.num, cb.checked);
         updatePrintFlaggedButton();
+        updateFlaggedBadge();
         const filterRow = document.getElementById('profileLotFilterRow');
         if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
       });
