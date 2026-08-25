@@ -6312,7 +6312,7 @@
   }
   function buildEquipmentRows(){
     const header = ['Equipment','Date','Notes'];
-    const rows = [...equipmentMaintenance].sort((a,b)=> b.maint_date.localeCompare(a.maint_date)).map(m=> [m.equipment_name, m.maint_date, m.notes||'']);
+    const rows = [...equipmentMaintenance].sort((a,b)=> a.equipment_name.localeCompare(b.equipment_name) || b.maint_date.localeCompare(a.maint_date)).map(m=> [m.equipment_name, m.maint_date, m.notes||'']);
     return { header, rows };
   }
 
@@ -6411,7 +6411,7 @@
       addSheet('Weights', buildWeightsRows, 0);
       addSheet('Breeding', buildBreedingRows, 0);
       addSheet('Haying', buildHayingRows, null);
-      addSheet('Equipment', buildEquipmentRows, null);
+      addSheet('Equipment', buildEquipmentRows, 0);
 
       const buffer = await wb.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/octet-stream' });
