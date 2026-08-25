@@ -6261,7 +6261,7 @@
 
   function buildMedsRows(){
     const header = ['Cow Number','Location','Owner','Date','Medicine','Reason','Notes'];
-    const rows = [...treatments].sort((a,b)=> a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true}) || b.date.localeCompare(a.date)).map(t=>{
+    const rows = [...treatments].sort((a,b)=> b.date.localeCompare(a.date)).map(t=>{
       const cow = cows.find(c=>c.number===t.cow_number) || {};
       return [t.cow_number, cow.lot||'', cow.owner||'', t.date, t.medicine||'', t.reason||'', t.notes||''];
     });
@@ -6269,7 +6269,7 @@
   }
   function buildCalvingRows(){
     const header = ['Cow Number','Location','Owner','Calving Date','Calf Sex','Birth Weight','Sire','Birth Assist','Outcome','Notes'];
-    const rows = [...calvings].sort((a,b)=> a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true}) || b.calving_date.localeCompare(a.calving_date)).map(c=>{
+    const rows = [...calvings].sort((a,b)=> b.calving_date.localeCompare(a.calving_date)).map(c=>{
       const cow = cows.find(x=>x.number===c.cow_number) || {};
       const outcome = c.promoted_to_cow_number ? `Kept (#${c.promoted_to_cow_number})` : (c.calf_outcome || 'Active');
       return [c.cow_number, cow.lot||'', cow.owner||'', c.calving_date, calfSexLabel(c.calf_sex), c.birth_weight!=null?c.birth_weight:'', c.sire||'', c.birth_assist||'', outcome, c.notes||''];
@@ -6278,7 +6278,7 @@
   }
   function buildNotesRows(){
     const header = ['Cow Number','Location','Owner','Date','Note'];
-    const rows = [...generalNotes].sort((a,b)=> a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true}) || b.note_date.localeCompare(a.note_date)).map(n=>{
+    const rows = [...generalNotes].sort((a,b)=> b.note_date.localeCompare(a.note_date)).map(n=>{
       const cow = cows.find(c=>c.number===n.cow_number) || {};
       return [n.cow_number, cow.lot||'', cow.owner||'', n.note_date, n.note||''];
     });
@@ -6286,7 +6286,7 @@
   }
   function buildWeightsRows(){
     const header = ['Cow Number','Location','Owner','Date','Weight (lbs)','Notes'];
-    const rows = [...weights].sort((a,b)=> a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true}) || b.weigh_date.localeCompare(a.weigh_date)).map(w=>{
+    const rows = [...weights].sort((a,b)=> b.weigh_date.localeCompare(a.weigh_date)).map(w=>{
       const cow = cows.find(c=>c.number===w.cow_number) || {};
       return [w.cow_number, cow.lot||'', cow.owner||'', w.weigh_date, w.weight!=null?w.weight:'', w.notes||''];
     });
@@ -6294,7 +6294,7 @@
   }
   function buildBreedingRows(){
     const header = ['Cow Number','Location','Owner','Date','Bred To','Method','Natural Sire','Vet Calls','Due Date','Notes'];
-    const rows = [...breedingRecords].sort((a,b)=> a.cow_number.localeCompare(b.cow_number, undefined, {numeric:true}) || b.breed_date.localeCompare(a.breed_date)).map(b=>{
+    const rows = [...breedingRecords].sort((a,b)=> b.breed_date.localeCompare(a.breed_date)).map(b=>{
       const cow = cows.find(c=>c.number===b.cow_number) || {};
       return [b.cow_number, cow.lot||'', cow.owner||'', b.breed_date, b.bred_to||'', b.pregnancy_method||'', b.natural_sire||'', b.vet_calls||'', b.expected_due_date||'', b.notes||''];
     });
