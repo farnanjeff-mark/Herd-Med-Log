@@ -1189,38 +1189,13 @@
       );
     });
 
-    cowListEl.innerHTML = '';
     emptyState.classList.toggle('hidden', cows.length !== 0);
-
-    filtered.forEach(cow=>{
-      const num = cow.number;
-      const records = recordsFor(num);
-      const meds = records.filter(r=>r.medicine);
-      const notesOnly = records.filter(r=>!r.medicine);
-      let meta;
-      if(meds.length === 0 && notesOnly.length === 0){
-        meta = 'No entries logged';
-      } else {
-        const parts = [];
-        if(meds.length>0) parts.push(`${meds.length} treatment${meds.length>1?'s':''}`);
-        if(notesOnly.length>0) parts.push(`${notesOnly.length} note${notesOnly.length>1?'s':''}`);
-        meta = parts.join(' · ');
-      }
-      if(meds.length>0){
-        const last = [...meds].sort((a,b)=>b.date.localeCompare(a.date))[0];
-        const ago = daysAgo(last.date);
-        meta += ` · last med ${ago===0?'today':ago===1?'1 day ago':ago+' days ago'}`;
-      }
-      const recentClass = hasRecentActivity(num) ? 'recent-activity' : '';
-      const card = document.createElement('div');
-      card.className = 'cow-card ' + recentClass + (isActiveStatus(cow) ? '' : ' status-inactive');
-      const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
-      card.addEventListener('click', ()=> openCow(num));
-      cowListEl.appendChild(card);
-    });
-    wireQuickAddButtons(cowListEl, (n)=>{ currentCow = n; recordModal(null); });
+    cowListEl.innerHTML = filtered.map(cow=> quickAddCardHtml(cow)).join('');
+    wireQuickAddCardOpen(cowListEl);
+    wireProfileQuickAddButtons(cowListEl);
     wireNeedsEntryCheckboxes(cowListEl);
+    wireTagNeededCheckboxes(cowListEl);
+    wireCalvedCheckboxes(cowListEl);
   }
 
   function setHeaderTitle(text, highlight){
@@ -2182,25 +2157,14 @@
       );
     });
 
-    listEl.innerHTML = '';
     emptyEl.classList.toggle('hidden', cows.length !== 0);
 
-    filtered.forEach(cow=>{
-      const num = cow.number;
-      const records = calvingsFor(num);
-      let meta = records.length === 0 ? 'No calvings logged' : `${records.length} calving${records.length>1?'s':''} logged`;
-      if(records.length>0){
-        const last = latestCalvingFor(num);
-        meta += ` · last ${fmtDate(last.calving_date)} (${calfSexLabel(last.calf_sex)})`;
-      }
-      const card = document.createElement('div');
-      card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
-      card.addEventListener('click', ()=> openCalvingCow(num));
-      listEl.appendChild(card);
-    });
-    wireQuickAddButtons(listEl, (n)=>{ currentCalvingCow = n; calvingModal(null); });
+    listEl.innerHTML = filtered.map(cow=> quickAddCardHtml(cow)).join('');
+    wireQuickAddCardOpen(listEl);
+    wireProfileQuickAddButtons(listEl);
     wireNeedsEntryCheckboxes(listEl);
+    wireTagNeededCheckboxes(listEl);
+    wireCalvedCheckboxes(listEl);
   }
 
   function renderCalvingDetail(){
@@ -2289,25 +2253,14 @@
       return generalNotesFor(c.number).some(n=> (n.note||'').toLowerCase().includes(q));
     });
 
-    listEl.innerHTML = '';
     emptyEl.classList.toggle('hidden', cows.length !== 0);
 
-    filtered.forEach(cow=>{
-      const num = cow.number;
-      const records = generalNotesFor(num);
-      let meta = records.length === 0 ? 'No notes logged' : `${records.length} note${records.length>1?'s':''} logged`;
-      if(records.length>0){
-        const last = latestNoteFor(num);
-        meta += ` · last ${fmtDate(last.note_date)}`;
-      }
-      const card = document.createElement('div');
-      card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
-      card.addEventListener('click', ()=> openNotesCow(num));
-      listEl.appendChild(card);
-    });
-    wireQuickAddButtons(listEl, (n)=>{ currentNotesCow = n; generalNoteModal(null); });
+    listEl.innerHTML = filtered.map(cow=> quickAddCardHtml(cow)).join('');
+    wireQuickAddCardOpen(listEl);
+    wireProfileQuickAddButtons(listEl);
     wireNeedsEntryCheckboxes(listEl);
+    wireTagNeededCheckboxes(listEl);
+    wireCalvedCheckboxes(listEl);
   }
 
   function renderNotesDetail(){
@@ -3104,23 +3057,12 @@
     listEl.innerHTML = '';
     emptyEl.classList.toggle('hidden', cows.length !== 0);
 
-    filtered.forEach(cow=>{
-      const num = cow.number;
-      const records = weightsFor(num);
-      let meta = records.length === 0 ? 'No weights logged' : `${records.length} weight${records.length>1?'s':''} logged`;
-      if(records.length>0){
-        const last = latestWeightFor(num);
-        meta += ` · last ${fmtDate(last.weigh_date)}${last.weight!=null ? ' (' + last.weight + ' lbs)' : ''}`;
-      }
-      const card = document.createElement('div');
-      card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
-      const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
-      card.addEventListener('click', ()=> openWeightsCow(num));
-      listEl.appendChild(card);
-    });
-    wireQuickAddButtons(listEl, (n)=>{ currentWeightsCow = n; weightModal(null); });
+    listEl.innerHTML = filtered.map(cow=> quickAddCardHtml(cow)).join('');
+    wireQuickAddCardOpen(listEl);
+    wireProfileQuickAddButtons(listEl);
     wireNeedsEntryCheckboxes(listEl);
+    wireTagNeededCheckboxes(listEl);
+    wireCalvedCheckboxes(listEl);
   }
 
   function renderWeightsDetail(){
@@ -3202,24 +3144,12 @@
     listEl.innerHTML = '';
     emptyEl.classList.toggle('hidden', cows.length !== 0);
 
-    filtered.forEach(cow=>{
-      const num = cow.number;
-      const records = breedingFor(num);
-      let meta = records.length === 0 ? 'No breedings logged' : `${records.length} breeding${records.length>1?'s':''} logged`;
-      if(records.length>0){
-        const last = latestBreedingFor(num);
-        meta += ` · last ${fmtDate(last.breed_date)}`;
-        if(last.expected_due_date) meta += ` · due ${fmtDate(last.expected_due_date)}`;
-      }
-      const card = document.createElement('div');
-      card.className = 'cow-card ' + (hasRecentActivity(num) ? 'recent-activity' : '') + (isActiveStatus(cow) ? '' : ' status-inactive');
-      const lotBadge = cow.lot ? `<span class="lot-badge">${escapeHtml(cow.lot)}</span>` : '';
-      card.innerHTML = `<div><div class="cow-num">${ownerNumHtml(num, cow.owner)}${lotBadge}${statusBadgeHtml(cow)}</div><div class="cow-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:10px;">${needsEntryCheckboxHtml(cow)}${quickAddButtonHtml(num)}<span class="chev">&rsaquo;</span></div>`;
-      card.addEventListener('click', ()=> openBreedingCow(num));
-      listEl.appendChild(card);
-    });
-    wireQuickAddButtons(listEl, (n)=>{ currentBreedingCow = n; breedingModal(null); });
+    listEl.innerHTML = filtered.map(cow=> quickAddCardHtml(cow)).join('');
+    wireQuickAddCardOpen(listEl);
+    wireProfileQuickAddButtons(listEl);
     wireNeedsEntryCheckboxes(listEl);
+    wireTagNeededCheckboxes(listEl);
+    wireCalvedCheckboxes(listEl);
   }
 
   function renderBreedingDetail(){
