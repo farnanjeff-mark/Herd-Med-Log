@@ -6323,6 +6323,59 @@
     }
     try{
       const wb = new ExcelJS.Workbook();
+
+      // All Info — every dated entry for every cow (not just the latest),
+      // grouped by cow so a cow with several breedings, meds, etc. shows
+      // each one as its own row together. Placed first since it's the
+      // most useful "everything about this cow" view.
+      const allInfoHeader = ['Cow Number','Location','Owner','Date','Type','Details'];
+      const allInfoWs = wb.addWorksheet('All Info');
+      allInfoWs.addRow(allInfoHeader);
+      allInfoWs.getRow(1).font = { bold:true };
+      allInfoWs.getRow(1).eachCell({ includeEmpty:true }, cell=>{
+        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
+      });
+      allInfoWs.getColumn(1).numFmt = '@';
+      const sortedCowsForAllInfo = [...cows].sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
+      sortedCowsForAllInfo.forEach((cow, cowIdx)=>{
+        const entries = [];
+        recordsFor(cow.number).forEach(r=>{
+          const desc = r.medicine ? `${r.medicine}${r.reason ? ' / '+r.reason : ''}${r.notes ? ' — '+r.notes : ''}` : (r.notes||'');
+          entries.push({ date: r.date, type: 'Med', details: desc });
+        });
+        calvingsFor(cow.number).forEach(c=>{
+          const details = [`${calfSexLabel(c.calf_sex)} calf`];
+          if(c.birth_weight!=null) details.push(`${c.birth_weight} lbs`);
+          if(c.sire) details.push(`Sire: ${c.sire}`);
+          if(c.notes) details.push(c.notes);
+          entries.push({ date: c.calving_date, type: 'Calving', details: details.join(' — ') });
+        });
+        generalNotesFor(cow.number).forEach(n=>{
+          entries.push({ date: n.note_date, type: 'Note', details: n.note||'' });
+        });
+        weightsFor(cow.number).forEach(w=>{
+          entries.push({ date: w.weigh_date, type: 'Weight', details: w.weight!=null ? w.weight+' lbs' : '' });
+        });
+        breedingFor(cow.number).forEach(b=>{
+          const details = [];
+          if(b.bred_to) details.push('Bred to: '+b.bred_to);
+          if(b.pregnancy_method) details.push(b.pregnancy_method);
+          if(b.expected_due_date) details.push('Due: '+b.expected_due_date);
+          if(b.notes) details.push(b.notes);
+          entries.push({ date: b.breed_date, type: 'Breeding', details: details.join(' — ') });
+        });
+        entries.sort((a,b)=> b.date.localeCompare(a.date));
+        entries.forEach(e=>{
+          const row = allInfoWs.addRow([cow.number, cow.lot||'', cow.owner||'', e.date, e.type, e.details]);
+          if(cowIdx % 2 === 1){
+            row.eachCell({ includeEmpty:true }, cell=>{
+              cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFDCEBF7' } };
+            });
+          }
+        });
+      });
+      allInfoWs.columns.forEach(col=>{ col.width = 18; });
+
       function addSheet(name, builder){
         const { header, rows } = builder();
         if(rows.length === 0) return; // Skip empty categories
@@ -6344,41 +6397,6 @@
       addSheet('Breeding', buildBreedingRows);
       addSheet('Haying', buildHayingRows);
       addSheet('Equipment', buildEquipmentRows);
-
-      // All Info — every cow, one row each, showing their most recent entry
-      // per category so the whole herd's current status fits on one sheet.
-      const allInfoHeader = ['Cow Number','Location','Owner','Group','Status','Herd Season',
-        'Med Date','Med Details','Calving Date','Calving Details','Note Date','Note',
-        'Weight Date','Weight (lbs)','Breeding Date','Breeding Details'];
-      const allInfoWs = wb.addWorksheet('All Info');
-      allInfoWs.addRow(allInfoHeader);
-      allInfoWs.getRow(1).font = { bold:true };
-      allInfoWs.getRow(1).eachCell({ includeEmpty:true }, cell=>{
-        cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFEFE8D8' } };
-      });
-      allInfoWs.getColumn(1).numFmt = '@';
-      cows.forEach((cow, idx)=>{
-        const latestMed = [...recordsFor(cow.number)].sort((a,b)=>b.date.localeCompare(a.date))[0];
-        const medDesc = latestMed ? (latestMed.medicine ? `${latestMed.medicine}${latestMed.reason ? ' / '+latestMed.reason : ''}` : '(note only)') : '';
-        const latestCalving = [...calvingsFor(cow.number)].sort((a,b)=>b.calving_date.localeCompare(a.calving_date))[0];
-        const latestNote = [...generalNotesFor(cow.number)].sort((a,b)=>b.note_date.localeCompare(a.note_date))[0];
-        const latestWeight = [...weightsFor(cow.number)].sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date))[0];
-        const latestBreeding = [...breedingFor(cow.number)].sort((a,b)=>b.breed_date.localeCompare(a.breed_date))[0];
-        const row = allInfoWs.addRow([
-          cow.number, cow.lot||'', cow.owner||'', cow.cow_group||'', cow.status||'Active', cow.herd_season||'',
-          latestMed ? latestMed.date : '', medDesc,
-          latestCalving ? latestCalving.calving_date : '', latestCalving ? `${calfSexLabel(latestCalving.calf_sex)} calf` : '',
-          latestNote ? latestNote.note_date : '', latestNote ? (latestNote.note||'') : '',
-          latestWeight ? latestWeight.weigh_date : '', latestWeight && latestWeight.weight!=null ? latestWeight.weight : '',
-          latestBreeding ? latestBreeding.breed_date : '', latestBreeding ? (latestBreeding.bred_to||'') : ''
-        ]);
-        if(idx % 2 === 1){
-          row.eachCell({ includeEmpty:true }, cell=>{
-            cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFDCEBF7' } };
-          });
-        }
-      });
-      allInfoWs.columns.forEach(col=>{ col.width = 16; });
 
       const buffer = await wb.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/octet-stream' });
