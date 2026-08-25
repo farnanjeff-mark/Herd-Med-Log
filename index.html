@@ -186,7 +186,7 @@
   .record-reason{font-size:16px;color:#4a4433;}
   .record-notes{font-family:Arial,sans-serif;font-size:14px;color:#6b6350;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px;}
   .record-del{position:absolute;top:10px;right:10px;background:none;border:none;color:#a08f6b;font-size:16px;cursor:pointer;padding:4px;}
-  .record-edit{position:absolute;top:10px;right:34px;background:none;border:none;color:#a08f6b;font-size:14px;cursor:pointer;padding:4px;}
+  .record-edit{position:absolute;top:6px;right:40px;background:none;border:none;color:#a08f6b;font-size:26px;cursor:pointer;padding:4px 6px;line-height:1;}
 
   .field{margin-bottom:12px;}
   .field label{display:block;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#6b6350;margin-bottom:5px;}
@@ -244,7 +244,7 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
-      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">👤</span>Cow Profile</span><span style="display:flex;gap:8px;"><span id="homeTagNeededBadge" class="hidden" style="background:#C4732B;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span id="homeCalvedBadge" class="hidden" style="background:#3C9142;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span id="homeFlaggedBadge" class="hidden" style="background:#3B6E8F;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span></span></button>
+      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">👤</span>Cow Profile</span><span style="display:flex;gap:10px;"><span id="homeTagNeededWrap" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:2px;"><span id="homeTagNeededBadge" style="background:#C4732B;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#fff;">Tag</span></span><span id="homeCalvedWrap" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:2px;"><span id="homeCalvedBadge" style="background:#3C9142;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#fff;">Calved</span></span><span id="homeFlaggedWrap" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:2px;"><span id="homeFlaggedBadge" style="background:#3B6E8F;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#fff;">Flagged</span></span></span></button>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <button class="btn btn-nav-tool" id="homeUtilitiesBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
         <button class="btn btn-nav-tool" id="homeReportsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
@@ -648,11 +648,6 @@
       </div>
     </div>
 
-    <div class="section-label">Photos</div>
-    <div id="profilePhotosList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
-    <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;"/>
-    <button class="btn btn-outline btn-full" id="profileAddPhotoBtn" style="margin-bottom:20px;">📷 Add Photo</button>
-
     <div class="section-label">Meds &amp; Notes</div>
     <div id="profileMedsList"></div>
     <button class="btn btn-profile-nav btn-full" id="profileGoMeds" style="margin-bottom:20px;">Go to Meds &amp; Notes →</button>
@@ -672,6 +667,11 @@
     <div class="section-label">Breeding Records</div>
     <div id="profileBreedingList"></div>
     <button class="btn btn-profile-nav btn-full" id="profileGoBreeding" style="margin-bottom:20px;">Go to Breeding Records →</button>
+
+    <div class="section-label">Photos</div>
+    <div id="profilePhotosList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
+    <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;"/>
+    <button class="btn btn-outline btn-full" id="profileAddPhotoBtn" style="margin-bottom:20px;">📷 Add Photo</button>
 
     <div class="section-label">Manage Cow</div>
     <button class="btn btn-profile-tool btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set location</button>
@@ -2348,35 +2348,38 @@
   }
   function updateTagNeededBadge(){
     const badge = document.getElementById('homeTagNeededBadge');
-    if(!badge) return;
+    const wrap = document.getElementById('homeTagNeededWrap');
+    if(!badge || !wrap) return;
     const count = cows.filter(c=>c.tag_needed).length;
     if(count > 0){
-      badge.classList.remove('hidden');
+      wrap.classList.remove('hidden');
       badge.textContent = count > 99 ? '99+' : count;
     } else {
-      badge.classList.add('hidden');
+      wrap.classList.add('hidden');
     }
   }
   function updateCalvedBadge(){
     const badge = document.getElementById('homeCalvedBadge');
-    if(!badge) return;
+    const wrap = document.getElementById('homeCalvedWrap');
+    if(!badge || !wrap) return;
     const count = cows.filter(c=>c.calved).length;
     if(count > 0){
-      badge.classList.remove('hidden');
+      wrap.classList.remove('hidden');
       badge.textContent = count > 99 ? '99+' : count;
     } else {
-      badge.classList.add('hidden');
+      wrap.classList.add('hidden');
     }
   }
   function updateFlaggedBadge(){
     const badge = document.getElementById('homeFlaggedBadge');
-    if(!badge) return;
+    const wrap = document.getElementById('homeFlaggedWrap');
+    if(!badge || !wrap) return;
     const count = cows.filter(c=>c.needs_entry).length;
     if(count > 0){
-      badge.classList.remove('hidden');
+      wrap.classList.remove('hidden');
       badge.textContent = count > 99 ? '99+' : count;
     } else {
-      badge.classList.add('hidden');
+      wrap.classList.add('hidden');
     }
   }
   function updatePrintFlaggedButton(){
