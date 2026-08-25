@@ -244,7 +244,7 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:20px 10px;">
-      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;position:relative;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile<span id="homeTagNeededBadge" class="hidden" style="position:absolute;top:-12px;right:-12px;background:#C4732B;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;padding:0 6px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.25);">0</span></button>
+      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;position:relative;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Cow Profile<span id="homeTagNeededBadge" class="hidden" style="position:absolute;top:-12px;right:-12px;background:#C4732B;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;padding:0 6px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.25);">0</span><span id="homeCalvedBadge" class="hidden" style="position:absolute;top:-12px;left:-12px;background:#3C9142;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;padding:0 6px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.25);">0</span></button>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <button class="btn btn-nav-tool" id="homeUtilitiesBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
         <button class="btn btn-nav-tool" id="homeReportsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
@@ -267,6 +267,7 @@
           <button class="btn btn-outline" id="homeQuickSearchBackBtn" style="font-size:20px;padding:14px 0;">⌫</button>
         </div>
         <button id="homeQuickSearchGoBtn" class="btn btn-nav-section" style="font-size:18px;padding:14px 60px;display:block;margin:0 auto;">Go</button>
+        <button id="homeTodaysActivityBtn" class="btn btn-outline btn-full" style="margin-top:16px;">📋 Today's Activity</button>
       </div>
     </div>
   </div>
@@ -936,6 +937,7 @@
     checkBackupReminder();
     updatePrintFlaggedButton();
     updateTagNeededBadge();
+    updateCalvedBadge();
   }
 
   function fmtDate(iso){
@@ -1078,6 +1080,8 @@
       if(!c.needs_entry) return false;
     } else if(filterKind === 'tag'){
       if(!c.tag_needed) return false;
+    } else if(filterKind === 'calved'){
+      if(!c.calved) return false;
     } else if(filterKind === 'herd'){
       if(c.herd_season !== filterValue) return false;
     } else if(filterKind === 'act'){
@@ -1101,6 +1105,7 @@
     const hasUnassigned = cows.some(c=>!c.owner);
     const hasFlagged = cows.some(c=>c.needs_entry);
     const hasTagNeeded = cows.some(c=>c.tag_needed);
+    const hasCalved = cows.some(c=>c.calved);
     const hasSpring = cows.some(c=>c.herd_season==='Spring');
     const hasFall = cows.some(c=>c.herd_season==='Fall');
 
@@ -1123,6 +1128,7 @@
     ).join('');
     const statusOptions = (hasFlagged ? '<option value="flag:1">Flagged</option>' : '') +
       (hasTagNeeded ? '<option value="tag:1">Tag Needed</option>' : '') +
+      (hasCalved ? '<option value="calved:1">Calved</option>' : '') +
       (hasSpring ? '<option value="herd:Spring">Spring Herd</option>' : '') +
       (hasFall ? '<option value="herd:Fall">Fall Herd</option>' : '');
     sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
@@ -1268,6 +1274,7 @@
     homeQuickSearchValue = '';
     updateHomeQuickSearchDisplay();
     updateTagNeededBadge();
+    updateCalvedBadge();
   }
   function showQuickAction(matchedCows){
     setHeaderTitle('Quick', 'Entry');
@@ -1306,6 +1313,7 @@
     wireProfileQuickAddButtons(listEl);
     wireNeedsEntryCheckboxes(listEl);
     wireTagNeededCheckboxes(listEl);
+    wireCalvedCheckboxes(listEl);
     window.scrollTo(0,0);
   }
   function showHerdTally(){
@@ -1859,6 +1867,10 @@
     pendingProfileFilterOverride = 'tag:1';
     showProfileList();
   }
+  function showProfileListCalved(){
+    pendingProfileFilterOverride = 'calved:1';
+    showProfileList();
+  }
   function openProfileCow(num){
     currentProfileCow = num;
     homeView.classList.add('hidden');
@@ -2372,12 +2384,24 @@
     wireProfileQuickAddButtons(listEl);
     wireNeedsEntryCheckboxes(listEl);
     wireTagNeededCheckboxes(listEl);
+    wireCalvedCheckboxes(listEl);
     document.getElementById('profilePrintListBtn').textContent = `🖨️ Print This List (${filtered.length})`;
   }
   function updateTagNeededBadge(){
     const badge = document.getElementById('homeTagNeededBadge');
     if(!badge) return;
     const count = cows.filter(c=>c.tag_needed).length;
+    if(count > 0){
+      badge.classList.remove('hidden');
+      badge.textContent = count > 99 ? '99+' : count;
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+  function updateCalvedBadge(){
+    const badge = document.getElementById('homeCalvedBadge');
+    if(!badge) return;
+    const count = cows.filter(c=>c.calved).length;
     if(count > 0){
       badge.classList.remove('hidden');
       badge.textContent = count > 99 ? '99+' : count;
@@ -4384,6 +4408,7 @@
   document.getElementById('homeReportsBtn').addEventListener('click', showReports);
   document.getElementById('homeFarmOperationsBtn').addEventListener('click', showFarmOperations);
   document.getElementById('homeQuickSearchGoBtn').addEventListener('click', runHomeQuickSearch);
+  document.getElementById('homeTodaysActivityBtn').addEventListener('click', todaysActivityModal);
   document.getElementById('quickActionHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeQuickSearchClearBtn').addEventListener('click', homeQuickSearchClear);
   document.getElementById('homeQuickSearchBackBtn').addEventListener('click', homeQuickSearchBackspace);
@@ -4444,6 +4469,10 @@
   document.getElementById('homeTagNeededBadge').addEventListener('click', (e)=>{
     e.stopPropagation();
     showProfileListTagNeeded();
+  });
+  document.getElementById('homeCalvedBadge').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    showProfileListCalved();
   });
   document.getElementById('profileListHomeBtn').addEventListener('click', showHome);
   document.getElementById('profileHomeBtn').addEventListener('click', showHome);
@@ -4603,6 +4632,34 @@
       showToast('Could not save — try again');
     }
   }
+  function calvedCheckboxHtml(cow){
+    return `<input type="checkbox" class="calved-check" data-num="${escapeHtml(cow.number)}" ${cow.calved ? 'checked' : ''} title="Calved" style="width:22px;height:22px;flex-shrink:0;accent-color:#3C9142;"/>`;
+  }
+  function wireCalvedCheckboxes(container){
+    container.querySelectorAll('.calved-check').forEach(cb=>{
+      cb.addEventListener('click', e=> e.stopPropagation());
+      cb.addEventListener('change', async e=>{
+        e.stopPropagation();
+        await toggleCalved(cb.dataset.num, cb.checked);
+        updateCalvedBadge();
+        const filterRow = document.getElementById('profileLotFilterRow');
+        if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
+      });
+    });
+  }
+  async function toggleCalved(num, checked){
+    try{
+      const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ calved: checked })
+      });
+      const idx = cows.findIndex(c=>c.number===num);
+      if(idx !== -1) cows[idx] = updated[0];
+    }catch(e){
+      showToast('Could not save — try again');
+    }
+  }
   async function toggleHerdSeason(num, season){
     try{
       const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
@@ -4666,6 +4723,10 @@
             <div style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#6b6350;margin-top:2px;">Tap for Profile &rsaquo;</div>
           </div>
           <div style="display:flex;align-items:flex-end;gap:12px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+              ${calvedCheckboxHtml(cow)}
+              <span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#6b6350;">Calved</span>
+            </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
               ${tagNeededCheckboxHtml(cow)}
               <span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#6b6350;">Tag</span>
@@ -5837,6 +5898,82 @@
     reportTableModal('Upcoming Calvings', ['Cow #','Due Date','Days Until','Bred To','Method'], rows);
   }
 
+  function todaysActivityModal(){
+    const modal = openModal(`
+      <div class="modal-title">Today's Activity</div>
+      <div class="field">
+        <label>Time Frame</label>
+        <select id="todaysActivityTimeframe">
+          <option value="0" selected>Today</option>
+          <option value="7">1 Week</option>
+          <option value="30">1 Month</option>
+        </select>
+      </div>
+      <div id="todaysActivityResults" style="max-height:60vh;overflow-y:auto;overflow-x:auto;margin-bottom:14px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeTodaysActivityBtn">Close</button>
+      </div>
+    `);
+    function currentEntries(){
+      const days = parseInt(modal.querySelector('#todaysActivityTimeframe').value, 10);
+      const entries = [];
+      treatments.forEach(t=>{
+        if(daysAgo(t.date) <= days && daysAgo(t.date) >= 0){
+          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
+          entries.push({ date: t.date, num: t.cow_number, type: 'Med', details: desc });
+        }
+      });
+      calvings.forEach(c=>{
+        if(daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0){
+          entries.push({ date: c.calving_date, num: c.cow_number, type: 'Calving', details: `${calfSexLabel(c.calf_sex)} calf${c.birth_weight!=null ? ', '+c.birth_weight+' lbs' : ''}` });
+        }
+      });
+      generalNotes.forEach(n=>{
+        if(daysAgo(n.note_date) <= days && daysAgo(n.note_date) >= 0){
+          entries.push({ date: n.note_date, num: n.cow_number, type: 'Note', details: n.note||'' });
+        }
+      });
+      weights.forEach(w=>{
+        if(daysAgo(w.weigh_date) <= days && daysAgo(w.weigh_date) >= 0){
+          entries.push({ date: w.weigh_date, num: w.cow_number, type: 'Weight', details: w.weight!=null ? w.weight+' lbs' : '' });
+        }
+      });
+      breedingRecords.forEach(b=>{
+        if(daysAgo(b.breed_date) <= days && daysAgo(b.breed_date) >= 0){
+          entries.push({ date: b.breed_date, num: b.cow_number, type: 'Breeding', details: b.bred_to ? 'Bred to: '+b.bred_to : '' });
+        }
+      });
+      entries.sort((a,b)=> b.date.localeCompare(a.date));
+      return entries;
+    }
+    function refresh(){
+      const entries = currentEntries();
+      const resultsEl = modal.querySelector('#todaysActivityResults');
+      if(entries.length === 0){
+        resultsEl.innerHTML = '<p class="empty">No activity in this timeframe.</p>';
+      } else {
+        resultsEl.innerHTML = `
+          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+            <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Type</th><th style="text-align:left;padding:8px;">Details</th></tr></thead>
+            <tbody>
+              ${entries.map((e,i)=>`
+                <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+                  <td style="padding:8px;">${fmtDateShort(e.date)}</td>
+                  <td style="padding:8px;">#${escapeHtml(e.num)}</td>
+                  <td style="padding:8px;">${escapeHtml(e.type)}</td>
+                  <td style="padding:8px;white-space:normal;">${escapeHtml(e.details)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    }
+    refresh();
+    modal.querySelector('#todaysActivityTimeframe').addEventListener('change', refresh);
+    modal.querySelector('#closeTodaysActivityBtn').addEventListener('click', closeModal);
+  }
+
   function bulkEditModal(){
     const modal = openModal(`
       <div class="modal-title">Bulk Edit</div>
@@ -5957,6 +6094,7 @@
           <option value="meds">Meds &amp; Notes</option>
           <option value="notes">General Notes</option>
           <option value="tagneeded">Tag Needed</option>
+          <option value="calved">Calved</option>
         </select>
       </div>
       <div class="field" id="textTimeframeField">
@@ -5976,7 +6114,7 @@
     const categorySelect = modal.querySelector('#textCategorySelect');
     const timeframeField = modal.querySelector('#textTimeframeField');
     function toggleTimeframeVisibility(){
-      timeframeField.classList.toggle('hidden', categorySelect.value === 'tagneeded');
+      timeframeField.classList.toggle('hidden', categorySelect.value === 'tagneeded' || categorySelect.value === 'calved');
     }
     categorySelect.addEventListener('change', toggleTimeframeVisibility);
     toggleTimeframeVisibility();
@@ -6010,6 +6148,10 @@
     } else if(category === 'tagneeded'){
       title = 'Tag Needed';
       const list = cows.filter(c=>c.tag_needed).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+      entries = list.map(c=> ({ id: c.number, line: `#${c.number}${c.lot ? ' — '+c.lot : ''}` }));
+    } else if(category === 'calved'){
+      title = 'Calved';
+      const list = cows.filter(c=>c.calved).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
       entries = list.map(c=> ({ id: c.number, line: `#${c.number}${c.lot ? ' — '+c.lot : ''}` }));
     }
     return { title, entries };
@@ -6187,8 +6329,8 @@
     return { header, rows };
   }
   function buildCowsRows(){
-    const header = ['Cow Number','Location','Owner','Group','Status','Flagged','Tag Needed','Herd Season'];
-    const rows = cows.map(c=> [c.number, c.lot||'', c.owner||'', c.cow_group||'', c.status||'Active', c.needs_entry?'Yes':'', c.tag_needed?'Yes':'', c.herd_season||'']);
+    const header = ['Cow Number','Location','Owner','Group','Status','Flagged','Tag Needed','Calved','Herd Season'];
+    const rows = cows.map(c=> [c.number, c.lot||'', c.owner||'', c.cow_group||'', c.status||'Active', c.needs_entry?'Yes':'', c.tag_needed?'Yes':'', c.calved?'Yes':'', c.herd_season||'']);
     return { header, rows };
   }
   function buildHayingRows(){
