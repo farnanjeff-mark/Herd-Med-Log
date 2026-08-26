@@ -4551,7 +4551,7 @@
     return (cow.status && cow.status !== 'Active') ? `<span class="status-badge">${escapeHtml(cow.status)}</span>` : '';
   }
   function needsEntryCheckboxHtml(cow){
-    return `<input type="checkbox" class="needs-entry-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.needs_entry ? 'checked' : ''} title="Flag this cow" style="--rc-color:#6B4A34;"/>`;
+    return `<input type="checkbox" class="needs-entry-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.needs_entry ? 'checked' : ''} title="Flag this cow" style="--rc-color:#8B6A4C;"/>`;
   }
   function wireNeedsEntryCheckboxes(container){
     container.querySelectorAll('.needs-entry-check').forEach(cb=>{
@@ -4580,7 +4580,7 @@
     }
   }
   function tagNeededCheckboxHtml(cow){
-    return `<input type="checkbox" class="tag-needed-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.tag_needed ? 'checked' : ''} title="Tag Needed" style="--rc-color:#6B4A34;"/>`;
+    return `<input type="checkbox" class="tag-needed-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.tag_needed ? 'checked' : ''} title="Tag Needed" style="--rc-color:#8B6A4C;"/>`;
   }
   function wireTagNeededCheckboxes(container){
     container.querySelectorAll('.tag-needed-check').forEach(cb=>{
@@ -4608,7 +4608,7 @@
     }
   }
   function calvedCheckboxHtml(cow){
-    return `<input type="checkbox" class="calved-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.calved ? 'checked' : ''} title="Calved" style="--rc-color:#6B4A34;"/>`;
+    return `<input type="checkbox" class="calved-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.calved ? 'checked' : ''} title="Calved" style="--rc-color:#8B6A4C;"/>`;
   }
   function wireCalvedCheckboxes(container){
     container.querySelectorAll('.calved-check').forEach(cb=>{
@@ -4675,14 +4675,14 @@
     const activeCalf = latestActiveCalfFor(num);
     const cols = activeCalf ? 6 : 5;
     const calfBtn = activeCalf
-      ? `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="calf" data-calving-id="${escapeHtml(activeCalf.id)}" title="Calf Record" style="background:#7A2E27;border:1px solid rgba(255,255,255,.7);border-radius:8px;padding:9px 1px;cursor:pointer;">
-          <span style="font-family:Arial,sans-serif;font-size:13px;font-weight:500;color:#fff;">Calf</span>
+      ? `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="calf" data-calving-id="${escapeHtml(activeCalf.id)}" title="Calf Record" style="background:#7A2E27;border:1px solid rgba(255,255,255,.7);border-radius:8px;padding:15px 2px;cursor:pointer;">
+          <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:500;color:#fff;">Calf</span>
         </button>`
       : '';
-    return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:5px;">` +
+    return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;">` +
       PROFILE_QUICK_ADD_TYPES.map(t=>
-        `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="${t.type}" title="${t.title}" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.7);border-radius:8px;padding:9px 1px;cursor:pointer;">
-          <span style="font-family:Arial,sans-serif;font-size:13px;font-weight:500;color:#fff;">${t.label}</span>
+        `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="${t.type}" title="${t.title}" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.7);border-radius:8px;padding:15px 2px;cursor:pointer;">
+          <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:500;color:#fff;">${t.label}</span>
         </button>`
       ).join('') + calfBtn +
     `</div>`;
@@ -4711,7 +4711,7 @@
             </div>
           </div>
         </div>
-        <div style="background:linear-gradient(135deg, #6B4A34, #4E3524);padding:14px;">
+        <div style="background:linear-gradient(135deg, #8B6A4C, #6B4A34);padding:14px;">
           ${profileQuickAddRowHtml(cow.number)}
         </div>
       </div>
