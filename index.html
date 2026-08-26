@@ -222,6 +222,9 @@
   body.printing-list #printListOutput{ display:block !important; }
 }
 #printListOutput{ display:none; }
+.rc-check{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:6px;border:2px solid var(--rc-color);background:#fff;flex-shrink:0;cursor:pointer;position:relative;margin:0;}
+.rc-check:checked{background:var(--rc-color);}
+.rc-check:checked::after{content:'\2713';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:13px;font-weight:700;line-height:1;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
@@ -4548,7 +4551,7 @@
     return (cow.status && cow.status !== 'Active') ? `<span class="status-badge">${escapeHtml(cow.status)}</span>` : '';
   }
   function needsEntryCheckboxHtml(cow){
-    return `<input type="checkbox" class="needs-entry-check" data-num="${escapeHtml(cow.number)}" ${cow.needs_entry ? 'checked' : ''} title="Flag this cow" style="width:22px;height:22px;flex-shrink:0;"/>`;
+    return `<input type="checkbox" class="needs-entry-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.needs_entry ? 'checked' : ''} title="Flag this cow" style="--rc-color:#6B4A34;"/>`;
   }
   function wireNeedsEntryCheckboxes(container){
     container.querySelectorAll('.needs-entry-check').forEach(cb=>{
@@ -4577,7 +4580,7 @@
     }
   }
   function tagNeededCheckboxHtml(cow){
-    return `<input type="checkbox" class="tag-needed-check" data-num="${escapeHtml(cow.number)}" ${cow.tag_needed ? 'checked' : ''} title="Tag Needed" style="width:22px;height:22px;flex-shrink:0;accent-color:#C4732B;"/>`;
+    return `<input type="checkbox" class="tag-needed-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.tag_needed ? 'checked' : ''} title="Tag Needed" style="--rc-color:#6B4A34;"/>`;
   }
   function wireTagNeededCheckboxes(container){
     container.querySelectorAll('.tag-needed-check').forEach(cb=>{
@@ -4605,7 +4608,7 @@
     }
   }
   function calvedCheckboxHtml(cow){
-    return `<input type="checkbox" class="calved-check" data-num="${escapeHtml(cow.number)}" ${cow.calved ? 'checked' : ''} title="Calved" style="width:22px;height:22px;flex-shrink:0;accent-color:#3C9142;"/>`;
+    return `<input type="checkbox" class="calved-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.calved ? 'checked' : ''} title="Calved" style="--rc-color:#6B4A34;"/>`;
   }
   function wireCalvedCheckboxes(container){
     container.querySelectorAll('.calved-check').forEach(cb=>{
@@ -4672,44 +4675,43 @@
     const activeCalf = latestActiveCalfFor(num);
     const cols = activeCalf ? 6 : 5;
     const calfBtn = activeCalf
-      ? `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="calf" data-calving-id="${escapeHtml(activeCalf.id)}" title="Calf Record" style="background:#8A5A2E;border:none;border-radius:10px;padding:10px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 2px 5px rgba(0,0,0,.18);">
-          <span style="color:#fff;font-size:18px;line-height:1;">🐄</span>
-          <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#fff;">Calf</span>
+      ? `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="calf" data-calving-id="${escapeHtml(activeCalf.id)}" title="Calf Record" style="background:#7A2E27;border:1px solid rgba(255,255,255,.7);border-radius:8px;padding:9px 1px;cursor:pointer;">
+          <span style="font-family:Arial,sans-serif;font-size:13px;font-weight:500;color:#fff;">Calf</span>
         </button>`
       : '';
-    return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:8px;">` +
+    return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:5px;">` +
       PROFILE_QUICK_ADD_TYPES.map(t=>
-        `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="${t.type}" title="${t.title}" style="background:#3C9142;border:none;border-radius:10px;padding:10px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 2px 5px rgba(0,0,0,.18);">
-          <span style="color:#fff;font-size:20px;font-weight:700;line-height:1;">+</span>
-          <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#fff;">${t.label}</span>
+        `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="${t.type}" title="${t.title}" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.7);border-radius:8px;padding:9px 1px;cursor:pointer;">
+          <span style="font-family:Arial,sans-serif;font-size:13px;font-weight:500;color:#fff;">${t.label}</span>
         </button>`
       ).join('') + calfBtn +
     `</div>`;
   }
   function quickAddCardHtml(cow){
+    const inactiveStyle = isActiveStatus(cow) ? '' : 'opacity:0.55;';
     return `
-      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(43,38,32,.10), 0 6px 16px rgba(43,38,32,.14);overflow:hidden;margin-bottom:18px;">
+      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(43,38,32,.10), 0 6px 16px rgba(43,38,32,.14);overflow:hidden;margin-bottom:18px;${inactiveStyle}">
         <div style="background:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid #eee;" data-open-num="${escapeHtml(cow.number)}">
           <div>
             <span style="font-family:Arial,sans-serif;font-size:23px;font-weight:700;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
             <div style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#6b6350;margin-top:2px;">Tap for Profile &rsaquo;</div>
           </div>
-          <div style="display:flex;align-items:flex-end;gap:12px;">
-            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-              ${calvedCheckboxHtml(cow)}
-              <span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#6b6350;">Calved</span>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <div style="display:flex;">
+            <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
               ${tagNeededCheckboxHtml(cow)}
-              <span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#6b6350;">Tag</span>
+              <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Tag</span>
             </div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              ${calvedCheckboxHtml(cow)}
+              <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Calved</span>
+            </div>
+            <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
               ${needsEntryCheckboxHtml(cow)}
-              <span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#6b6350;">Flagged</span>
+              <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Flag</span>
             </div>
           </div>
         </div>
-        <div style="background:linear-gradient(180deg, #0A82C4 0%, #0274BA 100%);padding:18px;">
+        <div style="background:linear-gradient(135deg, #6B4A34, #4E3524);padding:14px;">
           ${profileQuickAddRowHtml(cow.number)}
         </div>
       </div>
