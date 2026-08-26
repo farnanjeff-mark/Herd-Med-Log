@@ -246,8 +246,8 @@
   </div>
 
   <div class="view" id="homeView">
-    <div style="text-align:center;padding:12px 10px;">
-      <button class="btn btn-full" id="homeProfileBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#0C5A8E;padding:14px 16px;font-size:16px;margin-bottom:16px;margin-top:4px;display:flex;align-items:center;justify-content:center;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">👤</span>Cow Profile</span></button>
+    <div style="text-align:center;padding:4px 10px;">
+      <button class="btn btn-full" id="homeProfileBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#0C5A8E;padding:14px 16px;font-size:16px;margin-bottom:16px;margin-top:0;display:flex;align-items:center;justify-content:center;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">👤</span>Cow Profile</span></button>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <button class="btn" id="homeUtilitiesBtn" style="background:#2E88C4;color:#fff;border-color:#2E88C4;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
         <button class="btn" id="homeReportsBtn" style="background:#2E88C4;color:#fff;border-color:#2E88C4;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
@@ -270,8 +270,8 @@
           <button class="btn" id="homeQuickSearchBackBtn" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:18px;padding:12px 0;">⌫</button>
         </div>
         <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#3C9142;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
-        <button id="homeTodaysActivityBtn" class="btn btn-full" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;margin-top:12px;margin-bottom:12px;">📋 Today's Activity</button>
-        <div style="display:flex;justify-content:center;gap:8px;padding-top:10px;border-top:1px solid #ddd;">
+        <button id="homeTodaysActivityBtn" class="btn btn-full" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;margin-top:38px;margin-bottom:12px;">📋 Today's Activity</button>
+        <div style="display:flex;justify-content:center;gap:8px;padding-top:2px;">
           <div id="homeTagNeededWrap" class="hidden" style="width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1.5px solid #2E88C4;border-radius:10px;padding:8px 4px;cursor:pointer;">
             <span id="homeTagNeededBadge" style="font-size:30px;font-weight:700;color:#0C5A8E;line-height:1;">0</span>
             <span style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;font-weight:500;">Tag</span>
@@ -328,8 +328,6 @@
     <button class="btn btn-nav-tool btn-full" id="deadCalvesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">💔</span>&nbsp;&nbsp;Dead Calves</button>
     <button class="btn btn-nav-tool btn-full" id="calvingReportBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐮</span>&nbsp;&nbsp;Calving Report</button>
     <button class="btn btn-nav-tool btn-full" id="upcomingCalvingsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📅</span>&nbsp;&nbsp;Upcoming Calvings</button>
-    <button class="btn btn-nav-tool btn-full hidden" id="reportsPrintFlaggedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🖨️</span>&nbsp;&nbsp;Print Flagged Cows</button>
-    <button class="btn btn-nav-tool btn-full hidden" id="reportsExportFlaggedBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Export Flagged Cows</button>
   </div>
 
   <div class="view hidden" id="farmOperationsView">
@@ -952,7 +950,6 @@
     const homeTotalEl = document.getElementById('homeTotalCattle');
     if(homeTotalEl) homeTotalEl.textContent = cows.filter(isActiveStatus).length;
     checkBackupReminder();
-    updatePrintFlaggedButton();
     updateTagNeededBadge();
     updateCalvedBadge();
     updateFlaggedBadge();
@@ -1644,7 +1641,6 @@
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
-    updatePrintFlaggedButton();
     window.scrollTo(0,0);
   }
   function showFarmOperations(){
@@ -2404,24 +2400,6 @@
       wrap.classList.add('hidden');
     }
   }
-  function updatePrintFlaggedButton(){
-    const btn = document.getElementById('reportsPrintFlaggedBtn');
-    const exportBtn = document.getElementById('reportsExportFlaggedBtn');
-    if(!btn) return;
-    const flaggedCount = cows.filter(c=>c.needs_entry).length;
-    if(flaggedCount > 0){
-      btn.classList.remove('hidden');
-      btn.textContent = `🖨️ Print Flagged Cows (${flaggedCount})`;
-      if(exportBtn){
-        exportBtn.classList.remove('hidden');
-        exportBtn.textContent = `📊 Export Flagged Cows (${flaggedCount})`;
-      }
-    } else {
-      btn.classList.add('hidden');
-      if(exportBtn) exportBtn.classList.add('hidden');
-    }
-  }
-
   function printListModal(cowList, title, action){
     action = action || 'print';
     const count = cowList.length;
@@ -4475,14 +4453,6 @@
   document.getElementById('profilePrintListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Print This List', 'print'));
   document.getElementById('profileExportListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Export This List', 'export'));
   document.getElementById('profileBulkLogBtn').addEventListener('click', bulkLogEntryModal);
-  document.getElementById('reportsPrintFlaggedBtn').addEventListener('click', ()=>{
-    const flaggedCows = cows.filter(c=>c.needs_entry);
-    printListModal(flaggedCows, 'Print Flagged Cows', 'print');
-  });
-  document.getElementById('reportsExportFlaggedBtn').addEventListener('click', ()=>{
-    const flaggedCows = cows.filter(c=>c.needs_entry);
-    printListModal(flaggedCows, 'Export Flagged Cows', 'export');
-  });
   document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
   document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
   document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
@@ -4578,8 +4548,7 @@
       cb.addEventListener('change', async e=>{
         e.stopPropagation();
         await toggleNeedsEntry(cb.dataset.num, cb.checked);
-        updatePrintFlaggedButton();
-        updateFlaggedBadge();
+            updateFlaggedBadge();
         const filterRow = document.getElementById('profileLotFilterRow');
         if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
       });
