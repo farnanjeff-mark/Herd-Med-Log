@@ -246,31 +246,45 @@
   </div>
 
   <div class="view" id="homeView">
-    <div style="text-align:center;padding:20px 10px;">
-      <button class="btn btn-nav-section btn-full" id="homeProfileBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;margin-top:8px;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">👤</span>Cow Profile</span><span style="display:flex;gap:10px;"><span id="homeTagNeededWrap" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:2px;"><span id="homeTagNeededBadge" style="background:#C4732B;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#fff;">Tag</span></span><span id="homeCalvedWrap" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:2px;"><span id="homeCalvedBadge" style="background:#3C9142;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#fff;">Calved</span></span><span id="homeFlaggedWrap" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:2px;"><span id="homeFlaggedBadge" style="background:#3B6E8F;color:#fff;border:2px solid var(--ink);border-radius:50%;min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;padding:0 5px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);">0</span><span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#fff;">Flagged</span></span></span></button>
-      <div style="display:flex;gap:8px;margin-bottom:14px;">
-        <button class="btn btn-nav-tool" id="homeUtilitiesBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
-        <button class="btn btn-nav-tool" id="homeReportsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
-        <button class="btn btn-nav-tool" id="homeFarmOperationsBtn" style="flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🚜</span>Farm Ops</button>
+    <div style="text-align:center;padding:12px 10px;">
+      <button class="btn btn-full" id="homeProfileBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#0C5A8E;padding:14px 16px;font-size:16px;margin-bottom:16px;margin-top:4px;display:flex;align-items:center;justify-content:center;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">👤</span>Cow Profile</span></button>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="btn" id="homeUtilitiesBtn" style="background:#2E88C4;color:#fff;border-color:#2E88C4;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
+        <button class="btn" id="homeReportsBtn" style="background:#2E88C4;color:#fff;border-color:#2E88C4;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
+        <button class="btn" id="homeFarmOperationsBtn" style="background:#2E88C4;color:#fff;border-color:#2E88C4;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🚜</span>Farm Ops</button>
       </div>
       <div style="max-width:280px;margin:0 auto;">
-        <div id="homeQuickSearchDisplay" style="background:#fff;border:2px solid var(--ink);border-radius:10px;padding:12px;font-size:28px;font-weight:700;text-align:center;min-height:44px;margin-bottom:10px;letter-spacing:.05em;color:var(--ink);">&nbsp;</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
-          <button class="btn btn-outline keypad-digit" data-digit="1" style="font-size:22px;padding:14px 0;">1</button>
-          <button class="btn btn-outline keypad-digit" data-digit="2" style="font-size:22px;padding:14px 0;">2</button>
-          <button class="btn btn-outline keypad-digit" data-digit="3" style="font-size:22px;padding:14px 0;">3</button>
-          <button class="btn btn-outline keypad-digit" data-digit="4" style="font-size:22px;padding:14px 0;">4</button>
-          <button class="btn btn-outline keypad-digit" data-digit="5" style="font-size:22px;padding:14px 0;">5</button>
-          <button class="btn btn-outline keypad-digit" data-digit="6" style="font-size:22px;padding:14px 0;">6</button>
-          <button class="btn btn-outline keypad-digit" data-digit="7" style="font-size:22px;padding:14px 0;">7</button>
-          <button class="btn btn-outline keypad-digit" data-digit="8" style="font-size:22px;padding:14px 0;">8</button>
-          <button class="btn btn-outline keypad-digit" data-digit="9" style="font-size:22px;padding:14px 0;">9</button>
-          <button class="btn btn-outline" id="homeQuickSearchClearBtn" style="font-size:16px;padding:14px 0;">C</button>
-          <button class="btn btn-outline keypad-digit" data-digit="0" style="font-size:22px;padding:14px 0;">0</button>
-          <button class="btn btn-outline" id="homeQuickSearchBackBtn" style="font-size:20px;padding:14px 0;">⌫</button>
+        <div id="homeQuickSearchDisplay" style="background:#fff;border:2px solid #0C5A8E;border-radius:10px;padding:10px;font-size:26px;font-weight:700;text-align:center;min-height:40px;margin-bottom:8px;letter-spacing:.05em;color:var(--ink);">&nbsp;</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:8px;">
+          <button class="btn keypad-digit" data-digit="1" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">1</button>
+          <button class="btn keypad-digit" data-digit="2" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">2</button>
+          <button class="btn keypad-digit" data-digit="3" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">3</button>
+          <button class="btn keypad-digit" data-digit="4" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">4</button>
+          <button class="btn keypad-digit" data-digit="5" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">5</button>
+          <button class="btn keypad-digit" data-digit="6" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">6</button>
+          <button class="btn keypad-digit" data-digit="7" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">7</button>
+          <button class="btn keypad-digit" data-digit="8" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">8</button>
+          <button class="btn keypad-digit" data-digit="9" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">9</button>
+          <button class="btn" id="homeQuickSearchClearBtn" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:15px;padding:12px 0;">C</button>
+          <button class="btn keypad-digit" data-digit="0" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">0</button>
+          <button class="btn" id="homeQuickSearchBackBtn" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:18px;padding:12px 0;">⌫</button>
         </div>
-        <button id="homeQuickSearchGoBtn" class="btn btn-nav-section" style="font-size:18px;padding:14px 60px;display:block;margin:0 auto;">Go</button>
-        <button id="homeTodaysActivityBtn" class="btn btn-outline btn-full" style="margin-top:16px;">📋 Today's Activity</button>
+        <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#3C9142;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
+        <button id="homeTodaysActivityBtn" class="btn btn-full" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;margin-top:12px;margin-bottom:12px;">📋 Today's Activity</button>
+        <div style="display:flex;justify-content:center;gap:8px;padding-top:10px;border-top:1px solid #ddd;">
+          <div id="homeTagNeededWrap" class="hidden" style="width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1.5px solid #2E88C4;border-radius:10px;padding:8px 4px;cursor:pointer;">
+            <span id="homeTagNeededBadge" style="font-size:30px;font-weight:700;color:#0C5A8E;line-height:1;">0</span>
+            <span style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;font-weight:500;">Tag</span>
+          </div>
+          <div id="homeCalvedWrap" class="hidden" style="width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1.5px solid #2E88C4;border-radius:10px;padding:8px 4px;cursor:pointer;">
+            <span id="homeCalvedBadge" style="font-size:30px;font-weight:700;color:#0C5A8E;line-height:1;">0</span>
+            <span style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;font-weight:500;">Calved</span>
+          </div>
+          <div id="homeFlaggedWrap" class="hidden" style="width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1.5px solid #2E88C4;border-radius:10px;padding:8px 4px;cursor:pointer;">
+            <span id="homeFlaggedBadge" style="font-size:30px;font-weight:700;color:#0C5A8E;line-height:1;">0</span>
+            <span style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;font-weight:500;">Flagged</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -4441,15 +4455,15 @@
   document.getElementById('importParseBtn').addEventListener('click', parseAndPreviewImport);
   document.getElementById('importConfirmBtn').addEventListener('click', confirmImport);
   document.getElementById('homeProfileBtn').addEventListener('click', showProfileList);
-  document.getElementById('homeTagNeededBadge').addEventListener('click', (e)=>{
+  document.getElementById('homeTagNeededWrap').addEventListener('click', (e)=>{
     e.stopPropagation();
     showProfileListTagNeeded();
   });
-  document.getElementById('homeCalvedBadge').addEventListener('click', (e)=>{
+  document.getElementById('homeCalvedWrap').addEventListener('click', (e)=>{
     e.stopPropagation();
     showProfileListCalved();
   });
-  document.getElementById('homeFlaggedBadge').addEventListener('click', (e)=>{
+  document.getElementById('homeFlaggedWrap').addEventListener('click', (e)=>{
     e.stopPropagation();
     showProfileListFlagged();
   });
@@ -4681,13 +4695,13 @@
     const cols = activeCalf ? 6 : 5;
     const calfBtn = activeCalf
       ? `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="calf" data-calving-id="${escapeHtml(activeCalf.id)}" title="Calf Record" style="background:#3C9142;border:1px solid rgba(255,255,255,.7);border-radius:8px;padding:15px 2px;cursor:pointer;">
-          <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:500;color:#fff;">Calf</span>
+          <span style="font-family:Arial,sans-serif;font-size:15px;font-weight:500;color:#fff;">Calf</span>
         </button>`
       : '';
     return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;">` +
       PROFILE_QUICK_ADD_TYPES.map(t=>
         `<button class="profile-quick-add-btn" data-num="${escapeHtml(num)}" data-type="${t.type}" title="${t.title}" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.7);border-radius:8px;padding:15px 2px;cursor:pointer;">
-          <span style="font-family:Arial,sans-serif;font-size:14px;font-weight:500;color:#fff;">${t.label}</span>
+          <span style="font-family:Arial,sans-serif;font-size:15px;font-weight:500;color:#fff;">${t.label}</span>
         </button>`
       ).join('') + calfBtn +
     `</div>`;
@@ -4720,7 +4734,7 @@
     }
     if(lines.length === 0) return '';
     return `<div style="border-top:1px solid #eee;padding-top:8px;margin-top:10px;display:flex;flex-direction:column;gap:3px;">
-      ${lines.map(l=>`<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;">${l}</div>`).join('')}
+      ${lines.map(l=>`<div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;">${l}</div>`).join('')}
     </div>`;
   }
   function quickAddCardHtml(cow){
@@ -4730,10 +4744,10 @@
         <div style="background:#fff;padding:16px 18px;cursor:pointer;border-bottom:1px solid #eee;" data-open-num="${escapeHtml(cow.number)}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
-              <span style="font-family:Arial,sans-serif;font-size:23px;font-weight:700;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
-              <div style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#6b6350;margin-top:2px;">Tap for Profile &rsaquo;</div>
+              <span style="font-family:Arial,sans-serif;font-size:25px;font-weight:700;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
+              <div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#6b6350;margin-top:2px;">Tap for Profile &rsaquo;</div>
             </div>
-            <div style="display:flex;">
+            <div style="display:flex;flex-shrink:0;">
               <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
                 ${tagNeededCheckboxHtml(cow)}
                 <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Tag</span>
