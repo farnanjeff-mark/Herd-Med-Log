@@ -999,6 +999,11 @@
   function escapeHtml(s){
     const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML;
   }
+  function truncateText(str, maxLen){
+    maxLen = maxLen || 46;
+    if(!str) return '';
+    return str.length > maxLen ? str.slice(0, maxLen-1) + '…' : str;
+  }
   function recordsFor(num){
     return treatments.filter(t=>t.cow_number===num);
   }
@@ -4687,29 +4692,63 @@
       ).join('') + calfBtn +
     `</div>`;
   }
+  function cardRecentInfoHtml(num){
+    const lines = [];
+    const latestMed = [...recordsFor(num)].sort((a,b)=>b.date.localeCompare(a.date))[0];
+    if(latestMed){
+      const desc = latestMed.medicine ? `${latestMed.medicine}${latestMed.reason ? ' / '+latestMed.reason : ''}` : (latestMed.notes||'note');
+      lines.push(`<span style="color:#8a8163;">Last med:</span> ${fmtDateShort(latestMed.date)} — ${truncateText(desc)}`);
+    }
+    const latestCalving = [...calvingsFor(num)].sort((a,b)=>b.calving_date.localeCompare(a.calving_date))[0];
+    if(latestCalving){
+      const details = [`${calfSexLabel(latestCalving.calf_sex)} calf`];
+      if(latestCalving.birth_weight!=null) details.push(`${latestCalving.birth_weight} lb`);
+      lines.push(`<span style="color:#8a8163;">Last calving:</span> ${fmtDateShort(latestCalving.calving_date)} — ${truncateText(details.join(', '))}`);
+    }
+    const latestWeight = [...weightsFor(num)].sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date))[0];
+    if(latestWeight){
+      lines.push(`<span style="color:#8a8163;">Last weight:</span> ${fmtDateShort(latestWeight.weigh_date)}${latestWeight.weight!=null ? ' — '+latestWeight.weight+' lb' : ''}`);
+    }
+    const latestBreeding = [...breedingFor(num)].sort((a,b)=>b.breed_date.localeCompare(a.breed_date))[0];
+    if(latestBreeding){
+      const detail = latestBreeding.bred_to ? `Bred to: ${latestBreeding.bred_to}` : '';
+      lines.push(`<span style="color:#8a8163;">Last breeding:</span> ${fmtDateShort(latestBreeding.breed_date)}${detail ? ' — '+truncateText(detail) : ''}`);
+    }
+    const latestNote = [...generalNotesFor(num)].sort((a,b)=>b.note_date.localeCompare(a.note_date))[0];
+    if(latestNote){
+      lines.push(`<span style="color:#8a8163;">Last note:</span> ${fmtDateShort(latestNote.note_date)} — ${escapeHtml(truncateText(latestNote.note||''))}`);
+    }
+    if(lines.length === 0) return '';
+    return `<div style="border-top:1px solid #eee;padding-top:8px;margin-top:10px;display:flex;flex-direction:column;gap:3px;">
+      ${lines.map(l=>`<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;">${l}</div>`).join('')}
+    </div>`;
+  }
   function quickAddCardHtml(cow){
     const inactiveStyle = isActiveStatus(cow) ? '' : 'opacity:0.55;';
     return `
       <div style="background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(43,38,32,.10), 0 6px 16px rgba(43,38,32,.14);overflow:hidden;margin-bottom:18px;${inactiveStyle}">
-        <div style="background:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid #eee;" data-open-num="${escapeHtml(cow.number)}">
-          <div>
-            <span style="font-family:Arial,sans-serif;font-size:23px;font-weight:700;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
-            <div style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#6b6350;margin-top:2px;">Tap for Profile &rsaquo;</div>
+        <div style="background:#fff;padding:16px 18px;cursor:pointer;border-bottom:1px solid #eee;" data-open-num="${escapeHtml(cow.number)}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <span style="font-family:Arial,sans-serif;font-size:23px;font-weight:700;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
+              <div style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#6b6350;margin-top:2px;">Tap for Profile &rsaquo;</div>
+            </div>
+            <div style="display:flex;">
+              <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                ${tagNeededCheckboxHtml(cow)}
+                <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Tag</span>
+              </div>
+              <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                ${calvedCheckboxHtml(cow)}
+                <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Calved</span>
+              </div>
+              <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                ${needsEntryCheckboxHtml(cow)}
+                <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Flag</span>
+              </div>
+            </div>
           </div>
-          <div style="display:flex;">
-            <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
-              ${tagNeededCheckboxHtml(cow)}
-              <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Tag</span>
-            </div>
-            <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
-              ${calvedCheckboxHtml(cow)}
-              <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Calved</span>
-            </div>
-            <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
-              ${needsEntryCheckboxHtml(cow)}
-              <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Flag</span>
-            </div>
-          </div>
+          ${cardRecentInfoHtml(cow.number)}
         </div>
         <div style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);padding:14px;">
           ${profileQuickAddRowHtml(cow.number)}
