@@ -296,6 +296,7 @@
     <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Location / Group</button>
     <button class="btn btn-nav-tool btn-full" id="vetPregCheckBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🩺</span>&nbsp;&nbsp;Vet Preg Check</button>
     <button class="btn btn-nav-tool btn-full" id="manageBullsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐂</span>&nbsp;&nbsp;Manage Bulls</button>
+    <button class="btn btn-nav-tool btn-full" id="manageHayingFieldsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Manage Haying Fields</button>
     <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
   </div>
 
@@ -306,6 +307,15 @@
     <button class="btn btn-nav-tool btn-full" id="addBullBtn" style="margin-bottom:14px;">+ Add Bull</button>
     <div id="manageBullsList"></div>
     <div id="manageBullsEmptyState" class="empty hidden">No bulls in the list yet.</div>
+  </div>
+
+  <div class="view hidden" id="manageHayingFieldsView">
+    <button class="btn btn-outline btn-full" id="manageHayingFieldsHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Manage Haying Fields</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Removing a field only takes it off the dropdown going forward — any haying entry that already used the name keeps showing it.</div>
+    <button class="btn btn-nav-tool btn-full" id="addHayingFieldBtn" style="margin-bottom:14px;">+ Add Field</button>
+    <div id="manageHayingFieldsList"></div>
+    <div id="manageHayingFieldsEmptyState" class="empty hidden">No fields in the list yet.</div>
   </div>
 
   <div class="view hidden" id="vetPregCheckView">
@@ -812,6 +822,7 @@
   let equipmentMaintenance = []; // [{id, equipment_name, maint_date, notes}]
   let equipmentList = []; // [{id, name}]
   let bulls = []; // [{id, name}]
+  let hayingFields = []; // [{id, name}]
   let calfTreatments = []; // [{id, calving_id, date, medicine, reason, notes}]
   let calfWeights = []; // [{id, calving_id, weigh_date, weight, notes}]
   let currentEquipment = null;
@@ -840,6 +851,7 @@
   const utilitiesView = document.getElementById('utilitiesView');
   const vetPregCheckView = document.getElementById('vetPregCheckView');
   const manageBullsView = document.getElementById('manageBullsView');
+  const manageHayingFieldsView = document.getElementById('manageHayingFieldsView');
   const reportsView = document.getElementById('reportsView');
   const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
@@ -907,7 +919,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -922,7 +934,8 @@
         api('/calf_treatments?select=*', { method:'GET' }),
         api('/calf_weights?select=*', { method:'GET' }),
         api('/farm_notes?select=*', { method:'GET' }),
-        api('/bulls?select=*&order=name.asc', { method:'GET' })
+        api('/bulls?select=*&order=name.asc', { method:'GET' }),
+        api('/haying_fields?select=*&order=name.asc', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -939,10 +952,12 @@
       calfWeights = calfWeightRes || [];
       farmNotes = farmNotesRes || [];
       bulls = bullsRes || [];
+      hayingFields = hayingFieldsRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = [];
     }
     renderBullsList();
+    renderHayingFieldsList();
     renderHerdTally();
     renderHayingList();
     renderFarmNotesList();
@@ -1264,6 +1279,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1303,6 +1319,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1344,6 +1361,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1379,6 +1397,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1414,6 +1433,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1451,6 +1471,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1569,6 +1590,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1623,6 +1645,7 @@
     quickActionView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showVetPregCheck(){
@@ -1665,6 +1688,26 @@
     renderBullsList();
     window.scrollTo(0,0);
   }
+  function showManageHayingFields(){
+    setHeaderTitle('Manage Haying', 'Fields');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    manageHayingFieldsView.classList.remove('hidden');
+    renderHayingFieldsList();
+    window.scrollTo(0,0);
+  }
   function showReports(){
     setHeaderTitle('Reports', '');
     homeView.classList.add('hidden');
@@ -1672,6 +1715,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1690,6 +1734,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1707,6 +1752,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1726,6 +1772,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1747,6 +1794,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1932,6 +1980,7 @@
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -4248,6 +4297,68 @@
       showToast('Could not remove — try again');
     }
   }
+  function renderHayingFieldsList(){
+    const listEl = document.getElementById('manageHayingFieldsList');
+    const emptyEl = document.getElementById('manageHayingFieldsEmptyState');
+    if(!listEl) return;
+    const sorted = [...hayingFields].sort((a,b)=>a.name.localeCompare(b.name));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(f=>`
+      <div class="cow-card" style="cursor:default;">
+        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(f.name)}</div></div>
+        <button class="remove-haying-field-btn" data-id="${escapeHtml(f.id)}" data-name="${escapeHtml(f.name)}" title="Remove field" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.remove-haying-field-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeHayingField(btn.dataset.id, btn.dataset.name));
+    });
+  }
+  function addHayingFieldModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Field</div>
+      <div class="field">
+        <label>Field Name</label>
+        <input type="text" id="newHayingFieldName" placeholder="e.g. North 40" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddHayingField">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddHayingField">Add Field</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddHayingField').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddHayingField').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newHayingFieldName').value.trim();
+      if(!name){ showToast('Enter a field name'); return; }
+      if(hayingFields.some(f=>f.name.toLowerCase()===name.toLowerCase())){ showToast('That field is already in the list'); return; }
+      const btn = modal.querySelector('#confirmAddHayingField');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/haying_fields', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name })
+        });
+        hayingFields.push(inserted[0]);
+        closeModal();
+        renderHayingFieldsList();
+        showToast('Field added');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not add — try again');
+      }
+    });
+  }
+  async function removeHayingField(id, name){
+    if(!confirm(`Remove "${name}" from the field list? Past entries that used this name are unaffected.`)) return;
+    try{
+      await api('/haying_fields?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      hayingFields = hayingFields.filter(f=>f.id!==id);
+      renderHayingFieldsList();
+      showToast('Field removed');
+    }catch(e){
+      showToast('Could not remove — try again');
+    }
+  }
 
   function breedingModal(existingRecord){
     const isEdit = !!existingRecord;
@@ -4485,6 +4596,9 @@
   document.getElementById('manageBullsBtn').addEventListener('click', showManageBulls);
   document.getElementById('manageBullsHomeBtn').addEventListener('click', showHome);
   document.getElementById('addBullBtn').addEventListener('click', addBullModal);
+  document.getElementById('manageHayingFieldsBtn').addEventListener('click', showManageHayingFields);
+  document.getElementById('manageHayingFieldsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addHayingFieldBtn').addEventListener('click', addHayingFieldModal);
   document.getElementById('textListEntryBtn').addEventListener('click', textCategoryPickerModal);
   document.getElementById('homeUtilitiesBtn').addEventListener('click', showUtilities);
   document.getElementById('homeReportsBtn').addEventListener('click', showReports);
@@ -5237,11 +5351,24 @@
     });
   }
 
-  const HAYING_LOCATIONS = [
-    'Alfalfa', 'Ballard Corner', "Chase's", "Olin's", 'Ford City', "Laughlin's",
-    'Home Place', 'North 40', 'South 40', 'River Bottom', 'Creek Field',
-    'Back Forty', 'Hay Barn Field', 'East Pasture', 'West Pasture', 'Other'
-  ];
+  function getHayingFieldOptions(){
+    return hayingFields.map(f=>f.name);
+  }
+  async function addHayingFieldIfNew(name){
+    if(!name) return;
+    if(hayingFields.some(f=>f.name===name)) return;
+    try{
+      const inserted = await api('/haying_fields', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ name })
+      });
+      hayingFields.push(inserted[0]);
+      hayingFields.sort((a,b)=>a.name.localeCompare(b.name));
+    }catch(e){
+      console.error('Could not save new haying field name', e);
+    }
+  }
   function renderHayingList(){
     const listEl = document.getElementById('hayingList');
     const emptyEl = document.getElementById('hayingEmptyState');
@@ -5294,7 +5421,7 @@
         <label>Date</label>
         <input type="date" id="hayDate" value="${isEdit ? existingRecord.entry_date : today}"/>
       </div>
-      ${fieldWithOther('hayLocation', 'Location', HAYING_LOCATIONS, 'Type location')}
+      ${fieldWithOther('hayLocation', 'Location', getHayingFieldOptions(), 'Type location')}
       <div class="field">
         <label>Tasks Done</label>
         <div style="display:flex;gap:14px;margin-top:4px;">
@@ -5317,7 +5444,7 @@
       </div>
     `);
     wireFieldWithOther(modal, 'hayLocation');
-    if(isEdit && existingRecord.location) prefillFieldWithOther(modal, 'hayLocation', existingRecord.location, HAYING_LOCATIONS);
+    if(isEdit && existingRecord.location) prefillFieldWithOther(modal, 'hayLocation', existingRecord.location, getHayingFieldOptions());
     modal.querySelector('#cancelHaying').addEventListener('click', closeModal);
     modal.querySelector('#confirmHaying').addEventListener('click', async ()=>{
       const dateVal = modal.querySelector('#hayDate').value;
@@ -5326,6 +5453,7 @@
       if(!location){ showToast('Location is required'); return; }
       const btn = modal.querySelector('#confirmHaying');
       btn.disabled = true;
+      await addHayingFieldIfNew(location);
       const balesRaw = modal.querySelector('#hayBales').value;
       const body = {
         entry_date: dateVal,
