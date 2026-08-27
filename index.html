@@ -297,6 +297,7 @@
     <button class="btn btn-nav-tool btn-full" id="vetPregCheckBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🩺</span>&nbsp;&nbsp;Vet Preg Check</button>
     <button class="btn btn-nav-tool btn-full" id="manageBullsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐂</span>&nbsp;&nbsp;Manage Bulls</button>
     <button class="btn btn-nav-tool btn-full" id="manageHayingFieldsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Manage Haying Fields</button>
+    <button class="btn btn-nav-tool btn-full" id="manageMedsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">💊</span>&nbsp;&nbsp;Manage Meds</button>
     <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
   </div>
 
@@ -316,6 +317,15 @@
     <button class="btn btn-nav-tool btn-full" id="addHayingFieldBtn" style="margin-bottom:14px;">+ Add Field</button>
     <div id="manageHayingFieldsList"></div>
     <div id="manageHayingFieldsEmptyState" class="empty hidden">No fields in the list yet.</div>
+  </div>
+
+  <div class="view hidden" id="manageMedsView">
+    <button class="btn btn-outline btn-full" id="manageMedsHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Manage Meds</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Removing a medicine only takes it off the dropdown going forward — any treatment record that already used the name keeps showing it.</div>
+    <button class="btn btn-nav-tool btn-full" id="addMedBtn" style="margin-bottom:14px;">+ Add Medicine</button>
+    <div id="manageMedsList"></div>
+    <div id="manageMedsEmptyState" class="empty hidden">No medicines in the list yet.</div>
   </div>
 
   <div class="view hidden" id="vetPregCheckView">
@@ -823,6 +833,7 @@
   let equipmentList = []; // [{id, name}]
   let bulls = []; // [{id, name}]
   let hayingFields = []; // [{id, name}]
+  let medicines = []; // [{id, name}]
   let calfTreatments = []; // [{id, calving_id, date, medicine, reason, notes}]
   let calfWeights = []; // [{id, calving_id, weigh_date, weight, notes}]
   let currentEquipment = null;
@@ -852,6 +863,7 @@
   const vetPregCheckView = document.getElementById('vetPregCheckView');
   const manageBullsView = document.getElementById('manageBullsView');
   const manageHayingFieldsView = document.getElementById('manageHayingFieldsView');
+  const manageMedsView = document.getElementById('manageMedsView');
   const reportsView = document.getElementById('reportsView');
   const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
@@ -919,7 +931,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -935,7 +947,8 @@
         api('/calf_weights?select=*', { method:'GET' }),
         api('/farm_notes?select=*', { method:'GET' }),
         api('/bulls?select=*&order=name.asc', { method:'GET' }),
-        api('/haying_fields?select=*&order=name.asc', { method:'GET' })
+        api('/haying_fields?select=*&order=name.asc', { method:'GET' }),
+        api('/medicines?select=*&order=name.asc', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -953,11 +966,13 @@
       farmNotes = farmNotesRes || [];
       bulls = bullsRes || [];
       hayingFields = hayingFieldsRes || [];
+      medicines = medicinesRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = [];
     }
     renderBullsList();
     renderHayingFieldsList();
+    renderMedicinesList();
     renderHerdTally();
     renderHayingList();
     renderFarmNotesList();
@@ -1280,6 +1295,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1320,6 +1336,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1362,6 +1379,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1398,6 +1416,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1434,6 +1453,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1472,6 +1492,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1591,6 +1612,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1646,6 +1668,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showVetPregCheck(){
@@ -1708,6 +1731,27 @@
     renderHayingFieldsList();
     window.scrollTo(0,0);
   }
+  function showManageMeds(){
+    setHeaderTitle('Manage', 'Meds');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    manageMedsView.classList.remove('hidden');
+    renderMedicinesList();
+    window.scrollTo(0,0);
+  }
   function showReports(){
     setHeaderTitle('Reports', '');
     homeView.classList.add('hidden');
@@ -1716,6 +1760,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1735,6 +1780,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1753,6 +1799,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1773,6 +1820,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1795,6 +1843,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1981,6 +2030,7 @@
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -2752,7 +2802,7 @@
         <label>Date</label>
         <input type="date" id="bulkMedDate" value="${today}"/>
       </div>
-      ${fieldWithOther('bulkMed', 'Medicine (optional)', MEDICINE_OPTIONS, 'Type medicine name')}
+      ${fieldWithOther('bulkMed', 'Medicine (optional)', getMedicineOptions(), 'Type medicine name')}
       ${fieldWithOther('bulkReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
       <div class="field">
         <label>Notes</label>
@@ -2775,6 +2825,7 @@
       if(!med && !reason && !notes){ showToast('Enter at least a medicine/reason or a note'); return; }
       const btn = modal.querySelector('#confirmBulkMed');
       btn.disabled = true;
+      await addMedicineIfNew(med);
       const body = { date: dateVal, medicine: med||null, reason: reason||null, notes: notes||null };
       try{
         const results = await Promise.all(targetCows.map(cow=>
@@ -3605,7 +3656,24 @@
     `;
   }
 
-  const MEDICINE_OPTIONS = ['LA-200','Draxxin','Baytril','Banamine','Penicillin','Vitamin B12'];
+  function getMedicineOptions(){
+    return medicines.map(m=>m.name);
+  }
+  async function addMedicineIfNew(name){
+    if(!name) return;
+    if(medicines.some(m=>m.name===name)) return;
+    try{
+      const inserted = await api('/medicines', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ name })
+      });
+      medicines.push(inserted[0]);
+      medicines.sort((a,b)=>a.name.localeCompare(b.name));
+    }catch(e){
+      console.error('Could not save new medicine name', e);
+    }
+  }
   const REASON_OPTIONS = ['Respiratory / pneumonia','Foot rot','Pinkeye','Scours / diarrhea','Bloat','Mastitis','Injury / wound'];
 
   function wireFieldWithOther(modal, id){
@@ -3651,7 +3719,7 @@
           <input type="date" id="recDate" value="${isEdit ? existingRecord.date : today}"/>
         </div>
       </div>
-      ${fieldWithOther('recMed', 'Medicine (optional)', MEDICINE_OPTIONS, 'Type medicine name')}
+      ${fieldWithOther('recMed', 'Medicine (optional)', getMedicineOptions(), 'Type medicine name')}
       ${fieldWithOther('recReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
       <div class="field">
         <label>Notes</label>
@@ -3665,7 +3733,7 @@
     wireFieldWithOther(modal, 'recMed');
     wireFieldWithOther(modal, 'recReason');
     if(isEdit){
-      prefillFieldWithOther(modal, 'recMed', existingRecord.medicine, MEDICINE_OPTIONS);
+      prefillFieldWithOther(modal, 'recMed', existingRecord.medicine, getMedicineOptions());
       prefillFieldWithOther(modal, 'recReason', existingRecord.reason, REASON_OPTIONS);
     }
     modal.querySelector('#cancelAddRec').addEventListener('click', closeModal);
@@ -3678,6 +3746,7 @@
       if(!med && !reason && !notes){ showToast('Enter at least a medicine/reason or a note'); return; }
       const btn = modal.querySelector('#confirmAddRec');
       btn.disabled = true;
+      await addMedicineIfNew(med);
       const body = { date: dateVal, medicine: med||null, reason: reason||null, notes: notes||null };
       try{
         if(isEdit){
@@ -3939,7 +4008,7 @@
         <label>Date</label>
         <input type="date" id="calfMedDate" value="${isEdit ? existingEntry.date : today}"/>
       </div>
-      ${fieldWithOther('calfMedMedicine', 'Medicine (optional)', MEDICINE_OPTIONS, 'Type medicine')}
+      ${fieldWithOther('calfMedMedicine', 'Medicine (optional)', getMedicineOptions(), 'Type medicine')}
       ${fieldWithOther('calfMedReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
       <div class="field">
         <label>Notes</label>
@@ -3952,7 +4021,7 @@
     `);
     wireFieldWithOther(modal, 'calfMedMedicine');
     wireFieldWithOther(modal, 'calfMedReason');
-    if(isEdit && existingEntry.medicine) prefillFieldWithOther(modal, 'calfMedMedicine', existingEntry.medicine, MEDICINE_OPTIONS);
+    if(isEdit && existingEntry.medicine) prefillFieldWithOther(modal, 'calfMedMedicine', existingEntry.medicine, getMedicineOptions());
     if(isEdit && existingEntry.reason) prefillFieldWithOther(modal, 'calfMedReason', existingEntry.reason, REASON_OPTIONS);
     modal.querySelector('#cancelCalfMed').addEventListener('click', closeModal);
     modal.querySelector('#confirmCalfMed').addEventListener('click', async ()=>{
@@ -3960,6 +4029,7 @@
       if(!dateVal){ showToast('Date is required'); return; }
       const btn = modal.querySelector('#confirmCalfMed');
       btn.disabled = true;
+      await addMedicineIfNew(valueOf(modal, 'calfMedMedicine'));
       const body = {
         calving_id: calvingRecord.id,
         date: dateVal,
@@ -4359,6 +4429,68 @@
       showToast('Could not remove — try again');
     }
   }
+  function renderMedicinesList(){
+    const listEl = document.getElementById('manageMedsList');
+    const emptyEl = document.getElementById('manageMedsEmptyState');
+    if(!listEl) return;
+    const sorted = [...medicines].sort((a,b)=>a.name.localeCompare(b.name));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(m=>`
+      <div class="cow-card" style="cursor:default;">
+        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(m.name)}</div></div>
+        <button class="remove-med-btn" data-id="${escapeHtml(m.id)}" data-name="${escapeHtml(m.name)}" title="Remove medicine" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.remove-med-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeMedicine(btn.dataset.id, btn.dataset.name));
+    });
+  }
+  function addMedicineModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Medicine</div>
+      <div class="field">
+        <label>Medicine Name</label>
+        <input type="text" id="newMedName" placeholder="e.g. LA-200" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddMed">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddMed">Add Medicine</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddMed').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddMed').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newMedName').value.trim();
+      if(!name){ showToast('Enter a medicine name'); return; }
+      if(medicines.some(m=>m.name.toLowerCase()===name.toLowerCase())){ showToast('That medicine is already in the list'); return; }
+      const btn = modal.querySelector('#confirmAddMed');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/medicines', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name })
+        });
+        medicines.push(inserted[0]);
+        closeModal();
+        renderMedicinesList();
+        showToast('Medicine added');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not add — try again');
+      }
+    });
+  }
+  async function removeMedicine(id, name){
+    if(!confirm(`Remove "${name}" from the medicine list? Past records that used this name are unaffected.`)) return;
+    try{
+      await api('/medicines?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      medicines = medicines.filter(m=>m.id!==id);
+      renderMedicinesList();
+      showToast('Medicine removed');
+    }catch(e){
+      showToast('Could not remove — try again');
+    }
+  }
 
   function breedingModal(existingRecord){
     const isEdit = !!existingRecord;
@@ -4599,6 +4731,9 @@
   document.getElementById('manageHayingFieldsBtn').addEventListener('click', showManageHayingFields);
   document.getElementById('manageHayingFieldsHomeBtn').addEventListener('click', showHome);
   document.getElementById('addHayingFieldBtn').addEventListener('click', addHayingFieldModal);
+  document.getElementById('manageMedsBtn').addEventListener('click', showManageMeds);
+  document.getElementById('manageMedsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addMedBtn').addEventListener('click', addMedicineModal);
   document.getElementById('textListEntryBtn').addEventListener('click', textCategoryPickerModal);
   document.getElementById('homeUtilitiesBtn').addEventListener('click', showUtilities);
   document.getElementById('homeReportsBtn').addEventListener('click', showReports);
