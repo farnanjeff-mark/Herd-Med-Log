@@ -366,12 +366,16 @@
       <p>• Bulls — Utilities → Manage Bulls<br/>
       • Haying Fields — Utilities → Manage Haying Fields<br/>
       • Medicines — Utilities → Manage Meds<br/>
+      • Locations — Utilities → Manage Locations<br/>
+      • Owners — Utilities → Manage Owners<br/>
+      • Groups — Utilities → Manage Groups<br/>
+      • Reasons — Utilities → Manage Reasons<br/>
       • Equipment — Farm Operations → Equipment<br/>
       • Herd Tally Locations — Farm Operations → Herd Tally<br/>
       • Text Recipients — Utilities → Text a List → Manage Recipients</p>
 
       <div class="section-label">Still Needs a Developer to Change</div>
-      <p>Locations, Owners, Groups, Reasons, Status (Active/Sold/Deceased), Herd Season (Spring/Fall), Birth Assist, and Pregnancy Method are built into the code. Changing these requires editing <code>index.html</code> directly.</p>
+      <p>Status (Active/Sold/Deceased), Herd Season (Spring/Fall), Birth Assist, and Pregnancy Method are built into the code on purpose — the app's logic depends on those exact values, so they're not offered as self-editable lists. Changing these requires editing <code>index.html</code> directly.</p>
 
       <div class="section-label">Database Migrations</div>
       <p>Some changes need a small SQL script run in the Supabase dashboard (SQL Editor) before the matching app update will work — these are numbered files like <code>migration-v29-bulls-table.sql</code>. Always run any pending migration before using a feature that depends on it.</p>
