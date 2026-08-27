@@ -295,7 +295,17 @@
     <button class="btn btn-nav-tool btn-full" id="importDataBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📥</span>&nbsp;&nbsp;Import</button>
     <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Edit Owner / Location / Group</button>
     <button class="btn btn-nav-tool btn-full" id="vetPregCheckBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🩺</span>&nbsp;&nbsp;Vet Preg Check</button>
+    <button class="btn btn-nav-tool btn-full" id="manageBullsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐂</span>&nbsp;&nbsp;Manage Bulls</button>
     <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
+  </div>
+
+  <div class="view hidden" id="manageBullsView">
+    <button class="btn btn-outline btn-full" id="manageBullsHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Manage Bulls</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Removing a bull only takes it off the dropdown going forward — any calving or breeding record that already used the name keeps showing it.</div>
+    <button class="btn btn-nav-tool btn-full" id="addBullBtn" style="margin-bottom:14px;">+ Add Bull</button>
+    <div id="manageBullsList"></div>
+    <div id="manageBullsEmptyState" class="empty hidden">No bulls in the list yet.</div>
   </div>
 
   <div class="view hidden" id="vetPregCheckView">
@@ -525,7 +535,6 @@
     </div>
     <div class="toolbar">
       <input type="text" id="searchBox" placeholder="Search cow #, medicine, reason..." autocomplete="off"/>
-      <button class="btn btn-outline btn-sm" id="textListBtn" style="flex-shrink:0;">✉️ Text</button>
     </div>
     <div class="toolbar">
       <select id="sortBy" style="flex:1;">
@@ -562,7 +571,6 @@
     <button class="btn btn-outline btn-full" id="calvingListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
       <input type="text" id="calvingSearchBox" placeholder="Search cow #, calf sex, notes..." autocomplete="off"/>
-      <button class="btn btn-outline btn-sm" id="calvingTextListBtn" style="flex-shrink:0;">✉️ Text</button>
     </div>
     <div class="toolbar">
       <select id="calvingSortBy" style="flex:1;">
@@ -599,7 +607,6 @@
     <button class="btn btn-outline btn-full" id="notesListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
       <input type="text" id="notesSearchBox" placeholder="Search cow #, notes..." autocomplete="off"/>
-      <button class="btn btn-outline btn-sm" id="notesTextListBtn" style="flex-shrink:0;">✉️ Text</button>
     </div>
     <div class="toolbar">
       <select id="notesSortBy" style="flex:1;">
@@ -804,6 +811,7 @@
   let vetPregSessionEntries = []; // [{cowNum, daysAlong, dueDate, usedVetCheck}]
   let equipmentMaintenance = []; // [{id, equipment_name, maint_date, notes}]
   let equipmentList = []; // [{id, name}]
+  let bulls = []; // [{id, name}]
   let calfTreatments = []; // [{id, calving_id, date, medicine, reason, notes}]
   let calfWeights = []; // [{id, calving_id, weigh_date, weight, notes}]
   let currentEquipment = null;
@@ -831,6 +839,7 @@
   const breedingDetailView = document.getElementById('breedingDetailView');
   const utilitiesView = document.getElementById('utilitiesView');
   const vetPregCheckView = document.getElementById('vetPregCheckView');
+  const manageBullsView = document.getElementById('manageBullsView');
   const reportsView = document.getElementById('reportsView');
   const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
@@ -898,7 +907,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -912,7 +921,8 @@
         api('/equipment?select=*', { method:'GET' }),
         api('/calf_treatments?select=*', { method:'GET' }),
         api('/calf_weights?select=*', { method:'GET' }),
-        api('/farm_notes?select=*', { method:'GET' })
+        api('/farm_notes?select=*', { method:'GET' }),
+        api('/bulls?select=*&order=name.asc', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -928,9 +938,11 @@
       calfTreatments = calfTreatRes || [];
       calfWeights = calfWeightRes || [];
       farmNotes = farmNotesRes || [];
+      bulls = bullsRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = [];
     }
+    renderBullsList();
     renderHerdTally();
     renderHayingList();
     renderFarmNotesList();
@@ -1251,6 +1263,7 @@
     breedingDetailView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1289,6 +1302,7 @@
     breedingDetailView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1329,6 +1343,7 @@
     breedingDetailView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1363,6 +1378,7 @@
     breedingDetailView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1397,6 +1413,7 @@
     breedingDetailView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1433,6 +1450,7 @@
     breedingDetailView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1550,6 +1568,7 @@
     breedingDetailView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1603,6 +1622,7 @@
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showVetPregCheck(){
@@ -1626,12 +1646,32 @@
     renderVetPregTally();
     window.scrollTo(0,0);
   }
+  function showManageBulls(){
+    setHeaderTitle('Manage', 'Bulls');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    manageBullsView.classList.remove('hidden');
+    renderBullsList();
+    window.scrollTo(0,0);
+  }
   function showReports(){
     setHeaderTitle('Reports', '');
     homeView.classList.add('hidden');
     reportsView.classList.remove('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1649,6 +1689,7 @@
     farmOperationsView.classList.remove('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1665,6 +1706,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1683,6 +1725,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1703,6 +1746,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1887,6 +1931,7 @@
     breedingDetailView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -2812,6 +2857,7 @@
       if(!dateVal){ showToast('Date is required'); return; }
       const btn = modal.querySelector('#confirmBulkBrd');
       btn.disabled = true;
+      await addBullIfNew(bredTo);
       const resolved = resolveExpectedDueDate(dateVal, vet);
       const body = {
         breed_date: dateVal,
@@ -3668,6 +3714,7 @@
       if(!dateVal){ showToast('Calving date is required'); return; }
       const btn = modal.querySelector('#confirmCalv');
       btn.disabled = true;
+      await addBullIfNew(sire);
       const body = {
         calving_date: dateVal, calf_sex: sex||null, notes: notes||null,
         birth_weight: weightRaw ? parseFloat(weightRaw) : null,
@@ -4113,17 +4160,93 @@
   function addWeightModal(){ weightModal(null); }
   function editWeightModal(record){ weightModal(record); }
 
-  const BULL_OPTIONS = [
-    'Acceleration', 'Alpha', 'Bullseye', 'Diligent', 'Discipline', 'Dominance', 'Draft Pick',
-    'Fireproof', 'Grand Slam', 'Heat Seeker', 'Jameson', 'Kinsman', 'Long Bow', 'Majority',
-    'Paramount', 'Powercat', 'Preeminent', 'Venice', 'Venice Diligent', 'Winchester', 'Wizard'
-  ];
   function getBullOptionsWithExtras(){
+    // Any bull already used in a calving/breeding record but not yet in the
+    // bulls table (e.g. added before this migration ran) still shows up,
+    // same safety net the old hardcoded-list version had.
+    const known = new Set(bulls.map(b=>b.name));
     const used = new Set();
     calvings.forEach(c=>{ if(c.sire) used.add(c.sire); });
     breedingRecords.forEach(b=>{ if(b.bred_to) used.add(b.bred_to); });
-    const extras = [...used].filter(b=>!BULL_OPTIONS.includes(b)).sort();
-    return [...BULL_OPTIONS, ...extras];
+    const extras = [...used].filter(b=>!known.has(b)).sort();
+    return [...bulls.map(b=>b.name), ...extras];
+  }
+  async function addBullIfNew(name){
+    if(!name) return;
+    if(bulls.some(b=>b.name===name)) return;
+    try{
+      const inserted = await api('/bulls', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ name })
+      });
+      bulls.push(inserted[0]);
+      bulls.sort((a,b)=>a.name.localeCompare(b.name));
+    }catch(e){
+      console.error('Could not save new bull name', e);
+    }
+  }
+  function renderBullsList(){
+    const listEl = document.getElementById('manageBullsList');
+    const emptyEl = document.getElementById('manageBullsEmptyState');
+    if(!listEl) return;
+    const sorted = [...bulls].sort((a,b)=>a.name.localeCompare(b.name));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(b=>`
+      <div class="cow-card" style="cursor:default;">
+        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(b.name)}</div></div>
+        <button class="remove-bull-btn" data-id="${escapeHtml(b.id)}" data-name="${escapeHtml(b.name)}" title="Remove bull" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.remove-bull-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeBull(btn.dataset.id, btn.dataset.name));
+    });
+  }
+  function addBullModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Bull</div>
+      <div class="field">
+        <label>Bull Name</label>
+        <input type="text" id="newBullName" placeholder="e.g. Alpha" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddBull">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddBull">Add Bull</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddBull').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddBull').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newBullName').value.trim();
+      if(!name){ showToast('Enter a bull name'); return; }
+      if(bulls.some(b=>b.name.toLowerCase()===name.toLowerCase())){ showToast('That bull is already in the list'); return; }
+      const btn = modal.querySelector('#confirmAddBull');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/bulls', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name })
+        });
+        bulls.push(inserted[0]);
+        closeModal();
+        renderBullsList();
+        showToast('Bull added');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not add — try again');
+      }
+    });
+  }
+  async function removeBull(id, name){
+    if(!confirm(`Remove "${name}" from the bull list? Past records that used this name are unaffected.`)) return;
+    try{
+      await api('/bulls?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      bulls = bulls.filter(b=>b.id!==id);
+      renderBullsList();
+      showToast('Bull removed');
+    }catch(e){
+      showToast('Could not remove — try again');
+    }
   }
 
   function breedingModal(existingRecord){
@@ -4191,6 +4314,7 @@
       if(!dateVal){ showToast('Date is required'); return; }
       const btn = modal.querySelector('#confirmBrd');
       btn.disabled = true;
+      await addBullIfNew(bredTo);
       const resolved = resolveExpectedDueDate(dateVal, vet);
       const body = {
         breed_date: dateVal,
@@ -4358,6 +4482,9 @@
   document.getElementById('vetPregDaysAlong').addEventListener('keydown', (e)=>{
     if(e.key === 'Enter') saveVetPregCheckEntry();
   });
+  document.getElementById('manageBullsBtn').addEventListener('click', showManageBulls);
+  document.getElementById('manageBullsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addBullBtn').addEventListener('click', addBullModal);
   document.getElementById('textListEntryBtn').addEventListener('click', textCategoryPickerModal);
   document.getElementById('homeUtilitiesBtn').addEventListener('click', showUtilities);
   document.getElementById('homeReportsBtn').addEventListener('click', showReports);
