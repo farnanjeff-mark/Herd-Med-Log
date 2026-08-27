@@ -298,7 +298,88 @@
     <button class="btn btn-nav-tool btn-full" id="manageBullsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐂</span>&nbsp;&nbsp;Manage Bulls</button>
     <button class="btn btn-nav-tool btn-full" id="manageHayingFieldsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Manage Haying Fields</button>
     <button class="btn btn-nav-tool btn-full" id="manageMedsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">💊</span>&nbsp;&nbsp;Manage Meds</button>
-    <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
+    <button class="btn btn-nav-tool btn-full" id="manageLocationsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📍</span>&nbsp;&nbsp;Manage Locations</button>
+    <button class="btn btn-nav-tool btn-full" id="manageOwnersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Manage Owners</button>
+    <button class="btn btn-nav-tool btn-full" id="manageGroupsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐮</span>&nbsp;&nbsp;Manage Groups</button>
+    <button class="btn btn-nav-tool btn-full" id="manageReasonsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Manage Reasons</button>
+    <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
+    <button class="btn btn-outline btn-full" id="appInfoBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">📄</span>&nbsp;&nbsp;App Info / Handoff Guide</button>
+  </div>
+
+  <div class="view hidden" id="manageLocationsView">
+    <button class="btn btn-outline btn-full" id="manageLocationsHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Manage Locations</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Removing a location only takes it off the dropdown going forward — any cow already set to that location keeps showing it.</div>
+    <button class="btn btn-nav-tool btn-full" id="addLocationBtn" style="margin-bottom:14px;">+ Add Location</button>
+    <div id="manageLocationsList"></div>
+    <div id="manageLocationsEmptyState" class="empty hidden">No locations in the list yet.</div>
+  </div>
+
+  <div class="view hidden" id="manageOwnersView">
+    <button class="btn btn-outline btn-full" id="manageOwnersHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Manage Owners</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Removing an owner only takes it off the dropdown going forward — any cow already set to that owner keeps showing it. Note: JF, FCC, Kellan, Clint, and LA have special colored text on cow cards; a new owner name won't get a special color automatically.</div>
+    <button class="btn btn-nav-tool btn-full" id="addOwnerBtn" style="margin-bottom:14px;">+ Add Owner</button>
+    <div id="manageOwnersList"></div>
+    <div id="manageOwnersEmptyState" class="empty hidden">No owners in the list yet.</div>
+  </div>
+
+  <div class="view hidden" id="manageGroupsView">
+    <button class="btn btn-outline btn-full" id="manageGroupsHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Manage Groups</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Removing a group only takes it off the dropdown going forward — any cow already set to that group keeps showing it.</div>
+    <button class="btn btn-nav-tool btn-full" id="addGroupBtn" style="margin-bottom:14px;">+ Add Group</button>
+    <div id="manageGroupsList"></div>
+    <div id="manageGroupsEmptyState" class="empty hidden">No groups in the list yet.</div>
+  </div>
+
+  <div class="view hidden" id="manageReasonsView">
+    <button class="btn btn-outline btn-full" id="manageReasonsHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Manage Reasons</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Removing a reason only takes it off the dropdown going forward — any treatment record that already used it keeps showing it.</div>
+    <button class="btn btn-nav-tool btn-full" id="addReasonBtn" style="margin-bottom:14px;">+ Add Reason</button>
+    <div id="manageReasonsList"></div>
+    <div id="manageReasonsEmptyState" class="empty hidden">No reasons in the list yet.</div>
+  </div>
+
+  <div class="view hidden" id="appInfoView">
+    <button class="btn btn-outline btn-full" id="appInfoHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:16px;">App Info / Handoff Guide</div>
+    <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:var(--ink);">
+
+      <div class="section-label" style="margin-top:0;">What This App Is</div>
+      <p>The Herd Health Ledger is a cattle management app built for Farnan Cattle Company — cow records, medical logs, calving, breeding, herd tallies, bulls, haying, equipment, and reporting.</p>
+
+      <div class="section-label">How It's Built</div>
+      <p>It's a single HTML file — no app store, no install, no build process. It runs entirely in a web browser. Data is stored in a separate database service (Supabase), not inside the file itself.</p>
+
+      <div class="section-label">Where Things Live</div>
+      <p><b>Live app:</b> farnanjeff-mark.github.io/Herd-Med-Log/<br/>
+      <b>Code (GitHub):</b> github.com/farnanjeff-mark/Herd-Med-Log, file <code>index.html</code><br/>
+      <b>Database (Supabase):</b> project at nuutfigyhjyqhtxotuln.supabase.co</p>
+
+      <div class="section-label">Making a Change</div>
+      <p>Someone (a developer, or an AI coding assistant like Claude) edits <code>index.html</code>, then: download the file → replace it in the GitHub repo → commit → wait for the green checkmark under the repo's "Actions" tab → the live site updates automatically within a minute or two.</p>
+
+      <div class="section-label">You Can Manage Yourself (No Code Needed)</div>
+      <p>These have their own "+ Add" and remove buttons right in the app:</p>
+      <p>• Bulls — Utilities → Manage Bulls<br/>
+      • Haying Fields — Utilities → Manage Haying Fields<br/>
+      • Medicines — Utilities → Manage Meds<br/>
+      • Equipment — Farm Operations → Equipment<br/>
+      • Herd Tally Locations — Farm Operations → Herd Tally<br/>
+      • Text Recipients — Utilities → Text a List → Manage Recipients</p>
+
+      <div class="section-label">Still Needs a Developer to Change</div>
+      <p>Locations, Owners, Groups, Reasons, Status (Active/Sold/Deceased), Herd Season (Spring/Fall), Birth Assist, and Pregnancy Method are built into the code. Changing these requires editing <code>index.html</code> directly.</p>
+
+      <div class="section-label">Database Migrations</div>
+      <p>Some changes need a small SQL script run in the Supabase dashboard (SQL Editor) before the matching app update will work — these are numbered files like <code>migration-v29-bulls-table.sql</code>. Always run any pending migration before using a feature that depends on it.</p>
+
+      <div class="section-label">Access Needed to Maintain This App</div>
+      <p>Whoever takes this over will need to be added as a collaborator on the GitHub repo, and given access to the Supabase project (or the login credentials for both). Without that access, this document alone won't be enough — make sure a trusted person actually has a way in, not just this explanation of how things work.</p>
+
+    </div>
   </div>
 
   <div class="view hidden" id="manageBullsView">
@@ -834,6 +915,10 @@
   let bulls = []; // [{id, name}]
   let hayingFields = []; // [{id, name}]
   let medicines = []; // [{id, name}]
+  let locationsList = []; // [{id, name}]
+  let ownersList = []; // [{id, name}]
+  let groupsList = []; // [{id, name}]
+  let reasonsList = []; // [{id, name}]
   let calfTreatments = []; // [{id, calving_id, date, medicine, reason, notes}]
   let calfWeights = []; // [{id, calving_id, weigh_date, weight, notes}]
   let currentEquipment = null;
@@ -864,6 +949,11 @@
   const manageBullsView = document.getElementById('manageBullsView');
   const manageHayingFieldsView = document.getElementById('manageHayingFieldsView');
   const manageMedsView = document.getElementById('manageMedsView');
+  const appInfoView = document.getElementById('appInfoView');
+  const manageLocationsView = document.getElementById('manageLocationsView');
+  const manageOwnersView = document.getElementById('manageOwnersView');
+  const manageGroupsView = document.getElementById('manageGroupsView');
+  const manageReasonsView = document.getElementById('manageReasonsView');
   const reportsView = document.getElementById('reportsView');
   const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
@@ -931,7 +1021,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes, locationsRes, ownersRes, groupsRes, reasonsRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -948,7 +1038,11 @@
         api('/farm_notes?select=*', { method:'GET' }),
         api('/bulls?select=*&order=name.asc', { method:'GET' }),
         api('/haying_fields?select=*&order=name.asc', { method:'GET' }),
-        api('/medicines?select=*&order=name.asc', { method:'GET' })
+        api('/medicines?select=*&order=name.asc', { method:'GET' }),
+        api('/locations?select=*&order=name.asc', { method:'GET' }),
+        api('/owners?select=*&order=name.asc', { method:'GET' }),
+        api('/cow_groups?select=*&order=name.asc', { method:'GET' }),
+        api('/med_reasons?select=*&order=name.asc', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -967,12 +1061,20 @@
       bulls = bullsRes || [];
       hayingFields = hayingFieldsRes || [];
       medicines = medicinesRes || [];
+      locationsList = locationsRes || [];
+      ownersList = ownersRes || [];
+      groupsList = groupsRes || [];
+      reasonsList = reasonsRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = []; locationsList = []; ownersList = []; groupsList = []; reasonsList = [];
     }
     renderBullsList();
     renderHayingFieldsList();
     renderMedicinesList();
+    renderLocationsList();
+    renderOwnersList();
+    renderGroupsList();
+    renderReasonsList();
     renderHerdTally();
     renderHayingList();
     renderFarmNotesList();
@@ -1126,7 +1228,7 @@
   function matchesLocationGroupFilter(c, filterKind, filterValue){
     if(filterKind === 'loc'){
       if(filterValue === '__other__'){
-        if(!c.lot || LOT_OPTIONS.includes(c.lot)) return false;
+        if(!c.lot || getLocationOptions().includes(c.lot)) return false;
       } else if(c.lot !== filterValue){
         return false;
       }
@@ -1157,13 +1259,13 @@
     const sel = document.getElementById(selectId);
     row.style.display = '';
     const usedLots = [...new Set(cows.map(c=>c.lot).filter(Boolean))];
-    const hasOtherLots = usedLots.some(l=>!LOT_OPTIONS.includes(l));
+    const hasOtherLots = usedLots.some(l=>!getLocationOptions().includes(l));
     const usedGroups = [...new Set(cows.map(c=>c.cow_group).filter(Boolean))];
-    const extraGroups = usedGroups.filter(g=>!GROUP_OPTIONS.includes(g)).sort();
-    const groups = [...GROUP_OPTIONS, ...extraGroups];
+    const extraGroups = usedGroups.filter(g=>!getGroupOptions().includes(g)).sort();
+    const groups = [...getGroupOptions(), ...extraGroups];
     const usedOwners = [...new Set(cows.map(c=>c.owner).filter(Boolean))];
-    const extraOwners = usedOwners.filter(o=>!OWNER_OPTIONS.includes(o)).sort();
-    const owners = [...OWNER_OPTIONS, ...extraOwners];
+    const extraOwners = usedOwners.filter(o=>!getOwnerOptions().includes(o)).sort();
+    const owners = [...getOwnerOptions(), ...extraOwners];
     const hasUnassigned = cows.some(c=>!c.owner);
     const hasFlagged = cows.some(c=>c.needs_entry);
     const hasTagNeeded = cows.some(c=>c.tag_needed);
@@ -1196,7 +1298,7 @@
     sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
       (statusOptions ? `<optgroup label="✅ Status">${statusOptions}</optgroup>` : '') +
       '<optgroup label="📍 Location">' +
-        LOT_OPTIONS.map(l=>`<option value="loc:${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('') +
+        getLocationOptions().map(l=>`<option value="loc:${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('') +
         (hasOtherLots ? '<option value="loc:__other__">Other Location</option>' : '') +
       '</optgroup>' +
       '<optgroup label="🐮 Group">' +
@@ -1296,6 +1398,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1337,6 +1444,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1380,6 +1492,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1417,6 +1534,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1454,6 +1576,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1493,6 +1620,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1613,6 +1745,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1669,6 +1806,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showVetPregCheck(){
@@ -1752,6 +1894,131 @@
     renderMedicinesList();
     window.scrollTo(0,0);
   }
+  function showAppInfo(){
+    setHeaderTitle('App Info', '');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    appInfoView.classList.remove('hidden');
+    window.scrollTo(0,0);
+  }
+  function showManageLocations(){
+    setHeaderTitle('Manage', 'Locations');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    manageLocationsView.classList.remove('hidden');
+    renderLocationsList();
+    window.scrollTo(0,0);
+  }
+  function showManageOwners(){
+    setHeaderTitle('Manage', 'Owners');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    manageOwnersView.classList.remove('hidden');
+    renderOwnersList();
+    window.scrollTo(0,0);
+  }
+  function showManageGroups(){
+    setHeaderTitle('Manage', 'Groups');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    manageGroupsView.classList.remove('hidden');
+    renderGroupsList();
+    window.scrollTo(0,0);
+  }
+  function showManageReasons(){
+    setHeaderTitle('Manage', 'Reasons');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    manageReasonsView.classList.remove('hidden');
+    renderReasonsList();
+    window.scrollTo(0,0);
+  }
   function showReports(){
     setHeaderTitle('Reports', '');
     homeView.classList.add('hidden');
@@ -1761,6 +2028,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1781,6 +2053,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1800,6 +2077,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -1821,6 +2103,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1844,6 +2131,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -2031,6 +2323,11 @@
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
     manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -2803,7 +3100,7 @@
         <input type="date" id="bulkMedDate" value="${today}"/>
       </div>
       ${fieldWithOther('bulkMed', 'Medicine (optional)', getMedicineOptions(), 'Type medicine name')}
-      ${fieldWithOther('bulkReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
+      ${fieldWithOther('bulkReason', 'Reason (optional)', getReasonOptions(), 'Type reason')}
       <div class="field">
         <label>Notes</label>
         <textarea id="bulkMedNotes" rows="2" placeholder="Dosage, observations, or just a general note"></textarea>
@@ -2826,6 +3123,7 @@
       const btn = modal.querySelector('#confirmBulkMed');
       btn.disabled = true;
       await addMedicineIfNew(med);
+      await addReasonIfNew(reason);
       const body = { date: dateVal, medicine: med||null, reason: reason||null, notes: notes||null };
       try{
         const results = await Promise.all(targetCows.map(cow=>
@@ -3541,8 +3839,8 @@
         </div>
       </div>
       <a href="#" id="toggleBulkMode" style="display:block;font-family:Arial,sans-serif;font-size:12px;color:var(--barn);text-decoration:underline;margin-bottom:14px;">Add multiple cows at once</a>
-      ${fieldWithOther('newCowLot', 'Location (optional)', LOT_OPTIONS, 'Type location')}
-      ${fieldWithOther('newCowOwner', 'Owner (optional)', OWNER_OPTIONS, 'Type owner name')}
+      ${fieldWithOther('newCowLot', 'Location (optional)', getLocationOptions(), 'Type location')}
+      ${fieldWithOther('newCowOwner', 'Owner (optional)', getOwnerOptions(), 'Type owner name')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelAddCow">Cancel</button>
         <button class="btn btn-barn" id="confirmAddCow">Add Cow</button>
@@ -3574,6 +3872,8 @@
       const lot = valueOf(modal, 'newCowLot');
       const owner = valueOf(modal, 'newCowOwner');
       confirmBtn.disabled = true;
+      await addLocationIfNew(lot);
+      await addOwnerIfNew(owner);
 
       if(!bulkMode){
         const num = modal.querySelector('#newCowNum').value.trim();
@@ -3674,7 +3974,24 @@
       console.error('Could not save new medicine name', e);
     }
   }
-  const REASON_OPTIONS = ['Respiratory / pneumonia','Foot rot','Pinkeye','Scours / diarrhea','Bloat','Mastitis','Injury / wound'];
+  function getReasonOptions(){
+    return reasonsList.map(r=>r.name);
+  }
+  async function addReasonIfNew(name){
+    if(!name) return;
+    if(reasonsList.some(r=>r.name===name)) return;
+    try{
+      const inserted = await api('/med_reasons', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ name })
+      });
+      reasonsList.push(inserted[0]);
+      reasonsList.sort((a,b)=>a.name.localeCompare(b.name));
+    }catch(e){
+      console.error('Could not save new reason', e);
+    }
+  }
 
   function wireFieldWithOther(modal, id){
     const select = modal.querySelector('#'+id+'Select');
@@ -3720,7 +4037,7 @@
         </div>
       </div>
       ${fieldWithOther('recMed', 'Medicine (optional)', getMedicineOptions(), 'Type medicine name')}
-      ${fieldWithOther('recReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
+      ${fieldWithOther('recReason', 'Reason (optional)', getReasonOptions(), 'Type reason')}
       <div class="field">
         <label>Notes</label>
         <textarea id="recNotes" rows="2" placeholder="Dosage, observations, or just a general note">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
@@ -3734,7 +4051,7 @@
     wireFieldWithOther(modal, 'recReason');
     if(isEdit){
       prefillFieldWithOther(modal, 'recMed', existingRecord.medicine, getMedicineOptions());
-      prefillFieldWithOther(modal, 'recReason', existingRecord.reason, REASON_OPTIONS);
+      prefillFieldWithOther(modal, 'recReason', existingRecord.reason, getReasonOptions());
     }
     modal.querySelector('#cancelAddRec').addEventListener('click', closeModal);
     modal.querySelector('#confirmAddRec').addEventListener('click', async ()=>{
@@ -3747,6 +4064,7 @@
       const btn = modal.querySelector('#confirmAddRec');
       btn.disabled = true;
       await addMedicineIfNew(med);
+      await addReasonIfNew(reason);
       const body = { date: dateVal, medicine: med||null, reason: reason||null, notes: notes||null };
       try{
         if(isEdit){
@@ -4009,7 +4327,7 @@
         <input type="date" id="calfMedDate" value="${isEdit ? existingEntry.date : today}"/>
       </div>
       ${fieldWithOther('calfMedMedicine', 'Medicine (optional)', getMedicineOptions(), 'Type medicine')}
-      ${fieldWithOther('calfMedReason', 'Reason (optional)', REASON_OPTIONS, 'Type reason')}
+      ${fieldWithOther('calfMedReason', 'Reason (optional)', getReasonOptions(), 'Type reason')}
       <div class="field">
         <label>Notes</label>
         <textarea id="calfMedNotes" rows="2">${isEdit ? escapeHtml(existingEntry.notes||'') : ''}</textarea>
@@ -4022,7 +4340,7 @@
     wireFieldWithOther(modal, 'calfMedMedicine');
     wireFieldWithOther(modal, 'calfMedReason');
     if(isEdit && existingEntry.medicine) prefillFieldWithOther(modal, 'calfMedMedicine', existingEntry.medicine, getMedicineOptions());
-    if(isEdit && existingEntry.reason) prefillFieldWithOther(modal, 'calfMedReason', existingEntry.reason, REASON_OPTIONS);
+    if(isEdit && existingEntry.reason) prefillFieldWithOther(modal, 'calfMedReason', existingEntry.reason, getReasonOptions());
     modal.querySelector('#cancelCalfMed').addEventListener('click', closeModal);
     modal.querySelector('#confirmCalfMed').addEventListener('click', async ()=>{
       const dateVal = modal.querySelector('#calfMedDate').value;
@@ -4030,6 +4348,7 @@
       const btn = modal.querySelector('#confirmCalfMed');
       btn.disabled = true;
       await addMedicineIfNew(valueOf(modal, 'calfMedMedicine'));
+      await addReasonIfNew(valueOf(modal, 'calfMedReason'));
       const body = {
         calving_id: calvingRecord.id,
         date: dateVal,
@@ -4492,6 +4811,262 @@
     }
   }
 
+  function renderLocationsList(){
+    const listEl = document.getElementById('manageLocationsList');
+    const emptyEl = document.getElementById('manageLocationsEmptyState');
+    if(!listEl) return;
+    const sorted = [...locationsList].sort((a,b)=>a.name.localeCompare(b.name));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(l=>`
+      <div class="cow-card" style="cursor:default;">
+        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(l.name)}</div></div>
+        <button class="remove-location-btn" data-id="${escapeHtml(l.id)}" data-name="${escapeHtml(l.name)}" title="Remove location" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.remove-location-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeLocation(btn.dataset.id, btn.dataset.name));
+    });
+  }
+  function addLocationModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Location</div>
+      <div class="field">
+        <label>Location Name</label>
+        <input type="text" id="newLocationName" placeholder="e.g. Home" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddLocation">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddLocation">Add Location</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddLocation').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddLocation').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newLocationName').value.trim();
+      if(!name){ showToast('Enter a location name'); return; }
+      if(locationsList.some(l=>l.name.toLowerCase()===name.toLowerCase())){ showToast('That location is already in the list'); return; }
+      const btn = modal.querySelector('#confirmAddLocation');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/locations', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name })
+        });
+        locationsList.push(inserted[0]);
+        closeModal();
+        renderLocationsList();
+        showToast('Location added');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not add — try again');
+      }
+    });
+  }
+  async function removeLocation(id, name){
+    if(!confirm(`Remove "${name}" from the location list? Cows already set to this location are unaffected.`)) return;
+    try{
+      await api('/locations?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      locationsList = locationsList.filter(l=>l.id!==id);
+      renderLocationsList();
+      showToast('Location removed');
+    }catch(e){
+      showToast('Could not remove — try again');
+    }
+  }
+
+  function renderOwnersList(){
+    const listEl = document.getElementById('manageOwnersList');
+    const emptyEl = document.getElementById('manageOwnersEmptyState');
+    if(!listEl) return;
+    const sorted = [...ownersList].sort((a,b)=>a.name.localeCompare(b.name));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(o=>{
+      const oColor = ownerColor(o.name);
+      const colorStyle = oColor ? `color:${oColor};${oColor==='#FFFFFF' ? 'text-shadow:0 0 2px #000,0 0 1px #000;' : ''}` : '';
+      return `
+      <div class="cow-card" style="cursor:default;">
+        <div><div class="cow-num" style="font-size:17px;${colorStyle}">${escapeHtml(o.name)}</div></div>
+        <button class="remove-owner-btn" data-id="${escapeHtml(o.id)}" data-name="${escapeHtml(o.name)}" title="Remove owner" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+    `;
+    }).join('');
+    listEl.querySelectorAll('.remove-owner-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeOwner(btn.dataset.id, btn.dataset.name));
+    });
+  }
+  function addOwnerModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Owner</div>
+      <div class="field">
+        <label>Owner Name</label>
+        <input type="text" id="newOwnerName" placeholder="e.g. JF" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddOwner">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddOwner">Add Owner</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddOwner').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddOwner').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newOwnerName').value.trim();
+      if(!name){ showToast('Enter an owner name'); return; }
+      if(ownersList.some(o=>o.name.toLowerCase()===name.toLowerCase())){ showToast('That owner is already in the list'); return; }
+      const btn = modal.querySelector('#confirmAddOwner');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/owners', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name })
+        });
+        ownersList.push(inserted[0]);
+        closeModal();
+        renderOwnersList();
+        showToast('Owner added');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not add — try again');
+      }
+    });
+  }
+  async function removeOwner(id, name){
+    if(!confirm(`Remove "${name}" from the owner list? Cows already set to this owner are unaffected.`)) return;
+    try{
+      await api('/owners?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      ownersList = ownersList.filter(o=>o.id!==id);
+      renderOwnersList();
+      showToast('Owner removed');
+    }catch(e){
+      showToast('Could not remove — try again');
+    }
+  }
+
+  function renderGroupsList(){
+    const listEl = document.getElementById('manageGroupsList');
+    const emptyEl = document.getElementById('manageGroupsEmptyState');
+    if(!listEl) return;
+    const sorted = [...groupsList].sort((a,b)=>a.name.localeCompare(b.name));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(g=>`
+      <div class="cow-card" style="cursor:default;">
+        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(g.name)}</div></div>
+        <button class="remove-group-btn" data-id="${escapeHtml(g.id)}" data-name="${escapeHtml(g.name)}" title="Remove group" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.remove-group-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeGroup(btn.dataset.id, btn.dataset.name));
+    });
+  }
+  function addGroupModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Group</div>
+      <div class="field">
+        <label>Group Name</label>
+        <input type="text" id="newGroupName" placeholder="e.g. 2026 Fall Heifers" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddGroup">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddGroup">Add Group</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddGroup').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddGroup').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newGroupName').value.trim();
+      if(!name){ showToast('Enter a group name'); return; }
+      if(groupsList.some(g=>g.name.toLowerCase()===name.toLowerCase())){ showToast('That group is already in the list'); return; }
+      const btn = modal.querySelector('#confirmAddGroup');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/cow_groups', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name })
+        });
+        groupsList.push(inserted[0]);
+        closeModal();
+        renderGroupsList();
+        showToast('Group added');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not add — try again');
+      }
+    });
+  }
+  async function removeGroup(id, name){
+    if(!confirm(`Remove "${name}" from the group list? Cows already set to this group are unaffected.`)) return;
+    try{
+      await api('/cow_groups?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      groupsList = groupsList.filter(g=>g.id!==id);
+      renderGroupsList();
+      showToast('Group removed');
+    }catch(e){
+      showToast('Could not remove — try again');
+    }
+  }
+
+  function renderReasonsList(){
+    const listEl = document.getElementById('manageReasonsList');
+    const emptyEl = document.getElementById('manageReasonsEmptyState');
+    if(!listEl) return;
+    const sorted = [...reasonsList].sort((a,b)=>a.name.localeCompare(b.name));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(r=>`
+      <div class="cow-card" style="cursor:default;">
+        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(r.name)}</div></div>
+        <button class="remove-reason-btn" data-id="${escapeHtml(r.id)}" data-name="${escapeHtml(r.name)}" title="Remove reason" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.remove-reason-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeReason(btn.dataset.id, btn.dataset.name));
+    });
+  }
+  function addReasonModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Reason</div>
+      <div class="field">
+        <label>Reason</label>
+        <input type="text" id="newReasonName" placeholder="e.g. Foot rot" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddReason">Cancel</button>
+        <button class="btn btn-barn" id="confirmAddReason">Add Reason</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddReason').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddReason').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newReasonName').value.trim();
+      if(!name){ showToast('Enter a reason'); return; }
+      if(reasonsList.some(r=>r.name.toLowerCase()===name.toLowerCase())){ showToast('That reason is already in the list'); return; }
+      const btn = modal.querySelector('#confirmAddReason');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/med_reasons', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name })
+        });
+        reasonsList.push(inserted[0]);
+        closeModal();
+        renderReasonsList();
+        showToast('Reason added');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not add — try again');
+      }
+    });
+  }
+  async function removeReason(id, name){
+    if(!confirm(`Remove "${name}" from the reason list? Past records that used this reason are unaffected.`)) return;
+    try{
+      await api('/med_reasons?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      reasonsList = reasonsList.filter(r=>r.id!==id);
+      renderReasonsList();
+      showToast('Reason removed');
+    }catch(e){
+      showToast('Could not remove — try again');
+    }
+  }
+
   function breedingModal(existingRecord){
     const isEdit = !!existingRecord;
     const today = todayLocal();
@@ -4734,6 +5309,20 @@
   document.getElementById('manageMedsBtn').addEventListener('click', showManageMeds);
   document.getElementById('manageMedsHomeBtn').addEventListener('click', showHome);
   document.getElementById('addMedBtn').addEventListener('click', addMedicineModal);
+  document.getElementById('manageLocationsBtn').addEventListener('click', showManageLocations);
+  document.getElementById('manageLocationsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addLocationBtn').addEventListener('click', addLocationModal);
+  document.getElementById('manageOwnersBtn').addEventListener('click', showManageOwners);
+  document.getElementById('manageOwnersHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addOwnerBtn').addEventListener('click', addOwnerModal);
+  document.getElementById('manageGroupsBtn').addEventListener('click', showManageGroups);
+  document.getElementById('manageGroupsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addGroupBtn').addEventListener('click', addGroupModal);
+  document.getElementById('manageReasonsBtn').addEventListener('click', showManageReasons);
+  document.getElementById('manageReasonsHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addReasonBtn').addEventListener('click', addReasonModal);
+  document.getElementById('appInfoBtn').addEventListener('click', showAppInfo);
+  document.getElementById('appInfoHomeBtn').addEventListener('click', showHome);
   document.getElementById('textListEntryBtn').addEventListener('click', textCategoryPickerModal);
   document.getElementById('homeUtilitiesBtn').addEventListener('click', showUtilities);
   document.getElementById('homeReportsBtn').addEventListener('click', showReports);
@@ -4886,15 +5475,60 @@
   document.getElementById('backBtn').addEventListener('click', closeCow);
   document.getElementById('addRecordBtn').addEventListener('click', addRecordModal);
 
-  const LOT_OPTIONS = ['Home',"Olin's",'Ballard Corner',"Chase's",'Ford City',"Laughlin's"];
-  const OWNER_OPTIONS = ['JF','FCC','Kellan','Clint','LA'];
-  const GROUP_OPTIONS = [
-    '2024 Fall Heifers',
-    '2025 Spring Heifers',
-    '2025 Fall Heifers',
-    '2026 Spring Heifers',
-    '2026 Fall Heifers'
-  ];
+  function getLocationOptions(){
+    return locationsList.map(l=>l.name);
+  }
+  async function addLocationIfNew(name){
+    if(!name) return;
+    if(locationsList.some(l=>l.name===name)) return;
+    try{
+      const inserted = await api('/locations', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ name })
+      });
+      locationsList.push(inserted[0]);
+      locationsList.sort((a,b)=>a.name.localeCompare(b.name));
+    }catch(e){
+      console.error('Could not save new location', e);
+    }
+  }
+  function getOwnerOptions(){
+    return ownersList.map(o=>o.name);
+  }
+  async function addOwnerIfNew(name){
+    if(!name) return;
+    if(ownersList.some(o=>o.name===name)) return;
+    try{
+      const inserted = await api('/owners', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ name })
+      });
+      ownersList.push(inserted[0]);
+      ownersList.sort((a,b)=>a.name.localeCompare(b.name));
+    }catch(e){
+      console.error('Could not save new owner', e);
+    }
+  }
+  function getGroupOptions(){
+    return groupsList.map(g=>g.name);
+  }
+  async function addGroupIfNew(name){
+    if(!name) return;
+    if(groupsList.some(g=>g.name===name)) return;
+    try{
+      const inserted = await api('/cow_groups', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ name })
+      });
+      groupsList.push(inserted[0]);
+      groupsList.sort((a,b)=>a.name.localeCompare(b.name));
+    }catch(e){
+      console.error('Could not save new group', e);
+    }
+  }
   function ownerColor(owner){
     if(owner === 'JF') return '#D46A8C';
     if(owner === 'FCC') return '#D4B93C';
@@ -5148,19 +5782,20 @@
     const cow = cows.find(c=>c.number===targetNum);
     const modal = openModal(`
       <div class="modal-title">Location — #${escapeHtml(targetNum)}</div>
-      ${fieldWithOther('editLot', 'Location', LOT_OPTIONS, 'Type location')}
+      ${fieldWithOther('editLot', 'Location', getLocationOptions(), 'Type location')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelEditLot">Cancel</button>
         <button class="btn btn-barn" id="confirmEditLot">Save</button>
       </div>
     `);
     wireFieldWithOther(modal, 'editLot');
-    if(cow && cow.lot) prefillFieldWithOther(modal, 'editLot', cow.lot, LOT_OPTIONS);
+    if(cow && cow.lot) prefillFieldWithOther(modal, 'editLot', cow.lot, getLocationOptions());
     modal.querySelector('#cancelEditLot').addEventListener('click', closeModal);
     modal.querySelector('#confirmEditLot').addEventListener('click', async ()=>{
       const lot = valueOf(modal, 'editLot');
       const btn = modal.querySelector('#confirmEditLot');
       btn.disabled = true;
+      await addLocationIfNew(lot);
       try{
         const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
           method:'PATCH',
@@ -5190,19 +5825,20 @@
     const cow = cows.find(c=>c.number===targetNum);
     const modal = openModal(`
       <div class="modal-title">Owner — #${escapeHtml(targetNum)}</div>
-      ${fieldWithOther('editOwner', 'Owner', OWNER_OPTIONS, 'Type owner name')}
+      ${fieldWithOther('editOwner', 'Owner', getOwnerOptions(), 'Type owner name')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelEditOwner">Cancel</button>
         <button class="btn btn-barn" id="confirmEditOwner">Save</button>
       </div>
     `);
     wireFieldWithOther(modal, 'editOwner');
-    if(cow && cow.owner) prefillFieldWithOther(modal, 'editOwner', cow.owner, OWNER_OPTIONS);
+    if(cow && cow.owner) prefillFieldWithOther(modal, 'editOwner', cow.owner, getOwnerOptions());
     modal.querySelector('#cancelEditOwner').addEventListener('click', closeModal);
     modal.querySelector('#confirmEditOwner').addEventListener('click', async ()=>{
       const owner = valueOf(modal, 'editOwner');
       const btn = modal.querySelector('#confirmEditOwner');
       btn.disabled = true;
+      await addOwnerIfNew(owner);
       try{
         const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
           method:'PATCH',
@@ -5232,19 +5868,20 @@
     const cow = cows.find(c=>c.number===targetNum);
     const modal = openModal(`
       <div class="modal-title">Group — #${escapeHtml(targetNum)}</div>
-      ${fieldWithOther('editGroup', 'Group', GROUP_OPTIONS, 'Type group name')}
+      ${fieldWithOther('editGroup', 'Group', getGroupOptions(), 'Type group name')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelEditGroup">Cancel</button>
         <button class="btn btn-barn" id="confirmEditGroup">Save</button>
       </div>
     `);
     wireFieldWithOther(modal, 'editGroup');
-    if(cow && cow.cow_group) prefillFieldWithOther(modal, 'editGroup', cow.cow_group, GROUP_OPTIONS);
+    if(cow && cow.cow_group) prefillFieldWithOther(modal, 'editGroup', cow.cow_group, getGroupOptions());
     modal.querySelector('#cancelEditGroup').addEventListener('click', closeModal);
     modal.querySelector('#confirmEditGroup').addEventListener('click', async ()=>{
       const groupVal = valueOf(modal, 'editGroup');
       const btn = modal.querySelector('#confirmEditGroup');
       btn.disabled = true;
+      await addGroupIfNew(groupVal);
       try{
         const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
           method:'PATCH',
@@ -6376,9 +7013,9 @@
         <textarea id="bulkEditNums" rows="3" placeholder="e.g. 214, 215, 216 or one per line"></textarea>
       </div>
       <div class="section-label" style="margin-top:14px;">Set New Values</div>
-      ${fieldWithOther('bulkEditLot', 'New Location (optional)', LOT_OPTIONS, 'Type location')}
-      ${fieldWithOther('bulkEditOwner', 'New Owner (optional)', OWNER_OPTIONS, 'Type owner name')}
-      ${fieldWithOther('bulkEditGroup', 'New Group (optional)', GROUP_OPTIONS, 'Type group name')}
+      ${fieldWithOther('bulkEditLot', 'New Location (optional)', getLocationOptions(), 'Type location')}
+      ${fieldWithOther('bulkEditOwner', 'New Owner (optional)', getOwnerOptions(), 'Type owner name')}
+      ${fieldWithOther('bulkEditGroup', 'New Group (optional)', getGroupOptions(), 'Type group name')}
       <div class="field">
         <label>New Herd Season (optional)</label>
         <select id="bulkEditHerdSeasonSelect">
@@ -6438,6 +7075,9 @@
 
       const btn = modal.querySelector('#confirmBulkEdit');
       btn.disabled = true;
+      await addLocationIfNew(newLot);
+      await addOwnerIfNew(newOwner);
+      await addGroupIfNew(newGroup);
       const patchBody = {};
       if(newLot) patchBody.lot = newLot;
       if(newOwner) patchBody.owner = newOwner;
