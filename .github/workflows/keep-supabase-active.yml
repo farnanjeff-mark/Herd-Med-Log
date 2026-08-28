@@ -1,0 +1,22 @@
+
+name: Keep Supabase Active
+ 
+# Runs every Monday and Thursday at 12:00 UTC.
+# Supabase free-tier projects pause automatically after a period of no
+# activity. This workflow makes a small read-only API request on a
+# schedule so the project always looks "active" and never gets paused.
+on:
+  schedule:
+    - cron: '0 12 * * 1,4'
+  workflow_dispatch: {}  # lets you also trigger it manually from the Actions tab, for testing
+ 
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase (read-only)
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            "https://nuutfigyhjyqhtxotuln.supabase.co/rest/v1/cows?select=number&limit=1" \
+            -H "apikey: sb_publishable_jvBVaIs5ZYmOUuE8o28mqQ_RMipD5Xw" \
+            -H "Authorization: Bearer sb_publishable_jvBVaIs5ZYmOUuE8o28mqQ_RMipD5Xw"
