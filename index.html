@@ -25,7 +25,7 @@
   body{margin:0;background:var(--paper);color:var(--ink);font-family:'Georgia','Iowan Old Style',serif;-webkit-font-smoothing:antialiased;}
   .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--paper);}
 
-  .header{padding:22px 18px 20px;border-bottom:3px solid var(--ink);}
+  .header{padding:22px 10px 20px;border-bottom:3px solid var(--ink);}
   .eyebrow{font-family:Arial,sans-serif;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--barn);margin:0 0 4px;}
   .h1{font-family:Arial,sans-serif;font-weight:700;font-size:15px;margin:4px 0 0;letter-spacing:.08em;text-transform:uppercase;color:var(--barn);}
   .company-name{font-family:Arial,sans-serif;font-weight:700;font-size:26px;margin:0;letter-spacing:.01em;}
@@ -108,7 +108,7 @@
   }
   .btn:active{transform:translateY(1px);box-shadow:0 1px 2px rgba(43,38,32,.16);}
   .btn[disabled]{opacity:.5;cursor:default;}
-  .btn-outline{background:#FFFFFF;border-color:#C7BBA0;color:var(--ink);}
+  .btn-outline{background:#FFFFFF;border-color:#2E88C4;color:var(--ink);}
   .btn-barn{background:var(--barn);color:var(--paper);border-color:var(--barn);}
   .btn-pasture{background:var(--pasture);color:var(--paper);border-color:var(--pasture);}
   .btn-pink{background:#D46A8C;color:var(--paper);border-color:#D46A8C;}
@@ -235,10 +235,9 @@
 <div class="app">
   <div class="header">
     <div style="width:100%;display:flex;justify-content:center;">
-      <div style="display:inline-flex;align-items:center;gap:12px;background:#fff;border-radius:10px;padding:10px 18px;box-shadow:0 3px 8px rgba(0,0,0,.18);">
-        <span style="font-size:38px;line-height:1;flex-shrink:0;">🐮</span>
-        <div style="text-align:left;">
-          <p class="company-name" style="margin:0;">Farnan Cattle Company</p>
+      <div style="width:100%;background:#fff;border-radius:10px;padding:10px 18px;box-shadow:0 3px 8px rgba(0,0,0,.18);">
+        <div style="text-align:center;">
+          <p class="company-name" style="margin:0;">Farnan Cattle</p>
           <h1 class="h1" id="headerTitle" style="margin:0;">Herd <span>Ledger</span></h1>
         </div>
       </div>
@@ -247,13 +246,13 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:4px 10px;">
-      <button class="btn btn-full" id="homeProfileBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#0C5A8E;padding:14px 16px;font-size:16px;margin-bottom:16px;margin-top:0;display:flex;align-items:center;justify-content:center;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">👤</span>Cow Profile</span></button>
+      <button class="btn btn-full" id="homeProfileBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#0C5A8E;padding:14px 16px;font-size:16px;margin-bottom:16px;margin-top:0;display:flex;align-items:center;justify-content:center;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">🐮</span>Cow Profile</span></button>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <button class="btn" id="homeUtilitiesBtn" style="background:#2E88C4;color:#fff;border-color:#2E88C4;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
         <button class="btn" id="homeReportsBtn" style="background:#2E88C4;color:#fff;border-color:#2E88C4;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
         <button class="btn" id="homeFarmOperationsBtn" style="background:#2E88C4;color:#fff;border-color:#2E88C4;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🚜</span>Farm Ops</button>
       </div>
-      <div style="max-width:280px;margin:0 auto;">
+      <div style="max-width:280px;margin:0 auto;padding-top:20px;">
         <div id="homeQuickSearchDisplay" style="background:#fff;border:2px solid #0C5A8E;border-radius:10px;padding:10px;font-size:26px;font-weight:700;text-align:center;min-height:40px;margin-bottom:8px;letter-spacing:.05em;color:var(--ink);">&nbsp;</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:8px;">
           <button class="btn keypad-digit" data-digit="1" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">1</button>
@@ -270,7 +269,7 @@
           <button class="btn" id="homeQuickSearchBackBtn" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:18px;padding:12px 0;">⌫</button>
         </div>
         <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#3C9142;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
-        <button id="homeTodaysActivityBtn" class="btn btn-full" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;margin-top:38px;margin-bottom:12px;">📋 Today's Activity</button>
+        <button id="homeTodaysActivityBtn" class="btn btn-full" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;margin-top:20px;margin-bottom:12px;">📋 Today's Activity</button>
         <div style="display:flex;justify-content:center;gap:8px;padding-top:2px;">
           <div id="homeTagNeededWrap" class="hidden" style="width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1.5px solid #2E88C4;border-radius:10px;padding:8px 4px;cursor:pointer;">
             <span id="homeTagNeededBadge" style="font-size:30px;font-weight:700;color:#0C5A8E;line-height:1;">0</span>
@@ -748,14 +747,14 @@
   <div class="view hidden" id="profileListView">
     <button class="btn btn-outline btn-full" id="profileListHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
     <div class="toolbar">
-      <input type="text" id="profileSearchBox" placeholder="Search cow #..." autocomplete="off" style="flex:1;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);"/>
-      <select id="profileSortBy" style="flex:1;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);">
+      <input type="text" id="profileSearchBox" placeholder="Search cow #..." autocomplete="off" style="flex:1;background:#fff;border:2px solid #2E88C4;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);"/>
+      <select id="profileSortBy" style="flex:1;background:#fff;border:2px solid #2E88C4;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);">
         <option value="number">Cow Number</option>
         <option value="recent">Most Recent</option>
       </select>
     </div>
     <div class="toolbar" id="profileLotFilterRow">
-      <select id="profileLocationGroupFilter" style="flex:1;background:#fff;border:2px solid #C7BBA0;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);"><option value="">All Locations / Groups / Owners</option></select>
+      <select id="profileLocationGroupFilter" style="flex:1;background:#fff;border:2px solid #2E88C4;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);padding:10px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--ink);"><option value="">All Locations / Groups / Owners</option></select>
     </div>
     <div id="profileCowList"></div>
     <div id="profileEmptyState" class="empty hidden">No cattle logged yet.<br/>Tap the + button to add your first cow.</div>
@@ -5723,7 +5722,7 @@
   function quickAddCardHtml(cow){
     const inactiveStyle = isActiveStatus(cow) ? '' : 'opacity:0.55;';
     return `
-      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(43,38,32,.10), 0 6px 16px rgba(43,38,32,.14);overflow:hidden;margin-bottom:18px;${inactiveStyle}">
+      <div style="background:#fff;border:2px solid #2E88C4;border-radius:18px;box-shadow:0 1px 2px rgba(43,38,32,.10), 0 6px 16px rgba(43,38,32,.14);overflow:hidden;margin-bottom:18px;${inactiveStyle}">
         <div style="background:#fff;padding:16px 18px;cursor:pointer;border-bottom:1px solid #eee;" data-open-num="${escapeHtml(cow.number)}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
