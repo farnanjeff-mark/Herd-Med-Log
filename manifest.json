@@ -1,6 +1,6 @@
 {
-  "name": "Farnan Cattle Herd Ledger",
-  "short_name": "Herd Ledger",
+  "name": "CHAMP - Cattle Herd App & Management Platform",
+  "short_name": "CHAMP",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#EFE8D8",
