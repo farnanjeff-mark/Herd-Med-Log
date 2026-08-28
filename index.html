@@ -4636,12 +4636,52 @@
     emptyEl.classList.toggle('hidden', sorted.length !== 0);
     listEl.innerHTML = sorted.map(b=>`
       <div class="cow-card" style="cursor:default;">
-        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(b.name)}</div></div>
-        <button class="remove-bull-btn" data-id="${escapeHtml(b.id)}" data-name="${escapeHtml(b.name)}" title="Remove bull" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(b.name)}${b.code ? ` <span style="font-size:14px;color:#6b6350;font-weight:400;">— ${escapeHtml(b.code)}</span>` : ''}</div></div>
+        <div style="display:flex;align-items:center;">
+          <button class="edit-bull-btn" data-id="${escapeHtml(b.id)}" data-name="${escapeHtml(b.name)}" data-code="${escapeHtml(b.code||'')}" title="Edit code" style="background:none;border:none;color:#a08f6b;font-size:20px;cursor:pointer;padding:4px 8px;">&#9998;</button>
+          <button class="remove-bull-btn" data-id="${escapeHtml(b.id)}" data-name="${escapeHtml(b.name)}" title="Remove bull" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+        </div>
       </div>
     `).join('');
     listEl.querySelectorAll('.remove-bull-btn').forEach(btn=>{
       btn.addEventListener('click', ()=> removeBull(btn.dataset.id, btn.dataset.name));
+    });
+    listEl.querySelectorAll('.edit-bull-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> editBullCodeModal(btn.dataset.id, btn.dataset.name, btn.dataset.code));
+    });
+  }
+  function editBullCodeModal(id, name, currentCode){
+    const modal = openModal(`
+      <div class="modal-title">${escapeHtml(name)}</div>
+      <div class="field">
+        <label>Code</label>
+        <input type="text" id="editBullCodeInput" placeholder="e.g. registration or tag number" value="${escapeHtml(currentCode||'')}" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEditBullCode">Cancel</button>
+        <button class="btn btn-barn" id="confirmEditBullCode">Save</button>
+      </div>
+    `);
+    modal.querySelector('#cancelEditBullCode').addEventListener('click', closeModal);
+    modal.querySelector('#confirmEditBullCode').addEventListener('click', async ()=>{
+      const code = modal.querySelector('#editBullCodeInput').value.trim();
+      const btn = modal.querySelector('#confirmEditBullCode');
+      btn.disabled = true;
+      try{
+        const updated = await api('/bulls?id=eq.' + encodeURIComponent(id), {
+          method:'PATCH',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ code: code||null })
+        });
+        const idx = bulls.findIndex(b=>b.id===id);
+        if(idx !== -1) bulls[idx] = updated[0];
+        closeModal();
+        renderBullsList();
+        showToast('Code saved');
+      }catch(e){
+        btn.disabled = false;
+        showToast('Could not save — try again');
+      }
     });
   }
   function addBullModal(){
