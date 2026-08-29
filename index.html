@@ -97,8 +97,11 @@
     font-size:16px;
     border-radius:2px;
     width:100%;
+    min-width:0;
+    box-sizing:border-box;
   }
   input:focus, select:focus, textarea:focus{outline:2px solid var(--pasture);outline-offset:1px;}
+  input[type="date"]{padding:10px 6px;}
   #searchBox, #calvingSearchBox, #notesSearchBox, #profileSearchBox, #weightsSearchBox, #breedingSearchBox{background:#ffffff;}
 
   .btn{
