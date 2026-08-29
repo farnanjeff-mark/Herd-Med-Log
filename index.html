@@ -450,49 +450,71 @@
     <button class="btn btn-outline btn-full" id="advancedSearchHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
     <div class="modal-title" style="margin-bottom:14px;">Advanced Search</div>
 
+    <div class="section-label" style="margin-top:0;">Breeding</div>
     <div class="field">
-      <label>Location</label>
-      <select id="advSearchLocation"><option value="">Any</option></select>
+      <label>Bred To</label>
+      <select id="advSearchBredTo"><option value="">Any</option></select>
     </div>
     <div class="field">
-      <label>Owner</label>
-      <select id="advSearchOwner"><option value="">Any</option></select>
-    </div>
-    <div class="field">
-      <label>Group</label>
-      <select id="advSearchGroup"><option value="">Any</option></select>
-    </div>
-    <div class="field">
-      <label>Status</label>
-      <select id="advSearchStatus">
+      <label>Pregnancy Method</label>
+      <select id="advSearchMethod">
         <option value="">Any</option>
-        <option value="Active">Active</option>
-        <option value="Sold">Sold</option>
-        <option value="Deceased">Deceased</option>
+        <option value="ET">ET</option>
+        <option value="AI">AI</option>
+        <option value="BB">BB</option>
       </select>
     </div>
     <div class="field">
-      <label>Herd Season</label>
-      <select id="advSearchHerdSeason">
+      <label>Natural Sire</label>
+      <input type="text" id="advSearchNaturalSire" placeholder="Any"/>
+    </div>
+
+    <div class="section-label">Meds &amp; Notes</div>
+    <div class="field">
+      <label>Medicine</label>
+      <select id="advSearchMedicine"><option value="">Any</option></select>
+    </div>
+    <div class="field">
+      <label>Reason</label>
+      <select id="advSearchReason"><option value="">Any</option></select>
+    </div>
+
+    <div class="section-label">Calving</div>
+    <div class="field">
+      <label>Sire</label>
+      <select id="advSearchCalfSire"><option value="">Any</option></select>
+    </div>
+    <div class="field">
+      <label>Calf Sex</label>
+      <select id="advSearchCalfSex">
         <option value="">Any</option>
-        <option value="Spring">Spring</option>
-        <option value="Fall">Fall</option>
+        <option value="B">Bull</option>
+        <option value="H">Heifer</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Birth Assist</label>
+      <select id="advSearchBirthAssist">
+        <option value="">Any</option>
+        <option value="None">None</option>
+        <option value="Easy Pull">Easy Pull</option>
+        <option value="Hard Pull">Hard Pull</option>
+        <option value="C-Section">C-Section</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Calf Outcome</label>
+      <select id="advSearchCalfOutcome">
+        <option value="">Any</option>
+        <option value="active">Still Active</option>
+        <option value="kept">Kept (Promoted)</option>
+        <option value="sold">Sold</option>
+        <option value="died">Died</option>
       </select>
     </div>
 
-    <div class="section-label">Flags</div>
-    <label style="display:flex;align-items:center;gap:10px;padding:8px 0;font-family:Arial,sans-serif;font-size:14px;">
-      <input type="checkbox" id="advSearchTagNeeded" style="width:20px;height:20px;"/> Tag Needed
-    </label>
-    <label style="display:flex;align-items:center;gap:10px;padding:8px 0;font-family:Arial,sans-serif;font-size:14px;">
-      <input type="checkbox" id="advSearchCalved" style="width:20px;height:20px;"/> Calved
-    </label>
-    <label style="display:flex;align-items:center;gap:10px;padding:8px 0 16px;font-family:Arial,sans-serif;font-size:14px;">
-      <input type="checkbox" id="advSearchFlagged" style="width:20px;height:20px;"/> Flagged
-    </label>
-
-    <div class="section-label">Activity Date Range (optional)</div>
-    <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Matches cows with a med, calving, note, weight, or breeding entry in this range.</div>
+    <div class="section-label">Date Range (optional)</div>
+    <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Matches cows with any activity in this range.</div>
     <div class="row2">
       <div class="field">
         <label>From</label>
@@ -6659,17 +6681,23 @@
   let lastGlobalSearchRows = []; // for print
   let lastGlobalSearchQuery = '';
   function populateAdvancedSearchDropdowns(){
-    const locSel = document.getElementById('advSearchLocation');
-    const ownerSel = document.getElementById('advSearchOwner');
-    const groupSel = document.getElementById('advSearchGroup');
-    if(!locSel) return;
-    const prevLoc = locSel.value, prevOwner = ownerSel.value, prevGroup = groupSel.value;
-    locSel.innerHTML = '<option value="">Any</option>' + getLocationOptions().map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
-    ownerSel.innerHTML = '<option value="">Any</option>' + getOwnerOptions().map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
-    groupSel.innerHTML = '<option value="">Any</option>' + getGroupOptions().map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
-    if([...locSel.options].some(o=>o.value===prevLoc)) locSel.value = prevLoc;
-    if([...ownerSel.options].some(o=>o.value===prevOwner)) ownerSel.value = prevOwner;
-    if([...groupSel.options].some(o=>o.value===prevGroup)) groupSel.value = prevGroup;
+    const bredToSel = document.getElementById('advSearchBredTo');
+    const medSel = document.getElementById('advSearchMedicine');
+    const reasonSel = document.getElementById('advSearchReason');
+    const calfSireSel = document.getElementById('advSearchCalfSire');
+    if(!bredToSel) return;
+    const prev = {
+      bredTo: bredToSel.value, med: medSel.value, reason: reasonSel.value, calfSire: calfSireSel.value
+    };
+    const bullOptions = getBullOptionsWithExtras();
+    bredToSel.innerHTML = '<option value="">Any</option>' + bullOptions.map(b=>`<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+    calfSireSel.innerHTML = '<option value="">Any</option>' + bullOptions.map(b=>`<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+    medSel.innerHTML = '<option value="">Any</option>' + getMedicineOptions().map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+    reasonSel.innerHTML = '<option value="">Any</option>' + getReasonOptions().map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
+    if([...bredToSel.options].some(o=>o.value===prev.bredTo)) bredToSel.value = prev.bredTo;
+    if([...calfSireSel.options].some(o=>o.value===prev.calfSire)) calfSireSel.value = prev.calfSire;
+    if([...medSel.options].some(o=>o.value===prev.med)) medSel.value = prev.med;
+    if([...reasonSel.options].some(o=>o.value===prev.reason)) reasonSel.value = prev.reason;
   }
   function cowHasActivityInDateRange(num, fromStr, toStr){
     const dates = [
@@ -6682,26 +6710,51 @@
     return dates.some(d=> (!fromStr || d >= fromStr) && (!toStr || d <= toStr));
   }
   function runAdvancedSearch(){
-    const loc = document.getElementById('advSearchLocation').value;
-    const owner = document.getElementById('advSearchOwner').value;
-    const group = document.getElementById('advSearchGroup').value;
-    const status = document.getElementById('advSearchStatus').value;
-    const herdSeason = document.getElementById('advSearchHerdSeason').value;
-    const tagNeeded = document.getElementById('advSearchTagNeeded').checked;
-    const calved = document.getElementById('advSearchCalved').checked;
-    const flagged = document.getElementById('advSearchFlagged').checked;
+    const bredTo = document.getElementById('advSearchBredTo').value;
+    const method = document.getElementById('advSearchMethod').value;
+    const naturalSire = document.getElementById('advSearchNaturalSire').value.trim().toLowerCase();
+    const medicine = document.getElementById('advSearchMedicine').value;
+    const reason = document.getElementById('advSearchReason').value;
+    const calfSire = document.getElementById('advSearchCalfSire').value;
+    const calfSex = document.getElementById('advSearchCalfSex').value;
+    const birthAssist = document.getElementById('advSearchBirthAssist').value;
+    const calfOutcome = document.getElementById('advSearchCalfOutcome').value;
     const dateFrom = document.getElementById('advSearchDateFrom').value;
     const dateTo = document.getElementById('advSearchDateTo').value;
 
+    const breedingFieldsUsed = bredTo || method || naturalSire;
+    const medFieldsUsed = medicine || reason;
+    const calvingFieldsUsed = calfSire || calfSex || birthAssist || calfOutcome;
+
     const results = cows.filter(c=>{
-      if(loc && c.lot !== loc) return false;
-      if(owner && c.owner !== owner) return false;
-      if(group && c.cow_group !== group) return false;
-      if(status && (c.status||'Active') !== status) return false;
-      if(herdSeason && c.herd_season !== herdSeason) return false;
-      if(tagNeeded && !c.tag_needed) return false;
-      if(calved && !c.calved) return false;
-      if(flagged && !c.needs_entry) return false;
+      if(breedingFieldsUsed){
+        const hasMatch = breedingFor(c.number).some(b=>
+          (!bredTo || b.bred_to === bredTo) &&
+          (!method || b.pregnancy_method === method) &&
+          (!naturalSire || (b.natural_sire||'').toLowerCase().includes(naturalSire))
+        );
+        if(!hasMatch) return false;
+      }
+      if(medFieldsUsed){
+        const hasMatch = recordsFor(c.number).some(t=>
+          (!medicine || t.medicine === medicine) &&
+          (!reason || t.reason === reason)
+        );
+        if(!hasMatch) return false;
+      }
+      if(calvingFieldsUsed){
+        const hasMatch = calvingsFor(c.number).some(cv=>{
+          if(calfSire && cv.sire !== calfSire) return false;
+          if(calfSex && cv.calf_sex !== calfSex) return false;
+          if(birthAssist && cv.birth_assist !== birthAssist) return false;
+          if(calfOutcome){
+            const recordOutcome = cv.promoted_to_cow_number ? 'kept' : (cv.calf_outcome || 'active');
+            if(recordOutcome !== calfOutcome) return false;
+          }
+          return true;
+        });
+        if(!hasMatch) return false;
+      }
       if((dateFrom || dateTo) && !cowHasActivityInDateRange(c.number, dateFrom, dateTo)) return false;
       return true;
     }).sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
@@ -6721,14 +6774,15 @@
     wireCalvedCheckboxes(resultsEl);
   }
   function clearAdvancedSearch(){
-    document.getElementById('advSearchLocation').value = '';
-    document.getElementById('advSearchOwner').value = '';
-    document.getElementById('advSearchGroup').value = '';
-    document.getElementById('advSearchStatus').value = '';
-    document.getElementById('advSearchHerdSeason').value = '';
-    document.getElementById('advSearchTagNeeded').checked = false;
-    document.getElementById('advSearchCalved').checked = false;
-    document.getElementById('advSearchFlagged').checked = false;
+    document.getElementById('advSearchBredTo').value = '';
+    document.getElementById('advSearchMethod').value = '';
+    document.getElementById('advSearchNaturalSire').value = '';
+    document.getElementById('advSearchMedicine').value = '';
+    document.getElementById('advSearchReason').value = '';
+    document.getElementById('advSearchCalfSire').value = '';
+    document.getElementById('advSearchCalfSex').value = '';
+    document.getElementById('advSearchBirthAssist').value = '';
+    document.getElementById('advSearchCalfOutcome').value = '';
     document.getElementById('advSearchDateFrom').value = '';
     document.getElementById('advSearchDateTo').value = '';
     document.getElementById('advancedSearchCount').textContent = '';
