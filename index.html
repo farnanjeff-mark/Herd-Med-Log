@@ -192,7 +192,7 @@
   .field{margin-bottom:12px;}
   .field label{display:block;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#6b6350;margin-bottom:5px;}
   .row2{display:flex;gap:10px;}
-  .row2 > div{flex:1;}
+  .row2 > div{flex:1;min-width:0;}
 
   .fab{
     position:fixed;bottom:24px;left:50%;transform:translateX(calc(-50% + (min(480px,100vw) - 40px)/2 - 26px));
@@ -515,6 +515,16 @@
 
     <div class="section-label">Date Range (optional)</div>
     <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Matches cows with any activity in this range.</div>
+    <div class="field">
+      <label>Quick Range</label>
+      <select id="advSearchDatePreset">
+        <option value="">Custom Range</option>
+        <option value="0">1 Day</option>
+        <option value="7">1 Week</option>
+        <option value="30">1 Month</option>
+        <option value="all">Any</option>
+      </select>
+    </div>
     <div class="row2">
       <div class="field">
         <label>From</label>
@@ -5559,6 +5569,7 @@
   document.getElementById('advancedSearchBtn').addEventListener('click', showAdvancedSearch);
   document.getElementById('advancedSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('runAdvancedSearchBtn').addEventListener('click', runAdvancedSearch);
+  document.getElementById('advSearchDatePreset').addEventListener('change', applyAdvancedSearchDatePreset);
   document.getElementById('clearAdvancedSearchBtn').addEventListener('click', clearAdvancedSearch);
   document.getElementById('homeGlobalSearchBtn').addEventListener('click', showGlobalSearch);
   document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
@@ -6773,6 +6784,22 @@
     wireTagNeededCheckboxes(resultsEl);
     wireCalvedCheckboxes(resultsEl);
   }
+  function applyAdvancedSearchDatePreset(){
+    const preset = document.getElementById('advSearchDatePreset').value;
+    const fromEl = document.getElementById('advSearchDateFrom');
+    const toEl = document.getElementById('advSearchDateTo');
+    if(preset === ''){
+      return; // Custom Range — leave From/To exactly as the user has them
+    }
+    if(preset === 'all'){
+      fromEl.value = '';
+      toEl.value = '';
+      return;
+    }
+    const days = parseInt(preset, 10);
+    toEl.value = todayLocal();
+    fromEl.value = addDays(todayLocal(), -days).toISOString().slice(0,10);
+  }
   function clearAdvancedSearch(){
     document.getElementById('advSearchBredTo').value = '';
     document.getElementById('advSearchMethod').value = '';
@@ -6783,6 +6810,7 @@
     document.getElementById('advSearchCalfSex').value = '';
     document.getElementById('advSearchBirthAssist').value = '';
     document.getElementById('advSearchCalfOutcome').value = '';
+    document.getElementById('advSearchDatePreset').value = '';
     document.getElementById('advSearchDateFrom').value = '';
     document.getElementById('advSearchDateTo').value = '';
     document.getElementById('advancedSearchCount').textContent = '';
