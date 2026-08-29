@@ -435,6 +435,7 @@
 
   <div class="view hidden" id="reportsView">
     <button class="btn btn-outline btn-full" id="reportsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
+    <button class="btn btn-nav-tool btn-full" id="advancedSearchBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔍</span>&nbsp;&nbsp;Advanced Search</button>
     <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
     <button class="btn btn-nav-tool btn-full" id="headcountByOwnerBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Headcount by Owner</button>
     <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
@@ -443,6 +444,71 @@
     <button class="btn btn-nav-tool btn-full" id="deadCalvesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">💔</span>&nbsp;&nbsp;Dead Calves</button>
     <button class="btn btn-nav-tool btn-full" id="calvingReportBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐮</span>&nbsp;&nbsp;Calving Report</button>
     <button class="btn btn-nav-tool btn-full" id="upcomingCalvingsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📅</span>&nbsp;&nbsp;Upcoming Calvings</button>
+  </div>
+
+  <div class="view hidden" id="advancedSearchView">
+    <button class="btn btn-outline btn-full" id="advancedSearchHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:14px;">Advanced Search</div>
+
+    <div class="field">
+      <label>Location</label>
+      <select id="advSearchLocation"><option value="">Any</option></select>
+    </div>
+    <div class="field">
+      <label>Owner</label>
+      <select id="advSearchOwner"><option value="">Any</option></select>
+    </div>
+    <div class="field">
+      <label>Group</label>
+      <select id="advSearchGroup"><option value="">Any</option></select>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="advSearchStatus">
+        <option value="">Any</option>
+        <option value="Active">Active</option>
+        <option value="Sold">Sold</option>
+        <option value="Deceased">Deceased</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Herd Season</label>
+      <select id="advSearchHerdSeason">
+        <option value="">Any</option>
+        <option value="Spring">Spring</option>
+        <option value="Fall">Fall</option>
+      </select>
+    </div>
+
+    <div class="section-label">Flags</div>
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 0;font-family:Arial,sans-serif;font-size:14px;">
+      <input type="checkbox" id="advSearchTagNeeded" style="width:20px;height:20px;"/> Tag Needed
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 0;font-family:Arial,sans-serif;font-size:14px;">
+      <input type="checkbox" id="advSearchCalved" style="width:20px;height:20px;"/> Calved
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 0 16px;font-family:Arial,sans-serif;font-size:14px;">
+      <input type="checkbox" id="advSearchFlagged" style="width:20px;height:20px;"/> Flagged
+    </label>
+
+    <div class="section-label">Activity Date Range (optional)</div>
+    <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Matches cows with a med, calving, note, weight, or breeding entry in this range.</div>
+    <div class="row2">
+      <div class="field">
+        <label>From</label>
+        <input type="date" id="advSearchDateFrom"/>
+      </div>
+      <div class="field">
+        <label>To</label>
+        <input type="date" id="advSearchDateTo"/>
+      </div>
+    </div>
+
+    <button class="btn btn-barn btn-full" id="runAdvancedSearchBtn" style="margin-bottom:8px;">Search</button>
+    <button class="btn btn-outline btn-full" id="clearAdvancedSearchBtn" style="margin-bottom:16px;">Clear Filters</button>
+
+    <div id="advancedSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
+    <div id="advancedSearchResults"></div>
   </div>
 
   <div class="view hidden" id="farmOperationsView">
@@ -958,6 +1024,7 @@
   const manageOwnersView = document.getElementById('manageOwnersView');
   const manageGroupsView = document.getElementById('manageGroupsView');
   const manageReasonsView = document.getElementById('manageReasonsView');
+  const advancedSearchView = document.getElementById('advancedSearchView');
   const reportsView = document.getElementById('reportsView');
   const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
@@ -1407,6 +1474,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1453,6 +1521,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1501,6 +1570,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1543,6 +1613,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1585,6 +1656,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1629,6 +1701,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1754,6 +1827,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -1815,6 +1889,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showVetPregCheck(){
@@ -1938,6 +2013,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1964,6 +2040,7 @@
     manageLocationsView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -1990,6 +2067,7 @@
     manageLocationsView.classList.add('hidden');
     manageOwnersView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -2023,6 +2101,33 @@
     renderReasonsList();
     window.scrollTo(0,0);
   }
+  function showAdvancedSearch(){
+    setHeaderTitle('Advanced', 'Search');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    advancedSearchView.classList.remove('hidden');
+    populateAdvancedSearchDropdowns();
+    window.scrollTo(0,0);
+  }
   function showReports(){
     setHeaderTitle('Reports', '');
     homeView.classList.add('hidden');
@@ -2037,6 +2142,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -2062,6 +2168,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -2086,6 +2193,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
@@ -2112,6 +2220,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -2140,6 +2249,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -2332,6 +2442,7 @@
     manageOwnersView.classList.add('hidden');
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -5423,6 +5534,10 @@
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
   document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
+  document.getElementById('advancedSearchBtn').addEventListener('click', showAdvancedSearch);
+  document.getElementById('advancedSearchHomeBtn').addEventListener('click', showHome);
+  document.getElementById('runAdvancedSearchBtn').addEventListener('click', runAdvancedSearch);
+  document.getElementById('clearAdvancedSearchBtn').addEventListener('click', clearAdvancedSearch);
   document.getElementById('homeGlobalSearchBtn').addEventListener('click', showGlobalSearch);
   document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
@@ -6543,6 +6658,84 @@
 
   let lastGlobalSearchRows = []; // for print
   let lastGlobalSearchQuery = '';
+  function populateAdvancedSearchDropdowns(){
+    const locSel = document.getElementById('advSearchLocation');
+    const ownerSel = document.getElementById('advSearchOwner');
+    const groupSel = document.getElementById('advSearchGroup');
+    if(!locSel) return;
+    const prevLoc = locSel.value, prevOwner = ownerSel.value, prevGroup = groupSel.value;
+    locSel.innerHTML = '<option value="">Any</option>' + getLocationOptions().map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+    ownerSel.innerHTML = '<option value="">Any</option>' + getOwnerOptions().map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+    groupSel.innerHTML = '<option value="">Any</option>' + getGroupOptions().map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+    if([...locSel.options].some(o=>o.value===prevLoc)) locSel.value = prevLoc;
+    if([...ownerSel.options].some(o=>o.value===prevOwner)) ownerSel.value = prevOwner;
+    if([...groupSel.options].some(o=>o.value===prevGroup)) groupSel.value = prevGroup;
+  }
+  function cowHasActivityInDateRange(num, fromStr, toStr){
+    const dates = [
+      ...recordsFor(num).map(r=>r.date),
+      ...calvingsFor(num).map(r=>r.calving_date),
+      ...generalNotesFor(num).map(r=>r.note_date),
+      ...weightsFor(num).map(r=>r.weigh_date),
+      ...breedingFor(num).map(r=>r.breed_date)
+    ].filter(Boolean);
+    return dates.some(d=> (!fromStr || d >= fromStr) && (!toStr || d <= toStr));
+  }
+  function runAdvancedSearch(){
+    const loc = document.getElementById('advSearchLocation').value;
+    const owner = document.getElementById('advSearchOwner').value;
+    const group = document.getElementById('advSearchGroup').value;
+    const status = document.getElementById('advSearchStatus').value;
+    const herdSeason = document.getElementById('advSearchHerdSeason').value;
+    const tagNeeded = document.getElementById('advSearchTagNeeded').checked;
+    const calved = document.getElementById('advSearchCalved').checked;
+    const flagged = document.getElementById('advSearchFlagged').checked;
+    const dateFrom = document.getElementById('advSearchDateFrom').value;
+    const dateTo = document.getElementById('advSearchDateTo').value;
+
+    const results = cows.filter(c=>{
+      if(loc && c.lot !== loc) return false;
+      if(owner && c.owner !== owner) return false;
+      if(group && c.cow_group !== group) return false;
+      if(status && (c.status||'Active') !== status) return false;
+      if(herdSeason && c.herd_season !== herdSeason) return false;
+      if(tagNeeded && !c.tag_needed) return false;
+      if(calved && !c.calved) return false;
+      if(flagged && !c.needs_entry) return false;
+      if((dateFrom || dateTo) && !cowHasActivityInDateRange(c.number, dateFrom, dateTo)) return false;
+      return true;
+    }).sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
+
+    const countEl = document.getElementById('advancedSearchCount');
+    const resultsEl = document.getElementById('advancedSearchResults');
+    countEl.textContent = `${results.length} cow${results.length!==1?'s':''} matched`;
+    if(results.length === 0){
+      resultsEl.innerHTML = '<p class="empty">No cows match those filters.</p>';
+      return;
+    }
+    resultsEl.innerHTML = results.map(cow=> quickAddCardHtml(cow)).join('');
+    wireQuickAddCardOpen(resultsEl);
+    wireProfileQuickAddButtons(resultsEl);
+    wireNeedsEntryCheckboxes(resultsEl);
+    wireTagNeededCheckboxes(resultsEl);
+    wireCalvedCheckboxes(resultsEl);
+  }
+  function clearAdvancedSearch(){
+    document.getElementById('advSearchLocation').value = '';
+    document.getElementById('advSearchOwner').value = '';
+    document.getElementById('advSearchGroup').value = '';
+    document.getElementById('advSearchStatus').value = '';
+    document.getElementById('advSearchHerdSeason').value = '';
+    document.getElementById('advSearchTagNeeded').checked = false;
+    document.getElementById('advSearchCalved').checked = false;
+    document.getElementById('advSearchFlagged').checked = false;
+    document.getElementById('advSearchDateFrom').value = '';
+    document.getElementById('advSearchDateTo').value = '';
+    document.getElementById('advancedSearchCount').textContent = '';
+    document.getElementById('advancedSearchResults').innerHTML = '';
+  }
+
+
   function renderGlobalSearchResults(){
     const q = (globalSearchBox.value||'').trim().toLowerCase();
     const resultsEl = document.getElementById('globalSearchResults');
