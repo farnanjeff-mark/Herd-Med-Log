@@ -541,6 +541,8 @@
     <button class="btn btn-outline btn-full" id="clearAdvancedSearchBtn" style="margin-bottom:16px;">Clear Filters</button>
 
     <div id="advancedSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
+    <div id="advancedSearchReportTable" style="margin-bottom:14px;"></div>
+    <button class="btn btn-outline btn-full hidden" id="advancedSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
     <div id="advancedSearchResults"></div>
   </div>
 
@@ -5572,6 +5574,7 @@
   document.getElementById('runAdvancedSearchBtn').addEventListener('click', runAdvancedSearch);
   document.getElementById('advSearchDatePreset').addEventListener('change', applyAdvancedSearchDatePreset);
   document.getElementById('clearAdvancedSearchBtn').addEventListener('click', clearAdvancedSearch);
+  document.getElementById('advancedSearchPrintBtn').addEventListener('click', printAdvancedSearchResults);
   document.getElementById('homeGlobalSearchBtn').addEventListener('click', showGlobalSearch);
   document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
@@ -6721,6 +6724,7 @@
     ].filter(Boolean);
     return dates.some(d=> (!fromStr || d >= fromStr) && (!toStr || d <= toStr));
   }
+  let lastAdvancedSearchEntries = []; // for print
   function runAdvancedSearch(){
     const bredTo = document.getElementById('advSearchBredTo').value;
     const method = document.getElementById('advSearchMethod').value;
@@ -6738,42 +6742,137 @@
     const medFieldsUsed = medicine || reason;
     const calvingFieldsUsed = calfSire || calfSex || birthAssist || calfOutcome;
 
+    function matchingBreedingRecords(num){
+      return breedingFor(num).filter(b=>
+        (!bredTo || b.bred_to === bredTo) &&
+        (!method || b.pregnancy_method === method) &&
+        (!naturalSire || (b.natural_sire||'').toLowerCase().includes(naturalSire)) &&
+        (!dateFrom || b.breed_date >= dateFrom) &&
+        (!dateTo || b.breed_date <= dateTo)
+      );
+    }
+    function matchingMedRecords(num){
+      return recordsFor(num).filter(t=>
+        (!medicine || t.medicine === medicine) &&
+        (!reason || t.reason === reason) &&
+        (!dateFrom || t.date >= dateFrom) &&
+        (!dateTo || t.date <= dateTo)
+      );
+    }
+    function matchingCalvingRecords(num){
+      return calvingsFor(num).filter(cv=>{
+        if(calfSire && cv.sire !== calfSire) return false;
+        if(calfSex && cv.calf_sex !== calfSex) return false;
+        if(birthAssist && cv.birth_assist !== birthAssist) return false;
+        if(calfOutcome){
+          const recordOutcome = cv.promoted_to_cow_number ? 'kept' : (cv.calf_outcome || 'active');
+          if(recordOutcome !== calfOutcome) return false;
+        }
+        if(dateFrom && cv.calving_date < dateFrom) return false;
+        if(dateTo && cv.calving_date > dateTo) return false;
+        return true;
+      });
+    }
+
     const results = cows.filter(c=>{
-      if(breedingFieldsUsed){
-        const hasMatch = breedingFor(c.number).some(b=>
-          (!bredTo || b.bred_to === bredTo) &&
-          (!method || b.pregnancy_method === method) &&
-          (!naturalSire || (b.natural_sire||'').toLowerCase().includes(naturalSire))
-        );
-        if(!hasMatch) return false;
-      }
-      if(medFieldsUsed){
-        const hasMatch = recordsFor(c.number).some(t=>
-          (!medicine || t.medicine === medicine) &&
-          (!reason || t.reason === reason)
-        );
-        if(!hasMatch) return false;
-      }
-      if(calvingFieldsUsed){
-        const hasMatch = calvingsFor(c.number).some(cv=>{
-          if(calfSire && cv.sire !== calfSire) return false;
-          if(calfSex && cv.calf_sex !== calfSex) return false;
-          if(birthAssist && cv.birth_assist !== birthAssist) return false;
-          if(calfOutcome){
-            const recordOutcome = cv.promoted_to_cow_number ? 'kept' : (cv.calf_outcome || 'active');
-            if(recordOutcome !== calfOutcome) return false;
-          }
-          return true;
-        });
-        if(!hasMatch) return false;
-      }
-      if((dateFrom || dateTo) && !cowHasActivityInDateRange(c.number, dateFrom, dateTo)) return false;
+      if(breedingFieldsUsed && matchingBreedingRecords(c.number).length === 0) return false;
+      if(medFieldsUsed && matchingMedRecords(c.number).length === 0) return false;
+      if(calvingFieldsUsed && matchingCalvingRecords(c.number).length === 0) return false;
+      if(!breedingFieldsUsed && !medFieldsUsed && !calvingFieldsUsed && (dateFrom || dateTo) && !cowHasActivityInDateRange(c.number, dateFrom, dateTo)) return false;
       return true;
     }).sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
 
+    // Build the line-by-line report of exactly which records matched.
+    const reportEntries = [];
+    results.forEach(c=>{
+      const num = c.number;
+      if(breedingFieldsUsed){
+        matchingBreedingRecords(num).forEach(b=>{
+          const detail = [];
+          if(b.bred_to) detail.push(`Bred to: ${b.bred_to}`);
+          if(b.pregnancy_method) detail.push(b.pregnancy_method);
+          if(b.natural_sire) detail.push(`Natural sire: ${b.natural_sire}`);
+          reportEntries.push({ date: b.breed_date, num, type: 'Breeding', details: detail.join(' — ') });
+        });
+      }
+      if(medFieldsUsed){
+        matchingMedRecords(num).forEach(t=>{
+          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
+          reportEntries.push({ date: t.date, num, type: 'Med', details: desc });
+        });
+      }
+      if(calvingFieldsUsed){
+        matchingCalvingRecords(num).forEach(cv=>{
+          const detail = [`${calfSexLabel(cv.calf_sex)} calf`];
+          if(cv.sire) detail.push(`Sire: ${cv.sire}`);
+          if(cv.birth_assist) detail.push(cv.birth_assist);
+          reportEntries.push({ date: cv.calving_date, num, type: 'Calving', details: detail.join(' — ') });
+        });
+      }
+      if(!breedingFieldsUsed && !medFieldsUsed && !calvingFieldsUsed && (dateFrom || dateTo)){
+        // Pure date-range search with no other criteria — show all her
+        // activity in that window across every category.
+        recordsFor(num).forEach(t=>{
+          if((!dateFrom || t.date >= dateFrom) && (!dateTo || t.date <= dateTo)){
+            const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
+            reportEntries.push({ date: t.date, num, type: 'Med', details: desc });
+          }
+        });
+        calvingsFor(num).forEach(cv=>{
+          if((!dateFrom || cv.calving_date >= dateFrom) && (!dateTo || cv.calving_date <= dateTo)){
+            reportEntries.push({ date: cv.calving_date, num, type: 'Calving', details: `${calfSexLabel(cv.calf_sex)} calf` });
+          }
+        });
+        generalNotesFor(num).forEach(n=>{
+          if((!dateFrom || n.note_date >= dateFrom) && (!dateTo || n.note_date <= dateTo)){
+            reportEntries.push({ date: n.note_date, num, type: 'Note', details: n.note||'' });
+          }
+        });
+        weightsFor(num).forEach(w=>{
+          if((!dateFrom || w.weigh_date >= dateFrom) && (!dateTo || w.weigh_date <= dateTo)){
+            reportEntries.push({ date: w.weigh_date, num, type: 'Weight', details: w.weight!=null ? w.weight+' lb' : '' });
+          }
+        });
+        breedingFor(num).forEach(b=>{
+          if((!dateFrom || b.breed_date >= dateFrom) && (!dateTo || b.breed_date <= dateTo)){
+            reportEntries.push({ date: b.breed_date, num, type: 'Breeding', details: b.bred_to ? 'Bred to: '+b.bred_to : '' });
+          }
+        });
+      }
+    });
+    reportEntries.sort((a,b)=> b.date.localeCompare(a.date));
+    lastAdvancedSearchEntries = reportEntries;
+
     const countEl = document.getElementById('advancedSearchCount');
+    const tableEl = document.getElementById('advancedSearchReportTable');
+    const printBtn = document.getElementById('advancedSearchPrintBtn');
     const resultsEl = document.getElementById('advancedSearchResults');
     countEl.textContent = `${results.length} cow${results.length!==1?'s':''} matched`;
+
+    if(reportEntries.length > 0){
+      printBtn.classList.remove('hidden');
+      tableEl.innerHTML = `
+        <div style="overflow-x:auto;">
+          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+            <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Type</th><th style="text-align:left;padding:8px;">Details</th></tr></thead>
+            <tbody>
+              ${reportEntries.map((e,i)=>`
+                <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+                  <td style="padding:8px;">${fmtDateShort(e.date)}</td>
+                  <td style="padding:8px;">#${escapeHtml(e.num)}</td>
+                  <td style="padding:8px;">${escapeHtml(e.type)}</td>
+                  <td style="padding:8px;white-space:normal;">${escapeHtml(e.details)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else {
+      printBtn.classList.add('hidden');
+      tableEl.innerHTML = '';
+    }
+
     if(results.length === 0){
       resultsEl.innerHTML = '<p class="empty">No cows match those filters.</p>';
       return;
@@ -6815,7 +6914,33 @@
     document.getElementById('advSearchDateFrom').value = '';
     document.getElementById('advSearchDateTo').value = '';
     document.getElementById('advancedSearchCount').textContent = '';
+    document.getElementById('advancedSearchReportTable').innerHTML = '';
+    document.getElementById('advancedSearchPrintBtn').classList.add('hidden');
     document.getElementById('advancedSearchResults').innerHTML = '';
+    lastAdvancedSearchEntries = [];
+  }
+  function printAdvancedSearchResults(){
+    if(lastAdvancedSearchEntries.length === 0){ showToast('Nothing to print'); return; }
+    const rowsHtml = lastAdvancedSearchEntries.map((e,i)=>`
+      <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+        <td style="padding:6px;">${fmtDateShort(e.date)}</td>
+        <td style="padding:6px;">#${escapeHtml(e.num)}</td>
+        <td style="padding:6px;">${escapeHtml(e.type)}</td>
+        <td style="padding:6px;">${escapeHtml(e.details)}</td>
+      </tr>
+    `).join('');
+    document.getElementById('printListOutput').innerHTML = `
+      <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+        <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Advanced Search</h2>
+        <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${lastAdvancedSearchEntries.length} matching record${lastAdvancedSearchEntries.length!==1?'s':''}</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Date</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Type</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Details</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    `;
+    document.body.classList.add('printing-list');
+    requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
   }
 
 
