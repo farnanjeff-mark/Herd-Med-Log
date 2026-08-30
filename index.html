@@ -547,6 +547,16 @@
         </select>
       </div>
     </div>
+    <div class="row2">
+      <div class="field">
+        <label>Birth Weight Min (lbs)</label>
+        <input type="number" id="advSearchWeightMin" step="0.1" min="0" placeholder="Any"/>
+      </div>
+      <div class="field">
+        <label>Birth Weight Max (lbs)</label>
+        <input type="number" id="advSearchWeightMax" step="0.1" min="0" placeholder="Any"/>
+      </div>
+    </div>
 
     <div class="section-label">Date Range (optional)</div>
     <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Matches cows with any activity in this range.</div>
@@ -6798,12 +6808,16 @@
     const calfSex = document.getElementById('advSearchCalfSex').value;
     const birthAssist = document.getElementById('advSearchBirthAssist').value;
     const calfOutcome = document.getElementById('advSearchCalfOutcome').value;
+    const weightMinRaw = document.getElementById('advSearchWeightMin').value;
+    const weightMaxRaw = document.getElementById('advSearchWeightMax').value;
+    const weightMin = weightMinRaw !== '' ? parseFloat(weightMinRaw) : null;
+    const weightMax = weightMaxRaw !== '' ? parseFloat(weightMaxRaw) : null;
     const dateFrom = document.getElementById('advSearchDateFrom').value;
     const dateTo = document.getElementById('advSearchDateTo').value;
 
     const breedingFieldsUsed = bredTo || method || naturalSire;
     const medFieldsUsed = medicine || reason;
-    const calvingFieldsUsed = calfSire || calfSex || birthAssist || calfOutcome;
+    const calvingFieldsUsed = calfSire || calfSex || birthAssist || calfOutcome || weightMin != null || weightMax != null;
 
     function matchingBreedingRecords(num){
       return breedingFor(num).filter(b=>
@@ -6827,6 +6841,8 @@
         if(calfSire && cv.sire !== calfSire) return false;
         if(calfSex && cv.calf_sex !== calfSex) return false;
         if(birthAssist && cv.birth_assist !== birthAssist) return false;
+        if(weightMin != null && !(cv.birth_weight != null && cv.birth_weight >= weightMin)) return false;
+        if(weightMax != null && !(cv.birth_weight != null && cv.birth_weight <= weightMax)) return false;
         if(calfOutcome){
           const recordOutcome = cv.promoted_to_cow_number ? 'kept' : (cv.calf_outcome || 'active');
           if(recordOutcome !== calfOutcome) return false;
@@ -6873,6 +6889,7 @@
           const detail = [`${calfSexLabel(cv.calf_sex)} calf`];
           if(cv.sire) detail.push(`Sire: ${cv.sire}`);
           if(cv.birth_assist) detail.push(cv.birth_assist);
+          if(cv.birth_weight != null) detail.push(`${cv.birth_weight} lbs`);
           reportEntries.push({ date: cv.calving_date, num, type: 'Calving', details: detail.join(' — ') });
         });
       }
@@ -6981,6 +6998,8 @@
     document.getElementById('advSearchCalfSex').value = '';
     document.getElementById('advSearchBirthAssist').value = '';
     document.getElementById('advSearchCalfOutcome').value = '';
+    document.getElementById('advSearchWeightMin').value = '';
+    document.getElementById('advSearchWeightMax').value = '';
     document.getElementById('advSearchDatePreset').value = '';
     document.getElementById('advSearchDateFrom').value = '';
     document.getElementById('advSearchDateTo').value = '';
