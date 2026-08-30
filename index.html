@@ -4370,6 +4370,8 @@
           });
           calvings.push(inserted[0]);
           savedRecord = inserted[0];
+          const cowIdx = cows.findIndex(c=>c.number===currentCalvingCow);
+          if(cowIdx !== -1) cows[cowIdx] = Object.assign({}, cows[cowIdx], { calved:false });
         }
         closeModal();
         if(onSaved){
@@ -4378,6 +4380,7 @@
           renderCalvingDetail();
           renderCalvingList();
           renderProfileList();
+          if(!isEdit){ renderList(); updateCalvedBadge(); }
           window.scrollTo(0,0);
         }
         showToast(isEdit ? 'Calving updated' : 'Calving logged');
