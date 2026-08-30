@@ -191,6 +191,9 @@
   .field label{display:block;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#6b6350;margin-bottom:5px;}
   .row2{display:flex;gap:10px;}
   .row2 > div{flex:1;min-width:0;}
+  #advancedSearchView .section-label{font-size:19px;letter-spacing:.02em;margin:22px 0 10px;}
+  #advancedSearchView .field{margin-bottom:9px;}
+  #advancedSearchView .row2{gap:8px;}
 
   .fab{
     position:fixed;bottom:24px;left:50%;transform:translateX(calc(-50% + (min(480px,100vw) - 40px)/2 - 26px));
@@ -448,19 +451,47 @@
     <button class="btn btn-outline btn-full" id="advancedSearchHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
     <div class="modal-title" style="margin-bottom:14px;">Advanced Search</div>
 
-    <div class="section-label" style="margin-top:0;">Breeding</div>
-    <div class="field">
-      <label>Bred To</label>
-      <select id="advSearchBredTo"><option value="">Any</option></select>
+    <div class="section-label" style="margin-top:0;">Herd &amp; Location</div>
+    <div class="row2">
+      <div class="field">
+        <label>Location</label>
+        <select id="advSearchLocation"><option value="">Any</option></select>
+      </div>
+      <div class="field">
+        <label>Owner</label>
+        <select id="advSearchOwner"><option value="">Any</option></select>
+      </div>
     </div>
-    <div class="field">
-      <label>Pregnancy Method</label>
-      <select id="advSearchMethod">
-        <option value="">Any</option>
-        <option value="ET">ET</option>
-        <option value="AI">AI</option>
-        <option value="BB">BB</option>
-      </select>
+    <div class="row2">
+      <div class="field">
+        <label>Group</label>
+        <select id="advSearchGroup"><option value="">Any</option></select>
+      </div>
+      <div class="field">
+        <label>Herd Season</label>
+        <select id="advSearchHerdSeason">
+          <option value="">Any</option>
+          <option value="Spring">Spring</option>
+          <option value="Fall">Fall</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-label">Breeding</div>
+    <div class="row2">
+      <div class="field">
+        <label>Bred To</label>
+        <select id="advSearchBredTo"><option value="">Any</option></select>
+      </div>
+      <div class="field">
+        <label>Pregnancy Method</label>
+        <select id="advSearchMethod">
+          <option value="">Any</option>
+          <option value="ET">ET</option>
+          <option value="AI">AI</option>
+          <option value="BB">BB</option>
+        </select>
+      </div>
     </div>
     <div class="field">
       <label>Natural Sire</label>
@@ -468,47 +499,53 @@
     </div>
 
     <div class="section-label">Meds &amp; Notes</div>
-    <div class="field">
-      <label>Medicine</label>
-      <select id="advSearchMedicine"><option value="">Any</option></select>
-    </div>
-    <div class="field">
-      <label>Reason</label>
-      <select id="advSearchReason"><option value="">Any</option></select>
+    <div class="row2">
+      <div class="field">
+        <label>Medicine</label>
+        <select id="advSearchMedicine"><option value="">Any</option></select>
+      </div>
+      <div class="field">
+        <label>Reason</label>
+        <select id="advSearchReason"><option value="">Any</option></select>
+      </div>
     </div>
 
     <div class="section-label">Calving</div>
-    <div class="field">
-      <label>Sire</label>
-      <select id="advSearchCalfSire"><option value="">Any</option></select>
+    <div class="row2">
+      <div class="field">
+        <label>Sire</label>
+        <select id="advSearchCalfSire"><option value="">Any</option></select>
+      </div>
+      <div class="field">
+        <label>Calf Sex</label>
+        <select id="advSearchCalfSex">
+          <option value="">Any</option>
+          <option value="B">Bull</option>
+          <option value="H">Heifer</option>
+        </select>
+      </div>
     </div>
-    <div class="field">
-      <label>Calf Sex</label>
-      <select id="advSearchCalfSex">
-        <option value="">Any</option>
-        <option value="B">Bull</option>
-        <option value="H">Heifer</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Birth Assist</label>
-      <select id="advSearchBirthAssist">
-        <option value="">Any</option>
-        <option value="None">None</option>
-        <option value="Easy Pull">Easy Pull</option>
-        <option value="Hard Pull">Hard Pull</option>
-        <option value="C-Section">C-Section</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Calf Outcome</label>
-      <select id="advSearchCalfOutcome">
-        <option value="">Any</option>
-        <option value="active">Still Active</option>
-        <option value="kept">Kept (Promoted)</option>
-        <option value="sold">Sold</option>
-        <option value="died">Died</option>
-      </select>
+    <div class="row2">
+      <div class="field">
+        <label>Birth Assist</label>
+        <select id="advSearchBirthAssist">
+          <option value="">Any</option>
+          <option value="None">None</option>
+          <option value="Easy Pull">Easy Pull</option>
+          <option value="Hard Pull">Hard Pull</option>
+          <option value="C-Section">C-Section</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Calf Outcome</label>
+        <select id="advSearchCalfOutcome">
+          <option value="">Any</option>
+          <option value="active">Still Active</option>
+          <option value="kept">Kept (Promoted)</option>
+          <option value="sold">Sold</option>
+          <option value="died">Died</option>
+        </select>
+      </div>
     </div>
 
     <div class="section-label">Date Range (optional)</div>
@@ -523,13 +560,15 @@
         <option value="all">Any</option>
       </select>
     </div>
-    <div class="field">
-      <label>From</label>
-      <input type="date" id="advSearchDateFrom"/>
-    </div>
-    <div class="field">
-      <label>To</label>
-      <input type="date" id="advSearchDateTo"/>
+    <div class="row2">
+      <div class="field">
+        <label>From</label>
+        <input type="date" id="advSearchDateFrom"/>
+      </div>
+      <div class="field">
+        <label>To</label>
+        <input type="date" id="advSearchDateTo"/>
+      </div>
     </div>
 
     <button class="btn btn-barn btn-full" id="runAdvancedSearchBtn" style="margin-bottom:8px;">Search</button>
@@ -6695,19 +6734,44 @@
     const medSel = document.getElementById('advSearchMedicine');
     const reasonSel = document.getElementById('advSearchReason');
     const calfSireSel = document.getElementById('advSearchCalfSire');
+    const locationSel = document.getElementById('advSearchLocation');
+    const ownerSel = document.getElementById('advSearchOwner');
+    const groupSel = document.getElementById('advSearchGroup');
     if(!bredToSel) return;
     const prev = {
-      bredTo: bredToSel.value, med: medSel.value, reason: reasonSel.value, calfSire: calfSireSel.value
+      bredTo: bredToSel.value, med: medSel.value, reason: reasonSel.value, calfSire: calfSireSel.value,
+      location: locationSel.value, owner: ownerSel.value, group: groupSel.value
     };
     const bullOptions = getBullOptionsWithExtras();
     bredToSel.innerHTML = '<option value="">Any</option>' + bullOptions.map(b=>`<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
     calfSireSel.innerHTML = '<option value="">Any</option>' + bullOptions.map(b=>`<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
     medSel.innerHTML = '<option value="">Any</option>' + getMedicineOptions().map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
     reasonSel.innerHTML = '<option value="">Any</option>' + getReasonOptions().map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
+
+    // Location, Owner, and Group also pick up any values actually in use
+    // on cows that aren't in the saved lists, so nobody gets hidden from search.
+    const usedLots = [...new Set(cows.map(c=>c.lot).filter(Boolean))];
+    const extraLots = usedLots.filter(l=>!getLocationOptions().includes(l)).sort();
+    const locationOptions = [...getLocationOptions(), ...extraLots];
+    locationSel.innerHTML = '<option value="">Any</option>' + locationOptions.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+
+    const usedOwners = [...new Set(cows.map(c=>c.owner).filter(Boolean))];
+    const extraOwners = usedOwners.filter(o=>!getOwnerOptions().includes(o)).sort();
+    const ownerOptions = [...getOwnerOptions(), ...extraOwners];
+    ownerSel.innerHTML = '<option value="">Any</option>' + ownerOptions.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+
+    const usedGroups = [...new Set(cows.map(c=>c.cow_group).filter(Boolean))];
+    const extraGroups = usedGroups.filter(g=>!getGroupOptions().includes(g)).sort();
+    const groupOptions = [...getGroupOptions(), ...extraGroups];
+    groupSel.innerHTML = '<option value="">Any</option>' + groupOptions.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+
     if([...bredToSel.options].some(o=>o.value===prev.bredTo)) bredToSel.value = prev.bredTo;
     if([...calfSireSel.options].some(o=>o.value===prev.calfSire)) calfSireSel.value = prev.calfSire;
     if([...medSel.options].some(o=>o.value===prev.med)) medSel.value = prev.med;
     if([...reasonSel.options].some(o=>o.value===prev.reason)) reasonSel.value = prev.reason;
+    if([...locationSel.options].some(o=>o.value===prev.location)) locationSel.value = prev.location;
+    if([...ownerSel.options].some(o=>o.value===prev.owner)) ownerSel.value = prev.owner;
+    if([...groupSel.options].some(o=>o.value===prev.group)) groupSel.value = prev.group;
   }
   function cowHasActivityInDateRange(num, fromStr, toStr){
     const dates = [
@@ -6721,6 +6785,10 @@
   }
   let lastAdvancedSearchEntries = []; // for print
   function runAdvancedSearch(){
+    const location = document.getElementById('advSearchLocation').value;
+    const owner = document.getElementById('advSearchOwner').value;
+    const group = document.getElementById('advSearchGroup').value;
+    const herdSeason = document.getElementById('advSearchHerdSeason').value;
     const bredTo = document.getElementById('advSearchBredTo').value;
     const method = document.getElementById('advSearchMethod').value;
     const naturalSire = document.getElementById('advSearchNaturalSire').value.trim().toLowerCase();
@@ -6770,6 +6838,10 @@
     }
 
     const results = cows.filter(c=>{
+      if(location && c.lot !== location) return false;
+      if(owner && c.owner !== owner) return false;
+      if(group && c.cow_group !== group) return false;
+      if(herdSeason && c.herd_season !== herdSeason) return false;
       if(breedingFieldsUsed && matchingBreedingRecords(c.number).length === 0) return false;
       if(medFieldsUsed && matchingMedRecords(c.number).length === 0) return false;
       if(calvingFieldsUsed && matchingCalvingRecords(c.number).length === 0) return false;
@@ -6896,6 +6968,10 @@
     fromEl.value = addDays(todayLocal(), -days).toISOString().slice(0,10);
   }
   function clearAdvancedSearch(){
+    document.getElementById('advSearchLocation').value = '';
+    document.getElementById('advSearchOwner').value = '';
+    document.getElementById('advSearchGroup').value = '';
+    document.getElementById('advSearchHerdSeason').value = '';
     document.getElementById('advSearchBredTo').value = '';
     document.getElementById('advSearchMethod').value = '';
     document.getElementById('advSearchNaturalSire').value = '';
