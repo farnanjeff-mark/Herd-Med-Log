@@ -272,6 +272,7 @@
         </div>
         <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#3C9142;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
         <button id="homeTodaysActivityBtn" class="btn btn-full" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;margin-top:20px;margin-bottom:12px;">📋 Today's Activity</button>
+        <button id="homeTodoListBtn" class="btn btn-full" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;margin-bottom:12px;">✅ To-Do List<span id="homeTodoCount"></span></button>
         <div style="display:flex;justify-content:center;gap:8px;padding-top:2px;">
           <div id="homeTagNeededWrap" class="hidden" style="width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1.5px solid #2E88C4;border-radius:10px;padding:8px 4px;cursor:pointer;">
             <span id="homeTagNeededBadge" style="font-size:30px;font-weight:700;color:#0C5A8E;line-height:1;">0</span>
@@ -1056,6 +1057,7 @@
   let herdTally = []; // [{id, location, cows, calves, bulls}]
   let hayingLog = []; // [{id, entry_date, location, mowed, raked, tedded, total_bales, notes}]
   let farmNotes = []; // [{id, note_date, note}]
+  let todos = []; // [{id, text, completed, created_at}]
   let lastFilteredProfileCows = [];
   let pendingProfileFilterOverride = null;
   let vetPregSessionEntries = []; // [{cowNum, daysAlong, dueDate, usedVetCheck}]
@@ -1171,7 +1173,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes, locationsRes, ownersRes, groupsRes, reasonsRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes, locationsRes, ownersRes, groupsRes, reasonsRes, todosRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -1192,7 +1194,8 @@
         api('/locations?select=*&order=name.asc', { method:'GET' }),
         api('/owners?select=*&order=name.asc', { method:'GET' }),
         api('/cow_groups?select=*&order=name.asc', { method:'GET' }),
-        api('/med_reasons?select=*&order=name.asc', { method:'GET' })
+        api('/med_reasons?select=*&order=name.asc', { method:'GET' }),
+        api('/todos?select=*&order=created_at.asc', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -1215,8 +1218,9 @@
       ownersList = ownersRes || [];
       groupsList = groupsRes || [];
       reasonsList = reasonsRes || [];
+      todos = todosRes || [];
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = []; locationsList = []; ownersList = []; groupsList = []; reasonsList = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = []; locationsList = []; ownersList = []; groupsList = []; reasonsList = []; todos = [];
     }
     renderBullsList();
     renderHayingFieldsList();
@@ -1247,6 +1251,7 @@
     updateTagNeededBadge();
     updateCalvedBadge();
     updateFlaggedBadge();
+    updateTodoCount();
   }
 
   function fmtDate(iso){
@@ -5569,6 +5574,7 @@
     runHomeQuickSearch();
   });
   document.getElementById('homeTodaysActivityBtn').addEventListener('click', todaysActivityModal);
+  document.getElementById('homeTodoListBtn').addEventListener('click', todoListModal);
   document.getElementById('quickActionHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeQuickSearchClearBtn').addEventListener('click', (e)=>{
     e.currentTarget.blur();
@@ -7533,6 +7539,107 @@
     refresh();
     modal.querySelector('#todaysActivityTimeframe').addEventListener('change', refresh);
     modal.querySelector('#closeTodaysActivityBtn').addEventListener('click', closeModal);
+  }
+
+  function updateTodoCount(){
+    const el = document.getElementById('homeTodoCount');
+    if(!el) return;
+    const open = todos.filter(t=>!t.completed).length;
+    el.textContent = open > 0 ? ' (' + open + ')' : '';
+  }
+
+  async function addTodo(text){
+    try{
+      const inserted = await api('/todos', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ text })
+      });
+      todos.push(inserted[0]);
+      updateTodoCount();
+    }catch(e){ showToast('Could not save — try again'); }
+  }
+
+  async function toggleTodo(id, completed){
+    try{
+      const updated = await api('/todos?id=eq.' + encodeURIComponent(id), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ completed })
+      });
+      const idx = todos.findIndex(t=>t.id===id);
+      if(idx !== -1) todos[idx] = updated[0];
+      updateTodoCount();
+    }catch(e){ showToast('Could not save — try again'); }
+  }
+
+  async function deleteTodo(id){
+    try{
+      await api('/todos?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      todos = todos.filter(t=>t.id!==id);
+      updateTodoCount();
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  function todoListModal(){
+    const modal = openModal(`
+      <div class="modal-title">To-Do List</div>
+      <div class="field" style="display:flex;gap:8px;align-items:flex-end;">
+        <div style="flex:1;">
+          <label>New Item</label>
+          <input type="text" id="newTodoText" placeholder="e.g. Order ear tags" autocomplete="off"/>
+        </div>
+        <button class="btn btn-barn" id="addTodoBtn" style="padding:12px 18px;white-space:nowrap;">Add</button>
+      </div>
+      <div id="todoListItems" style="max-height:50vh;overflow-y:auto;margin-top:14px;margin-bottom:14px;"></div>
+      <div id="todoEmptyState" class="empty hidden">No to-do items yet.</div>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeTodoListBtn">Close</button>
+      </div>
+    `);
+    function refresh(){
+      const listEl = modal.querySelector('#todoListItems');
+      const emptyEl = modal.querySelector('#todoEmptyState');
+      emptyEl.classList.toggle('hidden', todos.length !== 0);
+      const sorted = [...todos].sort((a,b)=>{
+        if(a.completed !== b.completed) return a.completed ? 1 : -1;
+        return (a.created_at||'').localeCompare(b.created_at||'');
+      });
+      listEl.innerHTML = sorted.map(t=>`
+        <div class="record" style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <input type="checkbox" class="todo-check rc-check" data-id="${t.id}" ${t.completed ? 'checked' : ''} title="Completed" style="--rc-color:#3C9142;flex-shrink:0;"/>
+          <span style="flex:1;font-family:Arial,sans-serif;font-size:15px;${t.completed ? 'text-decoration:line-through;color:#a08f6b;' : 'color:var(--ink);'}">${escapeHtml(t.text)}</span>
+          <button class="record-del" data-id="${t.id}" title="Delete" style="position:static;">&times;</button>
+        </div>
+      `).join('');
+      listEl.querySelectorAll('.todo-check').forEach(cb=>{
+        cb.addEventListener('change', async ()=>{
+          await toggleTodo(cb.dataset.id, cb.checked);
+          refresh();
+        });
+      });
+      listEl.querySelectorAll('.record-del').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          await deleteTodo(btn.dataset.id);
+          refresh();
+        });
+      });
+    }
+    refresh();
+    async function submitNewTodo(){
+      const input = modal.querySelector('#newTodoText');
+      const text = input.value.trim();
+      if(!text) return;
+      input.value = '';
+      await addTodo(text);
+      refresh();
+      input.focus();
+    }
+    modal.querySelector('#addTodoBtn').addEventListener('click', submitNewTodo);
+    modal.querySelector('#newTodoText').addEventListener('keydown', e=>{
+      if(e.key === 'Enter'){ e.preventDefault(); submitNewTodo(); }
+    });
+    modal.querySelector('#closeTodoListBtn').addEventListener('click', closeModal);
   }
 
   function bulkEditModal(){
