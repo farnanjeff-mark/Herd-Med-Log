@@ -6567,18 +6567,19 @@
     }catch(e){ showToast('Could not remove — try again'); }
   }
 
-  async function saveBillSettings(farmName, farmAddress){
+  async function saveBillSettings(farmName, street, cityState, zip){
     try{
+      const payload = { farm_name: farmName||null, address_street: street||null, address_city_state: cityState||null, address_zip: zip||null };
       if(hayingBillSettings && hayingBillSettings.id){
         const updated = await api('/haying_bill_settings?id=eq.' + encodeURIComponent(hayingBillSettings.id), {
           method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ farm_name: farmName||null, farm_address: farmAddress||null })
+          body: JSON.stringify(payload)
         });
         hayingBillSettings = updated[0];
       } else {
         const inserted = await api('/haying_bill_settings', {
           method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ farm_name: farmName||null, farm_address: farmAddress||null })
+          body: JSON.stringify(payload)
         });
         hayingBillSettings = inserted[0];
       }
@@ -6613,12 +6614,17 @@
         <span>${label} rate</span><span>$${Number(val).toFixed(2)}${unit}</span>
       </div>
     `).join('');
+    const hasSplitAddress = bill.address_street || bill.address_city_state || bill.address_zip;
     document.getElementById('printListOutput').innerHTML = `
       <div style="padding:32px;font-family:Georgia,'Iowan Old Style',serif;color:#2B2620;max-width:600px;margin:0 auto;">
         <div style="text-align:center;border-bottom:3px solid #2B2620;padding-bottom:16px;margin-bottom:20px;">
-          <div style="font-family:Arial,sans-serif;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#7A2E27;margin:0 0 4px;">${escapeHtml(bill.farm_name||'')}</div>
-          ${bill.farm_address ? `<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;">${escapeHtml(bill.farm_address)}</div>` : ''}
-          <h2 style="margin:8px 0 0;font-weight:500;">Haying Bill</h2>
+          <div style="font-family:Arial,sans-serif;font-size:24px;font-weight:500;color:#7A2E27;margin:0 0 6px;">${escapeHtml(bill.farm_name||'')}</div>
+          ${hasSplitAddress ? `
+            ${bill.address_street ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:#2B2620;">${escapeHtml(bill.address_street)}</div>` : ''}
+            ${bill.address_city_state ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:#2B2620;">${escapeHtml(bill.address_city_state)}</div>` : ''}
+            ${bill.address_zip ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:#2B2620;">${escapeHtml(bill.address_zip)}</div>` : ''}
+          ` : (bill.farm_address ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:#2B2620;">${escapeHtml(bill.farm_address)}</div>` : '')}
+          <h2 style="margin:10px 0 0;font-weight:500;font-size:24px;">Haying Bill</h2>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:20px;font-size:14px;">
           <div>
@@ -6692,8 +6698,16 @@
           <input type="text" id="billFarmName" value="${escapeHtml((hayingBillSettings && hayingBillSettings.farm_name) || '')}"/>
         </div>
         <div class="field">
-          <label>Farm Address (optional)</label>
-          <input type="text" id="billFarmAddress" value="${escapeHtml((hayingBillSettings && hayingBillSettings.farm_address) || '')}"/>
+          <label>Street Address (optional)</label>
+          <input type="text" id="billFarmStreet" value="${escapeHtml((hayingBillSettings && hayingBillSettings.address_street) || '')}"/>
+        </div>
+        <div class="field">
+          <label>City, State (optional)</label>
+          <input type="text" id="billFarmCityState" value="${escapeHtml((hayingBillSettings && hayingBillSettings.address_city_state) || '')}"/>
+        </div>
+        <div class="field">
+          <label>Zip (optional)</label>
+          <input type="text" id="billFarmZip" value="${escapeHtml((hayingBillSettings && hayingBillSettings.address_zip) || '')}"/>
         </div>
         <div class="field">
           <label>Rates</label>
@@ -6784,7 +6798,9 @@
         const teddedRate = parseFloat(bodyEl.querySelector('#billTeddedRate').value) || 0;
         if(baleRate <= 0 && mowRate <= 0 && rakeRate <= 0 && teddedRate <= 0){ showToast('Enter at least one rate'); return; }
         const farmName = bodyEl.querySelector('#billFarmName').value.trim();
-        const farmAddress = bodyEl.querySelector('#billFarmAddress').value.trim();
+        const farmStreet = bodyEl.querySelector('#billFarmStreet').value.trim();
+        const farmCityState = bodyEl.querySelector('#billFarmCityState').value.trim();
+        const farmZip = bodyEl.querySelector('#billFarmZip').value.trim();
         const billDate = bodyEl.querySelector('#billDate').value;
         if(!billDate){ showToast('Bill date is required'); return; }
         const checkedIds = [...itemsEl.querySelectorAll('.bill-item-check:checked')].map(cb=>cb.dataset.id);
@@ -6808,7 +6824,8 @@
           const inserted = await api('/haying_bills', {
             method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
             body: JSON.stringify({
-              customer, bill_date: billDate, farm_name: farmName||null, farm_address: farmAddress||null,
+              customer, bill_date: billDate, farm_name: farmName||null,
+              address_street: farmStreet||null, address_city_state: farmCityState||null, address_zip: farmZip||null,
               rate_per_bale: baleRate, mow_rate: mowRate, rake_rate: rakeRate, tedded_rate: teddedRate,
               total_bales: totalBales, total_amount: totalAmount, line_items: lineItems
             })
@@ -6822,7 +6839,7 @@
             const idx = hayingLog.findIndex(h=>h.id===id);
             if(idx !== -1) hayingLog[idx] = Object.assign({}, hayingLog[idx], { billed_at: bill.created_at, bill_id: bill.id });
           });
-          await saveBillSettings(farmName, farmAddress);
+          await saveBillSettings(farmName, farmStreet, farmCityState, farmZip);
           renderHayingList();
           closeModal();
           printHayingBill(bill);
