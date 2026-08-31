@@ -598,6 +598,8 @@
     <button class="btn btn-outline btn-full" id="farmOperationsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
     <button class="btn btn-nav-tool btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
     <button class="btn btn-nav-tool btn-full" id="homeHayingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Haying</button>
+    <button class="btn btn-nav-tool btn-full" id="homeBillCustomerBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🧾</span>&nbsp;&nbsp;Bill Customer</button>
+    <button class="btn btn-nav-tool btn-full" id="homeBillHistoryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📜</span>&nbsp;&nbsp;Bill History</button>
     <button class="btn btn-nav-tool btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
     <button class="btn btn-nav-tool btn-full" id="homeFarmNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;Farm Notes</button>
     <button class="btn btn-nav-tool btn-full" id="homeLoanCalcBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">💰</span>&nbsp;&nbsp;Loan Calculator</button>
@@ -1061,6 +1063,9 @@
   let hayingLog = []; // [{id, entry_date, location, mowed, raked, tedded, total_bales, notes}]
   let farmNotes = []; // [{id, note_date, note}]
   let todos = []; // [{id, text, completed, created_at}]
+  let hayingCustomers = []; // [{id, name}]
+  let hayingBills = []; // [{id, customer, bill_date, farm_name, farm_address, rate_per_bale, total_bales, total_amount, line_items, created_at}]
+  let hayingBillSettings = null; // {id, farm_name, farm_address} or null
   let lastFilteredProfileCows = [];
   let pendingProfileFilterOverride = null;
   let vetPregSessionEntries = []; // [{cowNum, daysAlong, dueDate, usedVetCheck}]
@@ -1176,7 +1181,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes, locationsRes, ownersRes, groupsRes, reasonsRes, todosRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes, locationsRes, ownersRes, groupsRes, reasonsRes, todosRes, hayingCustomersRes, hayingBillsRes, hayingBillSettingsRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -1198,7 +1203,10 @@
         api('/owners?select=*&order=name.asc', { method:'GET' }),
         api('/cow_groups?select=*&order=name.asc', { method:'GET' }),
         api('/med_reasons?select=*&order=name.asc', { method:'GET' }),
-        api('/todos?select=*&order=created_at.asc', { method:'GET' })
+        api('/todos?select=*&order=created_at.asc', { method:'GET' }),
+        api('/haying_customers?select=*&order=name.asc', { method:'GET' }),
+        api('/haying_bills?select=*&order=created_at.desc', { method:'GET' }),
+        api('/haying_bill_settings?select=*&limit=1', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -1222,8 +1230,11 @@
       groupsList = groupsRes || [];
       reasonsList = reasonsRes || [];
       todos = todosRes || [];
+      hayingCustomers = hayingCustomersRes || [];
+      hayingBills = hayingBillsRes || [];
+      hayingBillSettings = (hayingBillSettingsRes && hayingBillSettingsRes[0]) || null;
     }catch(e){
-      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = []; locationsList = []; ownersList = []; groupsList = []; reasonsList = []; todos = [];
+      cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = []; locationsList = []; ownersList = []; groupsList = []; reasonsList = []; todos = []; hayingCustomers = []; hayingBills = []; hayingBillSettings = null;
     }
     renderBullsList();
     renderHayingFieldsList();
@@ -5600,6 +5611,8 @@
   document.getElementById('herdTallyHomeBtn').addEventListener('click', showHome);
   document.getElementById('addHerdTallyLocationBtn').addEventListener('click', addHerdTallyLocationModal);
   document.getElementById('homeHayingBtn').addEventListener('click', showHaying);
+  document.getElementById('homeBillCustomerBtn').addEventListener('click', billCustomerModal);
+  document.getElementById('homeBillHistoryBtn').addEventListener('click', billHistoryModal);
   document.getElementById('hayingHomeBtn').addEventListener('click', showHome);
   document.getElementById('addHayingBtn').addEventListener('click', ()=> hayingModal(null));
   document.getElementById('homeFarmNotesBtn').addEventListener('click', showFarmNotes);
@@ -6393,6 +6406,24 @@
       console.error('Could not save new haying field name', e);
     }
   }
+  function getHayingCustomerOptions(){
+    return hayingCustomers.map(c=>c.name);
+  }
+  async function addHayingCustomerIfNew(name){
+    if(!name) return;
+    if(hayingCustomers.some(c=>c.name===name)) return;
+    try{
+      const inserted = await api('/haying_customers', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ name })
+      });
+      hayingCustomers.push(inserted[0]);
+      hayingCustomers.sort((a,b)=>a.name.localeCompare(b.name));
+    }catch(e){
+      console.error('Could not save new customer name', e);
+    }
+  }
   function renderHayingList(){
     const listEl = document.getElementById('hayingList');
     const emptyEl = document.getElementById('hayingEmptyState');
@@ -6426,7 +6457,7 @@
         <button class="record-del" data-id="${h.id}">&times;</button>
         <button class="record-edit" data-id="${h.id}">&#9998;</button>
         <div class="record-date">${fmtDate(h.entry_date)}</div>
-        <div class="record-med">${escapeHtml(h.location)}</div>
+        <div class="record-med">${escapeHtml(h.location)}${h.customer ? ' · <span style="color:#7A2E27;">'+escapeHtml(h.customer)+'</span>' : ''}${h.billed_at ? ' · <span style="color:#455B3D;font-weight:700;">Billed</span>' : ''}</div>
         <div class="record-reason">${[tasks.join(', '), h.total_bales!=null ? h.total_bales + ' bales' : null].filter(Boolean).join(' · ')}</div>
         ${h.notes ? `<div class="record-notes">${escapeHtml(h.notes)}</div>` : ''}
       `;
@@ -6446,6 +6477,7 @@
         <input type="date" id="hayDate" value="${isEdit ? existingRecord.entry_date : today}"/>
       </div>
       ${fieldWithOther('hayLocation', 'Location', getHayingFieldOptions(), 'Type location')}
+      ${fieldWithOther('hayCustomer', 'Customer (optional, for custom work)', getHayingCustomerOptions(), 'Type customer name')}
       <div class="field">
         <label>Tasks Done</label>
         <div style="display:flex;gap:14px;margin-top:4px;">
@@ -6462,26 +6494,32 @@
         <label>Notes</label>
         <textarea id="hayNotes" rows="2">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
       </div>
+      ${isEdit && existingRecord.billed_at ? '<p style="font-family:Arial,sans-serif;font-size:13px;color:#455B3D;margin:0 0 10px;">This entry has been included on a bill. Editing or deleting it won\'t change that bill\'s record.</p>' : ''}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelHaying">Cancel</button>
         <button class="btn btn-barn" id="confirmHaying">Save</button>
       </div>
     `);
     wireFieldWithOther(modal, 'hayLocation');
+    wireFieldWithOther(modal, 'hayCustomer');
     if(isEdit && existingRecord.location) prefillFieldWithOther(modal, 'hayLocation', existingRecord.location, getHayingFieldOptions());
+    if(isEdit && existingRecord.customer) prefillFieldWithOther(modal, 'hayCustomer', existingRecord.customer, getHayingCustomerOptions());
     modal.querySelector('#cancelHaying').addEventListener('click', closeModal);
     modal.querySelector('#confirmHaying').addEventListener('click', async ()=>{
       const dateVal = modal.querySelector('#hayDate').value;
       const location = valueOf(modal, 'hayLocation');
+      const customer = valueOf(modal, 'hayCustomer');
       if(!dateVal){ showToast('Date is required'); return; }
       if(!location){ showToast('Location is required'); return; }
       const btn = modal.querySelector('#confirmHaying');
       btn.disabled = true;
       await addHayingFieldIfNew(location);
+      if(customer) await addHayingCustomerIfNew(customer);
       const balesRaw = modal.querySelector('#hayBales').value;
       const body = {
         entry_date: dateVal,
         location: location,
+        customer: customer || null,
         mowed: modal.querySelector('#hayMowed').checked,
         raked: modal.querySelector('#hayRaked').checked,
         tedded: modal.querySelector('#hayTedded').checked,
@@ -6511,12 +6549,337 @@
     });
   }
   async function deleteHayingEntry(id){
-    if(!confirm('Remove this haying entry?')) return;
+    const record = hayingLog.find(h=>h.id===id);
+    const message = record && record.billed_at
+      ? 'This entry has already been billed. Deleting it will not change any bill you\'ve already generated, but it will be permanently removed from your haying log. Continue?'
+      : 'Remove this haying entry?';
+    if(!confirm(message)) return;
     try{
       await api('/haying_log?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       hayingLog = hayingLog.filter(h=>h.id!==id);
       renderHayingList();
     }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  async function saveBillSettings(farmName, farmAddress){
+    try{
+      if(hayingBillSettings && hayingBillSettings.id){
+        const updated = await api('/haying_bill_settings?id=eq.' + encodeURIComponent(hayingBillSettings.id), {
+          method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ farm_name: farmName||null, farm_address: farmAddress||null })
+        });
+        hayingBillSettings = updated[0];
+      } else {
+        const inserted = await api('/haying_bill_settings', {
+          method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ farm_name: farmName||null, farm_address: farmAddress||null })
+        });
+        hayingBillSettings = inserted[0];
+      }
+    }catch(e){ console.error('Could not save farm billing info', e); }
+  }
+
+  function unbilledCustomers(){
+    const set = new Set();
+    hayingLog.forEach(h=>{ if(h.customer && !h.billed_at) set.add(h.customer); });
+    return [...set].sort((a,b)=>a.localeCompare(b));
+  }
+
+  function printHayingBill(bill){
+    const li = bill.line_items || [];
+    const rowsHtml = li.map(item=>`
+      <tr style="border-bottom:0.5px solid #c9bfa4;">
+        <td style="padding:8px 4px;">${fmtDateShort(item.date)}</td>
+        <td style="padding:8px 4px;">${escapeHtml(item.location||'')}</td>
+        <td style="padding:8px 4px;">${escapeHtml(item.tasks||'')}</td>
+        <td style="padding:8px 4px;text-align:right;">${item.bales}</td>
+        <td style="padding:8px 4px;text-align:right;">$${Number(item.amount||0).toFixed(2)}</td>
+      </tr>
+    `).join('');
+    const rateLines = [];
+    if(Number(bill.rate_per_bale) > 0) rateLines.push(['Baling', bill.rate_per_bale]);
+    if(Number(bill.mow_rate) > 0) rateLines.push(['Mowing', bill.mow_rate]);
+    if(Number(bill.rake_rate) > 0) rateLines.push(['Raking', bill.rake_rate]);
+    if(Number(bill.tedded_rate) > 0) rateLines.push(['Tedding', bill.tedded_rate]);
+    const rateLinesHtml = rateLines.map(([label, val])=>`
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6350;font-family:Arial,sans-serif;margin-bottom:4px;">
+        <span>${label} rate (per bale)</span><span>$${Number(val).toFixed(2)}</span>
+      </div>
+    `).join('');
+    document.getElementById('printListOutput').innerHTML = `
+      <div style="padding:32px;font-family:Georgia,'Iowan Old Style',serif;color:#2B2620;max-width:600px;margin:0 auto;">
+        <div style="text-align:center;border-bottom:3px solid #2B2620;padding-bottom:16px;margin-bottom:20px;">
+          <div style="font-family:Arial,sans-serif;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#7A2E27;margin:0 0 4px;">${escapeHtml(bill.farm_name||'')}</div>
+          ${bill.farm_address ? `<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;">${escapeHtml(bill.farm_address)}</div>` : ''}
+          <h2 style="margin:8px 0 0;font-weight:500;">Haying Bill</h2>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:20px;font-size:14px;">
+          <div>
+            <div style="color:#6b6350;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Billed to</div>
+            <div style="font-size:16px;margin-top:2px;">${escapeHtml(bill.customer)}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="color:#6b6350;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Bill date</div>
+            <div style="font-size:16px;margin-top:2px;">${fmtDate(bill.bill_date)}</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:16px;">
+          <thead>
+            <tr style="border-bottom:1.5px solid #2B2620;">
+              <th style="text-align:left;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Date</th>
+              <th style="text-align:left;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Field</th>
+              <th style="text-align:left;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Tasks</th>
+              <th style="text-align:right;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Bales</th>
+              <th style="text-align:right;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6350;font-family:Arial,sans-serif;margin-bottom:6px;">
+          <span>Total bales</span><span>${bill.total_bales}</span>
+        </div>
+        ${rateLinesHtml}
+        <div style="margin-bottom:8px;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:3px solid #2B2620;padding-top:14px;">
+          <span style="font-family:Arial,sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:.05em;">Total due</span>
+          <span style="font-size:26px;font-weight:700;">$${Number(bill.total_amount).toFixed(2)}</span>
+        </div>
+      </div>
+    `;
+    document.body.classList.add('printing-list');
+    requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
+  }
+
+  function billCustomerModal(){
+    const customers = unbilledCustomers();
+    const modal = openModal(`
+      <div class="modal-title">Bill Customer</div>
+      ${customers.length===0 ? '<p class="empty">No unbilled custom haying work found. Add a customer name on a haying entry first.</p>' : `
+        <div class="field">
+          <label>Customer</label>
+          <select id="billCustomerSelect">
+            <option value="">Select a customer...</option>
+            ${customers.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
+          </select>
+        </div>
+      `}
+      <div id="billCustomerBody"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline btn-full" id="closeBillCustomerBtn">Close</button>
+      </div>
+    `);
+    modal.querySelector('#closeBillCustomerBtn').addEventListener('click', closeModal);
+    if(customers.length===0) return;
+    const selectEl = modal.querySelector('#billCustomerSelect');
+    const bodyEl = modal.querySelector('#billCustomerBody');
+
+    function renderBillBody(customer){
+      if(!customer){ bodyEl.innerHTML = ''; return; }
+      const entries = hayingLog
+        .filter(h=> h.customer===customer && !h.billed_at)
+        .sort((a,b)=> a.entry_date.localeCompare(b.entry_date));
+      bodyEl.innerHTML = `
+        <div class="field">
+          <label>Farm Name</label>
+          <input type="text" id="billFarmName" value="${escapeHtml((hayingBillSettings && hayingBillSettings.farm_name) || '')}"/>
+        </div>
+        <div class="field">
+          <label>Farm Address (optional)</label>
+          <input type="text" id="billFarmAddress" value="${escapeHtml((hayingBillSettings && hayingBillSettings.farm_address) || '')}"/>
+        </div>
+        <div class="field">
+          <label>Rates (per bale)</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+            <div>
+              <label style="font-size:12px;color:#6b6350;">Baling ($)</label>
+              <input type="number" id="billBaleRate" min="0" step="0.01" placeholder="0.00"/>
+            </div>
+            <div>
+              <label style="font-size:12px;color:#6b6350;">Mowing ($)</label>
+              <input type="number" id="billMowRate" min="0" step="0.01" placeholder="0.00"/>
+            </div>
+            <div>
+              <label style="font-size:12px;color:#6b6350;">Raking ($)</label>
+              <input type="number" id="billRakeRate" min="0" step="0.01" placeholder="0.00"/>
+            </div>
+            <div>
+              <label style="font-size:12px;color:#6b6350;">Tedding ($)</label>
+              <input type="number" id="billTeddedRate" min="0" step="0.01" placeholder="0.00"/>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Bill Date</label>
+          <input type="date" id="billDate" value="${todayLocal()}"/>
+        </div>
+        <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin:10px 0 4px;">Unbilled Work (uncheck to exclude)</div>
+        <div id="billLineItems" style="max-height:40vh;overflow-y:auto;margin-bottom:10px;"></div>
+        <div style="display:flex;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;font-size:16px;border-top:2px solid var(--ink);padding-top:10px;margin-bottom:14px;">
+          <span>Total</span><span id="billTotalAmount">$0.00</span>
+        </div>
+        <button class="btn btn-barn btn-full" id="generateBillBtn">Generate Bill</button>
+      `;
+      const itemsEl = bodyEl.querySelector('#billLineItems');
+      itemsEl.innerHTML = entries.map(h=>{
+        const tasks = [];
+        if(h.mowed) tasks.push('Mowed');
+        if(h.raked) tasks.push('Raked');
+        if(h.tedded) tasks.push('Tedded');
+        return `
+          <div class="record" style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+            <input type="checkbox" class="bill-item-check rc-check" data-id="${h.id}" checked style="--rc-color:#3C9142;flex-shrink:0;"/>
+            <div style="flex:1;font-family:Arial,sans-serif;font-size:14px;">
+              <div>${fmtDate(h.entry_date)} · ${escapeHtml(h.location)}</div>
+              <div style="color:#6b6350;font-size:12px;">${[tasks.join(', '), (h.total_bales!=null ? h.total_bales+' bales' : '0 bales')].filter(Boolean).join(' · ')}</div>
+            </div>
+            <div class="bill-item-amount" data-id="${h.id}" style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;min-width:60px;text-align:right;">$0.00</div>
+          </div>
+        `;
+      }).join('');
+      function amountFor(rec, baleRate, mowRate, rakeRate, teddedRate){
+        const bales = rec.total_bales || 0;
+        let perBale = baleRate;
+        if(rec.mowed) perBale += mowRate;
+        if(rec.raked) perBale += rakeRate;
+        if(rec.tedded) perBale += teddedRate;
+        return bales * perBale;
+      }
+      function recalc(){
+        const baleRate = parseFloat(bodyEl.querySelector('#billBaleRate').value) || 0;
+        const mowRate = parseFloat(bodyEl.querySelector('#billMowRate').value) || 0;
+        const rakeRate = parseFloat(bodyEl.querySelector('#billRakeRate').value) || 0;
+        const teddedRate = parseFloat(bodyEl.querySelector('#billTeddedRate').value) || 0;
+        let total = 0;
+        entries.forEach(rec=>{
+          const amt = amountFor(rec, baleRate, mowRate, rakeRate, teddedRate);
+          const amtEl = itemsEl.querySelector('.bill-item-amount[data-id="'+rec.id+'"]');
+          if(amtEl) amtEl.textContent = '$' + amt.toFixed(2);
+        });
+        itemsEl.querySelectorAll('.bill-item-check:checked').forEach(cb=>{
+          const rec = entries.find(e=>e.id===cb.dataset.id);
+          if(rec) total += amountFor(rec, baleRate, mowRate, rakeRate, teddedRate);
+        });
+        bodyEl.querySelector('#billTotalAmount').textContent = '$' + total.toFixed(2);
+      }
+      itemsEl.querySelectorAll('.bill-item-check').forEach(cb=> cb.addEventListener('change', recalc));
+      ['#billBaleRate','#billMowRate','#billRakeRate','#billTeddedRate'].forEach(sel=>{
+        bodyEl.querySelector(sel).addEventListener('input', recalc);
+      });
+      recalc();
+
+      bodyEl.querySelector('#generateBillBtn').addEventListener('click', async ()=>{
+        const baleRate = parseFloat(bodyEl.querySelector('#billBaleRate').value) || 0;
+        const mowRate = parseFloat(bodyEl.querySelector('#billMowRate').value) || 0;
+        const rakeRate = parseFloat(bodyEl.querySelector('#billRakeRate').value) || 0;
+        const teddedRate = parseFloat(bodyEl.querySelector('#billTeddedRate').value) || 0;
+        if(baleRate <= 0 && mowRate <= 0 && rakeRate <= 0 && teddedRate <= 0){ showToast('Enter at least one rate'); return; }
+        const farmName = bodyEl.querySelector('#billFarmName').value.trim();
+        const farmAddress = bodyEl.querySelector('#billFarmAddress').value.trim();
+        const billDate = bodyEl.querySelector('#billDate').value;
+        if(!billDate){ showToast('Bill date is required'); return; }
+        const checkedIds = [...itemsEl.querySelectorAll('.bill-item-check:checked')].map(cb=>cb.dataset.id);
+        if(checkedIds.length === 0){ showToast('Select at least one entry to bill'); return; }
+        const selectedEntries = entries.filter(e=> checkedIds.includes(e.id));
+        const lineItems = selectedEntries.map(e=>{
+          const tasks = [];
+          if(e.mowed) tasks.push('Mowed');
+          if(e.raked) tasks.push('Raked');
+          if(e.tedded) tasks.push('Tedded');
+          const bales = e.total_bales || 0;
+          const amount = Math.round(amountFor(e, baleRate, mowRate, rakeRate, teddedRate) * 100) / 100;
+          return { date: e.entry_date, location: e.location, tasks: tasks.join(', '), mowed: !!e.mowed, raked: !!e.raked, tedded: !!e.tedded, bales, amount };
+        });
+        const totalBales = lineItems.reduce((s,li)=> s+li.bales, 0);
+        const totalAmount = Math.round(lineItems.reduce((s,li)=> s+li.amount, 0) * 100) / 100;
+        const btn = bodyEl.querySelector('#generateBillBtn');
+        btn.disabled = true;
+        try{
+          const inserted = await api('/haying_bills', {
+            method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify({
+              customer, bill_date: billDate, farm_name: farmName||null, farm_address: farmAddress||null,
+              rate_per_bale: baleRate, mow_rate: mowRate, rake_rate: rakeRate, tedded_rate: teddedRate,
+              total_bales: totalBales, total_amount: totalAmount, line_items: lineItems
+            })
+          });
+          const bill = inserted[0];
+          hayingBills.unshift(bill);
+          await api('/haying_log?id=in.(' + checkedIds.map(id=>encodeURIComponent(id)).join(',') + ')', {
+            method:'PATCH', headers: HEADERS, body: JSON.stringify({ billed_at: bill.created_at, bill_id: bill.id })
+          });
+          checkedIds.forEach(id=>{
+            const idx = hayingLog.findIndex(h=>h.id===id);
+            if(idx !== -1) hayingLog[idx] = Object.assign({}, hayingLog[idx], { billed_at: bill.created_at, bill_id: bill.id });
+          });
+          await saveBillSettings(farmName, farmAddress);
+          renderHayingList();
+          closeModal();
+          printHayingBill(bill);
+        }catch(e){ showToast('Could not generate bill — try again'); btn.disabled = false; }
+      });
+    }
+
+    selectEl.addEventListener('change', ()=> renderBillBody(selectEl.value));
+  }
+
+  function billHistoryModal(){
+    const modal = openModal(`
+      <div class="modal-title">Bill History</div>
+      <div id="billHistoryList" style="max-height:60vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeBillHistoryBtn">Close</button>
+      </div>
+    `);
+    const listEl = modal.querySelector('#billHistoryList');
+    function refresh(){
+      if(hayingBills.length === 0){
+        listEl.innerHTML = '<p class="empty">No bills generated yet.</p>';
+        return;
+      }
+      listEl.innerHTML = hayingBills.map(b=>`
+        <div class="record" style="padding:12px 14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div>
+              <div style="font-weight:700;">${escapeHtml(b.customer)}</div>
+              <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;">${fmtDate(b.bill_date)} · ${b.total_bales} bales</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="font-weight:700;font-size:16px;">$${Number(b.total_amount).toFixed(2)}</div>
+              <button class="btn btn-outline reprint-bill-btn" data-id="${b.id}" style="padding:8px 12px;font-size:13px;">Reprint</button>
+              <button class="record-del delete-bill-btn" data-id="${b.id}" title="Delete" style="position:static;">&times;</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      listEl.querySelectorAll('.reprint-bill-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const bill = hayingBills.find(b=>b.id===btn.dataset.id);
+          if(bill){ closeModal(); printHayingBill(bill); }
+        });
+      });
+      listEl.querySelectorAll('.delete-bill-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=> deleteHayingBill(btn.dataset.id, refresh));
+      });
+    }
+    refresh();
+    modal.querySelector('#closeBillHistoryBtn').addEventListener('click', closeModal);
+  }
+
+  async function deleteHayingBill(id, onDone){
+    const bill = hayingBills.find(b=>b.id===id);
+    if(!bill) return;
+    if(!confirm('Delete this bill for ' + bill.customer + '? Its haying entries will go back to being unbilled so you can bill them correctly.')) return;
+    try{
+      await api('/haying_log?bill_id=eq.' + encodeURIComponent(id), {
+        method:'PATCH', headers: HEADERS, body: JSON.stringify({ billed_at: null, bill_id: null })
+      });
+      await api('/haying_bills?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      hayingLog = hayingLog.map(h=> h.bill_id===id ? Object.assign({}, h, { billed_at:null, bill_id:null }) : h);
+      hayingBills = hayingBills.filter(b=>b.id!==id);
+      renderHayingList();
+      showToast('Bill removed');
+      if(onDone) onDone();
+    }catch(e){ showToast('Could not remove bill — try again'); }
   }
 
   function renderFarmNotesList(){
