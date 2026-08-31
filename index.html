@@ -6620,10 +6620,10 @@
         <div style="text-align:center;border-bottom:3px solid #2B2620;padding-bottom:16px;margin-bottom:20px;">
           <div style="font-family:Arial,sans-serif;font-size:24px;font-weight:500;color:#7A2E27;margin:0 0 6px;">${escapeHtml(bill.farm_name||'')}</div>
           ${hasSplitAddress ? `
-            ${bill.address_street ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:#2B2620;">${escapeHtml(bill.address_street)}</div>` : ''}
-            ${bill.address_city_state ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:#2B2620;">${escapeHtml(bill.address_city_state)}</div>` : ''}
-            ${bill.address_zip ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:#2B2620;">${escapeHtml(bill.address_zip)}</div>` : ''}
-          ` : (bill.farm_address ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:#2B2620;">${escapeHtml(bill.farm_address)}</div>` : '')}
+            ${bill.address_street ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:400;color:#2B2620;">${escapeHtml(bill.address_street)}</div>` : ''}
+            ${bill.address_city_state ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:400;color:#2B2620;">${escapeHtml(bill.address_city_state)}</div>` : ''}
+            ${bill.address_zip ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:400;color:#2B2620;">${escapeHtml(bill.address_zip)}</div>` : ''}
+          ` : (bill.farm_address ? `<div style="font-family:Arial,sans-serif;font-size:18px;font-weight:400;color:#2B2620;">${escapeHtml(bill.farm_address)}</div>` : '')}
           <h2 style="margin:10px 0 0;font-weight:500;font-size:24px;">Haying Bill</h2>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:20px;font-size:14px;">
