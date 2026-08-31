@@ -6458,7 +6458,7 @@
         <button class="record-edit" data-id="${h.id}">&#9998;</button>
         <div class="record-date">${fmtDate(h.entry_date)}</div>
         <div class="record-med">${escapeHtml(h.location)}${h.customer ? ' · <span style="color:#7A2E27;">'+escapeHtml(h.customer)+'</span>' : ''}${h.billed_at ? ' · <span style="color:#455B3D;font-weight:700;">Billed</span>' : ''}</div>
-        <div class="record-reason">${[tasks.join(', '), h.total_bales!=null ? h.total_bales + ' bales' : null].filter(Boolean).join(' · ')}</div>
+        <div class="record-reason">${[tasks.join(', '), h.total_bales!=null ? h.total_bales + ' bales' : null, h.acres!=null ? h.acres + ' acres' : null].filter(Boolean).join(' · ')}</div>
         ${h.notes ? `<div class="record-notes">${escapeHtml(h.notes)}</div>` : ''}
       `;
       div.querySelector('.record-del').addEventListener('click', ()=> deleteHayingEntry(h.id));
@@ -6491,6 +6491,10 @@
         <input type="number" id="hayBales" min="0" value="${isEdit && existingRecord.total_bales!=null ? existingRecord.total_bales : ''}"/>
       </div>
       <div class="field">
+        <label>Acres</label>
+        <input type="number" id="hayAcres" min="0" step="0.1" value="${isEdit && existingRecord.acres!=null ? existingRecord.acres : ''}"/>
+      </div>
+      <div class="field">
         <label>Notes</label>
         <textarea id="hayNotes" rows="2">${isEdit ? escapeHtml(existingRecord.notes||'') : ''}</textarea>
       </div>
@@ -6516,6 +6520,7 @@
       await addHayingFieldIfNew(location);
       if(customer) await addHayingCustomerIfNew(customer);
       const balesRaw = modal.querySelector('#hayBales').value;
+      const acresRaw = modal.querySelector('#hayAcres').value;
       const body = {
         entry_date: dateVal,
         location: location,
@@ -6524,6 +6529,7 @@
         raked: modal.querySelector('#hayRaked').checked,
         tedded: modal.querySelector('#hayTedded').checked,
         total_bales: balesRaw ? parseInt(balesRaw, 10) : null,
+        acres: acresRaw ? parseFloat(acresRaw) : null,
         notes: modal.querySelector('#hayNotes').value.trim()||null
       };
       try{
@@ -6593,17 +6599,18 @@
         <td style="padding:8px 4px;">${escapeHtml(item.location||'')}</td>
         <td style="padding:8px 4px;">${escapeHtml(item.tasks||'')}</td>
         <td style="padding:8px 4px;text-align:right;">${item.bales}</td>
+        <td style="padding:8px 4px;text-align:right;">${item.acres!=null && item.acres>0 ? item.acres : '—'}</td>
         <td style="padding:8px 4px;text-align:right;">$${Number(item.amount||0).toFixed(2)}</td>
       </tr>
     `).join('');
     const rateLines = [];
-    if(Number(bill.rate_per_bale) > 0) rateLines.push(['Baling', bill.rate_per_bale]);
-    if(Number(bill.mow_rate) > 0) rateLines.push(['Mowing', bill.mow_rate]);
-    if(Number(bill.rake_rate) > 0) rateLines.push(['Raking', bill.rake_rate]);
-    if(Number(bill.tedded_rate) > 0) rateLines.push(['Tedding', bill.tedded_rate]);
-    const rateLinesHtml = rateLines.map(([label, val])=>`
+    if(Number(bill.rate_per_bale) > 0) rateLines.push(['Baling', bill.rate_per_bale, '/bale']);
+    if(Number(bill.mow_rate) > 0) rateLines.push(['Mowing', bill.mow_rate, '/acre']);
+    if(Number(bill.rake_rate) > 0) rateLines.push(['Raking', bill.rake_rate, '/acre']);
+    if(Number(bill.tedded_rate) > 0) rateLines.push(['Tedding', bill.tedded_rate, '/acre']);
+    const rateLinesHtml = rateLines.map(([label, val, unit])=>`
       <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6350;font-family:Arial,sans-serif;margin-bottom:4px;">
-        <span>${label} rate (per bale)</span><span>$${Number(val).toFixed(2)}</span>
+        <span>${label} rate</span><span>$${Number(val).toFixed(2)}${unit}</span>
       </div>
     `).join('');
     document.getElementById('printListOutput').innerHTML = `
@@ -6630,6 +6637,7 @@
               <th style="text-align:left;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Field</th>
               <th style="text-align:left;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Tasks</th>
               <th style="text-align:right;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Bales</th>
+              <th style="text-align:right;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Acres</th>
               <th style="text-align:right;padding:6px 4px;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6350;font-weight:500;">Amount</th>
             </tr>
           </thead>
@@ -6688,22 +6696,22 @@
           <input type="text" id="billFarmAddress" value="${escapeHtml((hayingBillSettings && hayingBillSettings.farm_address) || '')}"/>
         </div>
         <div class="field">
-          <label>Rates (per bale)</label>
+          <label>Rates</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
             <div>
-              <label style="font-size:12px;color:#6b6350;">Baling ($)</label>
+              <label style="font-size:12px;color:#6b6350;">Baling ($/bale)</label>
               <input type="number" id="billBaleRate" min="0" step="0.01" placeholder="0.00"/>
             </div>
             <div>
-              <label style="font-size:12px;color:#6b6350;">Mowing ($)</label>
+              <label style="font-size:12px;color:#6b6350;">Mowing ($/acre)</label>
               <input type="number" id="billMowRate" min="0" step="0.01" placeholder="0.00"/>
             </div>
             <div>
-              <label style="font-size:12px;color:#6b6350;">Raking ($)</label>
+              <label style="font-size:12px;color:#6b6350;">Raking ($/acre)</label>
               <input type="number" id="billRakeRate" min="0" step="0.01" placeholder="0.00"/>
             </div>
             <div>
-              <label style="font-size:12px;color:#6b6350;">Tedding ($)</label>
+              <label style="font-size:12px;color:#6b6350;">Tedding ($/acre)</label>
               <input type="number" id="billTeddedRate" min="0" step="0.01" placeholder="0.00"/>
             </div>
           </div>
@@ -6730,7 +6738,8 @@
             <input type="checkbox" class="bill-item-check rc-check" data-id="${h.id}" checked style="--rc-color:#3C9142;flex-shrink:0;"/>
             <div style="flex:1;font-family:Arial,sans-serif;font-size:14px;">
               <div>${fmtDate(h.entry_date)} · ${escapeHtml(h.location)}</div>
-              <div style="color:#6b6350;font-size:12px;">${[tasks.join(', '), (h.total_bales!=null ? h.total_bales+' bales' : '0 bales')].filter(Boolean).join(' · ')}</div>
+              <div style="color:#6b6350;font-size:12px;">${[tasks.join(', '), (h.total_bales!=null ? h.total_bales+' bales' : '0 bales'), (h.acres!=null ? h.acres+' acres' : null)].filter(Boolean).join(' · ')}</div>
+              ${(h.acres==null && (h.mowed||h.raked||h.tedded)) ? '<div style="color:#7A2E27;font-size:11px;">No acres recorded — mowing/raking/tedding won\'t be charged</div>' : ''}
             </div>
             <div class="bill-item-amount" data-id="${h.id}" style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;min-width:60px;text-align:right;">$0.00</div>
           </div>
@@ -6738,11 +6747,12 @@
       }).join('');
       function amountFor(rec, baleRate, mowRate, rakeRate, teddedRate){
         const bales = rec.total_bales || 0;
-        let perBale = baleRate;
-        if(rec.mowed) perBale += mowRate;
-        if(rec.raked) perBale += rakeRate;
-        if(rec.tedded) perBale += teddedRate;
-        return bales * perBale;
+        const acres = rec.acres || 0;
+        let amt = bales * baleRate;
+        if(rec.mowed) amt += acres * mowRate;
+        if(rec.raked) amt += acres * rakeRate;
+        if(rec.tedded) amt += acres * teddedRate;
+        return amt;
       }
       function recalc(){
         const baleRate = parseFloat(bodyEl.querySelector('#billBaleRate').value) || 0;
@@ -6786,8 +6796,9 @@
           if(e.raked) tasks.push('Raked');
           if(e.tedded) tasks.push('Tedded');
           const bales = e.total_bales || 0;
+          const acres = e.acres || 0;
           const amount = Math.round(amountFor(e, baleRate, mowRate, rakeRate, teddedRate) * 100) / 100;
-          return { date: e.entry_date, location: e.location, tasks: tasks.join(', '), mowed: !!e.mowed, raked: !!e.raked, tedded: !!e.tedded, bales, amount };
+          return { date: e.entry_date, location: e.location, tasks: tasks.join(', '), mowed: !!e.mowed, raked: !!e.raked, tedded: !!e.tedded, bales, acres, amount };
         });
         const totalBales = lineItems.reduce((s,li)=> s+li.bales, 0);
         const totalAmount = Math.round(lineItems.reduce((s,li)=> s+li.amount, 0) * 100) / 100;
