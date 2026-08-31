@@ -272,7 +272,6 @@
         </div>
         <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#3C9142;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
         <button id="homeTodaysActivityBtn" class="btn btn-full" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;margin-top:20px;margin-bottom:12px;">📋 Today's Activity</button>
-        <button id="homeTodoListBtn" class="btn btn-full" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;margin-bottom:12px;">✅ To-Do List<span id="homeTodoCount"></span></button>
         <div style="display:flex;justify-content:center;gap:8px;padding-top:2px;">
           <div id="homeTagNeededWrap" class="hidden" style="width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1.5px solid #2E88C4;border-radius:10px;padding:8px 4px;cursor:pointer;">
             <span id="homeTagNeededBadge" style="font-size:30px;font-weight:700;color:#0C5A8E;line-height:1;">0</span>
@@ -285,6 +284,10 @@
           <div id="homeFlaggedWrap" class="hidden" style="width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1.5px solid #2E88C4;border-radius:10px;padding:8px 4px;cursor:pointer;">
             <span id="homeFlaggedBadge" style="font-size:30px;font-weight:700;color:#0C5A8E;line-height:1;">0</span>
             <span style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;font-weight:500;">Flagged</span>
+          </div>
+          <div id="homeTodoWrap" style="width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;border:1.5px solid #2E88C4;border-radius:10px;padding:8px 4px;cursor:pointer;">
+            <span id="homeTodoBadge" style="font-size:30px;font-weight:700;color:#0C5A8E;line-height:1;">0</span>
+            <span style="font-family:Arial,sans-serif;font-size:11px;color:#6b6350;font-weight:500;">List</span>
           </div>
         </div>
       </div>
@@ -5574,7 +5577,7 @@
     runHomeQuickSearch();
   });
   document.getElementById('homeTodaysActivityBtn').addEventListener('click', todaysActivityModal);
-  document.getElementById('homeTodoListBtn').addEventListener('click', todoListModal);
+  document.getElementById('homeTodoWrap').addEventListener('click', todoListModal);
   document.getElementById('quickActionHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeQuickSearchClearBtn').addEventListener('click', (e)=>{
     e.currentTarget.blur();
@@ -7542,10 +7545,10 @@
   }
 
   function updateTodoCount(){
-    const el = document.getElementById('homeTodoCount');
-    if(!el) return;
-    const open = todos.filter(t=>!t.completed).length;
-    el.textContent = open > 0 ? ' (' + open + ')' : '';
+    const badge = document.getElementById('homeTodoBadge');
+    if(!badge) return;
+    const count = todos.filter(t=>!t.completed).length;
+    badge.textContent = count > 99 ? '99+' : count;
   }
 
   async function addTodo(text){
