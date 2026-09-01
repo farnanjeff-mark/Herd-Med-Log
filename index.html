@@ -5445,9 +5445,9 @@
     const daysInput = document.getElementById('vetPregDaysAlong');
     const cowNum = cowNumInput.value.trim();
     if(!cowNum){ showToast('Enter a cow number'); return; }
-    const cow = cows.find(c=>c.number===cowNum);
+    const cow = cows.find(c=>c.number.toLowerCase()===cowNum.toLowerCase());
     if(!cow){ showToast(`No cow #${cowNum} found`); return; }
-    const latest = [...breedingFor(cowNum)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+    const latest = [...breedingFor(cow.number)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
     if(!latest){ showToast(`No breeding record for #${cowNum}`); return; }
 
     const btn = document.getElementById('vetPregOpenBtn');
@@ -5480,9 +5480,9 @@
     const daysAlongVal = daysInput.value.trim();
     if(!cowNum){ showToast('Enter a cow number'); return; }
     if(daysAlongVal === ''){ showToast('Enter days along'); return; }
-    const cow = cows.find(c=>c.number===cowNum);
+    const cow = cows.find(c=>c.number.toLowerCase()===cowNum.toLowerCase());
     if(!cow){ showToast(`No cow #${cowNum} found`); return; }
-    const latest = [...breedingFor(cowNum)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+    const latest = [...breedingFor(cow.number)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
     if(!latest){ showToast(`No breeding record for #${cowNum}`); return; }
 
     const btn = document.getElementById('vetPregSaveBtn');
