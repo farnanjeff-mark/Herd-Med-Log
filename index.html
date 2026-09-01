@@ -7655,13 +7655,12 @@
     `;
   }
 
-  function reportCardModal(title, entries, cardRenderFn, headerCells, rowsHtml){
+  function reportCardModal(title, cowList, headerCells, rowsHtml){
     const modal = openModal(`
       <div class="modal-title">${title}</div>
-      <div id="reportCardCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;">${entries.length} cow${entries.length!==1?'s':''} matched</div>
-      <div id="reportCardList" style="max-height:60vh;overflow-y:auto;margin-bottom:14px;">
-        ${entries.length===0 ? '<p class="empty">No matching records.</p>' : entries.map(e=>cardRenderFn(e)).join('')}
-      </div>
+      <div id="reportCardCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;">${cowList.length} cow${cowList.length!==1?'s':''} matched</div>
+      <div id="reportTableWrap" style="overflow-x:auto;margin-bottom:14px;"></div>
+      <div id="reportCardList" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="reportPrintBtn">🖨️ Print</button>
         <button class="btn btn-outline" id="reportExportBtn">📊 Export</button>
@@ -7670,9 +7669,25 @@
         <button class="btn btn-barn btn-full" id="closeReportBtn">Close</button>
       </div>
     `);
-    modal.querySelectorAll('.report-card-tap').forEach(card=>{
-      card.addEventListener('click', ()=>{ closeModal(); openProfileCow(card.dataset.num); });
-    });
+    const tableEl = modal.querySelector('#reportTableWrap');
+    const listEl = modal.querySelector('#reportCardList');
+    if(cowList.length === 0){
+      tableEl.innerHTML = '';
+      listEl.innerHTML = '<p class="empty">No matching records.</p>';
+    } else {
+      tableEl.innerHTML = `
+        <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+          <thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+      listEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
+      wireQuickAddCardOpen(listEl);
+      wireProfileQuickAddButtons(listEl);
+      wireNeedsEntryCheckboxes(listEl);
+      wireTagNeededCheckboxes(listEl);
+      wireCalvedCheckboxes(listEl);
+    }
     modal.querySelector('#closeReportBtn').addEventListener('click', closeModal);
     modal.querySelector('#reportPrintBtn').addEventListener('click', ()=>{
       document.getElementById('printListOutput').innerHTML = `
@@ -7799,12 +7814,7 @@
   function soldDeceasedModal(){
     const list = cows.filter(c=> c.status && c.status !== 'Active').sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
     const rows = list.map((c,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(c.number)}</td><td style="padding:8px;">${escapeHtml(c.status)}</td><td style="padding:8px;">${escapeHtml(c.lot||'')}</td><td style="padding:8px;">${escapeHtml(c.owner||'')}</td></tr>`).join('');
-    reportCardModal('Sold / Deceased List', list, c=>`
-      <div class="record report-card-tap" data-num="${escapeHtml(c.number)}" style="padding:12px 14px;cursor:pointer;">
-        <div class="record-med" style="font-size:16px;font-weight:700;">#${escapeHtml(c.number)} — ${escapeHtml(c.status)}</div>
-        ${(c.lot||c.owner) ? `<div class="record-reason">${[c.lot ? 'Location: '+escapeHtml(c.lot) : null, c.owner ? 'Owner: '+escapeHtml(c.owner) : null].filter(Boolean).join(' · ')}</div>` : ''}
-      </div>
-    `, ['Cow #','Status','Location','Owner'], rows);
+    reportCardModal('Sold / Deceased List', list, ['Cow #','Status','Location','Owner'], rows);
   }
 
   function biggestGainersModal(){
@@ -7819,12 +7829,7 @@
       return { cow, first, last, days, totalGain, adg };
     }).filter(Boolean).sort((a,b)=> b.totalGain - a.totalGain);
     const rows = gains.map((g,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(g.cow.number)}</td><td style="padding:8px;">${fmtDateShort(g.first.weigh_date)}</td><td style="padding:8px;">${fmtDateShort(g.last.weigh_date)}</td><td style="padding:8px;">${g.days}</td><td style="padding:8px;">${g.totalGain} lbs</td><td style="padding:8px;">${g.adg}</td></tr>`).join('');
-    reportCardModal('Biggest Gainers', gains, g=>`
-      <div class="record report-card-tap" data-num="${escapeHtml(g.cow.number)}" style="padding:12px 14px;cursor:pointer;">
-        <div class="record-med" style="font-size:16px;font-weight:700;">#${escapeHtml(g.cow.number)} — ${g.totalGain} lbs gained</div>
-        <div class="record-reason">${fmtDateShort(g.first.weigh_date)} → ${fmtDateShort(g.last.weigh_date)} (${g.days} days) · ADG: ${g.adg}</div>
-      </div>
-    `, ['Cow #','First Weigh','Last Weigh','Days','Total Gain','ADG'], rows);
+    reportCardModal('Biggest Gainers', gains.map(g=>g.cow), ['Cow #','First Weigh','Last Weigh','Days','Total Gain','ADG'], rows);
   }
 
   function deadCalvesModal(){
@@ -7840,6 +7845,7 @@
         </select>
       </div>
       <div id="deadCalvesCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
+      <div id="deadCalvesTable" style="overflow-x:auto;margin-bottom:14px;"></div>
       <div id="deadCalvesResults" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="deadCalvesPrintBtn">🖨️ Print</button>
@@ -7857,23 +7863,35 @@
       ).join('') };
     }
     function refresh(){
-      const { list } = currentRows();
+      const { list, headerCells, rowsHtml } = currentRows();
       const countEl = modal.querySelector('#deadCalvesCount');
+      const tableEl = modal.querySelector('#deadCalvesTable');
       const resultsEl = modal.querySelector('#deadCalvesResults');
       countEl.textContent = `${list.length} calf${list.length!==1?'ves':''} matched`;
       if(list.length === 0){
+        tableEl.innerHTML = '';
         resultsEl.innerHTML = '<p class="empty">No dead calves in this timeframe.</p>';
       } else {
-        resultsEl.innerHTML = list.map(c=>`
-          <div class="record report-card-tap" data-num="${escapeHtml(c.cow_number)}" style="padding:12px 14px;cursor:pointer;">
-            <div class="record-med" style="font-size:16px;font-weight:700;">#${escapeHtml(c.cow_number)} — ${fmtDateShort(c.calving_date)}</div>
-            <div class="record-reason">${[calfSexLabel(c.calf_sex), c.birth_weight!=null ? c.birth_weight+' lb' : null, c.sire ? 'Sire: '+escapeHtml(c.sire) : null].filter(Boolean).join(' · ')}</div>
-            ${c.notes ? `<div class="record-notes">${escapeHtml(c.notes)}</div>` : ''}
-          </div>
-        `).join('');
-        resultsEl.querySelectorAll('.report-card-tap').forEach(card=>{
-          card.addEventListener('click', ()=>{ closeModal(); openProfileCow(card.dataset.num); });
+        tableEl.innerHTML = `
+          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+            <thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        `;
+        const seen = new Set();
+        const cowList = [];
+        list.forEach(c=>{
+          if(seen.has(c.cow_number)) return;
+          seen.add(c.cow_number);
+          const cow = cows.find(cw=>cw.number===c.cow_number);
+          if(cow) cowList.push(cow);
         });
+        resultsEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
+        wireQuickAddCardOpen(resultsEl);
+        wireProfileQuickAddButtons(resultsEl);
+        wireNeedsEntryCheckboxes(resultsEl);
+        wireTagNeededCheckboxes(resultsEl);
+        wireCalvedCheckboxes(resultsEl);
       }
     }
     refresh();
@@ -7928,6 +7946,7 @@
         </select>
       </div>
       <div id="calvingReportCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
+      <div id="calvingReportTable" style="overflow-x:auto;margin-bottom:14px;"></div>
       <div id="calvingReportResults" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="calvingReportPrintBtn">🖨️ Print</button>
@@ -7946,27 +7965,35 @@
       }).join('') };
     }
     function refresh(){
-      const { list } = currentRows();
+      const { list, headerCells, rowsHtml } = currentRows();
       const countEl = modal.querySelector('#calvingReportCount');
+      const tableEl = modal.querySelector('#calvingReportTable');
       const resultsEl = modal.querySelector('#calvingReportResults');
       countEl.textContent = `${list.length} calving${list.length!==1?'s':''} matched`;
       if(list.length === 0){
+        tableEl.innerHTML = '';
         resultsEl.innerHTML = '<p class="empty">No calvings in this timeframe.</p>';
       } else {
-        resultsEl.innerHTML = list.map(c=>{
-          const outcome = c.promoted_to_cow_number ? `Kept (#${c.promoted_to_cow_number})` : (c.calf_outcome === 'sold' ? 'Sold' : c.calf_outcome === 'died' ? 'Died' : 'Active');
-          return `
-            <div class="record report-card-tap" data-num="${escapeHtml(c.cow_number)}" style="padding:12px 14px;cursor:pointer;">
-              <div class="record-med" style="font-size:16px;font-weight:700;">#${escapeHtml(c.cow_number)} — ${fmtDateShort(c.calving_date)}</div>
-              <div class="record-reason">${[calfSexLabel(c.calf_sex), c.birth_weight!=null ? c.birth_weight+' lb' : null, c.birth_assist ? 'Assist: '+escapeHtml(c.birth_assist) : null, outcome].filter(Boolean).join(' · ')}</div>
-              ${c.sire ? `<div class="record-reason">Sire: ${escapeHtml(c.sire)}</div>` : ''}
-              ${c.notes ? `<div class="record-notes">${escapeHtml(c.notes)}</div>` : ''}
-            </div>
-          `;
-        }).join('');
-        resultsEl.querySelectorAll('.report-card-tap').forEach(card=>{
-          card.addEventListener('click', ()=>{ closeModal(); openProfileCow(card.dataset.num); });
+        tableEl.innerHTML = `
+          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+            <thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        `;
+        const seen = new Set();
+        const cowList = [];
+        list.forEach(c=>{
+          if(seen.has(c.cow_number)) return;
+          seen.add(c.cow_number);
+          const cow = cows.find(cw=>cw.number===c.cow_number);
+          if(cow) cowList.push(cow);
         });
+        resultsEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
+        wireQuickAddCardOpen(resultsEl);
+        wireProfileQuickAddButtons(resultsEl);
+        wireNeedsEntryCheckboxes(resultsEl);
+        wireTagNeededCheckboxes(resultsEl);
+        wireCalvedCheckboxes(resultsEl);
       }
     }
     refresh();
@@ -8030,19 +8057,7 @@
         : daysUntil;
       return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(e.cow.number)}</td><td style="padding:8px;">${fmtDateShort(e.breeding.expected_due_date)}</td><td style="padding:8px;">${daysUntilHtml}</td><td style="padding:8px;">${escapeHtml(e.breeding.bred_to||'')}</td><td style="padding:8px;">${escapeHtml(e.breeding.pregnancy_method||'')}</td></tr>`;
     }).join('');
-    reportCardModal('Upcoming Calvings', entries, e=>{
-      const daysUntil = Math.round((e.dueDate - today)/86400000);
-      const detail = [];
-      if(e.breeding.bred_to) detail.push(`Bred to: ${escapeHtml(e.breeding.bred_to)}`);
-      if(e.breeding.pregnancy_method) detail.push(escapeHtml(e.breeding.pregnancy_method));
-      return `
-        <div class="record report-card-tap" data-num="${escapeHtml(e.cow.number)}" style="padding:12px 14px;cursor:pointer;${daysUntil<0 ? 'border-left-color:#7A2E27;' : ''}">
-          <div class="record-med" style="font-size:16px;font-weight:700;">#${escapeHtml(e.cow.number)} — Due ${fmtDateShort(e.breeding.expected_due_date)}</div>
-          <div class="record-reason" style="${daysUntil<0 ? 'color:#7A2E27;font-weight:700;' : ''}">${daysUntil<0 ? Math.abs(daysUntil)+' days overdue' : daysUntil+' days until due'}</div>
-          ${detail.length ? `<div class="record-reason">${detail.join(' · ')}</div>` : ''}
-        </div>
-      `;
-    }, ['Cow #','Due Date','Days Until','Bred To','Method'], rows);
+    reportCardModal('Upcoming Calvings', entries.map(e=>e.cow), ['Cow #','Due Date','Days Until','Bred To','Method'], rows);
   }
 
   function openCowsReportModal(){
@@ -8057,33 +8072,36 @@
     const modal = openModal(`
       <div class="modal-title">Open Cows</div>
       <div id="openCowsCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;">${entries.length} cow${entries.length!==1?'s':''} matched</div>
-      <div id="openCowsList" style="max-height:65vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div id="openCowsTable" style="overflow-x:auto;margin-bottom:14px;"></div>
+      <div id="openCowsList" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-barn btn-full" id="closeOpenCowsBtn">Close</button>
       </div>
     `);
+    const tableEl = modal.querySelector('#openCowsTable');
     const listEl = modal.querySelector('#openCowsList');
     if(entries.length === 0){
+      tableEl.innerHTML = '';
       listEl.innerHTML = '<p class="empty">No cows currently marked open.</p>';
     } else {
-      listEl.innerHTML = entries.map(e=>{
+      const rowsHtml = entries.map((e,i)=>{
         const detail = [];
-        if(e.breeding.bred_to) detail.push(`Bred to: ${escapeHtml(e.breeding.bred_to)}`);
-        if(e.breeding.pregnancy_method) detail.push(escapeHtml(e.breeding.pregnancy_method));
-        return `
-          <div class="record open-cow-card" data-num="${escapeHtml(e.cow.number)}" style="padding:12px 14px;border-left-color:#7A2E27;cursor:pointer;">
-            <div class="record-med" style="font-size:16px;font-weight:700;">#${escapeHtml(e.cow.number)}</div>
-            <div class="record-reason" style="color:#7A2E27;font-weight:700;">Open${e.breeding.open_date ? ' — '+fmtDate(e.breeding.open_date) : ''}</div>
-            ${detail.length ? `<div class="record-reason">${detail.join(' · ')}</div>` : ''}
-          </div>
-        `;
+        if(e.breeding.bred_to) detail.push(`Bred to: ${e.breeding.bred_to}`);
+        if(e.breeding.pregnancy_method) detail.push(e.breeding.pregnancy_method);
+        return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${e.breeding.open_date ? fmtDateShort(e.breeding.open_date) : ''}</td><td style="padding:8px;">#${escapeHtml(e.cow.number)}</td><td style="padding:8px;">Open</td><td style="padding:8px;white-space:normal;">${escapeHtml(detail.join(' — '))}</td></tr>`;
       }).join('');
-      listEl.querySelectorAll('.open-cow-card').forEach(card=>{
-        card.addEventListener('click', ()=>{
-          closeModal();
-          openProfileCow(card.dataset.num);
-        });
-      });
+      tableEl.innerHTML = `
+        <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+          <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Type</th><th style="text-align:left;padding:8px;">Details</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+      listEl.innerHTML = entries.map(e=> quickAddCardHtml(e.cow)).join('');
+      wireQuickAddCardOpen(listEl);
+      wireProfileQuickAddButtons(listEl);
+      wireNeedsEntryCheckboxes(listEl);
+      wireTagNeededCheckboxes(listEl);
+      wireCalvedCheckboxes(listEl);
     }
     modal.querySelector('#closeOpenCowsBtn').addEventListener('click', closeModal);
   }
@@ -8100,7 +8118,8 @@
         </select>
       </div>
       <div id="todaysActivityCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
-      <div id="todaysActivityResults" style="max-height:60vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div id="todaysActivityTable" style="overflow-x:auto;margin-bottom:14px;"></div>
+      <div id="todaysActivityResults" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-barn btn-full" id="closeTodaysActivityBtn">Close</button>
       </div>
@@ -8140,20 +8159,42 @@
     function refresh(){
       const entries = currentEntries();
       const countEl = modal.querySelector('#todaysActivityCount');
+      const tableEl = modal.querySelector('#todaysActivityTable');
       const resultsEl = modal.querySelector('#todaysActivityResults');
       countEl.textContent = `${entries.length} entr${entries.length!==1?'ies':'y'} matched`;
       if(entries.length === 0){
+        tableEl.innerHTML = '';
         resultsEl.innerHTML = '<p class="empty">No activity in this timeframe.</p>';
       } else {
-        resultsEl.innerHTML = entries.map(e=>`
-          <div class="record report-card-tap" data-num="${escapeHtml(e.num)}" style="padding:12px 14px;cursor:pointer;">
-            <div class="record-med" style="font-size:16px;font-weight:700;">#${escapeHtml(e.num)} — ${escapeHtml(e.type)}</div>
-            <div class="record-reason">${fmtDateShort(e.date)}${e.details ? ' · '+escapeHtml(e.details) : ''}</div>
-          </div>
-        `).join('');
-        resultsEl.querySelectorAll('.report-card-tap').forEach(card=>{
-          card.addEventListener('click', ()=>{ closeModal(); openProfileCow(card.dataset.num); });
+        tableEl.innerHTML = `
+          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+            <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Type</th><th style="text-align:left;padding:8px;">Details</th></tr></thead>
+            <tbody>
+              ${entries.map((e,i)=>`
+                <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+                  <td style="padding:8px;">${fmtDateShort(e.date)}</td>
+                  <td style="padding:8px;">#${escapeHtml(e.num)}</td>
+                  <td style="padding:8px;">${escapeHtml(e.type)}</td>
+                  <td style="padding:8px;white-space:normal;">${escapeHtml(e.details)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+        const seen = new Set();
+        const cowList = [];
+        entries.forEach(e=>{
+          if(seen.has(e.num)) return;
+          seen.add(e.num);
+          const cow = cows.find(cw=>cw.number===e.num);
+          if(cow) cowList.push(cow);
         });
+        resultsEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
+        wireQuickAddCardOpen(resultsEl);
+        wireProfileQuickAddButtons(resultsEl);
+        wireNeedsEntryCheckboxes(resultsEl);
+        wireTagNeededCheckboxes(resultsEl);
+        wireCalvedCheckboxes(resultsEl);
       }
     }
     refresh();
