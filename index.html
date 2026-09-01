@@ -507,6 +507,10 @@
       <label>Natural Sire</label>
       <input type="text" id="advSearchNaturalSire" placeholder="Any"/>
     </div>
+    <div class="field" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="advSearchOpenOnly" style="width:20px;height:20px;"/>
+      <label style="margin:0;" for="advSearchOpenOnly">Open cows only</label>
+    </div>
 
     <div class="section-label">Meds &amp; Notes</div>
     <div class="row2">
@@ -7236,6 +7240,7 @@
     const bredTo = document.getElementById('advSearchBredTo').value;
     const method = document.getElementById('advSearchMethod').value;
     const naturalSire = document.getElementById('advSearchNaturalSire').value.trim().toLowerCase();
+    const openOnly = document.getElementById('advSearchOpenOnly').checked;
     const medicine = document.getElementById('advSearchMedicine').value;
     const reason = document.getElementById('advSearchReason').value;
     const calfSire = document.getElementById('advSearchCalfSire').value;
@@ -7249,7 +7254,7 @@
     const dateFrom = document.getElementById('advSearchDateFrom').value;
     const dateTo = document.getElementById('advSearchDateTo').value;
 
-    const breedingFieldsUsed = bredTo || method || naturalSire;
+    const breedingFieldsUsed = bredTo || method || naturalSire || openOnly;
     const medFieldsUsed = medicine || reason;
     const calvingFieldsUsed = calfSire || calfSex || birthAssist || calfOutcome || weightMin != null || weightMax != null;
 
@@ -7258,6 +7263,7 @@
         (!bredTo || b.bred_to === bredTo) &&
         (!method || b.pregnancy_method === method) &&
         (!naturalSire || (b.natural_sire||'').toLowerCase().includes(naturalSire)) &&
+        (!openOnly || b.pregnancy_status === 'Open') &&
         (!dateFrom || b.breed_date >= dateFrom) &&
         (!dateTo || b.breed_date <= dateTo)
       );
@@ -7309,6 +7315,7 @@
           if(b.bred_to) detail.push(`Bred to: ${b.bred_to}`);
           if(b.pregnancy_method) detail.push(b.pregnancy_method);
           if(b.natural_sire) detail.push(`Natural sire: ${b.natural_sire}`);
+          if(b.pregnancy_status === 'Open') detail.push(`Open${b.open_date ? ' ('+fmtDate(b.open_date)+')' : ''}`);
           reportEntries.push({ date: b.breed_date, num, type: 'Breeding', details: detail.join(' — ') });
         });
       }
@@ -7426,6 +7433,7 @@
     document.getElementById('advSearchBredTo').value = '';
     document.getElementById('advSearchMethod').value = '';
     document.getElementById('advSearchNaturalSire').value = '';
+    document.getElementById('advSearchOpenOnly').checked = false;
     document.getElementById('advSearchMedicine').value = '';
     document.getElementById('advSearchReason').value = '';
     document.getElementById('advSearchCalfSire').value = '';
