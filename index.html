@@ -3674,7 +3674,7 @@
           if(r.vet_calls) details.push(`Vet: ${escapeHtml(r.vet_calls)}`);
           return `<div class="record"${r.pregnancy_status==='Open' ? ' style="border-left-color:#7A2E27;"' : ''}>
             <div class="record-date">${fmtDate(r.breed_date)}</div>
-            ${r.pregnancy_status==='Open' ? '<div class="record-med" style="color:#7A2E27;font-weight:700;">Open</div>' : ''}
+            ${r.pregnancy_status==='Open' ? `<div class="record-med" style="color:#7A2E27;font-weight:700;">Open${r.open_date ? ' — '+fmtDate(r.open_date) : ''}</div>` : ''}
             ${r.expected_due_date ? `<div class="record-med">Due: ${fmtDate(r.expected_due_date)}</div>` : ''}
             ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
             ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
@@ -5456,7 +5456,7 @@
       const updated = await api('/breeding_records?id=eq.' + encodeURIComponent(latest.id), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ pregnancy_status: 'Open', vet_calls: null, expected_due_date: null })
+        body: JSON.stringify({ pregnancy_status: 'Open', vet_calls: null, expected_due_date: null, open_date: todayLocal() })
       });
       const idx = breedingRecords.findIndex(b=>b.id===latest.id);
       if(idx !== -1) breedingRecords[idx] = updated[0];
