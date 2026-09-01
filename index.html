@@ -5321,6 +5321,7 @@
     const initialDate = isEdit ? existingRecord.breed_date : today;
     const initialVetCalls = isEdit ? (existingRecord.vet_calls||'') : '';
     const initialResolved = resolveExpectedDueDate(initialDate, initialVetCalls);
+    const initialIsOpen = isEdit && existingRecord.pregnancy_status === 'Open';
     const modal = openModal(`
       <div class="modal-title">${isEdit ? 'Edit Breeding' : 'Log Breeding'} — #${escapeHtml(currentBreedingCow)}</div>
       <div class="field">
@@ -5339,14 +5340,24 @@
         <label>Natural Sire</label>
         <input type="text" id="brdSire" placeholder="Natural sire name or ID (if applicable)" value="${isEdit ? escapeHtml(existingRecord.natural_sire||'') : ''}"/>
       </div>
-      <div class="field">
-        <label>Vet Calls</label>
-        <textarea id="brdVet" rows="2" placeholder="e.g. 60 (days along, per vet)">${escapeHtml(initialVetCalls)}</textarea>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="brdIsOpen" ${initialIsOpen ? 'checked' : ''} style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="brdIsOpen">Cow is Open (not pregnant)</label>
       </div>
-      <div class="field">
-        <label>Expected Due Date</label>
-        <input type="text" id="brdDueDisplay" value="${fmtDate(initialResolved.dueDate)}" disabled style="background:#e5ded0;"/>
-        <div id="brdDueNote" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:4px;">${initialResolved.usedVetCheck ? `Adjusted from vet call — ${Math.abs(initialResolved.diffDays)} days off from the breed-date estimate.` : ''}</div>
+      <div id="brdNotOpenFields">
+        <div class="field">
+          <label>Vet Calls</label>
+          <textarea id="brdVet" rows="2" placeholder="e.g. 60 (days along, per vet)">${escapeHtml(initialVetCalls)}</textarea>
+        </div>
+        <div class="field">
+          <label>Expected Due Date</label>
+          <input type="text" id="brdDueDisplay" value="${fmtDate(initialResolved.dueDate)}" disabled style="background:#e5ded0;"/>
+          <div id="brdDueNote" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:4px;">${initialResolved.usedVetCheck ? `Adjusted from vet call — ${Math.abs(initialResolved.diffDays)} days off from the breed-date estimate.` : ''}</div>
+        </div>
+      </div>
+      <div class="field" id="brdOpenDateField">
+        <label>Date Found Open</label>
+        <input type="date" id="brdOpenDate" value="${isEdit && existingRecord.open_date ? existingRecord.open_date : today}"/>
       </div>
       <div class="field">
         <label>Notes</label>
@@ -5365,8 +5376,15 @@
       modal.querySelector('#brdDueDisplay').value = fmtDate(resolved.dueDate);
       modal.querySelector('#brdDueNote').textContent = resolved.usedVetCheck ? `Adjusted from vet call — ${Math.abs(resolved.diffDays)} days off from the breed-date estimate.` : '';
     }
+    function refreshOpenToggle(){
+      const isOpen = modal.querySelector('#brdIsOpen').checked;
+      modal.querySelector('#brdNotOpenFields').classList.toggle('hidden', isOpen);
+      modal.querySelector('#brdOpenDateField').classList.toggle('hidden', !isOpen);
+    }
     modal.querySelector('#brdDate').addEventListener('input', refreshDueDateDisplay);
     modal.querySelector('#brdVet').addEventListener('input', refreshDueDateDisplay);
+    modal.querySelector('#brdIsOpen').addEventListener('change', refreshOpenToggle);
+    refreshOpenToggle();
     wireFieldWithOther(modal, 'brdBredTo');
     if(isEdit && existingRecord.bred_to) prefillFieldWithOther(modal, 'brdBredTo', existingRecord.bred_to, getBullOptionsWithExtras());
     modal.querySelector('#cancelBrd').addEventListener('click', closeModal);
@@ -5375,22 +5393,42 @@
       const bredTo = valueOf(modal, 'brdBredTo');
       const method = modal.querySelector('#brdMethod').value;
       const sire = modal.querySelector('#brdSire').value.trim();
+      const isOpen = modal.querySelector('#brdIsOpen').checked;
       const vet = modal.querySelector('#brdVet').value.trim();
+      const openDate = modal.querySelector('#brdOpenDate').value;
       const notes = modal.querySelector('#brdNotes').value.trim();
       if(!dateVal){ showToast('Date is required'); return; }
+      if(isOpen && !openDate){ showToast('Date found open is required'); return; }
       const btn = modal.querySelector('#confirmBrd');
       btn.disabled = true;
       await addBullIfNew(bredTo);
-      const resolved = resolveExpectedDueDate(dateVal, vet);
-      const body = {
-        breed_date: dateVal,
-        bred_to: bredTo||null,
-        pregnancy_method: method||null,
-        natural_sire: sire||null,
-        vet_calls: vet||null,
-        notes: notes||null,
-        expected_due_date: resolved.dueDate
-      };
+      let body;
+      if(isOpen){
+        body = {
+          breed_date: dateVal,
+          bred_to: bredTo||null,
+          pregnancy_method: method||null,
+          natural_sire: sire||null,
+          notes: notes||null,
+          pregnancy_status: 'Open',
+          vet_calls: null,
+          expected_due_date: null,
+          open_date: openDate
+        };
+      } else {
+        const resolved = resolveExpectedDueDate(dateVal, vet);
+        body = {
+          breed_date: dateVal,
+          bred_to: bredTo||null,
+          pregnancy_method: method||null,
+          natural_sire: sire||null,
+          vet_calls: vet||null,
+          notes: notes||null,
+          expected_due_date: resolved.dueDate,
+          pregnancy_status: vet ? 'Bred' : null,
+          open_date: null
+        };
+      }
       try{
         if(isEdit){
           const updated = await api('/breeding_records?id=eq.' + encodeURIComponent(existingRecord.id), {
