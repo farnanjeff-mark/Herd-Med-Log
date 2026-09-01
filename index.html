@@ -5744,7 +5744,7 @@
   });
   document.getElementById('homeCalvedWrap').addEventListener('click', (e)=>{
     e.stopPropagation();
-    showProfileListCalved();
+    calvedReportModal();
   });
   document.getElementById('homeFlaggedWrap').addEventListener('click', (e)=>{
     e.stopPropagation();
@@ -8058,6 +8058,16 @@
       return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(e.cow.number)}</td><td style="padding:8px;">${fmtDateShort(e.breeding.expected_due_date)}</td><td style="padding:8px;">${daysUntilHtml}</td><td style="padding:8px;">${escapeHtml(e.breeding.bred_to||'')}</td><td style="padding:8px;">${escapeHtml(e.breeding.pregnancy_method||'')}</td></tr>`;
     }).join('');
     reportCardModal('Upcoming Calvings', entries.map(e=>e.cow), ['Cow #','Due Date','Days Until','Bred To','Method'], rows);
+  }
+
+  function calvedReportModal(){
+    const list = cows.filter(c=>c.calved).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const rows = list.map((c,i)=>{
+      const latestBreeding = [...breedingFor(c.number)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+      const bredTo = latestBreeding ? (latestBreeding.bred_to||'') : '';
+      return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(c.number)}</td><td style="padding:8px;">${escapeHtml(c.owner||'')}</td><td style="padding:8px;">${escapeHtml(bredTo)}</td></tr>`;
+    }).join('');
+    reportCardModal('Calved Cows', list, ['Cow #','Owner','Bred To'], rows);
   }
 
   function openCowsReportModal(){
