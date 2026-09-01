@@ -435,7 +435,10 @@
         <input type="number" id="vetPregDaysAlong" min="0" placeholder="e.g. 60"/>
       </div>
     </div>
-    <button class="btn btn-barn btn-full" id="vetPregSaveBtn" style="margin-bottom:20px;">Save &amp; Next</button>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button class="btn btn-barn" id="vetPregSaveBtn" style="flex:1;">Save &amp; Next</button>
+      <button class="btn btn-outline" id="vetPregOpenBtn" style="flex:1;border-color:#7A2E27;color:#7A2E27;">Mark Open</button>
+    </div>
     <div class="section-label" style="margin-top:0;">This Session</div>
     <div id="vetPregTallyList"></div>
     <div id="vetPregEmptyState" class="empty hidden">No entries logged yet this session.</div>
@@ -5439,12 +5442,54 @@
     const emptyEl = document.getElementById('vetPregEmptyState');
     if(!listEl) return;
     emptyEl.classList.toggle('hidden', vetPregSessionEntries.length !== 0);
-    listEl.innerHTML = [...vetPregSessionEntries].reverse().map(e=>`
-      <div class="record" style="padding:10px 14px;">
-        <div class="record-med" style="font-size:16px;">#${escapeHtml(e.cowNum)} — ${e.daysAlong} days</div>
-        <div class="record-reason">Due: ${fmtDate(e.dueDate)}${e.usedVetCheck ? ' (adjusted from vet call)' : ''}</div>
-      </div>
-    `).join('');
+    listEl.innerHTML = [...vetPregSessionEntries].reverse().map(e=>{
+      if(e.isOpen){
+        return `
+          <div class="record" style="padding:10px 14px;border-left-color:#7A2E27;">
+            <div class="record-med" style="font-size:16px;">#${escapeHtml(e.cowNum)} — <span style="color:#7A2E27;">Open</span></div>
+          </div>
+        `;
+      }
+      return `
+        <div class="record" style="padding:10px 14px;">
+          <div class="record-med" style="font-size:16px;">#${escapeHtml(e.cowNum)} — ${e.daysAlong} days</div>
+          <div class="record-reason">Due: ${fmtDate(e.dueDate)}${e.usedVetCheck ? ' (adjusted from vet call)' : ''}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function markVetPregOpenEntry(){
+    const cowNumInput = document.getElementById('vetPregCowNum');
+    const daysInput = document.getElementById('vetPregDaysAlong');
+    const cowNum = cowNumInput.value.trim();
+    if(!cowNum){ showToast('Enter a cow number'); return; }
+    const cow = cows.find(c=>c.number===cowNum);
+    if(!cow){ showToast(`No cow #${cowNum} found`); return; }
+    const latest = [...breedingFor(cowNum)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+    if(!latest){ showToast(`No breeding record for #${cowNum}`); return; }
+
+    const btn = document.getElementById('vetPregOpenBtn');
+    btn.disabled = true;
+    try{
+      const updated = await api('/breeding_records?id=eq.' + encodeURIComponent(latest.id), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ pregnancy_status: 'Open', vet_calls: null, expected_due_date: null })
+      });
+      const idx = breedingRecords.findIndex(b=>b.id===latest.id);
+      if(idx !== -1) breedingRecords[idx] = updated[0];
+
+      vetPregSessionEntries.push({ cowNum, isOpen: true });
+      renderVetPregTally();
+      showToast(`#${cowNum} marked open`);
+      cowNumInput.value = '';
+      daysInput.value = '';
+      cowNumInput.focus();
+    }catch(e){
+      showToast('Could not save — try again');
+    }
+    btn.disabled = false;
   }
 
   async function saveVetPregCheckEntry(){
@@ -5466,7 +5511,7 @@
       const updated = await api('/breeding_records?id=eq.' + encodeURIComponent(latest.id), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ vet_calls: daysAlongVal, expected_due_date: resolved.dueDate })
+        body: JSON.stringify({ vet_calls: daysAlongVal, expected_due_date: resolved.dueDate, pregnancy_status: 'Bred' })
       });
       const idx = breedingRecords.findIndex(b=>b.id===latest.id);
       if(idx !== -1) breedingRecords[idx] = updated[0];
@@ -5557,6 +5602,7 @@
   document.getElementById('vetPregCheckBtn').addEventListener('click', showVetPregCheck);
   document.getElementById('vetPregCheckHomeBtn').addEventListener('click', showHome);
   document.getElementById('vetPregSaveBtn').addEventListener('click', saveVetPregCheckEntry);
+  document.getElementById('vetPregOpenBtn').addEventListener('click', markVetPregOpenEntry);
   document.getElementById('vetPregDaysAlong').addEventListener('keydown', (e)=>{
     if(e.key === 'Enter') saveVetPregCheckEntry();
   });
