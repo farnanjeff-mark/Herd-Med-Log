@@ -8061,7 +8061,10 @@
   }
 
   function calvedReportModal(){
-    const list = cows.filter(c=>c.calved).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const list = cows.filter(c=>c.calved).map(c=>{
+      const latestCalving = [...calvingsFor(c.number)].sort((a,b)=> b.calving_date.localeCompare(a.calving_date))[0];
+      return { cow: c, latestCalvingDate: latestCalving ? latestCalving.calving_date : '' };
+    }).sort((a,b)=> b.latestCalvingDate.localeCompare(a.latestCalvingDate)).map(e=>e.cow);
     const rows = list.map((c,i)=>{
       const latestBreeding = [...breedingFor(c.number)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
       const bredTo = latestBreeding ? (latestBreeding.bred_to||'') : '';
