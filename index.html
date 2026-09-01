@@ -273,15 +273,15 @@
         <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#fff;border-width:1.5px;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
       </div>
       <div style="display:flex;gap:6px;padding-top:20px;margin-bottom:12px;padding-left:10px;padding-right:10px;">
-        <div id="homeCalvedWrap" class="hidden" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeCalvedWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeCalvedBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Calved</span>
         </div>
-        <div id="homeTagNeededWrap" class="hidden" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeTagNeededWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeTagNeededBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Tag</span>
         </div>
-        <div id="homeFlaggedWrap" class="hidden" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeFlaggedWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeFlaggedBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Flagged</span>
         </div>
@@ -3030,36 +3030,24 @@
     const wrap = document.getElementById('homeTagNeededWrap');
     if(!badge || !wrap) return;
     const count = cows.filter(c=>c.tag_needed).length;
-    if(count > 0){
-      wrap.classList.remove('hidden');
-      badge.textContent = count > 99 ? '99+' : count;
-    } else {
-      wrap.classList.add('hidden');
-    }
+    wrap.classList.remove('hidden');
+    badge.textContent = count > 99 ? '99+' : count;
   }
   function updateCalvedBadge(){
     const badge = document.getElementById('homeCalvedBadge');
     const wrap = document.getElementById('homeCalvedWrap');
     if(!badge || !wrap) return;
     const count = cows.filter(c=>c.calved).length;
-    if(count > 0){
-      wrap.classList.remove('hidden');
-      badge.textContent = count > 99 ? '99+' : count;
-    } else {
-      wrap.classList.add('hidden');
-    }
+    wrap.classList.remove('hidden');
+    badge.textContent = count > 99 ? '99+' : count;
   }
   function updateFlaggedBadge(){
     const badge = document.getElementById('homeFlaggedBadge');
     const wrap = document.getElementById('homeFlaggedWrap');
     if(!badge || !wrap) return;
     const count = cows.filter(c=>c.needs_entry).length;
-    if(count > 0){
-      wrap.classList.remove('hidden');
-      badge.textContent = count > 99 ? '99+' : count;
-    } else {
-      wrap.classList.add('hidden');
-    }
+    wrap.classList.remove('hidden');
+    badge.textContent = count > 99 ? '99+' : count;
   }
   function printListModal(cowList, title, action){
     action = action || 'print';
@@ -3684,8 +3672,9 @@
           if(r.pregnancy_method) details.push(escapeHtml(r.pregnancy_method));
           if(r.natural_sire) details.push(`Natural sire: ${escapeHtml(r.natural_sire)}`);
           if(r.vet_calls) details.push(`Vet: ${escapeHtml(r.vet_calls)}`);
-          return `<div class="record">
+          return `<div class="record"${r.pregnancy_status==='Open' ? ' style="border-left-color:#7A2E27;"' : ''}>
             <div class="record-date">${fmtDate(r.breed_date)}</div>
+            ${r.pregnancy_status==='Open' ? '<div class="record-med" style="color:#7A2E27;font-weight:700;">Open</div>' : ''}
             ${r.expected_due_date ? `<div class="record-med">Due: ${fmtDate(r.expected_due_date)}</div>` : ''}
             ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
             ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
@@ -4822,15 +4811,7 @@
   function editWeightModal(record){ weightModal(record); }
 
   function getBullOptionsWithExtras(){
-    // Any bull already used in a calving/breeding record but not yet in the
-    // bulls table (e.g. added before this migration ran) still shows up,
-    // same safety net the old hardcoded-list version had.
-    const known = new Set(bulls.map(b=>b.name));
-    const used = new Set();
-    calvings.forEach(c=>{ if(c.sire) used.add(c.sire); });
-    breedingRecords.forEach(b=>{ if(b.bred_to) used.add(b.bred_to); });
-    const extras = [...used].filter(b=>!known.has(b)).sort();
-    return [...bulls.map(b=>b.name), ...extras];
+    return bulls.map(b=>b.name);
   }
   async function addBullIfNew(name){
     if(!name) return;
