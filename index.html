@@ -7259,11 +7259,13 @@
     const calvingFieldsUsed = calfSire || calfSex || birthAssist || calfOutcome || weightMin != null || weightMax != null;
 
     function matchingBreedingRecords(num){
-      return breedingFor(num).filter(b=>
+      const records = breedingFor(num);
+      const latest = [...records].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+      return records.filter(b=>
         (!bredTo || b.bred_to === bredTo) &&
         (!method || b.pregnancy_method === method) &&
         (!naturalSire || (b.natural_sire||'').toLowerCase().includes(naturalSire)) &&
-        (!openOnly || b.pregnancy_status === 'Open') &&
+        (!openOnly || (latest && b.id === latest.id && b.pregnancy_status === 'Open')) &&
         (!dateFrom || b.breed_date >= dateFrom) &&
         (!dateTo || b.breed_date <= dateTo)
       );
