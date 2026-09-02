@@ -1397,18 +1397,6 @@
     return sex === 'B' ? 'Bull' : sex === 'H' ? 'Heifer' : 'Unknown';
   }
 
-  function hasRecentActivity(num, days){
-    days = days || 21;
-    const dates = [
-      ...recordsFor(num).map(r=>r.date),
-      ...calvingsFor(num).map(r=>r.calving_date),
-      ...generalNotesFor(num).map(r=>r.note_date),
-      ...weightsFor(num).map(r=>r.weigh_date),
-      ...breedingFor(num).map(r=>r.breed_date)
-    ];
-    return dates.some(d=> d && daysAgo(d) <= days && daysAgo(d) >= 0);
-  }
-
   function matchesLocationGroupFilter(c, filterKind, filterValue){
     if(filterKind === 'loc'){
       if(filterValue === '__other__'){
@@ -2378,44 +2366,6 @@
     }catch(e){ deletedRecords = []; }
     renderRecentlyDeleted();
   }
-  function showMedsNotes(){
-    setHeaderTitle('Med', 'Log');
-    homeView.classList.add('hidden');
-    detailView.classList.add('hidden');
-    calvingListView.classList.add('hidden');
-    calvingDetailView.classList.add('hidden');
-    notesListView.classList.add('hidden');
-    notesDetailView.classList.add('hidden');
-    profileListView.classList.add('hidden');
-    profileView.classList.add('hidden');
-    weightsListView.classList.add('hidden');
-    breedingListView.classList.add('hidden');
-    weightsDetailView.classList.add('hidden');
-    breedingDetailView.classList.add('hidden');
-    listView.classList.remove('hidden');
-    fabAdd.classList.remove('hidden');
-    renderList();
-    window.scrollTo(0,0);
-  }
-  function showCalvingList(){
-    setHeaderTitle('Calving', 'Records');
-    homeView.classList.add('hidden');
-    listView.classList.add('hidden');
-    detailView.classList.add('hidden');
-    calvingDetailView.classList.add('hidden');
-    notesListView.classList.add('hidden');
-    notesDetailView.classList.add('hidden');
-    profileListView.classList.add('hidden');
-    profileView.classList.add('hidden');
-    weightsListView.classList.add('hidden');
-    breedingListView.classList.add('hidden');
-    weightsDetailView.classList.add('hidden');
-    breedingDetailView.classList.add('hidden');
-    calvingListView.classList.remove('hidden');
-    fabAdd.classList.remove('hidden');
-    renderCalvingList();
-    window.scrollTo(0,0);
-  }
   function openCalvingCow(num){
     currentCalvingCow = num;
     homeView.classList.add('hidden');
@@ -2446,25 +2396,6 @@
     fabAdd.classList.remove('hidden');
     calvingSearchBox.value = '';
     renderCalvingList();
-    window.scrollTo(0,0);
-  }
-  function showNotesList(){
-    setHeaderTitle('General', 'Notes');
-    homeView.classList.add('hidden');
-    listView.classList.add('hidden');
-    detailView.classList.add('hidden');
-    calvingListView.classList.add('hidden');
-    calvingDetailView.classList.add('hidden');
-    notesDetailView.classList.add('hidden');
-    profileListView.classList.add('hidden');
-    profileView.classList.add('hidden');
-    weightsListView.classList.add('hidden');
-    breedingListView.classList.add('hidden');
-    weightsDetailView.classList.add('hidden');
-    breedingDetailView.classList.add('hidden');
-    notesListView.classList.remove('hidden');
-    fabAdd.classList.remove('hidden');
-    renderNotesList();
     window.scrollTo(0,0);
   }
   function openNotesCow(num){
@@ -2520,10 +2451,6 @@
   }
   function showProfileListTagNeeded(){
     pendingProfileFilterOverride = 'tag:1';
-    showProfileList();
-  }
-  function showProfileListCalved(){
-    pendingProfileFilterOverride = 'calved:1';
     showProfileList();
   }
   function showProfileListFlagged(){
@@ -2584,24 +2511,6 @@
     renderProfileList();
     window.scrollTo(0,0);
   }
-  function showWeightsList(){
-    setHeaderTitle('Weights', '');
-    homeView.classList.add('hidden');
-    listView.classList.add('hidden');
-    detailView.classList.add('hidden');
-    calvingListView.classList.add('hidden');
-    calvingDetailView.classList.add('hidden');
-    notesListView.classList.add('hidden');
-    notesDetailView.classList.add('hidden');
-    profileListView.classList.add('hidden');
-    profileView.classList.add('hidden');
-    weightsDetailView.classList.add('hidden');
-    breedingDetailView.classList.add('hidden');
-    weightsListView.classList.remove('hidden');
-    fabAdd.classList.remove('hidden');
-    renderWeightsList();
-    window.scrollTo(0,0);
-  }
   function openWeightsCow(num){
     currentWeightsCow = num;
     homeView.classList.add('hidden');
@@ -2630,25 +2539,6 @@
     fabAdd.classList.remove('hidden');
     weightsSearchBox.value = '';
     renderWeightsList();
-    window.scrollTo(0,0);
-  }
-  function showBreedingList(){
-    setHeaderTitle('Breeding', 'Records');
-    homeView.classList.add('hidden');
-    listView.classList.add('hidden');
-    detailView.classList.add('hidden');
-    calvingListView.classList.add('hidden');
-    calvingDetailView.classList.add('hidden');
-    notesListView.classList.add('hidden');
-    notesDetailView.classList.add('hidden');
-    profileListView.classList.add('hidden');
-    profileView.classList.add('hidden');
-    weightsListView.classList.add('hidden');
-    weightsDetailView.classList.add('hidden');
-    breedingDetailView.classList.add('hidden');
-    breedingListView.classList.remove('hidden');
-    fabAdd.classList.remove('hidden');
-    renderBreedingList();
     window.scrollTo(0,0);
   }
   function openBreedingCow(num){
@@ -3958,86 +3848,6 @@
       renderCalvingDetail();
       renderCalvingList();
       showToast('Calving record removed');
-    }catch(e){ showToast('Could not remove — try again'); }
-  }
-
-  async function deleteCow(){
-    if(!currentCow) return;
-    if(!confirm(`Remove cow #${currentCow} and all its treatment history? This can't be undone.`)) return;
-    try{
-      await api('/cows?number=eq.' + encodeURIComponent(currentCow), { method:'DELETE' });
-      cows = cows.filter(c=>c.number!==currentCow);
-      treatments = treatments.filter(t=>t.cow_number!==currentCow);
-      calvings = calvings.filter(c=>c.cow_number!==currentCow);
-      generalNotes = generalNotes.filter(n=>n.cow_number!==currentCow);
-      weights = weights.filter(w=>w.cow_number!==currentCow);
-      breedingRecords = breedingRecords.filter(b=>b.cow_number!==currentCow);
-      closeCow();
-      showToast('Cow removed');
-    }catch(e){ showToast('Could not remove — try again'); }
-  }
-
-  async function deleteCowFromCalving(){
-    if(!currentCalvingCow) return;
-    if(!confirm(`Remove cow #${currentCalvingCow} and all its records (treatments, notes, and calvings)? This can't be undone.`)) return;
-    try{
-      await api('/cows?number=eq.' + encodeURIComponent(currentCalvingCow), { method:'DELETE' });
-      cows = cows.filter(c=>c.number!==currentCalvingCow);
-      treatments = treatments.filter(t=>t.cow_number!==currentCalvingCow);
-      calvings = calvings.filter(c=>c.cow_number!==currentCalvingCow);
-      generalNotes = generalNotes.filter(n=>n.cow_number!==currentCalvingCow);
-      weights = weights.filter(w=>w.cow_number!==currentCalvingCow);
-      breedingRecords = breedingRecords.filter(b=>b.cow_number!==currentCalvingCow);
-      closeCalvingCow();
-      showToast('Cow removed');
-    }catch(e){ showToast('Could not remove — try again'); }
-  }
-
-  async function deleteCowFromNotes(){
-    if(!currentNotesCow) return;
-    if(!confirm(`Remove cow #${currentNotesCow} and all its records (treatments, notes, and calvings)? This can't be undone.`)) return;
-    try{
-      await api('/cows?number=eq.' + encodeURIComponent(currentNotesCow), { method:'DELETE' });
-      cows = cows.filter(c=>c.number!==currentNotesCow);
-      treatments = treatments.filter(t=>t.cow_number!==currentNotesCow);
-      calvings = calvings.filter(c=>c.cow_number!==currentNotesCow);
-      generalNotes = generalNotes.filter(n=>n.cow_number!==currentNotesCow);
-      weights = weights.filter(w=>w.cow_number!==currentNotesCow);
-      breedingRecords = breedingRecords.filter(b=>b.cow_number!==currentNotesCow);
-      closeNotesCow();
-      showToast('Cow removed');
-    }catch(e){ showToast('Could not remove — try again'); }
-  }
-
-  async function deleteCowFromWeights(){
-    if(!currentWeightsCow) return;
-    if(!confirm(`Remove cow #${currentWeightsCow} and all its records (treatments, notes, calvings, and weights)? This can't be undone.`)) return;
-    try{
-      await api('/cows?number=eq.' + encodeURIComponent(currentWeightsCow), { method:'DELETE' });
-      cows = cows.filter(c=>c.number!==currentWeightsCow);
-      treatments = treatments.filter(t=>t.cow_number!==currentWeightsCow);
-      calvings = calvings.filter(c=>c.cow_number!==currentWeightsCow);
-      generalNotes = generalNotes.filter(n=>n.cow_number!==currentWeightsCow);
-      weights = weights.filter(w=>w.cow_number!==currentWeightsCow);
-      breedingRecords = breedingRecords.filter(b=>b.cow_number!==currentWeightsCow);
-      closeWeightsCow();
-      showToast('Cow removed');
-    }catch(e){ showToast('Could not remove — try again'); }
-  }
-
-  async function deleteCowFromBreeding(){
-    if(!currentBreedingCow) return;
-    if(!confirm(`Remove cow #${currentBreedingCow} and all its records (treatments, notes, calvings, weights, and breeding)? This can't be undone.`)) return;
-    try{
-      await api('/cows?number=eq.' + encodeURIComponent(currentBreedingCow), { method:'DELETE' });
-      cows = cows.filter(c=>c.number!==currentBreedingCow);
-      treatments = treatments.filter(t=>t.cow_number!==currentBreedingCow);
-      calvings = calvings.filter(c=>c.cow_number!==currentBreedingCow);
-      generalNotes = generalNotes.filter(n=>n.cow_number!==currentBreedingCow);
-      weights = weights.filter(w=>w.cow_number!==currentBreedingCow);
-      breedingRecords = breedingRecords.filter(b=>b.cow_number!==currentBreedingCow);
-      closeBreedingCow();
-      showToast('Cow removed');
     }catch(e){ showToast('Could not remove — try again'); }
   }
 
@@ -6022,17 +5832,6 @@
       showToast('Could not save — try again');
     }
   }
-  function quickAddButtonHtml(num){
-    return `<button class="quick-add-btn" data-num="${escapeHtml(num)}" title="Quick add" style="width:36px;height:36px;border-radius:50%;background:#0274BA;color:#fff;border:none;font-size:22px;font-weight:700;line-height:1;cursor:pointer;flex-shrink:0;">+</button>`;
-  }
-  function wireQuickAddButtons(container, onQuickAdd){
-    container.querySelectorAll('.quick-add-btn').forEach(btn=>{
-      btn.addEventListener('click', e=>{
-        e.stopPropagation();
-        onQuickAdd(btn.dataset.num);
-      });
-    });
-  }
   const PROFILE_QUICK_ADD_TYPES = [
     { type:'meds', title:'Log Medicine', label:'Meds' },
     { type:'calving', title:'Log Calving', label:'Calving' },
@@ -7743,63 +7542,6 @@
     }
     modal.querySelector('#closeReportBtn').addEventListener('click', closeModal);
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
-    modal.querySelector('#reportPrintBtn').addEventListener('click', ()=>{
-      document.getElementById('printListOutput').innerHTML = `
-        <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
-          <h2 style="margin:0 0 4px;">Farnan Cattle Co. — ${title}</h2>
-          <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())}</div>
-          <table style="width:100%;border-collapse:collapse;font-size:12px;">
-            <thead><tr>${headerCells.map(h=>`<th style="text-align:left;padding:6px;border-bottom:2px solid #000;">${h}</th>`).join('')}</tr></thead>
-            <tbody>${rowsHtml}</tbody>
-          </table>
-        </div>
-      `;
-      document.body.classList.add('printing-list');
-      requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
-    });
-    modal.querySelector('#reportExportBtn').addEventListener('click', async ()=>{
-      if(typeof ExcelJS === 'undefined'){ showToast('Could not load spreadsheet library'); return; }
-      try{
-        const wb = new ExcelJS.Workbook();
-        const ws = wb.addWorksheet(title.slice(0,30));
-        ws.addRow(headerCells.map(h=>h.replace(/<[^>]+>/g,'')));
-        ws.getRow(1).font = { bold:true };
-        const tmp = document.createElement('table');
-        tmp.innerHTML = rowsHtml;
-        [...tmp.querySelectorAll('tr')].forEach(tr=>{
-          ws.addRow([...tr.querySelectorAll('td')].map(td=>td.textContent));
-        });
-        ws.columns.forEach(col=>{ col.width = 18; });
-        const buffer = await wb.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = title.toLowerCase().replace(/[^a-z0-9]+/g,'-') + '-' + todayLocal() + '.xlsx';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast('Exported');
-      }catch(e){ showToast('Export failed — try again'); }
-    });
-  }
-
-  function reportTableModal(title, headerCells, rowsHtml, cowListForActions){
-    const modal = openModal(`
-      <div class="modal-title">${title}</div>
-      <div style="max-height:60vh;overflow-y:auto;overflow-x:auto;margin-bottom:14px;">
-        <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
-          <thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-outline" id="reportPrintBtn">🖨️ Print</button>
-        <button class="btn btn-outline" id="reportExportBtn">📊 Export</button>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-barn btn-full" id="closeReportBtn">Close</button>
-      </div>
-    `);
-    modal.querySelector('#closeReportBtn').addEventListener('click', closeModal);
     modal.querySelector('#reportPrintBtn').addEventListener('click', ()=>{
       document.getElementById('printListOutput').innerHTML = `
         <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
