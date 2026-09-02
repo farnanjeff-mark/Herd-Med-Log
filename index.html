@@ -5819,7 +5819,7 @@
       const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ calved: checked })
+        body: JSON.stringify({ calved: checked, calved_marked_at: checked ? new Date().toISOString() : null })
       });
       const idx = cows.findIndex(c=>c.number===num);
       if(idx !== -1) cows[idx] = updated[0];
@@ -7877,10 +7877,7 @@
   }
 
   function calvedReportModal(){
-    const list = cows.filter(c=>c.calved).map(c=>{
-      const latestCalving = [...calvingsFor(c.number)].sort((a,b)=> b.calving_date.localeCompare(a.calving_date))[0];
-      return { cow: c, latestCalvingDate: latestCalving ? latestCalving.calving_date : '' };
-    }).sort((a,b)=> b.latestCalvingDate.localeCompare(a.latestCalvingDate)).map(e=>e.cow);
+    const list = [...cows].filter(c=>c.calved).sort((a,b)=> (b.calved_marked_at||'').localeCompare(a.calved_marked_at||''));
     const rows = list.map((c,i)=>{
       const latestBreeding = [...breedingFor(c.number)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
       const bredTo = latestBreeding ? (latestBreeding.bred_to||'') : '';
