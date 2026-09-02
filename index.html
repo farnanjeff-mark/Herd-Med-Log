@@ -3662,7 +3662,8 @@
           <div class="record-med">${w.weight!=null ? w.weight+' lbs' : ''}</div>
           ${w.notes ? `<div class="record-notes">${escapeHtml(w.notes)}</div>` : ''}
         </div>`).join('');
-        calfActivityEl.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:6px;">From #${escapeHtml(num)}'s ${fmtDate(currentCalf.calving_date)} calf — not her own record</div>${medsHtml}${wtsHtml}`;
+        calfActivityEl.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:6px;">From #${escapeHtml(num)}'s ${fmtDate(currentCalf.calving_date)} calf — not her own record</div>${medsHtml}${wtsHtml}<button class="btn btn-profile-nav btn-full" id="profileGoCalfRecord" style="margin-top:8px;">Go to Calf Record →</button>`;
+        calfActivityEl.querySelector('#profileGoCalfRecord').addEventListener('click', ()=> calfRecordModal(currentCalf));
       }
     } else {
       calfActivityLabel.style.display = 'none';
@@ -8319,6 +8320,8 @@
     generalNotes.forEach(n=>{ if(daysAgo(n.note_date) === 0) count++; });
     weights.forEach(w=>{ if(daysAgo(w.weigh_date) === 0) count++; });
     breedingRecords.forEach(b=>{ if(daysAgo(b.breed_date) === 0) count++; });
+    calfTreatments.forEach(t=>{ if(daysAgo(t.date) === 0) count++; });
+    calfWeights.forEach(w=>{ if(daysAgo(w.weigh_date) === 0) count++; });
     badge.textContent = count > 99 ? '99+' : count;
   }
 
