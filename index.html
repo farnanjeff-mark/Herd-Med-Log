@@ -7657,10 +7657,13 @@
 
   function reportCardModal(title, cowList, headerCells, rowsHtml){
     const modal = openModal(`
-      <div class="modal-title">${title}</div>
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>${title}</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
       <div id="reportCardCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;">${cowList.length} cow${cowList.length!==1?'s':''} matched</div>
       <div id="reportTableWrap" style="overflow-x:auto;margin-bottom:14px;"></div>
-      <div id="reportCardList" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div id="reportCardList" style="margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="reportPrintBtn">🖨️ Print</button>
         <button class="btn btn-outline" id="reportExportBtn">📊 Export</button>
@@ -7689,6 +7692,7 @@
       wireCalvedCheckboxes(listEl);
     }
     modal.querySelector('#closeReportBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
     modal.querySelector('#reportPrintBtn').addEventListener('click', ()=>{
       document.getElementById('printListOutput').innerHTML = `
         <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
@@ -7793,7 +7797,10 @@
     });
     const entries = Object.entries(counts).sort((a,b)=> b[1]-a[1]);
     const modal = openModal(`
-      <div class="modal-title">Headcount by Owner</div>
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Headcount by Owner</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
       <div style="margin-bottom:16px;">
         ${entries.map(([owner,count])=>`
           <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-family:Arial,sans-serif;">
@@ -7809,6 +7816,7 @@
       </div>
     `);
     modal.querySelector('#closeHeadcountBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
   }
 
   function soldDeceasedModal(){
@@ -7834,7 +7842,10 @@
 
   function deadCalvesModal(){
     const modal = openModal(`
-      <div class="modal-title">Dead Calves</div>
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Dead Calves</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
       <div class="field">
         <label>Time Frame</label>
         <select id="deadCalvesTimeframe">
@@ -7846,7 +7857,7 @@
       </div>
       <div id="deadCalvesCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
       <div id="deadCalvesTable" style="overflow-x:auto;margin-bottom:14px;"></div>
-      <div id="deadCalvesResults" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div id="deadCalvesResults" style="margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="deadCalvesPrintBtn">🖨️ Print</button>
         <button class="btn btn-outline" id="deadCalvesExportBtn">📊 Export</button>
@@ -7897,6 +7908,7 @@
     refresh();
     modal.querySelector('#deadCalvesTimeframe').addEventListener('change', refresh);
     modal.querySelector('#closeDeadCalvesBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
     modal.querySelector('#deadCalvesPrintBtn').addEventListener('click', ()=>{
       const { headerCells, rowsHtml } = currentRows();
       document.getElementById('printListOutput').innerHTML = `
@@ -7935,7 +7947,10 @@
 
   function calvingReportModal(){
     const modal = openModal(`
-      <div class="modal-title">Calving Report</div>
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Calving Report</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
       <div class="field">
         <label>Time Frame</label>
         <select id="calvingReportTimeframe">
@@ -7947,7 +7962,7 @@
       </div>
       <div id="calvingReportCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
       <div id="calvingReportTable" style="overflow-x:auto;margin-bottom:14px;"></div>
-      <div id="calvingReportResults" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div id="calvingReportResults" style="margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="calvingReportPrintBtn">🖨️ Print</button>
         <button class="btn btn-outline" id="calvingReportExportBtn">📊 Export</button>
@@ -7999,6 +8014,7 @@
     refresh();
     modal.querySelector('#calvingReportTimeframe').addEventListener('change', refresh);
     modal.querySelector('#closeCalvingReportBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
     modal.querySelector('#calvingReportPrintBtn').addEventListener('click', ()=>{
       const { headerCells, rowsHtml } = currentRows();
       document.getElementById('printListOutput').innerHTML = `
@@ -8083,10 +8099,13 @@
     });
     entries.sort((a,b)=> (b.breeding.open_date||'').localeCompare(a.breeding.open_date||''));
     const modal = openModal(`
-      <div class="modal-title">Open Cows</div>
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Open Cows</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
       <div id="openCowsCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;">${entries.length} cow${entries.length!==1?'s':''} matched</div>
       <div id="openCowsTable" style="overflow-x:auto;margin-bottom:14px;"></div>
-      <div id="openCowsList" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div id="openCowsList" style="margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-barn btn-full" id="closeOpenCowsBtn">Close</button>
       </div>
@@ -8117,11 +8136,15 @@
       wireCalvedCheckboxes(listEl);
     }
     modal.querySelector('#closeOpenCowsBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
   }
 
   function todaysActivityModal(){
     const modal = openModal(`
-      <div class="modal-title">Today's Activity</div>
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Today's Activity</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
       <div class="field">
         <label>Time Frame</label>
         <select id="todaysActivityTimeframe">
@@ -8132,7 +8155,7 @@
       </div>
       <div id="todaysActivityCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
       <div id="todaysActivityTable" style="overflow-x:auto;margin-bottom:14px;"></div>
-      <div id="todaysActivityResults" style="max-height:50vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div id="todaysActivityResults" style="margin-bottom:14px;"></div>
       <div class="modal-actions">
         <button class="btn btn-barn btn-full" id="closeTodaysActivityBtn">Close</button>
       </div>
@@ -8213,6 +8236,7 @@
     refresh();
     modal.querySelector('#todaysActivityTimeframe').addEventListener('change', refresh);
     modal.querySelector('#closeTodaysActivityBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
   }
 
   function updateTodoCount(){
