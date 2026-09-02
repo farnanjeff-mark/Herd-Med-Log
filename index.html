@@ -272,7 +272,7 @@
         </div>
         <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#fff;border-width:1.5px;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
       </div>
-      <div style="display:flex;gap:6px;padding-top:20px;margin-bottom:12px;padding-left:10px;padding-right:10px;">
+      <div style="display:flex;gap:6px;padding-top:20px;padding-left:10px;padding-right:10px;">
         <div id="homeCalvedWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeCalvedBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Calved</span>
@@ -285,13 +285,19 @@
           <span id="homeFlaggedBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Flagged</span>
         </div>
+      </div>
+      <div style="display:flex;gap:6px;padding-top:6px;margin-bottom:12px;padding-left:10px;padding-right:10px;">
         <div id="homeTodoWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeTodoBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">List</span>
+          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">To Do</span>
         </div>
         <div id="homeTodaysActivityWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeTodaysActivityBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Activity</span>
+        </div>
+        <div id="homeCalfActivityWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+          <span id="homeCalfActivityBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
+          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Calf Activity</span>
         </div>
       </div>
     </div>
@@ -1281,6 +1287,7 @@
     updateFlaggedBadge();
     updateTodoCount();
     updateTodaysActivityBadge();
+    updateCalfActivityBadge();
   }
 
   function fmtDate(iso){
@@ -5508,6 +5515,7 @@
     runHomeQuickSearch();
   });
   document.getElementById('homeTodaysActivityWrap').addEventListener('click', todaysActivityModal);
+  document.getElementById('homeCalfActivityWrap').addEventListener('click', calfActivityModal);
   document.getElementById('homeTodoWrap').addEventListener('click', todoListModal);
   document.getElementById('quickActionHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeQuickSearchClearBtn').addEventListener('click', (e)=>{
@@ -8046,6 +8054,95 @@
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
   }
 
+  function calfActivityModal(){
+    const modal = openModal(`
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Calf Activity</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
+      <div class="field">
+        <label>Time Frame</label>
+        <select id="calfActivityTimeframe">
+          <option value="0" selected>Today</option>
+          <option value="7">1 Week</option>
+          <option value="30">1 Month</option>
+        </select>
+      </div>
+      <div id="calfActivityCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
+      <div id="calfActivityTable" style="overflow-x:auto;margin-bottom:14px;"></div>
+      <div id="calfActivityResults" style="margin-bottom:14px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeCalfActivityBtn">Close</button>
+      </div>
+    `);
+    function currentEntries(){
+      const days = parseInt(modal.querySelector('#calfActivityTimeframe').value, 10);
+      const entries = [];
+      calfTreatments.forEach(t=>{
+        if(daysAgo(t.date) <= days && daysAgo(t.date) >= 0){
+          const cv = calvings.find(c=>c.id===t.calving_id);
+          if(!cv) return;
+          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
+          entries.push({ date: t.date, num: cv.cow_number, type: 'Calf Med', details: desc });
+        }
+      });
+      calfWeights.forEach(w=>{
+        if(daysAgo(w.weigh_date) <= days && daysAgo(w.weigh_date) >= 0){
+          const cv = calvings.find(c=>c.id===w.calving_id);
+          if(!cv) return;
+          entries.push({ date: w.weigh_date, num: cv.cow_number, type: 'Calf Weight', details: w.weight!=null ? w.weight+' lbs' : '' });
+        }
+      });
+      entries.sort((a,b)=> b.date.localeCompare(a.date));
+      return entries;
+    }
+    function refresh(){
+      const entries = currentEntries();
+      const countEl = modal.querySelector('#calfActivityCount');
+      const tableEl = modal.querySelector('#calfActivityTable');
+      const resultsEl = modal.querySelector('#calfActivityResults');
+      countEl.textContent = `${entries.length} entr${entries.length!==1?'ies':'y'} matched`;
+      if(entries.length === 0){
+        tableEl.innerHTML = '';
+        resultsEl.innerHTML = '<p class="empty">No calf activity in this timeframe.</p>';
+      } else {
+        tableEl.innerHTML = `
+          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+            <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Type</th><th style="text-align:left;padding:8px;">Details</th></tr></thead>
+            <tbody>
+              ${entries.map((e,i)=>`
+                <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+                  <td style="padding:8px;">${fmtDateShort(e.date)}</td>
+                  <td style="padding:8px;">#${escapeHtml(e.num)}</td>
+                  <td style="padding:8px;">${escapeHtml(e.type)}</td>
+                  <td style="padding:8px;white-space:normal;">${escapeHtml(e.details)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+        const seen = new Set();
+        const cowList = [];
+        entries.forEach(e=>{
+          if(seen.has(e.num)) return;
+          seen.add(e.num);
+          const cow = cows.find(cw=>cw.number===e.num);
+          if(cow) cowList.push(cow);
+        });
+        resultsEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
+        wireQuickAddCardOpen(resultsEl);
+        wireProfileQuickAddButtons(resultsEl);
+        wireNeedsEntryCheckboxes(resultsEl);
+        wireTagNeededCheckboxes(resultsEl);
+        wireCalvedCheckboxes(resultsEl);
+      }
+    }
+    refresh();
+    modal.querySelector('#calfActivityTimeframe').addEventListener('change', refresh);
+    modal.querySelector('#closeCalfActivityBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
+  }
+
   function updateTodoCount(){
     const badge = document.getElementById('homeTodoBadge');
     if(!badge) return;
@@ -8062,6 +8159,14 @@
     generalNotes.forEach(n=>{ if(daysAgo(n.note_date) === 0) count++; });
     weights.forEach(w=>{ if(daysAgo(w.weigh_date) === 0) count++; });
     breedingRecords.forEach(b=>{ if(daysAgo(b.breed_date) === 0) count++; });
+    calfTreatments.forEach(t=>{ if(daysAgo(t.date) === 0) count++; });
+    calfWeights.forEach(w=>{ if(daysAgo(w.weigh_date) === 0) count++; });
+    badge.textContent = count > 99 ? '99+' : count;
+  }
+  function updateCalfActivityBadge(){
+    const badge = document.getElementById('homeCalfActivityBadge');
+    if(!badge) return;
+    let count = 0;
     calfTreatments.forEach(t=>{ if(daysAgo(t.date) === 0) count++; });
     calfWeights.forEach(w=>{ if(daysAgo(w.weigh_date) === 0) count++; });
     badge.textContent = count > 99 ? '99+' : count;
