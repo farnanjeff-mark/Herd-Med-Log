@@ -8107,8 +8107,7 @@
   function updateDueSoonBadge(){
     const badge = document.getElementById('homeDueSoonBadge');
     if(!badge) return;
-    const count = dueSoonEntries().length;
-    badge.textContent = count > 99 ? '99+' : count;
+    badge.textContent = dueSoonEntries().length;
   }
 
   async function addTodo(text){
