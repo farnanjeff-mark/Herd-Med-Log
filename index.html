@@ -5936,6 +5936,7 @@
     container.querySelectorAll('[data-open-num]').forEach(el=>{
       el.addEventListener('click', e=>{
         e.stopPropagation();
+        closeModal();
         openProfileCow(el.dataset.openNum);
       });
     });
