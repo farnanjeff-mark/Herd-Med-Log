@@ -945,6 +945,9 @@
     <div id="profileCalvingList"></div>
     <button class="btn btn-profile-nav btn-full" id="profileGoCalving" style="margin-bottom:20px;">Go to Calving Records →</button>
 
+    <div class="section-label" id="profileCalfActivityLabel" style="display:none;">Calf Activity</div>
+    <div id="profileCalfActivityList" style="margin-bottom:20px;"></div>
+
     <div class="section-label">General Notes</div>
     <div id="profileNotesList"></div>
     <button class="btn btn-profile-nav btn-full" id="profileGoNotes" style="margin-bottom:20px;">Go to General Notes →</button>
@@ -3633,6 +3636,38 @@
             ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
           </div>`;
         }).join('');
+
+    // Calf Activity — meds/notes/weights for her most recent calf that hasn't been made its own cow yet
+    const currentCalf = calvingRecs.find(r=> !r.promoted_to_cow_number);
+    const calfActivityLabel = document.getElementById('profileCalfActivityLabel');
+    const calfActivityEl = document.getElementById('profileCalfActivityList');
+    if(currentCalf){
+      const calfMeds = calfTreatments.filter(t=>t.calving_id===currentCalf.id).sort((a,b)=>b.date.localeCompare(a.date));
+      const calfWts = calfWeights.filter(w=>w.calving_id===currentCalf.id).sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date));
+      if(calfMeds.length === 0 && calfWts.length === 0){
+        calfActivityLabel.style.display = 'none';
+        calfActivityEl.innerHTML = '';
+      } else {
+        calfActivityLabel.style.display = '';
+        const medsHtml = calfMeds.map(t=>{
+          const desc = t.medicine ? `${escapeHtml(t.medicine)}${t.reason ? ' / '+escapeHtml(t.reason) : ''}` : '(note only)';
+          return `<div class="record" style="border-left-color:#2E88C4;">
+            <div class="record-date">${fmtDate(t.date)}</div>
+            <div class="record-med">${desc}</div>
+            ${t.notes ? `<div class="record-notes">${escapeHtml(t.notes)}</div>` : ''}
+          </div>`;
+        }).join('');
+        const wtsHtml = calfWts.map(w=>`<div class="record" style="border-left-color:#2E88C4;">
+          <div class="record-date">${fmtDate(w.weigh_date)}</div>
+          <div class="record-med">${w.weight!=null ? w.weight+' lbs' : ''}</div>
+          ${w.notes ? `<div class="record-notes">${escapeHtml(w.notes)}</div>` : ''}
+        </div>`).join('');
+        calfActivityEl.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:6px;">From #${escapeHtml(num)}'s ${fmtDate(currentCalf.calving_date)} calf — not her own record</div>${medsHtml}${wtsHtml}`;
+      }
+    } else {
+      calfActivityLabel.style.display = 'none';
+      calfActivityEl.innerHTML = '';
+    }
 
     // General Notes
     const notesRecs = [...generalNotesFor(num)].sort((a,b)=>b.note_date.localeCompare(a.note_date));
@@ -7318,6 +7353,16 @@
         (!dateTo || t.date <= dateTo)
       );
     }
+    function matchingCalfMedRecords(num){
+      const calvingIds = calvingsFor(num).map(cv=>cv.id);
+      return calfTreatments.filter(t=>
+        calvingIds.includes(t.calving_id) &&
+        (!medicine || t.medicine === medicine) &&
+        (!reason || t.reason === reason) &&
+        (!dateFrom || t.date >= dateFrom) &&
+        (!dateTo || t.date <= dateTo)
+      );
+    }
     function matchingCalvingRecords(num){
       return calvingsFor(num).filter(cv=>{
         if(calfSire && cv.sire !== calfSire) return false;
@@ -7341,7 +7386,7 @@
       if(group && c.cow_group !== group) return false;
       if(herdSeason && c.herd_season !== herdSeason) return false;
       if(breedingFieldsUsed && matchingBreedingRecords(c.number).length === 0) return false;
-      if(medFieldsUsed && matchingMedRecords(c.number).length === 0) return false;
+      if(medFieldsUsed && matchingMedRecords(c.number).length === 0 && matchingCalfMedRecords(c.number).length === 0) return false;
       if(calvingFieldsUsed && matchingCalvingRecords(c.number).length === 0) return false;
       if(!breedingFieldsUsed && !medFieldsUsed && !calvingFieldsUsed && (dateFrom || dateTo) && !cowHasActivityInDateRange(c.number, dateFrom, dateTo)) return false;
       return true;
@@ -7365,6 +7410,10 @@
         matchingMedRecords(num).forEach(t=>{
           const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
           reportEntries.push({ date: t.date, num, type: 'Med', details: desc });
+        });
+        matchingCalfMedRecords(num).forEach(t=>{
+          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
+          reportEntries.push({ date: t.date, num, type: 'Calf Med', details: desc });
         });
       }
       if(calvingFieldsUsed){
@@ -8187,6 +8236,21 @@
       breedingRecords.forEach(b=>{
         if(daysAgo(b.breed_date) <= days && daysAgo(b.breed_date) >= 0){
           entries.push({ date: b.breed_date, num: b.cow_number, type: 'Breeding', details: b.bred_to ? 'Bred to: '+b.bred_to : '' });
+        }
+      });
+      calfTreatments.forEach(t=>{
+        if(daysAgo(t.date) <= days && daysAgo(t.date) >= 0){
+          const cv = calvings.find(c=>c.id===t.calving_id);
+          if(!cv) return;
+          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
+          entries.push({ date: t.date, num: cv.cow_number, type: 'Calf Med', details: desc });
+        }
+      });
+      calfWeights.forEach(w=>{
+        if(daysAgo(w.weigh_date) <= days && daysAgo(w.weigh_date) >= 0){
+          const cv = calvings.find(c=>c.id===w.calving_id);
+          if(!cv) return;
+          entries.push({ date: w.weigh_date, num: cv.cow_number, type: 'Calf Weight', details: w.weight!=null ? w.weight+' lbs' : '' });
         }
       });
       entries.sort((a,b)=> b.date.localeCompare(a.date));
