@@ -306,19 +306,29 @@
 
   <div class="view hidden" id="utilitiesView">
     <button class="btn btn-outline btn-full" id="utilitiesHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
-    <button class="btn btn-nav-tool btn-full" id="exportEverythingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📦</span>&nbsp;&nbsp;Export</button>
-    <button class="btn btn-nav-tool btn-full" id="importDataBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📥</span>&nbsp;&nbsp;Import</button>
-    <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Bulk Entry</button>
-    <button class="btn btn-nav-tool btn-full" id="vetPregCheckBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🩺</span>&nbsp;&nbsp;Vet Preg Check</button>
-    <button class="btn btn-nav-tool btn-full" id="manageBullsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐂</span>&nbsp;&nbsp;Manage Bulls</button>
-    <button class="btn btn-nav-tool btn-full" id="manageHayingFieldsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Manage Haying Fields</button>
-    <button class="btn btn-nav-tool btn-full" id="manageMedsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">💊</span>&nbsp;&nbsp;Manage Meds</button>
-    <button class="btn btn-nav-tool btn-full" id="manageLocationsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📍</span>&nbsp;&nbsp;Manage Locations</button>
-    <button class="btn btn-nav-tool btn-full" id="manageOwnersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">👤</span>&nbsp;&nbsp;Manage Owners</button>
-    <button class="btn btn-nav-tool btn-full" id="manageGroupsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐮</span>&nbsp;&nbsp;Manage Groups</button>
-    <button class="btn btn-nav-tool btn-full" id="manageReasonsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Manage Reasons</button>
-    <button class="btn btn-nav-tool btn-full" id="textListEntryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">✉️</span>&nbsp;&nbsp;Text a List</button>
-    <button class="btn btn-outline btn-full" id="appInfoBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">📄</span>&nbsp;&nbsp;App Info / Handoff Guide</button>
+
+    <div class="section-label">Data</div>
+    <button class="btn btn-nav-tool btn-full" id="exportEverythingBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">📦</span>&nbsp;&nbsp;Export</button>
+    <button class="btn btn-nav-tool btn-full" id="importDataBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">📥</span>&nbsp;&nbsp;Import</button>
+    <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🔧</span>&nbsp;&nbsp;Bulk Entry</button>
+
+    <div class="section-label">Herd Tools</div>
+    <button class="btn btn-nav-tool btn-full" id="vetPregCheckBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🩺</span>&nbsp;&nbsp;Vet Preg Check</button>
+
+    <div class="section-label">Reference Lists</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <button class="btn" id="manageBullsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">🐂</span>Bulls</button>
+      <button class="btn" id="manageHayingFieldsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">🌾</span>Haying Fields</button>
+      <button class="btn" id="manageMedsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">💊</span>Meds</button>
+      <button class="btn" id="manageLocationsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">📍</span>Locations</button>
+      <button class="btn" id="manageOwnersBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">👤</span>Owners</button>
+      <button class="btn" id="manageGroupsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">🐮</span>Groups</button>
+      <button class="btn" id="manageReasonsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">📋</span>Reasons</button>
+    </div>
+
+    <div class="section-label">Help</div>
+    <button class="btn btn-outline btn-full" id="textListEntryBtn" style="padding:11px 14px;font-size:14px;margin-bottom:8px;"><span style="font-size:18px;">✉️</span>&nbsp;&nbsp;Text a List</button>
+    <button class="btn btn-outline btn-full" id="appInfoBtn" style="padding:11px 14px;font-size:14px;"><span style="font-size:18px;">📄</span>&nbsp;&nbsp;App Info / Handoff Guide</button>
   </div>
 
   <div class="view hidden" id="manageLocationsView">
@@ -453,16 +463,24 @@
 
   <div class="view hidden" id="reportsView">
     <button class="btn btn-outline btn-full" id="reportsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
-    <button class="btn btn-nav-tool btn-full" id="advancedSearchBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔍</span>&nbsp;&nbsp;Advanced Search</button>
-    <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
-    <button class="btn btn-nav-tool btn-full" id="headcountByOwnerBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📊</span>&nbsp;&nbsp;Headcount by Owner</button>
-    <button class="btn btn-nav-tool btn-full" id="soldDeceasedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📋</span>&nbsp;&nbsp;Sold / Deceased List</button>
-    <button class="btn btn-nav-tool btn-full" id="recentlyDeletedBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🗑️</span>&nbsp;&nbsp;Recently Deleted</button>
-    <button class="btn btn-nav-tool btn-full" id="biggestGainersBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📈</span>&nbsp;&nbsp;Biggest Gainers</button>
-    <button class="btn btn-nav-tool btn-full" id="deadCalvesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">💔</span>&nbsp;&nbsp;Dead Calves</button>
-    <button class="btn btn-nav-tool btn-full" id="calvingReportBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐮</span>&nbsp;&nbsp;Calving Report</button>
-    <button class="btn btn-nav-tool btn-full" id="upcomingCalvingsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📅</span>&nbsp;&nbsp;Upcoming Calvings</button>
-    <button class="btn btn-nav-tool btn-full" id="openCowsBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🐄</span>&nbsp;&nbsp;Open Cows</button>
+
+    <div class="section-label">Search</div>
+    <button class="btn btn-nav-tool btn-full" id="advancedSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🔍</span>&nbsp;&nbsp;Advanced Search</button>
+    <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
+
+    <div class="section-label">Herd Reports</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <button class="btn" id="headcountByOwnerBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">📊</span>Headcount</button>
+      <button class="btn" id="openCowsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">🐄</span>Open Cows</button>
+      <button class="btn" id="upcomingCalvingsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">📅</span>Upcoming Calvings</button>
+      <button class="btn" id="calvingReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">🐮</span>Calving Report</button>
+      <button class="btn" id="biggestGainersBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">📈</span>Biggest Gainers</button>
+      <button class="btn" id="deadCalvesBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">💔</span>Dead Calves</button>
+      <button class="btn" id="soldDeceasedBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;flex-direction:column;gap:2px;padding:10px 6px;font-size:12px;"><span style="font-size:20px;">📋</span>Sold / Deceased</button>
+    </div>
+
+    <div class="section-label">Records</div>
+    <button class="btn btn-outline btn-full" id="recentlyDeletedBtn" style="padding:11px 14px;font-size:14px;"><span style="font-size:18px;">🗑️</span>&nbsp;&nbsp;Recently Deleted</button>
   </div>
 
   <div class="view hidden" id="advancedSearchView">
@@ -614,13 +632,19 @@
 
   <div class="view hidden" id="farmOperationsView">
     <button class="btn btn-outline btn-full" id="farmOperationsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
-    <button class="btn btn-nav-tool btn-full" id="homeHerdTallyBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
-    <button class="btn btn-nav-tool btn-full" id="homeHayingBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🌾</span>&nbsp;&nbsp;Haying</button>
-    <button class="btn btn-nav-tool btn-full" id="homeBillCustomerBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🧾</span>&nbsp;&nbsp;Bill Customer</button>
-    <button class="btn btn-nav-tool btn-full" id="homeBillHistoryBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📜</span>&nbsp;&nbsp;Bill History</button>
-    <button class="btn btn-nav-tool btn-full" id="homeEquipmentBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
-    <button class="btn btn-nav-tool btn-full" id="homeFarmNotesBtn" style="padding:14px 16px;font-size:16px;margin-bottom:12px;"><span style="font-size:26px;">📝</span>&nbsp;&nbsp;Farm Notes</button>
-    <button class="btn btn-nav-tool btn-full" id="homeLoanCalcBtn" style="padding:14px 16px;font-size:16px;"><span style="font-size:26px;">💰</span>&nbsp;&nbsp;Loan Calculator</button>
+
+    <div class="section-label">Herd</div>
+    <button class="btn btn-nav-tool btn-full" id="homeHerdTallyBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🔢</span>&nbsp;&nbsp;Herd Tally</button>
+
+    <div class="section-label">Haying &amp; Billing</div>
+    <button class="btn btn-nav-tool btn-full" id="homeHayingBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🌾</span>&nbsp;&nbsp;Haying</button>
+    <button class="btn btn-nav-tool btn-full" id="homeBillCustomerBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🧾</span>&nbsp;&nbsp;Bill Customer</button>
+    <button class="btn btn-nav-tool btn-full" id="homeBillHistoryBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">📜</span>&nbsp;&nbsp;Bill History</button>
+
+    <div class="section-label">Other Tools</div>
+    <button class="btn btn-outline btn-full" id="homeEquipmentBtn" style="padding:11px 14px;font-size:14px;margin-bottom:8px;"><span style="font-size:18px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
+    <button class="btn btn-outline btn-full" id="homeFarmNotesBtn" style="padding:11px 14px;font-size:14px;margin-bottom:8px;"><span style="font-size:18px;">📝</span>&nbsp;&nbsp;Farm Notes</button>
+    <button class="btn btn-outline btn-full" id="homeLoanCalcBtn" style="padding:11px 14px;font-size:14px;"><span style="font-size:18px;">💰</span>&nbsp;&nbsp;Loan Calculator</button>
   </div>
 
   <div class="view hidden" id="importView">
