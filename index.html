@@ -8153,6 +8153,18 @@
     }catch(e){ showToast('Could not save — try again'); }
   }
 
+  async function editTodo(id, text){
+    try{
+      const updated = await api('/todos?id=eq.' + encodeURIComponent(id), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify({ text })
+      });
+      const idx = todos.findIndex(t=>t.id===id);
+      if(idx !== -1) todos[idx] = updated[0];
+    }catch(e){ showToast('Could not save — try again'); }
+  }
+
   async function deleteTodo(id){
     try{
       await api('/todos?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
@@ -8186,12 +8198,41 @@
         return (a.created_at||'').localeCompare(b.created_at||'');
       });
       listEl.innerHTML = sorted.map(t=>`
-        <div class="record" style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <div class="record" style="padding:10px 14px;display:flex;align-items:center;gap:10px;" data-todo-id="${t.id}">
           <input type="checkbox" class="todo-check rc-check" data-id="${t.id}" ${t.completed ? 'checked' : ''} title="Completed" style="--rc-color:#3C9142;flex-shrink:0;"/>
-          <span style="flex:1;font-family:Arial,sans-serif;font-size:15px;${t.completed ? 'text-decoration:line-through;color:#a08f6b;' : 'color:var(--ink);'}">${escapeHtml(t.text)}</span>
+          <span class="todo-text" style="flex:1;font-family:Arial,sans-serif;font-size:15px;${t.completed ? 'text-decoration:line-through;color:#a08f6b;' : 'color:var(--ink);'}">${escapeHtml(t.text)}</span>
+          <button class="record-edit todo-edit-btn" data-id="${t.id}" title="Edit" style="position:static;font-size:20px;">&#9998;</button>
           <button class="record-del" data-id="${t.id}" title="Delete" style="position:static;">&times;</button>
         </div>
       `).join('');
+      listEl.querySelectorAll('.todo-edit-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const row = btn.closest('[data-todo-id]');
+          const id = btn.dataset.id;
+          const item = todos.find(t=>t.id===id);
+          if(!item) return;
+          row.innerHTML = `
+            <input type="text" class="todo-edit-input" value="${escapeHtml(item.text)}" style="flex:1;font-family:Arial,sans-serif;font-size:15px;padding:6px 8px;"/>
+            <button class="btn btn-outline todo-cancel-btn" style="padding:6px 10px;font-size:13px;">Cancel</button>
+            <button class="btn btn-barn todo-save-btn" style="padding:6px 10px;font-size:13px;">Save</button>
+          `;
+          const input = row.querySelector('.todo-edit-input');
+          input.focus();
+          input.select();
+          async function save(){
+            const newText = input.value.trim();
+            if(!newText) return;
+            await editTodo(id, newText);
+            refresh();
+          }
+          row.querySelector('.todo-save-btn').addEventListener('click', save);
+          row.querySelector('.todo-cancel-btn').addEventListener('click', refresh);
+          input.addEventListener('keydown', e=>{
+            if(e.key === 'Enter'){ e.preventDefault(); save(); }
+            if(e.key === 'Escape'){ e.preventDefault(); refresh(); }
+          });
+        });
+      });
       listEl.querySelectorAll('.todo-check').forEach(cb=>{
         cb.addEventListener('change', async ()=>{
           await toggleTodo(cb.dataset.id, cb.checked);
