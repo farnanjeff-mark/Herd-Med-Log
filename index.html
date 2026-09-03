@@ -277,10 +277,6 @@
         <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#fff;border-width:1.5px;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
       </div>
       <div style="display:flex;gap:6px;padding-top:20px;padding-left:10px;padding-right:10px;">
-        <div id="homeCalvedWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
-          <span id="homeCalvedBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Calved</span>
-        </div>
         <div id="homeTagNeededWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeTagNeededBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Tag</span>
@@ -289,8 +285,6 @@
           <span id="homeFlaggedBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Flagged</span>
         </div>
-      </div>
-      <div style="display:flex;gap:6px;padding-top:6px;margin-bottom:12px;padding-left:10px;padding-right:10px;">
         <div id="homeTodoWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeTodoBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">To Do</span>
@@ -299,9 +293,26 @@
           <span id="homeTodaysActivityBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Activity</span>
         </div>
+      </div>
+      <div style="display:flex;gap:6px;padding-top:6px;margin-bottom:12px;padding-left:10px;padding-right:10px;">
+        <div id="homeCalvedWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+          <span id="homeCalvedBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
+          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Calved</span>
+        </div>
         <div id="homeDueSoonWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeDueSoonBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Due Soon</span>
+        </div>
+        <div id="homeCalvedThisYearWrap" style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <span id="homeCalvedThisYearSpringBadge" style="font-size:24px;font-weight:700;color:#fff;line-height:1;">0</span>
+            <span style="font-family:Arial,sans-serif;font-size:9px;color:#fff;font-weight:500;">Spring</span>
+          </div>
+          <div style="width:1px;align-self:stretch;background:rgba(255,255,255,.5);"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <span id="homeCalvedThisYearFallBadge" style="font-size:24px;font-weight:700;color:#fff;line-height:1;">0</span>
+            <span style="font-family:Arial,sans-serif;font-size:9px;color:#fff;font-weight:500;">Fall</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1312,6 +1323,7 @@
     updateTodoCount();
     updateTodaysActivityBadge();
     updateDueSoonBadge();
+    updateCalvedThisYearBadge();
   }
 
   function fmtDate(iso){
@@ -5536,6 +5548,7 @@
   });
   document.getElementById('homeTodaysActivityWrap').addEventListener('click', todaysActivityModal);
   document.getElementById('homeDueSoonWrap').addEventListener('click', dueSoonModal);
+  document.getElementById('homeCalvedThisYearWrap').addEventListener('click', calvedThisYearModal);
   document.getElementById('homeTodoWrap').addEventListener('click', todoListModal);
   document.getElementById('quickActionHomeBtn').addEventListener('click', showHome);
   document.getElementById('homeQuickSearchClearBtn').addEventListener('click', (e)=>{
@@ -8100,6 +8113,79 @@
       return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(e.cow.number)}</td><td style="padding:8px;">${fmtDateShort(e.breeding.expected_due_date)}</td><td style="padding:8px;">${daysUntilHtml}</td><td style="padding:8px;">${escapeHtml(e.breeding.bred_to||'')}</td><td style="padding:8px;">${escapeHtml(e.breeding.pregnancy_method||'')}</td></tr>`;
     }).join('');
     reportCardModal('Due Soon (Next 14 Days)', entries.map(e=>e.cow), ['Cow #','Due Date','Days Until','Bred To','Method'], rows);
+  }
+
+  function calvedThisYearGroups(){
+    const year = todayDate().getFullYear();
+    const yearStart = year + '-01-01';
+    const yearEnd = year + '-12-31';
+    const seenCows = new Set();
+    const groups = { Spring: [], Fall: [], Undefined: [] };
+    [...calvings]
+      .filter(c=> c.calving_date >= yearStart && c.calving_date <= yearEnd)
+      .sort((a,b)=> b.calving_date.localeCompare(a.calving_date))
+      .forEach(c=>{
+        if(seenCows.has(c.cow_number)) return;
+        seenCows.add(c.cow_number);
+        const cow = cows.find(cw=>cw.number===c.cow_number);
+        if(!cow) return;
+        const season = cow.herd_season === 'Spring' ? 'Spring' : cow.herd_season === 'Fall' ? 'Fall' : 'Undefined';
+        groups[season].push({ cow, calving: c });
+      });
+    return groups;
+  }
+
+  function updateCalvedThisYearBadge(){
+    const springBadge = document.getElementById('homeCalvedThisYearSpringBadge');
+    const fallBadge = document.getElementById('homeCalvedThisYearFallBadge');
+    if(!springBadge || !fallBadge) return;
+    const groups = calvedThisYearGroups();
+    springBadge.textContent = groups.Spring.length;
+    fallBadge.textContent = groups.Fall.length;
+  }
+
+  function calvedThisYearModal(){
+    const year = todayDate().getFullYear();
+    const groups = calvedThisYearGroups();
+    const total = groups.Spring.length + groups.Fall.length + groups.Undefined.length;
+    function sectionHtml(label, entries){
+      if(entries.length === 0) return '';
+      const rows = entries.map((e,i)=> `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${fmtDateShort(e.calving.calving_date)}</td><td style="padding:8px;">#${escapeHtml(e.cow.number)}</td><td style="padding:8px;">${escapeHtml(e.cow.owner||'')}</td></tr>`).join('');
+      const cardsHtml = entries.map(e=> quickAddCardHtml(e.cow)).join('');
+      return `
+        <div class="section-label">${label} (${entries.length})</div>
+        <div style="overflow-x:auto;margin-bottom:10px;">
+          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+            <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Owner</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="calved-this-year-cards" style="margin-bottom:16px;">${cardsHtml}</div>
+      `;
+    }
+    const modal = openModal(`
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Calved This Year</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">${total} cow${total!==1?'s':''} calved in ${year}</div>
+      ${sectionHtml('Spring', groups.Spring)}
+      ${sectionHtml('Fall', groups.Fall)}
+      ${sectionHtml('Undefined', groups.Undefined)}
+      ${total === 0 ? '<p class="empty">No calvings recorded this year yet.</p>' : ''}
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeCalvedThisYearBtn">Close</button>
+      </div>
+    `);
+    modal.querySelectorAll('.calved-this-year-cards').forEach(container=>{
+      wireQuickAddCardOpen(container);
+      wireProfileQuickAddButtons(container);
+      wireNeedsEntryCheckboxes(container);
+      wireTagNeededCheckboxes(container);
+      wireCalvedCheckboxes(container);
+    });
+    modal.querySelector('#closeCalvedThisYearBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
   }
 
   function updateTodoCount(){
