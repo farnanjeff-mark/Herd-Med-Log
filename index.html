@@ -514,6 +514,7 @@
         <label>Herd Season</label>
         <select id="advSearchHerdSeason">
           <option value="">Any</option>
+          <option value="__undefined__">Undefined</option>
           <option value="Spring">Spring</option>
           <option value="Fall">Fall</option>
         </select>
@@ -7114,17 +7115,17 @@
     const usedLots = [...new Set(cows.map(c=>c.lot).filter(Boolean))];
     const extraLots = usedLots.filter(l=>!getLocationOptions().includes(l)).sort();
     const locationOptions = [...getLocationOptions(), ...extraLots];
-    locationSel.innerHTML = '<option value="">Any</option>' + locationOptions.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+    locationSel.innerHTML = '<option value="">Any</option><option value="__undefined__">Undefined</option>' + locationOptions.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
 
     const usedOwners = [...new Set(cows.map(c=>c.owner).filter(Boolean))];
     const extraOwners = usedOwners.filter(o=>!getOwnerOptions().includes(o)).sort();
     const ownerOptions = [...getOwnerOptions(), ...extraOwners];
-    ownerSel.innerHTML = '<option value="">Any</option>' + ownerOptions.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+    ownerSel.innerHTML = '<option value="">Any</option><option value="__undefined__">Undefined</option>' + ownerOptions.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
 
     const usedGroups = [...new Set(cows.map(c=>c.cow_group).filter(Boolean))];
     const extraGroups = usedGroups.filter(g=>!getGroupOptions().includes(g)).sort();
     const groupOptions = [...getGroupOptions(), ...extraGroups];
-    groupSel.innerHTML = '<option value="">Any</option>' + groupOptions.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+    groupSel.innerHTML = '<option value="">Any</option><option value="__undefined__">Undefined</option>' + groupOptions.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
 
     if([...bredToSel.options].some(o=>o.value===prev.bredTo)) bredToSel.value = prev.bredTo;
     if([...calfSireSel.options].some(o=>o.value===prev.calfSire)) calfSireSel.value = prev.calfSire;
@@ -7219,10 +7220,10 @@
     }
 
     const results = cows.filter(c=>{
-      if(location && c.lot !== location) return false;
-      if(owner && c.owner !== owner) return false;
-      if(group && c.cow_group !== group) return false;
-      if(herdSeason && c.herd_season !== herdSeason) return false;
+      if(location){ if(location==='__undefined__' ? c.lot : c.lot !== location) return false; }
+      if(owner){ if(owner==='__undefined__' ? c.owner : c.owner !== owner) return false; }
+      if(group){ if(group==='__undefined__' ? c.cow_group : c.cow_group !== group) return false; }
+      if(herdSeason){ if(herdSeason==='__undefined__' ? c.herd_season : c.herd_season !== herdSeason) return false; }
       if(breedingFieldsUsed && matchingBreedingRecords(c.number).length === 0) return false;
       if(medFieldsUsed && matchingMedRecords(c.number).length === 0 && matchingCalfMedRecords(c.number).length === 0) return false;
       if(calvingFieldsUsed && matchingCalvingRecords(c.number).length === 0) return false;
