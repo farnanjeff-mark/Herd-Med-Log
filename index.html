@@ -331,6 +331,7 @@
       <button class="btn" id="manageOwnersBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">👤</span>Owners</button>
       <button class="btn" id="manageGroupsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐮</span>Groups</button>
       <button class="btn" id="manageReasonsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Reasons</button>
+      <button class="btn" id="manageCustomAIBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🧪</span>Custom AI</button>
     </div>
 
     <div class="section-label">Help</div>
@@ -372,6 +373,31 @@
     <button class="btn btn-nav-tool btn-full" id="addReasonBtn" style="margin-bottom:14px;">+ Add Reason</button>
     <div id="manageReasonsList"></div>
     <div id="manageReasonsEmptyState" class="empty hidden">No reasons in the list yet.</div>
+  </div>
+
+  <div class="view hidden" id="manageCustomAIView">
+    <button class="btn btn-outline btn-full" id="manageCustomAIHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Manage Custom AI</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Removing a straw or supply only takes it off the dropdown going forward — any job already using it keeps its locked-in price.</div>
+
+    <div class="section-label" style="margin-top:0;">Arm Service Rate</div>
+    <div class="field" style="display:flex;gap:10px;align-items:flex-end;">
+      <div style="flex:1;">
+        <label>$ per head</label>
+        <input type="number" step="0.01" min="0" id="armServiceRateInput" placeholder="e.g. 9.00"/>
+      </div>
+      <button class="btn btn-profile-tool" id="saveArmServiceRateBtn" style="margin-bottom:12px;">Save</button>
+    </div>
+
+    <div class="section-label">Straws</div>
+    <button class="btn btn-profile-tool btn-full" id="addCustomAIStrawBtn" style="margin-bottom:14px;">+ Add Straw</button>
+    <div id="manageCustomAIStrawsList"></div>
+    <div id="manageCustomAIStrawsEmptyState" class="empty hidden">No straws in the list yet.</div>
+
+    <div class="section-label">Drugs &amp; Supplies</div>
+    <button class="btn btn-profile-tool btn-full" id="addCustomAISupplyBtn" style="margin-bottom:14px;">+ Add Drug or Supply</button>
+    <div id="manageCustomAISuppliesList"></div>
+    <div id="manageCustomAISuppliesEmptyState" class="empty hidden">No drugs or supplies in the list yet.</div>
   </div>
 
   <div class="view hidden" id="appInfoView">
@@ -648,6 +674,7 @@
     <button class="btn btn-nav-tool btn-full" id="homeHayingBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🌾</span>&nbsp;&nbsp;Haying</button>
     <button class="btn btn-nav-tool btn-full" id="homeBillCustomerBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🧾</span>&nbsp;&nbsp;Bill Customer</button>
     <button class="btn btn-nav-tool btn-full" id="homeBillHistoryBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">📜</span>&nbsp;&nbsp;Bill History</button>
+    <button class="btn btn-nav-tool btn-full" id="homeCustomAIBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🧪</span>&nbsp;&nbsp;Custom AI</button>
 
     <div class="section-label">Other Tools</div>
     <button class="btn btn-outline btn-full" id="homeEquipmentBtn" style="padding:11px 14px;font-size:14px;margin-bottom:8px;"><span style="font-size:18px;">🔧</span>&nbsp;&nbsp;Equipment Maintenance</button>
@@ -719,6 +746,16 @@
     <div id="hayingList"></div>
     <div id="hayingTotalBales" style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;border-top:2px solid var(--ink);font-weight:700;font-size:17px;"></div>
     <div id="hayingEmptyState" class="empty hidden">No haying entries logged yet.</div>
+  </div>
+
+  <div class="view hidden" id="customAIView">
+    <button class="btn btn-outline btn-full" id="customAIHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:14px;">Custom AI</div>
+    <button class="btn btn-nav-tool btn-full" id="addCustomAIJobBtn" style="margin-bottom:8px;"><span style="font-size:20px;">➕</span>&nbsp;&nbsp;New Job</button>
+    <button class="btn btn-outline btn-full" id="manageCustomAICustomersBtn" style="margin-bottom:14px;"><span style="font-size:18px;">👤</span>&nbsp;&nbsp;Manage Customers</button>
+    <div class="section-label" style="margin-top:0;">Job History</div>
+    <div id="customAIJobsList"></div>
+    <div id="customAIJobsEmptyState" class="empty hidden">No custom AI jobs logged yet.</div>
   </div>
 
   <div class="view hidden" id="farmNotesView">
@@ -1139,6 +1176,13 @@
   let currentBreedingCow = null;
   let importType = 'meds'; // 'meds' | 'calving' | 'notes' | 'weights' | 'breeding'
   let importParsedRows = [];
+  let customAIStraws = []; // [{id, name, price, active}]
+  let customAISupplies = []; // [{id, name, price, active}]
+  let customAISettings = null; // {id, arm_service_rate}
+  let customAICustomers = []; // [{id, name, email, phone}]
+  let customAIJobs = []; // [{id, customer_id, job_date, arm_service_rate_locked, straw_charges_total, arm_service_total, supplies_total, job_total, price_snapshot, customer_name_cache, customer_email_cache, customer_phone_cache}]
+  let customAIJobStrawEntries = []; // [{id, job_id, straw_name, price_locked, quantity}]
+  let customAIJobSupplyEntries = []; // [{id, job_id, item_name, price_locked, quantity}]
 
   const homeView = document.getElementById('homeView');
   const listView = document.getElementById('listView');
@@ -1171,6 +1215,8 @@
   const recentlyDeletedView = document.getElementById('recentlyDeletedView');
   const herdTallyView = document.getElementById('herdTallyView');
   const hayingView = document.getElementById('hayingView');
+  const manageCustomAIView = document.getElementById('manageCustomAIView');
+  const customAIView = document.getElementById('customAIView');
   const farmNotesView = document.getElementById('farmNotesView');
   const loanCalculatorView = document.getElementById('loanCalculatorView');
   const equipmentListView = document.getElementById('equipmentListView');
@@ -1231,7 +1277,7 @@
 
   async function loadAll(){
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes, locationsRes, ownersRes, groupsRes, reasonsRes, todosRes, hayingCustomersRes, hayingBillsRes, hayingBillSettingsRes, homeStatsSettingsRes] = await Promise.all([
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes, locationsRes, ownersRes, groupsRes, reasonsRes, todosRes, hayingCustomersRes, hayingBillsRes, hayingBillSettingsRes, homeStatsSettingsRes, customAIStrawsRes, customAISuppliesRes, customAISettingsRes, customAICustomersRes, customAIJobsRes, customAIJobStrawEntriesRes, customAIJobSupplyEntriesRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -1257,7 +1303,14 @@
         api('/haying_customers?select=*&order=name.asc', { method:'GET' }),
         api('/haying_bills?select=*&order=created_at.desc', { method:'GET' }),
         api('/haying_bill_settings?select=*&limit=1', { method:'GET' }),
-        api('/home_stats_settings?select=*&limit=1', { method:'GET' })
+        api('/home_stats_settings?select=*&limit=1', { method:'GET' }),
+        api('/custom_ai_straws?select=*&order=name.asc', { method:'GET' }),
+        api('/custom_ai_supplies?select=*&order=name.asc', { method:'GET' }),
+        api('/custom_ai_settings?select=*&limit=1', { method:'GET' }),
+        api('/custom_ai_customers?select=*&order=name.asc', { method:'GET' }),
+        api('/custom_ai_jobs?select=*&order=job_date.desc', { method:'GET' }),
+        api('/custom_ai_job_straw_entries?select=*', { method:'GET' }),
+        api('/custom_ai_job_supply_entries?select=*', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -1285,8 +1338,16 @@
       hayingBills = hayingBillsRes || [];
       hayingBillSettings = (hayingBillSettingsRes && hayingBillSettingsRes[0]) || null;
       homeStatsSettings = (homeStatsSettingsRes && homeStatsSettingsRes[0]) || null;
+      customAIStraws = customAIStrawsRes || [];
+      customAISupplies = customAISuppliesRes || [];
+      customAISettings = (customAISettingsRes && customAISettingsRes[0]) || null;
+      customAICustomers = customAICustomersRes || [];
+      customAIJobs = customAIJobsRes || [];
+      customAIJobStrawEntries = customAIJobStrawEntriesRes || [];
+      customAIJobSupplyEntries = customAIJobSupplyEntriesRes || [];
     }catch(e){
       cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = []; locationsList = []; ownersList = []; groupsList = []; reasonsList = []; todos = []; hayingCustomers = []; hayingBills = []; hayingBillSettings = null; homeStatsSettings = null;
+      customAIStraws = []; customAISupplies = []; customAISettings = null; customAICustomers = []; customAIJobs = []; customAIJobStrawEntries = []; customAIJobSupplyEntries = [];
     }
     renderBullsList();
     renderHayingFieldsList();
@@ -1300,6 +1361,9 @@
     renderFarmNotesList();
     renderEquipmentList();
     if(currentEquipment) renderEquipmentDetail();
+    renderCustomAIStrawsList();
+    renderCustomAISuppliesList();
+    renderCustomAIJobsList();
     renderList();
     renderCalvingList();
     if(currentCalvingCow) renderCalvingDetail();
@@ -1618,6 +1682,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1665,6 +1731,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1714,6 +1782,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1757,6 +1827,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1800,6 +1872,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1845,6 +1919,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -1967,6 +2043,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2009,6 +2087,8 @@
     utilitiesView.classList.remove('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2035,6 +2115,8 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2056,6 +2138,8 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2075,6 +2159,8 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2095,6 +2181,8 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2116,6 +2204,8 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2137,6 +2227,8 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2164,6 +2256,8 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2191,6 +2285,8 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2218,6 +2314,8 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2238,12 +2336,35 @@
     renderReasonsList();
     window.scrollTo(0,0);
   }
+  function showManageCustomAI(){
+    setHeaderTitle('Manage', 'Custom AI');
+    document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    manageCustomAIView.classList.remove('hidden');
+    const rateInput = document.getElementById('armServiceRateInput');
+    if(rateInput) rateInput.value = customAISettings ? customAISettings.arm_service_rate : '';
+    renderCustomAIStrawsList();
+    renderCustomAISuppliesList();
+    window.scrollTo(0,0);
+  }
+  function showCustomAI(){
+    setHeaderTitle('Custom', 'AI');
+    document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    customAIView.classList.remove('hidden');
+    renderCustomAIJobsList();
+    window.scrollTo(0,0);
+  }
   function showAdvancedSearch(){
     setHeaderTitle('Advanced', 'Search');
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2281,6 +2402,8 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2333,6 +2456,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
@@ -2360,6 +2485,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
@@ -2389,6 +2516,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.remove('hidden');
@@ -2521,6 +2650,8 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -3906,11 +4037,20 @@
   }
 
   // ---- Modals ----
-  function openModal(html){
+  function openModal(html, options){
+    options = options || {};
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop modal-stack-item';
     backdrop.innerHTML = `<div class="modal">${html}</div>`;
-    backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) closeModal(); });
+    backdrop.addEventListener('click', (e)=>{
+      if(e.target===backdrop){
+        if(options.confirmBeforeClose){
+          if(confirm(options.confirmMessage || 'Discard unsaved changes?')) closeModal();
+        } else {
+          closeModal();
+        }
+      }
+    });
     document.body.appendChild(backdrop);
     return backdrop;
   }
@@ -5573,6 +5713,15 @@
   document.getElementById('homeBillHistoryBtn').addEventListener('click', billHistoryModal);
   document.getElementById('hayingHomeBtn').addEventListener('click', showHome);
   document.getElementById('addHayingBtn').addEventListener('click', ()=> hayingModal(null));
+  document.getElementById('manageCustomAIBtn').addEventListener('click', showManageCustomAI);
+  document.getElementById('manageCustomAIHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addCustomAIStrawBtn').addEventListener('click', addCustomAIStrawModal);
+  document.getElementById('addCustomAISupplyBtn').addEventListener('click', addCustomAISupplyModal);
+  document.getElementById('saveArmServiceRateBtn').addEventListener('click', saveArmServiceRate);
+  document.getElementById('homeCustomAIBtn').addEventListener('click', showCustomAI);
+  document.getElementById('customAIHomeBtn').addEventListener('click', showHome);
+  document.getElementById('addCustomAIJobBtn').addEventListener('click', ()=> customAIJobModal(null));
+  document.getElementById('manageCustomAICustomersBtn').addEventListener('click', manageCustomAICustomersModal);
   document.getElementById('homeFarmNotesBtn').addEventListener('click', showFarmNotes);
   document.getElementById('farmNotesHomeBtn').addEventListener('click', showHome);
   document.getElementById('addFarmNoteBtn').addEventListener('click', ()=> farmNoteModal(null));
@@ -6857,6 +7006,650 @@
       showToast('Bill removed');
       if(onDone) onDone();
     }catch(e){ showToast('Could not remove bill — try again'); }
+  }
+
+  // ===== Custom AI Services =====
+
+  function renderCustomAIStrawsList(){
+    const listEl = document.getElementById('manageCustomAIStrawsList');
+    const emptyEl = document.getElementById('manageCustomAIStrawsEmptyState');
+    if(!listEl) return;
+    const sorted = [...customAIStraws].sort((a,b)=>a.name.localeCompare(b.name));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(s=>`
+      <div class="cow-card" style="cursor:default;">
+        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(s.name)}</div><div class="cow-meta">$${Number(s.price).toFixed(2)} per straw</div></div>
+        <button class="remove-custom-ai-straw-btn" data-id="${escapeHtml(s.id)}" data-name="${escapeHtml(s.name)}" title="Remove straw" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.remove-custom-ai-straw-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeCustomAIStraw(btn.dataset.id, btn.dataset.name));
+    });
+  }
+
+  function addCustomAIStrawModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Straw</div>
+      <div class="field">
+        <label>Straw Name</label>
+        <input type="text" id="newStrawName" placeholder="e.g. Angus Elite 42" autofocus/>
+      </div>
+      <div class="field">
+        <label>Price per Straw</label>
+        <input type="number" step="0.01" min="0" id="newStrawPrice" placeholder="e.g. 18.00"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddStraw">Cancel</button>
+        <button class="btn btn-profile-tool" id="confirmAddStraw">Add Straw</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddStraw').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddStraw').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newStrawName').value.trim();
+      const price = parseFloat(modal.querySelector('#newStrawPrice').value);
+      if(!name){ showToast('Enter a straw name'); return; }
+      if(isNaN(price) || price < 0){ showToast('Enter a valid price'); return; }
+      const btn = modal.querySelector('#confirmAddStraw');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/custom_ai_straws', {
+          method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name, price })
+        });
+        customAIStraws.push(inserted[0]);
+        closeModal();
+        renderCustomAIStrawsList();
+        showToast('Straw added');
+      }catch(e){ btn.disabled = false; showToast('Could not add — try again'); }
+    });
+  }
+
+  async function removeCustomAIStraw(id, name){
+    if(!confirm(`Remove "${name}" from the straw list? Past jobs that used this straw keep their locked-in price.`)) return;
+    try{
+      await api('/custom_ai_straws?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      customAIStraws = customAIStraws.filter(s=>s.id!==id);
+      renderCustomAIStrawsList();
+      showToast('Straw removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  function renderCustomAISuppliesList(){
+    const listEl = document.getElementById('manageCustomAISuppliesList');
+    const emptyEl = document.getElementById('manageCustomAISuppliesEmptyState');
+    if(!listEl) return;
+    const sorted = [...customAISupplies].sort((a,b)=>a.name.localeCompare(b.name));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(s=>`
+      <div class="cow-card" style="cursor:default;">
+        <div><div class="cow-num" style="font-size:17px;">${escapeHtml(s.name)}</div><div class="cow-meta">$${Number(s.price).toFixed(2)} each</div></div>
+        <button class="remove-custom-ai-supply-btn" data-id="${escapeHtml(s.id)}" data-name="${escapeHtml(s.name)}" title="Remove item" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.remove-custom-ai-supply-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> removeCustomAISupply(btn.dataset.id, btn.dataset.name));
+    });
+  }
+
+  function addCustomAISupplyModal(){
+    const modal = openModal(`
+      <div class="modal-title">Add Drug or Supply</div>
+      <div class="field">
+        <label>Item Name</label>
+        <input type="text" id="newSupplyName" placeholder="e.g. Cystrolen" autofocus/>
+      </div>
+      <div class="field">
+        <label>Price Each</label>
+        <input type="number" step="0.01" min="0" id="newSupplyPrice" placeholder="e.g. 10.00"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelAddSupply">Cancel</button>
+        <button class="btn btn-profile-tool" id="confirmAddSupply">Add Item</button>
+      </div>
+    `);
+    modal.querySelector('#cancelAddSupply').addEventListener('click', closeModal);
+    modal.querySelector('#confirmAddSupply').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newSupplyName').value.trim();
+      const price = parseFloat(modal.querySelector('#newSupplyPrice').value);
+      if(!name){ showToast('Enter an item name'); return; }
+      if(isNaN(price) || price < 0){ showToast('Enter a valid price'); return; }
+      const btn = modal.querySelector('#confirmAddSupply');
+      btn.disabled = true;
+      try{
+        const inserted = await api('/custom_ai_supplies', {
+          method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name, price })
+        });
+        customAISupplies.push(inserted[0]);
+        closeModal();
+        renderCustomAISuppliesList();
+        showToast('Item added');
+      }catch(e){ btn.disabled = false; showToast('Could not add — try again'); }
+    });
+  }
+
+  async function removeCustomAISupply(id, name){
+    if(!confirm(`Remove "${name}" from the drugs/supplies list? Past jobs that used it keep their locked-in price.`)) return;
+    try{
+      await api('/custom_ai_supplies?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      customAISupplies = customAISupplies.filter(s=>s.id!==id);
+      renderCustomAISuppliesList();
+      showToast('Item removed');
+    }catch(e){ showToast('Could not remove — try again'); }
+  }
+
+  async function saveArmServiceRate(){
+    const input = document.getElementById('armServiceRateInput');
+    const rate = parseFloat(input.value);
+    if(isNaN(rate) || rate < 0){ showToast('Enter a valid rate'); return; }
+    const btn = document.getElementById('saveArmServiceRateBtn');
+    btn.disabled = true;
+    try{
+      if(customAISettings && customAISettings.id){
+        const updated = await api('/custom_ai_settings?id=eq.' + encodeURIComponent(customAISettings.id), {
+          method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ arm_service_rate: rate, updated_at: new Date().toISOString() })
+        });
+        customAISettings = updated[0];
+      } else {
+        const inserted = await api('/custom_ai_settings', {
+          method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ arm_service_rate: rate })
+        });
+        customAISettings = inserted[0];
+      }
+      showToast('Arm service rate saved');
+    }catch(e){ showToast('Could not save — try again'); }
+    btn.disabled = false;
+  }
+
+  function manageCustomAICustomersModal(){
+    const modal = openModal(`
+      <div class="modal-title">Custom AI Customers</div>
+      <button class="btn btn-profile-tool btn-full" id="addCustomAICustomerBtn" style="margin-bottom:14px;">+ Add Customer</button>
+      <div id="customAICustomersList"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline btn-full" id="closeCustomAICustomersBtn">Close</button>
+      </div>
+    `);
+    modal.querySelector('#closeCustomAICustomersBtn').addEventListener('click', closeModal);
+    function refresh(){
+      const listEl = modal.querySelector('#customAICustomersList');
+      const sorted = [...customAICustomers].sort((a,b)=>a.name.localeCompare(b.name));
+      if(sorted.length===0){ listEl.innerHTML = '<p class="empty">No customers added yet.</p>'; return; }
+      listEl.innerHTML = sorted.map(c=>`
+        <div class="cow-card" style="cursor:default;">
+          <div>
+            <div class="cow-num" style="font-size:17px;">${escapeHtml(c.name)}</div>
+            <div class="cow-meta">${escapeHtml(c.email||'')}${c.email && c.phone ? ' · ' : ''}${escapeHtml(c.phone||'')}</div>
+          </div>
+          <button class="remove-custom-ai-customer-btn" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" title="Remove customer" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+        </div>
+      `).join('');
+      listEl.querySelectorAll('.remove-custom-ai-customer-btn').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          if(!confirm(`Remove "${btn.dataset.name}" from Custom AI customers? Past jobs keep this customer's name, email, and phone as they were.`)) return;
+          try{
+            await api('/custom_ai_customers?id=eq.' + encodeURIComponent(btn.dataset.id), { method:'DELETE' });
+            customAICustomers = customAICustomers.filter(c=>c.id!==btn.dataset.id);
+            refresh();
+            showToast('Customer removed');
+          }catch(e){ showToast('Could not remove — try again'); }
+        });
+      });
+    }
+    modal.querySelector('#addCustomAICustomerBtn').addEventListener('click', ()=>{
+      const inner = openModal(`
+        <div class="modal-title">Add Customer</div>
+        <div class="field">
+          <label>Name</label>
+          <input type="text" id="newCustomerName" placeholder="e.g. Farmer Smith" autofocus/>
+        </div>
+        <div class="field">
+          <label>Email (optional)</label>
+          <input type="email" id="newCustomerEmail" placeholder="name@example.com"/>
+        </div>
+        <div class="field">
+          <label>Phone (optional)</label>
+          <input type="tel" id="newCustomerPhone" placeholder="(816) 555-0134"/>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" id="cancelAddCustomer">Cancel</button>
+          <button class="btn btn-profile-tool" id="confirmAddCustomer">Add Customer</button>
+        </div>
+      `);
+      inner.querySelector('#cancelAddCustomer').addEventListener('click', closeModal);
+      inner.querySelector('#confirmAddCustomer').addEventListener('click', async ()=>{
+        const name = inner.querySelector('#newCustomerName').value.trim();
+        const email = inner.querySelector('#newCustomerEmail').value.trim();
+        const phone = inner.querySelector('#newCustomerPhone').value.trim();
+        if(!name){ showToast('Enter a customer name'); return; }
+        const btn = inner.querySelector('#confirmAddCustomer');
+        btn.disabled = true;
+        try{
+          const inserted = await api('/custom_ai_customers', {
+            method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify({ name, email: email||null, phone: phone||null })
+          });
+          customAICustomers.push(inserted[0]);
+          closeModal();
+          refresh();
+          showToast('Customer added');
+        }catch(e){ btn.disabled = false; showToast('Could not add — try again'); }
+      });
+    });
+    refresh();
+  }
+
+  function customAIStrawPrice(name, snapshot){
+    if(snapshot && snapshot.straws && snapshot.straws[name] != null) return Number(snapshot.straws[name]);
+    const s = customAIStraws.find(x=>x.name===name);
+    return s ? Number(s.price) : 0;
+  }
+  function customAISupplyPrice(name, snapshot){
+    if(snapshot && snapshot.supplies && snapshot.supplies[name] != null) return Number(snapshot.supplies[name]);
+    const s = customAISupplies.find(x=>x.name===name);
+    return s ? Number(s.price) : 0;
+  }
+
+  function customAIJobModal(existingJob){
+    const isEdit = !!existingJob;
+    const snapshot = isEdit ? (existingJob.price_snapshot || {}) : {
+      straws: Object.fromEntries(customAIStraws.map(s=>[s.name, Number(s.price)])),
+      supplies: Object.fromEntries(customAISupplies.map(s=>[s.name, Number(s.price)])),
+      arm_service_rate: customAISettings ? Number(customAISettings.arm_service_rate) : 0
+    };
+    const armRate = isEdit ? Number(existingJob.arm_service_rate_locked) : Number(snapshot.arm_service_rate || 0);
+    const existingStrawRows = isEdit ? customAIJobStrawEntries.filter(e=>e.job_id===existingJob.id) : [];
+    const existingSupplyRows = isEdit ? customAIJobSupplyEntries.filter(e=>e.job_id===existingJob.id) : [];
+
+    if(!isEdit && customAICustomers.length===0){
+      openModal(`
+        <div class="modal-title">New Job</div>
+        <p class="empty">No Custom AI customers yet. Add one first from Manage Customers.</p>
+        <div class="modal-actions">
+          <button class="btn btn-outline btn-full" id="closeNoCustomerModal">Close</button>
+        </div>
+      `).querySelector('#closeNoCustomerModal').addEventListener('click', closeModal);
+      return;
+    }
+
+    const modal = openModal(`
+      <div class="modal-title">${isEdit ? 'Edit Job' : 'New Custom AI Job'}</div>
+      <div class="field" style="background:#2E88C4;border-radius:6px;padding:10px 12px;">
+        <label style="color:#fff;">Customer</label>
+        <select id="jobCustomerSelect">
+          <option value="">Select customer...</option>
+          ${customAICustomers.map(c=>`<option value="${escapeHtml(c.id)}" ${isEdit && existingJob.customer_id===c.id ? 'selected':''}>${escapeHtml(c.name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="jobDateInput" value="${isEdit ? existingJob.job_date : todayLocal()}"/>
+      </div>
+
+      <div class="section-label" style="margin-top:16px;display:flex;justify-content:space-between;align-items:baseline;">
+        <span>Straws Used</span>
+        <span style="font-family:Arial,sans-serif;font-size:11px;color:#7A2E27;font-weight:400;text-transform:none;letter-spacing:0;">Arm service $${armRate.toFixed(2)}/head auto-added</span>
+      </div>
+      <div id="jobStrawRows"></div>
+      <button class="btn btn-profile-tool btn-full" id="addJobStrawRowBtn" style="margin-bottom:16px;">+ Add straw type</button>
+
+      <div class="section-label">Drugs &amp; Supplies Used</div>
+      <div id="jobSupplyRows"></div>
+      <button class="btn btn-profile-tool btn-full" id="addJobSupplyRowBtn" style="margin-bottom:16px;">+ Add drug or supply</button>
+
+      <div style="border-top:2px solid var(--ink);padding-top:10px;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#6b6350;margin-bottom:4px;"><span>Straw charges</span><span id="jobStrawSub">$0.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#6b6350;margin-bottom:4px;"><span>Arm service (<span id="jobHeadCount">0</span> head)</span><span id="jobArmSub">$0.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#6b6350;margin-bottom:10px;"><span>Drugs and supplies</span><span id="jobSupplySub">$0.00</span></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);padding-top:10px;margin-bottom:16px;">
+        <span style="font-family:Arial,sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.05em;">Job total</span>
+        <span id="jobTotal" style="font-size:24px;font-weight:700;">$0.00</span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelJobBtn">Cancel</button>
+        <button class="btn btn-barn" id="saveJobBtn">Save and finish job</button>
+      </div>
+    `, { confirmBeforeClose: true, confirmMessage: (isEdit ? 'Discard these changes?' : 'Discard this job?') + ' Any entries you\'ve added will be lost.' });
+
+    const strawRowsEl = modal.querySelector('#jobStrawRows');
+    const supplyRowsEl = modal.querySelector('#jobSupplyRows');
+
+    function strawRow(existingEntry){
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+      const options = customAIStraws.map(s=>s.name)
+        .concat(existingEntry && !customAIStraws.some(s=>s.name===existingEntry.straw_name) ? [existingEntry.straw_name] : [])
+        .map(n=>`<option value="${escapeHtml(n)}" ${existingEntry && existingEntry.straw_name===n ? 'selected':''}>${escapeHtml(n)}</option>`).join('');
+      row.innerHTML = `
+        <select style="flex:2;" data-role="straw-name"><option value="">Straw...</option>${options}</select>
+        <input type="number" min="1" step="1" placeholder="Qty" style="flex:1;" data-role="straw-qty" value="${existingEntry ? existingEntry.quantity : ''}"/>
+        <span data-role="remove" style="color:#7A2E27;font-family:Arial,sans-serif;font-weight:700;font-size:20px;cursor:pointer;padding:0 6px;">&times;</span>
+      `;
+      row.querySelector('[data-role="remove"]').addEventListener('click', ()=>{ row.remove(); recalc(); });
+      row.querySelector('[data-role="straw-name"]').addEventListener('change', recalc);
+      row.querySelector('[data-role="straw-qty"]').addEventListener('input', recalc);
+      return row;
+    }
+    function supplyRow(existingEntry){
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+      const options = customAISupplies.map(s=>s.name)
+        .concat(existingEntry && !customAISupplies.some(s=>s.name===existingEntry.item_name) ? [existingEntry.item_name] : [])
+        .map(n=>`<option value="${escapeHtml(n)}" ${existingEntry && existingEntry.item_name===n ? 'selected':''}>${escapeHtml(n)}</option>`).join('');
+      row.innerHTML = `
+        <select style="flex:2;" data-role="supply-name"><option value="">Select...</option>${options}</select>
+        <input type="number" min="1" step="1" placeholder="Qty" style="flex:1;" data-role="supply-qty" value="${existingEntry ? existingEntry.quantity : ''}"/>
+        <span data-role="remove" style="color:#7A2E27;font-family:Arial,sans-serif;font-weight:700;font-size:20px;cursor:pointer;padding:0 6px;">&times;</span>
+      `;
+      row.querySelector('[data-role="remove"]').addEventListener('click', ()=>{ row.remove(); recalc(); });
+      row.querySelector('[data-role="supply-name"]').addEventListener('change', recalc);
+      row.querySelector('[data-role="supply-qty"]').addEventListener('input', recalc);
+      return row;
+    }
+
+    function recalc(){
+      let strawTotal = 0, head = 0;
+      strawRowsEl.querySelectorAll('div').forEach(row=>{
+        const nameSel = row.querySelector('[data-role="straw-name"]');
+        const qtyInput = row.querySelector('[data-role="straw-qty"]');
+        if(!nameSel || !qtyInput) return;
+        const qty = parseInt(qtyInput.value) || 0;
+        if(nameSel.value && qty > 0){
+          strawTotal += customAIStrawPrice(nameSel.value, snapshot) * qty;
+          head += qty;
+        }
+      });
+      let supplyTotal = 0;
+      supplyRowsEl.querySelectorAll('div').forEach(row=>{
+        const nameSel = row.querySelector('[data-role="supply-name"]');
+        const qtyInput = row.querySelector('[data-role="supply-qty"]');
+        if(!nameSel || !qtyInput) return;
+        const qty = parseInt(qtyInput.value) || 0;
+        if(nameSel.value && qty > 0){
+          supplyTotal += customAISupplyPrice(nameSel.value, snapshot) * qty;
+        }
+      });
+      const armTotal = head * armRate;
+      modal.querySelector('#jobStrawSub').textContent = '$' + strawTotal.toFixed(2);
+      modal.querySelector('#jobArmSub').textContent = '$' + armTotal.toFixed(2);
+      modal.querySelector('#jobSupplySub').textContent = '$' + supplyTotal.toFixed(2);
+      modal.querySelector('#jobHeadCount').textContent = head;
+      modal.querySelector('#jobTotal').textContent = '$' + (strawTotal + armTotal + supplyTotal).toFixed(2);
+    }
+
+    modal.querySelector('#addJobStrawRowBtn').addEventListener('click', ()=>{ strawRowsEl.appendChild(strawRow(null)); });
+    modal.querySelector('#addJobSupplyRowBtn').addEventListener('click', ()=>{ supplyRowsEl.appendChild(supplyRow(null)); });
+
+    if(existingStrawRows.length){
+      existingStrawRows.forEach(e=> strawRowsEl.appendChild(strawRow(e)));
+    } else {
+      strawRowsEl.appendChild(strawRow(null));
+    }
+    if(existingSupplyRows.length){
+      existingSupplyRows.forEach(e=> supplyRowsEl.appendChild(supplyRow(e)));
+    } else {
+      supplyRowsEl.appendChild(supplyRow(null));
+    }
+    recalc();
+
+    modal.querySelector('#cancelJobBtn').addEventListener('click', ()=>{
+      const hasStraw = [...strawRowsEl.querySelectorAll('[data-role="straw-name"]')].some(el=>el.value);
+      const hasSupply = [...supplyRowsEl.querySelectorAll('[data-role="supply-name"]')].some(el=>el.value);
+      if((hasStraw || hasSupply) && !confirm('Discard this job? Any entries you\'ve added will be lost.')) return;
+      closeModal();
+    });
+    modal.querySelector('#saveJobBtn').addEventListener('click', async ()=>{
+      const customerId = modal.querySelector('#jobCustomerSelect').value;
+      const jobDate = modal.querySelector('#jobDateInput').value;
+      if(!customerId){ showToast('Select a customer'); return; }
+      if(!jobDate){ showToast('Date is required'); return; }
+
+      const strawLines = [];
+      strawRowsEl.querySelectorAll('div').forEach(row=>{
+        const nameSel = row.querySelector('[data-role="straw-name"]');
+        const qtyInput = row.querySelector('[data-role="straw-qty"]');
+        if(!nameSel || !qtyInput) return;
+        const qty = parseInt(qtyInput.value) || 0;
+        if(nameSel.value && qty > 0) strawLines.push({ straw_name: nameSel.value, price_locked: customAIStrawPrice(nameSel.value, snapshot), quantity: qty });
+      });
+      const supplyLines = [];
+      supplyRowsEl.querySelectorAll('div').forEach(row=>{
+        const nameSel = row.querySelector('[data-role="supply-name"]');
+        const qtyInput = row.querySelector('[data-role="supply-qty"]');
+        if(!nameSel || !qtyInput) return;
+        const qty = parseInt(qtyInput.value) || 0;
+        if(nameSel.value && qty > 0) supplyLines.push({ item_name: nameSel.value, price_locked: customAISupplyPrice(nameSel.value, snapshot), quantity: qty });
+      });
+      if(strawLines.length === 0 && supplyLines.length === 0){ showToast('Add at least one straw or supply'); return; }
+
+      const strawTotal = strawLines.reduce((s,l)=> s + l.price_locked * l.quantity, 0);
+      const head = strawLines.reduce((s,l)=> s + l.quantity, 0);
+      const armTotal = head * armRate;
+      const supplyTotal = supplyLines.reduce((s,l)=> s + l.price_locked * l.quantity, 0);
+      const jobTotal = strawTotal + armTotal + supplyTotal;
+      const customer = customAICustomers.find(c=>c.id===customerId);
+
+      const btn = modal.querySelector('#saveJobBtn');
+      btn.disabled = true;
+      try{
+        let job;
+        if(isEdit){
+          const updated = await api('/custom_ai_jobs?id=eq.' + encodeURIComponent(existingJob.id), {
+            method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify({
+              customer_id: customerId, job_date: jobDate,
+              straw_charges_total: strawTotal, arm_service_total: armTotal, supplies_total: supplyTotal, job_total: jobTotal,
+              customer_name_cache: customer ? customer.name : existingJob.customer_name_cache,
+              customer_email_cache: customer ? customer.email : existingJob.customer_email_cache,
+              customer_phone_cache: customer ? customer.phone : existingJob.customer_phone_cache,
+              updated_at: new Date().toISOString()
+            })
+          });
+          job = updated[0];
+          await api('/custom_ai_job_straw_entries?job_id=eq.' + encodeURIComponent(existingJob.id), { method:'DELETE' });
+          await api('/custom_ai_job_supply_entries?job_id=eq.' + encodeURIComponent(existingJob.id), { method:'DELETE' });
+          customAIJobStrawEntries = customAIJobStrawEntries.filter(e=>e.job_id!==existingJob.id);
+          customAIJobSupplyEntries = customAIJobSupplyEntries.filter(e=>e.job_id!==existingJob.id);
+          const idx = customAIJobs.findIndex(j=>j.id===job.id);
+          if(idx!==-1) customAIJobs[idx] = job;
+        } else {
+          const inserted = await api('/custom_ai_jobs', {
+            method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify({
+              customer_id: customerId, job_date: jobDate, arm_service_rate_locked: armRate,
+              straw_charges_total: strawTotal, arm_service_total: armTotal, supplies_total: supplyTotal, job_total: jobTotal,
+              price_snapshot: snapshot,
+              customer_name_cache: customer ? customer.name : null,
+              customer_email_cache: customer ? customer.email : null,
+              customer_phone_cache: customer ? customer.phone : null
+            })
+          });
+          job = inserted[0];
+          customAIJobs.unshift(job);
+        }
+        if(strawLines.length){
+          const insertedStraws = await api('/custom_ai_job_straw_entries', {
+            method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(strawLines.map(l=> Object.assign({ job_id: job.id }, l)))
+          });
+          customAIJobStrawEntries.push(...insertedStraws);
+        }
+        if(supplyLines.length){
+          const insertedSupplies = await api('/custom_ai_job_supply_entries', {
+            method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(supplyLines.map(l=> Object.assign({ job_id: job.id }, l)))
+          });
+          customAIJobSupplyEntries.push(...insertedSupplies);
+        }
+        renderCustomAIJobsList();
+        closeModal();
+        showToast('Job saved');
+        printCustomAIBill(job);
+      }catch(e){ btn.disabled = false; showToast('Could not save job — try again'); }
+    });
+  }
+
+  function renderCustomAIJobsList(){
+    const listEl = document.getElementById('customAIJobsList');
+    const emptyEl = document.getElementById('customAIJobsEmptyState');
+    if(!listEl) return;
+    const sorted = [...customAIJobs].sort((a,b)=> b.job_date.localeCompare(a.job_date));
+    emptyEl.classList.toggle('hidden', sorted.length !== 0);
+    listEl.innerHTML = sorted.map(j=>`
+      <div class="record" style="padding:12px 14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;">
+          <div>
+            <div style="font-weight:700;">${escapeHtml(j.customer_name_cache||'')}</div>
+            <div class="cow-meta">${fmtDate(j.job_date)}</div>
+          </div>
+          <div style="font-weight:700;font-size:16px;">$${Number(j.job_total).toFixed(2)}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-outline print-job-btn" data-id="${j.id}" style="flex:1;min-width:70px;padding:8px 6px;font-size:12px;">Print</button>
+          <button class="btn btn-outline email-job-btn" data-id="${j.id}" style="flex:1;min-width:70px;padding:8px 6px;font-size:12px;">Email</button>
+          <button class="btn btn-outline text-job-btn" data-id="${j.id}" style="flex:1;min-width:70px;padding:8px 6px;font-size:12px;">Text</button>
+          <button class="btn btn-outline edit-job-btn" data-id="${j.id}" style="flex:1;min-width:70px;padding:8px 6px;font-size:12px;">Edit</button>
+          <button class="record-del delete-job-btn" data-id="${j.id}" title="Delete" style="position:static;">&times;</button>
+        </div>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.print-job-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+      const job = customAIJobs.find(j=>j.id===btn.dataset.id); if(job) printCustomAIBill(job);
+    }));
+    listEl.querySelectorAll('.email-job-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+      const job = customAIJobs.find(j=>j.id===btn.dataset.id); if(job) emailCustomAIBill(job);
+    }));
+    listEl.querySelectorAll('.text-job-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+      const job = customAIJobs.find(j=>j.id===btn.dataset.id); if(job) textCustomAIBill(job);
+    }));
+    listEl.querySelectorAll('.edit-job-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+      const job = customAIJobs.find(j=>j.id===btn.dataset.id); if(job) customAIJobModal(job);
+    }));
+    listEl.querySelectorAll('.delete-job-btn').forEach(btn=> btn.addEventListener('click', ()=> deleteCustomAIJob(btn.dataset.id)));
+  }
+
+  async function deleteCustomAIJob(id){
+    const job = customAIJobs.find(j=>j.id===id);
+    if(!job) return;
+    if(!confirm(`Delete this job for ${job.customer_name_cache}? This cannot be undone.`)) return;
+    try{
+      await api('/custom_ai_jobs?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      customAIJobs = customAIJobs.filter(j=>j.id!==id);
+      customAIJobStrawEntries = customAIJobStrawEntries.filter(e=>e.job_id!==id);
+      customAIJobSupplyEntries = customAIJobSupplyEntries.filter(e=>e.job_id!==id);
+      renderCustomAIJobsList();
+      showToast('Job deleted');
+    }catch(e){ showToast('Could not delete — try again'); }
+  }
+
+  function customAIBillHtml(job){
+    const strawLines = customAIJobStrawEntries.filter(e=>e.job_id===job.id);
+    const supplyLines = customAIJobSupplyEntries.filter(e=>e.job_id===job.id);
+    const strawRows = strawLines.map(l=>`
+      <tr style="border-bottom:0.5px solid #c9bfa4;">
+        <td style="padding:6px 4px;">${escapeHtml(l.straw_name)}</td>
+        <td style="padding:6px 4px;text-align:right;">${l.quantity}</td>
+        <td style="padding:6px 4px;text-align:right;">$${Number(l.price_locked).toFixed(2)}</td>
+        <td style="padding:6px 4px;text-align:right;">$${(l.quantity*l.price_locked).toFixed(2)}</td>
+      </tr>`).join('');
+    const supplyRows = supplyLines.map(l=>`
+      <tr style="border-bottom:0.5px solid #c9bfa4;">
+        <td style="padding:6px 4px;">${escapeHtml(l.item_name)}</td>
+        <td style="padding:6px 4px;text-align:right;">${l.quantity}</td>
+        <td style="padding:6px 4px;text-align:right;">$${Number(l.price_locked).toFixed(2)}</td>
+        <td style="padding:6px 4px;text-align:right;">$${(l.quantity*l.price_locked).toFixed(2)}</td>
+      </tr>`).join('');
+    const farmName = (hayingBillSettings && hayingBillSettings.farm_name) || '';
+    const farmStreet = (hayingBillSettings && hayingBillSettings.address_street) || '';
+    const farmCityState = (hayingBillSettings && hayingBillSettings.address_city_state) || '';
+    const farmZip = (hayingBillSettings && hayingBillSettings.address_zip) || '';
+    const headCount = strawLines.reduce((s,l)=>s+l.quantity,0);
+    return `
+      <div style="padding:32px;font-family:Georgia,'Iowan Old Style',serif;color:#2B2620;max-width:600px;margin:0 auto;">
+        <div style="text-align:center;border-bottom:3px solid #2B2620;padding-bottom:16px;margin-bottom:20px;">
+          <div style="font-family:Arial,sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7A2E27;margin:0 0 6px;">${escapeHtml(farmName)}</div>
+          ${farmStreet ? `<div style="font-family:Arial,sans-serif;font-size:14px;color:#6b6350;">${escapeHtml(farmStreet)}</div>` : ''}
+          ${(farmCityState||farmZip) ? `<div style="font-family:Arial,sans-serif;font-size:14px;color:#6b6350;">${escapeHtml(farmCityState)}${farmCityState&&farmZip?' ':''}${escapeHtml(farmZip)}</div>` : ''}
+          <h2 style="margin:10px 0 0;font-weight:500;font-size:20px;color:#0C5A8E;text-transform:uppercase;letter-spacing:.05em;">Custom A.I. Service Bill</h2>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:14px;">
+          <div><div style="color:#6b6350;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Billed to</div><div style="font-size:16px;margin-top:2px;">${escapeHtml(job.customer_name_cache||'')}</div></div>
+          <div style="text-align:right;"><div style="color:#6b6350;font-family:Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Date</div><div style="font-size:16px;margin-top:2px;">${fmtDate(job.job_date)}</div></div>
+        </div>
+        ${strawRows ? `
+        <div style="font-family:Arial,sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#0C5A8E;margin-bottom:4px;">Straws</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px;">
+          <thead><tr style="border-bottom:1.5px solid #2B2620;">
+            <th style="text-align:left;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Straw</th>
+            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Qty</th>
+            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Each</th>
+            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Total</th>
+          </tr></thead>
+          <tbody>${strawRows}</tbody>
+        </table>` : ''}
+        ${supplyRows ? `
+        <div style="font-family:Arial,sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#0C5A8E;margin-bottom:4px;">Drugs and supplies</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px;">
+          <thead><tr style="border-bottom:1.5px solid #2B2620;">
+            <th style="text-align:left;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Item</th>
+            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Qty</th>
+            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Each</th>
+            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Total</th>
+          </tr></thead>
+          <tbody>${supplyRows}</tbody>
+        </table>` : ''}
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6350;font-family:Arial,sans-serif;margin-bottom:4px;"><span>Straw charges (${headCount} head)</span><span>$${Number(job.straw_charges_total).toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6350;font-family:Arial,sans-serif;margin-bottom:4px;"><span>Arm service (${headCount} head &times; $${Number(job.arm_service_rate_locked).toFixed(2)})</span><span>$${Number(job.arm_service_total).toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6350;font-family:Arial,sans-serif;margin-bottom:10px;"><span>Drugs and supplies</span><span>$${Number(job.supplies_total).toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:3px solid #2B2620;padding-top:14px;">
+          <span style="font-family:Arial,sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:.05em;">Total due</span>
+          <span style="font-size:26px;font-weight:700;color:#7A2E27;">$${Number(job.job_total).toFixed(2)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function printCustomAIBill(job){
+    document.getElementById('printListOutput').innerHTML = customAIBillHtml(job);
+    document.body.classList.add('printing-list');
+    requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
+  }
+
+  function customAIBillPlainText(job){
+    const strawLines = customAIJobStrawEntries.filter(e=>e.job_id===job.id);
+    const supplyLines = customAIJobSupplyEntries.filter(e=>e.job_id===job.id);
+    const headCount = strawLines.reduce((s,l)=>s+l.quantity,0);
+    let lines = [];
+    lines.push('Custom A.I. Service Bill');
+    lines.push('Billed to: ' + (job.customer_name_cache||''));
+    lines.push('Date: ' + fmtDate(job.job_date));
+    lines.push('');
+    strawLines.forEach(l=> lines.push(`${l.straw_name} x${l.quantity} @ $${Number(l.price_locked).toFixed(2)} = $${(l.quantity*l.price_locked).toFixed(2)}`));
+    supplyLines.forEach(l=> lines.push(`${l.item_name} x${l.quantity} @ $${Number(l.price_locked).toFixed(2)} = $${(l.quantity*l.price_locked).toFixed(2)}`));
+    lines.push('');
+    lines.push(`Straw charges (${headCount} head): $${Number(job.straw_charges_total).toFixed(2)}`);
+    lines.push(`Arm service (${headCount} head x $${Number(job.arm_service_rate_locked).toFixed(2)}): $${Number(job.arm_service_total).toFixed(2)}`);
+    lines.push(`Drugs and supplies: $${Number(job.supplies_total).toFixed(2)}`);
+    lines.push(`Total due: $${Number(job.job_total).toFixed(2)}`);
+    return lines.join('\n');
+  }
+
+  function emailCustomAIBill(job){
+    if(!job.customer_email_cache){ showToast('No email on file for this customer'); return; }
+    const subject = encodeURIComponent('Custom A.I. Service Bill — ' + fmtDate(job.job_date));
+    const body = encodeURIComponent(customAIBillPlainText(job));
+    window.location.href = `mailto:${encodeURIComponent(job.customer_email_cache)}?subject=${subject}&body=${body}`;
+  }
+
+  function textCustomAIBill(job){
+    if(!job.customer_phone_cache){ showToast('No phone number on file for this customer'); return; }
+    const body = encodeURIComponent(customAIBillPlainText(job));
+    const digits = job.customer_phone_cache.replace(/[^0-9+]/g,'');
+    window.location.href = `sms:${digits}?body=${body}`;
   }
 
   function renderFarmNotesList(){
