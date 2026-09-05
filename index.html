@@ -7019,9 +7019,18 @@
     listEl.innerHTML = sorted.map(s=>`
       <div class="cow-card" style="cursor:default;">
         <div><div class="cow-num" style="font-size:17px;">${escapeHtml(s.name)}</div><div class="cow-meta">$${Number(s.price).toFixed(2)} per straw</div></div>
-        <button class="remove-custom-ai-straw-btn" data-id="${escapeHtml(s.id)}" data-name="${escapeHtml(s.name)}" title="Remove straw" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+        <div style="display:flex;align-items:center;gap:2px;">
+          <button class="edit-custom-ai-straw-btn" data-id="${escapeHtml(s.id)}" title="Edit straw" style="background:none;border:none;color:#0C5A8E;font-size:18px;cursor:pointer;padding:4px 8px;">✏️</button>
+          <button class="remove-custom-ai-straw-btn" data-id="${escapeHtml(s.id)}" data-name="${escapeHtml(s.name)}" title="Remove straw" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+        </div>
       </div>
     `).join('');
+    listEl.querySelectorAll('.edit-custom-ai-straw-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const straw = customAIStraws.find(s=>s.id===btn.dataset.id);
+        if(straw) editCustomAIStrawModal(straw);
+      });
+    });
     listEl.querySelectorAll('.remove-custom-ai-straw-btn').forEach(btn=>{
       btn.addEventListener('click', ()=> removeCustomAIStraw(btn.dataset.id, btn.dataset.name));
     });
@@ -7064,6 +7073,45 @@
     });
   }
 
+  function editCustomAIStrawModal(straw){
+    const modal = openModal(`
+      <div class="modal-title">Edit Straw</div>
+      <div class="field">
+        <label>Straw Name</label>
+        <input type="text" id="editStrawName" value="${escapeHtml(straw.name)}" autofocus/>
+      </div>
+      <div class="field">
+        <label>Price per Straw</label>
+        <input type="number" step="0.01" min="0" id="editStrawPrice" value="${Number(straw.price)}"/>
+      </div>
+      <div class="banner banner-note" style="display:block;margin-bottom:14px;">Changing this price only affects new jobs going forward — past bills keep the price they were charged.</div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEditStraw">Cancel</button>
+        <button class="btn btn-profile-tool" id="confirmEditStraw">Save Changes</button>
+      </div>
+    `);
+    modal.querySelector('#cancelEditStraw').addEventListener('click', closeModal);
+    modal.querySelector('#confirmEditStraw').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#editStrawName').value.trim();
+      const price = parseFloat(modal.querySelector('#editStrawPrice').value);
+      if(!name){ showToast('Enter a straw name'); return; }
+      if(isNaN(price) || price < 0){ showToast('Enter a valid price'); return; }
+      const btn = modal.querySelector('#confirmEditStraw');
+      btn.disabled = true;
+      try{
+        const updated = await api('/custom_ai_straws?id=eq.' + encodeURIComponent(straw.id), {
+          method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name, price })
+        });
+        const idx = customAIStraws.findIndex(s=>s.id===straw.id);
+        if(idx!==-1) customAIStraws[idx] = updated[0];
+        closeModal();
+        renderCustomAIStrawsList();
+        showToast('Straw updated');
+      }catch(e){ btn.disabled = false; showToast('Could not save — try again'); }
+    });
+  }
+
   async function removeCustomAIStraw(id, name){
     if(!confirm(`Remove "${name}" from the straw list? Past jobs that used this straw keep their locked-in price.`)) return;
     try{
@@ -7083,9 +7131,18 @@
     listEl.innerHTML = sorted.map(s=>`
       <div class="cow-card" style="cursor:default;">
         <div><div class="cow-num" style="font-size:17px;">${escapeHtml(s.name)}</div><div class="cow-meta">$${Number(s.price).toFixed(2)} each</div></div>
-        <button class="remove-custom-ai-supply-btn" data-id="${escapeHtml(s.id)}" data-name="${escapeHtml(s.name)}" title="Remove item" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+        <div style="display:flex;align-items:center;gap:2px;">
+          <button class="edit-custom-ai-supply-btn" data-id="${escapeHtml(s.id)}" title="Edit item" style="background:none;border:none;color:#0C5A8E;font-size:18px;cursor:pointer;padding:4px 8px;">✏️</button>
+          <button class="remove-custom-ai-supply-btn" data-id="${escapeHtml(s.id)}" data-name="${escapeHtml(s.name)}" title="Remove item" style="background:none;border:none;color:#a08f6b;font-size:22px;cursor:pointer;padding:4px 8px;">&times;</button>
+        </div>
       </div>
     `).join('');
+    listEl.querySelectorAll('.edit-custom-ai-supply-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const supply = customAISupplies.find(s=>s.id===btn.dataset.id);
+        if(supply) editCustomAISupplyModal(supply);
+      });
+    });
     listEl.querySelectorAll('.remove-custom-ai-supply-btn').forEach(btn=>{
       btn.addEventListener('click', ()=> removeCustomAISupply(btn.dataset.id, btn.dataset.name));
     });
@@ -7125,6 +7182,45 @@
         renderCustomAISuppliesList();
         showToast('Item added');
       }catch(e){ btn.disabled = false; showToast('Could not add — try again'); }
+    });
+  }
+
+  function editCustomAISupplyModal(supply){
+    const modal = openModal(`
+      <div class="modal-title">Edit Drug or Supply</div>
+      <div class="field">
+        <label>Item Name</label>
+        <input type="text" id="editSupplyName" value="${escapeHtml(supply.name)}" autofocus/>
+      </div>
+      <div class="field">
+        <label>Price Each</label>
+        <input type="number" step="0.01" min="0" id="editSupplyPrice" value="${Number(supply.price)}"/>
+      </div>
+      <div class="banner banner-note" style="display:block;margin-bottom:14px;">Changing this price only affects new jobs going forward — past bills keep the price they were charged.</div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEditSupply">Cancel</button>
+        <button class="btn btn-profile-tool" id="confirmEditSupply">Save Changes</button>
+      </div>
+    `);
+    modal.querySelector('#cancelEditSupply').addEventListener('click', closeModal);
+    modal.querySelector('#confirmEditSupply').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#editSupplyName').value.trim();
+      const price = parseFloat(modal.querySelector('#editSupplyPrice').value);
+      if(!name){ showToast('Enter an item name'); return; }
+      if(isNaN(price) || price < 0){ showToast('Enter a valid price'); return; }
+      const btn = modal.querySelector('#confirmEditSupply');
+      btn.disabled = true;
+      try{
+        const updated = await api('/custom_ai_supplies?id=eq.' + encodeURIComponent(supply.id), {
+          method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ name, price })
+        });
+        const idx = customAISupplies.findIndex(s=>s.id===supply.id);
+        if(idx!==-1) customAISupplies[idx] = updated[0];
+        closeModal();
+        renderCustomAISuppliesList();
+        showToast('Item updated');
+      }catch(e){ btn.disabled = false; showToast('Could not save — try again'); }
     });
   }
 
@@ -7500,7 +7596,7 @@
     const sorted = [...customAIJobs].sort((a,b)=> b.job_date.localeCompare(a.job_date));
     emptyEl.classList.toggle('hidden', sorted.length !== 0);
     listEl.innerHTML = sorted.map(j=>`
-      <div class="record" style="padding:12px 14px;">
+      <div class="record" style="padding:12px 14px;${j.paid ? '' : 'border-left:4px solid #7A2E27;'}">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;">
           <div>
             <div style="font-weight:700;">${escapeHtml(j.customer_name_cache||'')}</div>
@@ -7508,6 +7604,10 @@
           </div>
           <div style="font-weight:700;font-size:16px;">$${Number(j.job_total).toFixed(2)}</div>
         </div>
+        <label style="display:flex;align-items:center;gap:6px;margin-bottom:10px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:${j.paid ? '#3C9142' : '#7A2E27'};cursor:pointer;">
+          <input type="checkbox" class="paid-checkbox" data-id="${j.id}" ${j.paid ? 'checked' : ''} style="width:18px;height:18px;accent-color:${j.paid ? '#3C9142' : '#7A2E27'};"/>
+          ${j.paid ? 'Paid' : 'Unpaid'}
+        </label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn btn-outline print-job-btn" data-id="${j.id}" style="flex:1;min-width:70px;padding:8px 6px;font-size:12px;">Print</button>
           <button class="btn btn-outline email-job-btn" data-id="${j.id}" style="flex:1;min-width:70px;padding:8px 6px;font-size:12px;">Email</button>
@@ -7517,6 +7617,7 @@
         </div>
       </div>
     `).join('');
+    listEl.querySelectorAll('.paid-checkbox').forEach(cb=> cb.addEventListener('change', ()=> toggleCustomAIJobPaid(cb.dataset.id, cb.checked)));
     listEl.querySelectorAll('.print-job-btn').forEach(btn=> btn.addEventListener('click', ()=>{
       const job = customAIJobs.find(j=>j.id===btn.dataset.id); if(job) printCustomAIBill(job);
     }));
@@ -7530,6 +7631,25 @@
       const job = customAIJobs.find(j=>j.id===btn.dataset.id); if(job) customAIJobModal(job);
     }));
     listEl.querySelectorAll('.delete-job-btn').forEach(btn=> btn.addEventListener('click', ()=> deleteCustomAIJob(btn.dataset.id)));
+  }
+
+  async function toggleCustomAIJobPaid(id, paid){
+    const idx = customAIJobs.findIndex(j=>j.id===id);
+    if(idx===-1) return;
+    const previous = customAIJobs[idx].paid;
+    customAIJobs[idx].paid = paid; // optimistic update
+    renderCustomAIJobsList();
+    try{
+      await api('/custom_ai_jobs?id=eq.' + encodeURIComponent(id), {
+        method:'PATCH', headers: HEADERS,
+        body: JSON.stringify({ paid })
+      });
+      showToast(paid ? 'Marked paid' : 'Marked unpaid');
+    }catch(e){
+      customAIJobs[idx].paid = previous; // revert on failure
+      renderCustomAIJobsList();
+      showToast('Could not save — try again');
+    }
   }
 
   async function deleteCustomAIJob(id){
@@ -7582,7 +7702,8 @@
         </div>
         ${strawRows ? `
         <div style="font-family:Arial,sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#0C5A8E;margin-bottom:4px;">Straws</div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px;table-layout:fixed;">
+          <colgroup><col style="width:46%;"><col style="width:14%;"><col style="width:20%;"><col style="width:20%;"></colgroup>
           <thead><tr style="border-bottom:1.5px solid #2B2620;">
             <th style="text-align:left;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Straw</th>
             <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Qty</th>
@@ -7593,7 +7714,8 @@
         </table>` : ''}
         ${supplyRows ? `
         <div style="font-family:Arial,sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#0C5A8E;margin-bottom:4px;">Drugs and supplies</div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px;table-layout:fixed;">
+          <colgroup><col style="width:46%;"><col style="width:14%;"><col style="width:20%;"><col style="width:20%;"></colgroup>
           <thead><tr style="border-bottom:1.5px solid #2B2620;">
             <th style="text-align:left;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Item</th>
             <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Qty</th>
