@@ -7669,20 +7669,27 @@
   function customAIBillHtml(job){
     const strawLines = customAIJobStrawEntries.filter(e=>e.job_id===job.id);
     const supplyLines = customAIJobSupplyEntries.filter(e=>e.job_id===job.id);
-    const strawRows = strawLines.map(l=>`
-      <tr style="border-bottom:0.5px solid #c9bfa4;">
-        <td style="padding:6px 4px;">${escapeHtml(l.straw_name)}</td>
-        <td style="padding:6px 4px;text-align:right;">${l.quantity}</td>
-        <td style="padding:6px 4px;text-align:right;">$${Number(l.price_locked).toFixed(2)}</td>
-        <td style="padding:6px 4px;text-align:right;">$${(l.quantity*l.price_locked).toFixed(2)}</td>
-      </tr>`).join('');
-    const supplyRows = supplyLines.map(l=>`
-      <tr style="border-bottom:0.5px solid #c9bfa4;">
-        <td style="padding:6px 4px;">${escapeHtml(l.item_name)}</td>
-        <td style="padding:6px 4px;text-align:right;">${l.quantity}</td>
-        <td style="padding:6px 4px;text-align:right;">$${Number(l.price_locked).toFixed(2)}</td>
-        <td style="padding:6px 4px;text-align:right;">$${(l.quantity*l.price_locked).toFixed(2)}</td>
-      </tr>`).join('');
+    const COLS = 'flex:0 0 46%;|flex:0 0 14%;text-align:right;|flex:0 0 20%;text-align:right;|flex:0 0 20%;text-align:right;'.split('|');
+    function lineItemRow(name, qty, price){
+      return `
+      <div style="display:flex;border-bottom:0.5px solid #c9bfa4;padding:6px 4px;font-size:13px;">
+        <div style="${COLS[0]}">${escapeHtml(name)}</div>
+        <div style="${COLS[1]}">${qty}</div>
+        <div style="${COLS[2]}">$${Number(price).toFixed(2)}</div>
+        <div style="${COLS[3]}">$${(qty*price).toFixed(2)}</div>
+      </div>`;
+    }
+    function headerRow(nameLabel){
+      return `
+      <div style="display:flex;border-bottom:1.5px solid #2B2620;padding-bottom:5px;margin-bottom:2px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">
+        <div style="${COLS[0]}">${nameLabel}</div>
+        <div style="${COLS[1]}">Qty</div>
+        <div style="${COLS[2]}">Each</div>
+        <div style="${COLS[3]}">Total</div>
+      </div>`;
+    }
+    const strawRows = strawLines.map(l=> lineItemRow(l.straw_name, l.quantity, l.price_locked)).join('');
+    const supplyRows = supplyLines.map(l=> lineItemRow(l.item_name, l.quantity, l.price_locked)).join('');
     const farmName = (hayingBillSettings && hayingBillSettings.farm_name) || '';
     const farmStreet = (hayingBillSettings && hayingBillSettings.address_street) || '';
     const farmCityState = (hayingBillSettings && hayingBillSettings.address_city_state) || '';
@@ -7702,28 +7709,16 @@
         </div>
         ${strawRows ? `
         <div style="font-family:Arial,sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#0C5A8E;margin-bottom:4px;">Straws</div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px;table-layout:fixed;">
-          <colgroup><col style="width:46%;"><col style="width:14%;"><col style="width:20%;"><col style="width:20%;"></colgroup>
-          <thead><tr style="border-bottom:1.5px solid #2B2620;">
-            <th style="text-align:left;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Straw</th>
-            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Qty</th>
-            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Each</th>
-            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Total</th>
-          </tr></thead>
-          <tbody>${strawRows}</tbody>
-        </table>` : ''}
+        <div style="margin-bottom:14px;">
+          ${headerRow('Straw')}
+          ${strawRows}
+        </div>` : ''}
         ${supplyRows ? `
         <div style="font-family:Arial,sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#0C5A8E;margin-bottom:4px;">Drugs and supplies</div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px;table-layout:fixed;">
-          <colgroup><col style="width:46%;"><col style="width:14%;"><col style="width:20%;"><col style="width:20%;"></colgroup>
-          <thead><tr style="border-bottom:1.5px solid #2B2620;">
-            <th style="text-align:left;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Item</th>
-            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Qty</th>
-            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Each</th>
-            <th style="text-align:right;padding:5px 4px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;color:#6b6350;">Total</th>
-          </tr></thead>
-          <tbody>${supplyRows}</tbody>
-        </table>` : ''}
+        <div style="margin-bottom:14px;">
+          ${headerRow('Item')}
+          ${supplyRows}
+        </div>` : ''}
         <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6350;font-family:Arial,sans-serif;margin-bottom:4px;"><span>Straw charges (${headCount} head)</span><span>$${Number(job.straw_charges_total).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6350;font-family:Arial,sans-serif;margin-bottom:4px;"><span>Arm service (${headCount} head &times; $${Number(job.arm_service_rate_locked).toFixed(2)})</span><span>$${Number(job.arm_service_total).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6350;font-family:Arial,sans-serif;margin-bottom:10px;"><span>Drugs and supplies</span><span>$${Number(job.supplies_total).toFixed(2)}</span></div>
