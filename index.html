@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>CHAMP</title>
+<title>CHAmp</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="CHAMP">
+<meta name="apple-mobile-web-app-title" content="CHAmp">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#7A2E27">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -1275,9 +1275,19 @@
     }
   }
 
+  let isLoadingAll = false;
   async function loadAll(){
+    if(isLoadingAll) return;
+    isLoadingAll = true;
     try{
-      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes, locationsRes, ownersRes, groupsRes, reasonsRes, todosRes, hayingCustomersRes, hayingBillsRes, hayingBillSettingsRes, homeStatsSettingsRes, customAIStrawsRes, customAISuppliesRes, customAISettingsRes, customAICustomersRes, customAIJobsRes, customAIJobStrawEntriesRes, customAIJobSupplyEntriesRes] = await Promise.all([
+      await loadAllInner();
+    } finally {
+      isLoadingAll = false;
+    }
+  }
+  async function loadAllInner(){
+    try{
+      const [cowsRes, treatRes, calvingsRes, notesRes, weightsRes, breedingRes, photosRes, tallyRes, hayingRes, equipmentRes, equipmentListRes, calfTreatRes, calfWeightRes, farmNotesRes, bullsRes, hayingFieldsRes, medicinesRes, locationsRes, ownersRes, groupsRes, reasonsRes, todosRes, hayingCustomersRes, hayingBillsRes, hayingBillSettingsRes, homeStatsSettingsRes] = await Promise.all([
         api('/cows?select=*&order=number.asc', { method:'GET' }),
         api('/treatments?select=*', { method:'GET' }),
         api('/calvings?select=*', { method:'GET' }),
@@ -1303,14 +1313,7 @@
         api('/haying_customers?select=*&order=name.asc', { method:'GET' }),
         api('/haying_bills?select=*&order=created_at.desc', { method:'GET' }),
         api('/haying_bill_settings?select=*&limit=1', { method:'GET' }),
-        api('/home_stats_settings?select=*&limit=1', { method:'GET' }),
-        api('/custom_ai_straws?select=*&order=name.asc', { method:'GET' }),
-        api('/custom_ai_supplies?select=*&order=name.asc', { method:'GET' }),
-        api('/custom_ai_settings?select=*&limit=1', { method:'GET' }),
-        api('/custom_ai_customers?select=*&order=name.asc', { method:'GET' }),
-        api('/custom_ai_jobs?select=*&order=job_date.desc', { method:'GET' }),
-        api('/custom_ai_job_straw_entries?select=*', { method:'GET' }),
-        api('/custom_ai_job_supply_entries?select=*', { method:'GET' })
+        api('/home_stats_settings?select=*&limit=1', { method:'GET' })
       ]);
       cows = cowsRes || [];
       treatments = treatRes || [];
@@ -1338,16 +1341,8 @@
       hayingBills = hayingBillsRes || [];
       hayingBillSettings = (hayingBillSettingsRes && hayingBillSettingsRes[0]) || null;
       homeStatsSettings = (homeStatsSettingsRes && homeStatsSettingsRes[0]) || null;
-      customAIStraws = customAIStrawsRes || [];
-      customAISupplies = customAISuppliesRes || [];
-      customAISettings = (customAISettingsRes && customAISettingsRes[0]) || null;
-      customAICustomers = customAICustomersRes || [];
-      customAIJobs = customAIJobsRes || [];
-      customAIJobStrawEntries = customAIJobStrawEntriesRes || [];
-      customAIJobSupplyEntries = customAIJobSupplyEntriesRes || [];
     }catch(e){
       cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = []; locationsList = []; ownersList = []; groupsList = []; reasonsList = []; todos = []; hayingCustomers = []; hayingBills = []; hayingBillSettings = null; homeStatsSettings = null;
-      customAIStraws = []; customAISupplies = []; customAISettings = null; customAICustomers = []; customAIJobs = []; customAIJobStrawEntries = []; customAIJobSupplyEntries = [];
     }
     renderBullsList();
     renderHayingFieldsList();
@@ -1361,9 +1356,6 @@
     renderFarmNotesList();
     renderEquipmentList();
     if(currentEquipment) renderEquipmentDetail();
-    renderCustomAIStrawsList();
-    renderCustomAISuppliesList();
-    renderCustomAIJobsList();
     renderList();
     renderCalvingList();
     if(currentCalvingCow) renderCalvingDetail();
@@ -2336,26 +2328,50 @@
     renderReasonsList();
     window.scrollTo(0,0);
   }
-  function showManageCustomAI(){
+  async function loadCustomAIData(){
+    try{
+      const [strawsRes, suppliesRes, settingsRes, customersRes, jobsRes, strawEntriesRes, supplyEntriesRes] = await Promise.all([
+        api('/custom_ai_straws?select=*&order=name.asc', { method:'GET' }),
+        api('/custom_ai_supplies?select=*&order=name.asc', { method:'GET' }),
+        api('/custom_ai_settings?select=*&limit=1', { method:'GET' }),
+        api('/custom_ai_customers?select=*&order=name.asc', { method:'GET' }),
+        api('/custom_ai_jobs?select=*&order=job_date.desc', { method:'GET' }),
+        api('/custom_ai_job_straw_entries?select=*', { method:'GET' }),
+        api('/custom_ai_job_supply_entries?select=*', { method:'GET' })
+      ]);
+      customAIStraws = strawsRes || [];
+      customAISupplies = suppliesRes || [];
+      customAISettings = (settingsRes && settingsRes[0]) || null;
+      customAICustomers = customersRes || [];
+      customAIJobs = jobsRes || [];
+      customAIJobStrawEntries = strawEntriesRes || [];
+      customAIJobSupplyEntries = supplyEntriesRes || [];
+    }catch(e){
+      showToast('Could not load Custom AI data — try again');
+    }
+  }
+  async function showManageCustomAI(){
     setHeaderTitle('Manage', 'Custom AI');
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     manageCustomAIView.classList.remove('hidden');
+    window.scrollTo(0,0);
+    await loadCustomAIData();
     const rateInput = document.getElementById('armServiceRateInput');
     if(rateInput) rateInput.value = customAISettings ? customAISettings.arm_service_rate : '';
     renderCustomAIStrawsList();
     renderCustomAISuppliesList();
-    window.scrollTo(0,0);
   }
-  function showCustomAI(){
+  async function showCustomAI(){
     setHeaderTitle('Custom', 'AI');
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     customAIView.classList.remove('hidden');
-    renderCustomAIJobsList();
     window.scrollTo(0,0);
+    await loadCustomAIData();
+    renderCustomAIJobsList();
   }
   function showAdvancedSearch(){
     setHeaderTitle('Advanced', 'Search');
