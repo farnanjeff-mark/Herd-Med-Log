@@ -1258,15 +1258,23 @@
 
   async function api(path, options){
     setSync('busy');
+    const maxAttempts = 3;
     let res;
-    try{
-      res = await fetch(REST + path, Object.assign({ headers: HEADERS }, options||{}));
-    }catch(networkErr){
-      console.error(networkErr);
-      setSync('err');
-      showConnError('Could not reach the database. Check your internet connection — your last change may not have saved.');
-      networkErr.isNetworkFailure = true;
-      throw networkErr;
+    for(let attempt=1; attempt<=maxAttempts; attempt++){
+      try{
+        res = await fetch(REST + path, Object.assign({ headers: HEADERS }, options||{}));
+        break; // got a response — stop retrying
+      }catch(networkErr){
+        if(attempt < maxAttempts){
+          await new Promise(r=>setTimeout(r, 400 * attempt)); // brief pause, then try again — smooths out short blips
+          continue;
+        }
+        console.error(networkErr);
+        setSync('err');
+        showConnError('Could not reach the database. Check your internet connection — your last change may not have saved.');
+        networkErr.isNetworkFailure = true;
+        throw networkErr;
+      }
     }
     try{
       if(!res.ok){
