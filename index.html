@@ -1315,6 +1315,12 @@
           } else if(entry.kind === 'insert' && entry.table === 'general_notes'){
             const idx = generalNotes.findIndex(n=>n.id === entry.tempId);
             if(idx !== -1 && result && result[0]) generalNotes[idx] = result[0];
+          } else if(entry.kind === 'insert' && entry.table === 'weights'){
+            const idx = weights.findIndex(w=>w.id === entry.tempId);
+            if(idx !== -1 && result && result[0]) weights[idx] = result[0];
+          } else if(entry.kind === 'insert' && entry.table === 'breeding_records'){
+            const idx = breedingRecords.findIndex(b=>b.id === entry.tempId);
+            if(idx !== -1 && result && result[0]) breedingRecords[idx] = result[0];
           } else if(entry.kind === 'update' && entry.table === 'cows'){
             const idx = cows.findIndex(c=>c.number === entry.cowNumber);
             const meta = PENDING_COW_FIELD_META[entry.field];
@@ -1344,6 +1350,10 @@
         if(currentCow) renderDetail();
         if(currentNotesCow) renderNotesDetail();
         renderNotesList();
+        if(currentWeightsCow) renderWeightsDetail();
+        renderWeightsList();
+        if(currentBreedingCow) renderBreedingDetail();
+        renderBreedingList();
         renderProfileList();
         if(currentProfileCow) renderProfile();
         renderList();
@@ -4049,7 +4059,8 @@
       }
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
-        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        ${r._pendingSync ? '' : `<button class="record-edit" data-id="${r.id}">&#9998;</button>`}
+        ${r._pendingSync ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;">Not synced yet</div>` : ''}
         <div class="record-date">${fmtDate(r.weigh_date)}</div>
         <div class="record-med">${r.weight!=null ? r.weight + ' lbs' : ''}</div>
         ${changeHtml}
@@ -4059,7 +4070,7 @@
         e.stopPropagation();
         deleteWeight(r.id);
       });
-      div.querySelector('.record-edit').addEventListener('click', (e)=>{
+      div.querySelector('.record-edit')?.addEventListener('click', (e)=>{
         e.stopPropagation();
         editWeightModal(r);
       });
@@ -4133,7 +4144,8 @@
       if(r.vet_calls) details.push(`Vet: ${escapeHtml(r.vet_calls)}`);
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
-        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        ${r._pendingSync ? '' : `<button class="record-edit" data-id="${r.id}">&#9998;</button>`}
+        ${r._pendingSync ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;">Not synced yet</div>` : ''}
         <div class="record-date">${fmtDate(r.breed_date)}</div>
         ${r.expected_due_date ? `<div class="record-med">Due: ${fmtDate(r.expected_due_date)}</div>` : ''}
         ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
@@ -4143,7 +4155,7 @@
         e.stopPropagation();
         deleteBreedingRecord(r.id);
       });
-      div.querySelector('.record-edit').addEventListener('click', (e)=>{
+      div.querySelector('.record-edit')?.addEventListener('click', (e)=>{
         e.stopPropagation();
         editBreedingModal(r);
       });
@@ -4205,6 +4217,15 @@
   }
 
   async function deleteWeight(id){
+    if(String(id).startsWith('pending-weight-')){
+      const pw = getPendingWrites().find(w=>w.tempId===id);
+      if(pw) removePendingWrite(pw.localId);
+      weights = weights.filter(w=>w.id!==id);
+      renderWeightsDetail();
+      renderWeightsList();
+      showToast('Removed — it was never synced, so nothing to undo on the database');
+      return;
+    }
     try{
       const record = weights.find(w=>w.id===id);
       if(record) await snapshotBeforeDelete('weights', record);
@@ -4217,6 +4238,15 @@
   }
 
   async function deleteBreedingRecord(id){
+    if(String(id).startsWith('pending-breeding-')){
+      const pw = getPendingWrites().find(w=>w.tempId===id);
+      if(pw) removePendingWrite(pw.localId);
+      breedingRecords = breedingRecords.filter(b=>b.id!==id);
+      renderBreedingDetail();
+      renderBreedingList();
+      showToast('Removed — it was never synced, so nothing to undo on the database');
+      return;
+    }
     try{
       const record = breedingRecords.find(b=>b.id===id);
       if(record) await snapshotBeforeDelete('breeding_records', record);
@@ -5097,6 +5127,7 @@
           });
           weights.push(inserted[0]);
         }
+        saveOfflineCache();
         closeModal();
         renderWeightsDetail();
         renderWeightsList();
@@ -5104,8 +5135,27 @@
         window.scrollTo(0,0);
         showToast(isEdit ? 'Weight updated' : 'Weight logged');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure && !isEdit){
+          const tempId = makeLocalId('pending-weight');
+          const tempRecord = Object.assign({ id: tempId, cow_number: currentWeightsCow, _pendingSync: true }, body);
+          weights.push(tempRecord);
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'insert', table: 'weights', tempId,
+            method: 'POST', path: '/weights',
+            body: Object.assign({ cow_number: currentWeightsCow }, body)
+          });
+          saveOfflineCache();
+          closeModal();
+          renderWeightsDetail();
+          renderWeightsList();
+          renderProfileList();
+          window.scrollTo(0,0);
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
@@ -5744,6 +5794,7 @@
           });
           breedingRecords.push(inserted[0]);
         }
+        saveOfflineCache();
         closeModal();
         renderBreedingDetail();
         renderBreedingList();
@@ -5751,8 +5802,27 @@
         window.scrollTo(0,0);
         showToast(isEdit ? 'Breeding updated' : 'Breeding logged');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure && !isEdit){
+          const tempId = makeLocalId('pending-breeding');
+          const tempRecord = Object.assign({ id: tempId, cow_number: currentBreedingCow, _pendingSync: true }, body);
+          breedingRecords.push(tempRecord);
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'insert', table: 'breeding_records', tempId,
+            method: 'POST', path: '/breeding_records',
+            body: Object.assign({ cow_number: currentBreedingCow }, body)
+          });
+          saveOfflineCache();
+          closeModal();
+          renderBreedingDetail();
+          renderBreedingList();
+          renderProfileList();
+          window.scrollTo(0,0);
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
