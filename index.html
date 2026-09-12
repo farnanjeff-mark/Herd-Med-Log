@@ -1285,6 +1285,12 @@
     }
   }
 
+  const PENDING_COW_FIELD_META = {
+    calved:      { flag: '_pendingCalvedSync', attr: 'data-pending-calved-num' },
+    tag_needed:  { flag: '_pendingTagSync',    attr: 'data-pending-tag-num' },
+    needs_entry: { flag: '_pendingFlagSync',   attr: 'data-pending-flag-num' }
+  };
+
   let isSyncingPendingWrites = false;
   async function syncPendingWrites(){
     if(isSyncingPendingWrites) return;
@@ -1305,11 +1311,12 @@
             if(idx !== -1 && result && result[0]) calvings[idx] = result[0];
           } else if(entry.kind === 'update' && entry.table === 'cows'){
             const idx = cows.findIndex(c=>c.number === entry.cowNumber);
+            const meta = PENDING_COW_FIELD_META[entry.field];
             if(idx !== -1){
               cows[idx] = Object.assign({}, cows[idx], result && result[0] ? result[0] : {});
-              delete cows[idx]._pendingCalvedSync;
+              if(meta) delete cows[idx][meta.flag];
             }
-            document.querySelectorAll('[data-pending-num="'+CSS.escape(entry.cowNumber)+'"]').forEach(el=> el.style.display='none');
+            if(meta) document.querySelectorAll('['+meta.attr+'="'+CSS.escape(entry.cowNumber)+'"]').forEach(el=> el.style.display='none');
           }
           removePendingWrite(entry.localId);
           anySucceeded = true;
@@ -6142,7 +6149,10 @@
     return (cow.status && cow.status !== 'Active') ? `<span class="status-badge">${escapeHtml(cow.status)}</span>` : '';
   }
   function needsEntryCheckboxHtml(cow){
-    return `<input type="checkbox" class="needs-entry-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.needs_entry ? 'checked' : ''} title="Flag this cow" style="--rc-color:#0274BA;"/>`;
+    return `<span style="position:relative;display:inline-block;">
+      <input type="checkbox" class="needs-entry-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.needs_entry ? 'checked' : ''} title="Flag this cow" style="--rc-color:#0274BA;"/>
+      <span data-pending-flag-num="${escapeHtml(cow.number)}" style="display:${cow._pendingFlagSync ? 'block' : 'none'};position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#A32D2D;border:1.5px solid #fff;"></span>
+    </span>`;
   }
   function wireNeedsEntryCheckboxes(container){
     container.querySelectorAll('.needs-entry-check').forEach(cb=>{
@@ -6157,20 +6167,39 @@
     });
   }
   async function toggleNeedsEntry(num, checked){
+    const body = { needs_entry: checked };
     try{
       const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ needs_entry: checked })
+        body: JSON.stringify(body)
       });
       const idx = cows.findIndex(c=>c.number===num);
       if(idx !== -1) cows[idx] = updated[0];
+      saveOfflineCache();
     }catch(e){
-      showToast('Could not save — try again');
+      if(e && e.isNetworkFailure){
+        const idx = cows.findIndex(c=>c.number===num);
+        if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingFlagSync: true });
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'cows', field: 'needs_entry', cowNumber: num,
+          method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(num),
+          body
+        });
+        saveOfflineCache();
+        document.querySelectorAll('[data-pending-flag-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
+        showToast('Saved on this phone — will sync when you have signal');
+      } else {
+        showToast('Could not save — try again');
+      }
     }
   }
   function tagNeededCheckboxHtml(cow){
-    return `<input type="checkbox" class="tag-needed-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.tag_needed ? 'checked' : ''} title="Tag Needed" style="--rc-color:#0274BA;"/>`;
+    return `<span style="position:relative;display:inline-block;">
+      <input type="checkbox" class="tag-needed-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.tag_needed ? 'checked' : ''} title="Tag Needed" style="--rc-color:#0274BA;"/>
+      <span data-pending-tag-num="${escapeHtml(cow.number)}" style="display:${cow._pendingTagSync ? 'block' : 'none'};position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#A32D2D;border:1.5px solid #fff;"></span>
+    </span>`;
   }
   function wireTagNeededCheckboxes(container){
     container.querySelectorAll('.tag-needed-check').forEach(cb=>{
@@ -6185,22 +6214,38 @@
     });
   }
   async function toggleTagNeeded(num, checked){
+    const body = { tag_needed: checked };
     try{
       const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ tag_needed: checked })
+        body: JSON.stringify(body)
       });
       const idx = cows.findIndex(c=>c.number===num);
       if(idx !== -1) cows[idx] = updated[0];
+      saveOfflineCache();
     }catch(e){
-      showToast('Could not save — try again');
+      if(e && e.isNetworkFailure){
+        const idx = cows.findIndex(c=>c.number===num);
+        if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingTagSync: true });
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'cows', field: 'tag_needed', cowNumber: num,
+          method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(num),
+          body
+        });
+        saveOfflineCache();
+        document.querySelectorAll('[data-pending-tag-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
+        showToast('Saved on this phone — will sync when you have signal');
+      } else {
+        showToast('Could not save — try again');
+      }
     }
   }
   function calvedCheckboxHtml(cow){
     return `<span style="position:relative;display:inline-block;">
       <input type="checkbox" class="calved-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.calved ? 'checked' : ''} title="Calved" style="--rc-color:#0274BA;"/>
-      <span class="calved-pending-dot" data-pending-num="${escapeHtml(cow.number)}" style="display:${cow._pendingCalvedSync ? 'block' : 'none'};position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#A32D2D;border:1.5px solid #fff;"></span>
+      <span data-pending-calved-num="${escapeHtml(cow.number)}" style="display:${cow._pendingCalvedSync ? 'block' : 'none'};position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#A32D2D;border:1.5px solid #fff;"></span>
     </span>`;
   }
   function wireCalvedCheckboxes(container){
@@ -6232,12 +6277,12 @@
         if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingCalvedSync: true });
         queuePendingWrite({
           localId: makeLocalId('pw'),
-          kind: 'update', table: 'cows', cowNumber: num,
+          kind: 'update', table: 'cows', field: 'calved', cowNumber: num,
           method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(num),
           body
         });
         saveOfflineCache();
-        document.querySelectorAll('[data-pending-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
+        document.querySelectorAll('[data-pending-calved-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
         showToast('Saved on this phone — will sync when you have signal');
       } else {
         showToast('Could not save — try again');
