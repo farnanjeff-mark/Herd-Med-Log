@@ -1309,6 +1309,12 @@
           if(entry.kind === 'insert' && entry.table === 'calvings'){
             const idx = calvings.findIndex(c=>c.id === entry.tempId);
             if(idx !== -1 && result && result[0]) calvings[idx] = result[0];
+          } else if(entry.kind === 'insert' && entry.table === 'treatments'){
+            const idx = treatments.findIndex(t=>t.id === entry.tempId);
+            if(idx !== -1 && result && result[0]) treatments[idx] = result[0];
+          } else if(entry.kind === 'insert' && entry.table === 'general_notes'){
+            const idx = generalNotes.findIndex(n=>n.id === entry.tempId);
+            if(idx !== -1 && result && result[0]) generalNotes[idx] = result[0];
           } else if(entry.kind === 'update' && entry.table === 'cows'){
             const idx = cows.findIndex(c=>c.number === entry.cowNumber);
             const meta = PENDING_COW_FIELD_META[entry.field];
@@ -1335,6 +1341,9 @@
         saveOfflineCache();
         renderCalvingList();
         if(currentCalvingCow) renderCalvingDetail();
+        if(currentCow) renderDetail();
+        if(currentNotesCow) renderNotesDetail();
+        renderNotesList();
         renderProfileList();
         if(currentProfileCow) renderProfile();
         renderList();
@@ -3040,7 +3049,8 @@
       div.className = 'record' + (isNote ? ' note-entry' : '');
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
-        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        ${r._pendingSync ? '' : `<button class="record-edit" data-id="${r.id}">&#9998;</button>`}
+        ${r._pendingSync ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;">Not synced yet</div>` : ''}
         <div class="record-date">${fmtDate(r.date)}${isNote ? ' · NOTE' : ''}</div>
         ${isNote ? '' : `<div class="record-med">${escapeHtml(r.medicine)}</div><div class="record-reason">${escapeHtml(r.reason)}</div>`}
         ${r.notes ? `<div class="${isNote ? 'record-reason' : 'record-notes'}">${escapeHtml(r.notes)}</div>` : ''}
@@ -3049,7 +3059,7 @@
         e.stopPropagation();
         deleteRecord(r.id);
       });
-      div.querySelector('.record-edit').addEventListener('click', (e)=>{
+      div.querySelector('.record-edit')?.addEventListener('click', (e)=>{
         e.stopPropagation();
         editRecordModal(r);
       });
@@ -3213,7 +3223,8 @@
       div.className = 'record note-entry';
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
-        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        ${r._pendingSync ? '' : `<button class="record-edit" data-id="${r.id}">&#9998;</button>`}
+        ${r._pendingSync ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;">Not synced yet</div>` : ''}
         <div class="record-date">${fmtDate(r.note_date)}</div>
         <div class="record-reason">${escapeHtml(r.note)}</div>
       `;
@@ -3221,7 +3232,7 @@
         e.stopPropagation();
         deleteGeneralNote(r.id);
       });
-      div.querySelector('.record-edit').addEventListener('click', (e)=>{
+      div.querySelector('.record-edit')?.addEventListener('click', (e)=>{
         e.stopPropagation();
         editGeneralNoteModal(r);
       });
@@ -4152,6 +4163,15 @@
   }
 
   async function deleteRecord(id){
+    if(String(id).startsWith('pending-treatment-')){
+      const pw = getPendingWrites().find(w=>w.tempId===id);
+      if(pw) removePendingWrite(pw.localId);
+      treatments = treatments.filter(t=>t.id!==id);
+      renderDetail();
+      renderList();
+      showToast('Removed — it was never synced, so nothing to undo on the database');
+      return;
+    }
     try{
       const record = treatments.find(t=>t.id===id);
       if(record) await snapshotBeforeDelete('treatments', record);
@@ -4164,6 +4184,15 @@
   }
 
   async function deleteGeneralNote(id){
+    if(String(id).startsWith('pending-note-')){
+      const pw = getPendingWrites().find(w=>w.tempId===id);
+      if(pw) removePendingWrite(pw.localId);
+      generalNotes = generalNotes.filter(n=>n.id!==id);
+      renderNotesDetail();
+      renderNotesList();
+      showToast('Removed — it was never synced, so nothing to undo on the database');
+      return;
+    }
     try{
       const record = generalNotes.find(n=>n.id===id);
       if(record) await snapshotBeforeDelete('general_notes', record);
@@ -4521,6 +4550,7 @@
           });
           treatments.push(inserted[0]);
         }
+        saveOfflineCache();
         closeModal();
         renderDetail();
         renderList();
@@ -4528,8 +4558,27 @@
         window.scrollTo(0,0);
         showToast(isEdit ? 'Entry updated' : 'Entry logged');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure && !isEdit){
+          const tempId = makeLocalId('pending-treatment');
+          const tempRecord = Object.assign({ id: tempId, cow_number: currentCow, _pendingSync: true }, body);
+          treatments.push(tempRecord);
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'insert', table: 'treatments', tempId,
+            method: 'POST', path: '/treatments',
+            body: Object.assign({ cow_number: currentCow }, body)
+          });
+          saveOfflineCache();
+          closeModal();
+          renderDetail();
+          renderList();
+          renderProfileList();
+          window.scrollTo(0,0);
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
@@ -5845,6 +5894,7 @@
           });
           generalNotes.push(inserted[0]);
         }
+        saveOfflineCache();
         closeModal();
         renderNotesDetail();
         renderNotesList();
@@ -5852,8 +5902,27 @@
         window.scrollTo(0,0);
         showToast(isEdit ? 'Note updated' : 'Note logged');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure && !isEdit){
+          const tempId = makeLocalId('pending-note');
+          const tempRecord = Object.assign({ id: tempId, cow_number: currentNotesCow, _pendingSync: true }, body);
+          generalNotes.push(tempRecord);
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'insert', table: 'general_notes', tempId,
+            method: 'POST', path: '/general_notes',
+            body: Object.assign({ cow_number: currentNotesCow }, body)
+          });
+          saveOfflineCache();
+          closeModal();
+          renderNotesDetail();
+          renderNotesList();
+          renderProfileList();
+          window.scrollTo(0,0);
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
