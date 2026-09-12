@@ -1275,6 +1275,47 @@
     }
   }
 
+  const OFFLINE_CACHE_KEY = 'cattleMedsOfflineCache_v1';
+
+  function saveOfflineCache(){
+    try{
+      const snapshot = {
+        savedAt: new Date().toISOString(),
+        cows, treatments, calvings, generalNotes, weights, breedingRecords, cowPhotos,
+        herdTally, hayingLog, equipmentMaintenance, equipmentList, calfTreatments, calfWeights,
+        farmNotes, bulls, hayingFields, medicines, locationsList, ownersList, groupsList, reasonsList,
+        todos, hayingCustomers, hayingBills, hayingBillSettings, homeStatsSettings
+      };
+      localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(snapshot));
+    }catch(e){
+      console.error('Could not save offline cache', e);
+    }
+  }
+
+  function loadOfflineCache(){
+    try{
+      const raw = localStorage.getItem(OFFLINE_CACHE_KEY);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){
+      console.error('Could not read offline cache', e);
+      return null;
+    }
+  }
+
+  function offlineCacheAgeLabel(savedAt){
+    if(!savedAt) return 'an earlier visit';
+    const d = new Date(savedAt);
+    if(isNaN(d.getTime())) return 'an earlier visit';
+    const mins = Math.round((Date.now()-d.getTime())/60000);
+    if(mins < 1) return 'just now';
+    if(mins < 60) return mins + ' minute' + (mins===1?'':'s') + ' ago';
+    const hrs = Math.round(mins/60);
+    if(hrs < 24) return hrs + ' hour' + (hrs===1?'':'s') + ' ago';
+    const days = Math.round(hrs/24);
+    return days + ' day' + (days===1?'':'s') + ' ago';
+  }
+
   let isLoadingAll = false;
   async function loadAll(){
     if(isLoadingAll) return;
@@ -1341,8 +1382,40 @@
       hayingBills = hayingBillsRes || [];
       hayingBillSettings = (hayingBillSettingsRes && hayingBillSettingsRes[0]) || null;
       homeStatsSettings = (homeStatsSettingsRes && homeStatsSettingsRes[0]) || null;
+      saveOfflineCache();
     }catch(e){
+      const cached = loadOfflineCache();
+      if(cached){
+        cows = cached.cows || [];
+        treatments = cached.treatments || [];
+        calvings = cached.calvings || [];
+        generalNotes = cached.generalNotes || [];
+        weights = cached.weights || [];
+        breedingRecords = cached.breedingRecords || [];
+        cowPhotos = cached.cowPhotos || [];
+        herdTally = cached.herdTally || [];
+        hayingLog = cached.hayingLog || [];
+        equipmentMaintenance = cached.equipmentMaintenance || [];
+        equipmentList = cached.equipmentList || [];
+        calfTreatments = cached.calfTreatments || [];
+        calfWeights = cached.calfWeights || [];
+        farmNotes = cached.farmNotes || [];
+        bulls = cached.bulls || [];
+        hayingFields = cached.hayingFields || [];
+        medicines = cached.medicines || [];
+        locationsList = cached.locationsList || [];
+        ownersList = cached.ownersList || [];
+        groupsList = cached.groupsList || [];
+        reasonsList = cached.reasonsList || [];
+        todos = cached.todos || [];
+        hayingCustomers = cached.hayingCustomers || [];
+        hayingBills = cached.hayingBills || [];
+        hayingBillSettings = cached.hayingBillSettings || null;
+        homeStatsSettings = cached.homeStatsSettings || null;
+        showConnError('No connection — showing saved data from ' + offlineCacheAgeLabel(cached.savedAt) + '.');
+      } else {
       cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = []; locationsList = []; ownersList = []; groupsList = []; reasonsList = []; todos = []; hayingCustomers = []; hayingBills = []; hayingBillSettings = null; homeStatsSettings = null;
+      }
     }
     renderBullsList();
     renderHayingFieldsList();
