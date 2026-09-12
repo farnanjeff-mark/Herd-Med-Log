@@ -1258,8 +1258,17 @@
 
   async function api(path, options){
     setSync('busy');
+    let res;
     try{
-      const res = await fetch(REST + path, Object.assign({ headers: HEADERS }, options||{}));
+      res = await fetch(REST + path, Object.assign({ headers: HEADERS }, options||{}));
+    }catch(networkErr){
+      console.error(networkErr);
+      setSync('err');
+      showConnError('Could not reach the database. Check your internet connection — your last change may not have saved.');
+      networkErr.isNetworkFailure = true;
+      throw networkErr;
+    }
+    try{
       if(!res.ok){
         const errText = await res.text().catch(()=> '');
         throw new Error('Supabase error ' + res.status + ': ' + errText);
@@ -1273,6 +1282,57 @@
       setSync('err');
       showConnError('Could not reach the database. Check your internet connection — your last change may not have saved.');
       throw e;
+    }
+  }
+
+  let isSyncingPendingWrites = false;
+  async function syncPendingWrites(){
+    if(isSyncingPendingWrites) return;
+    const queue = getPendingWrites();
+    if(queue.length === 0) return;
+    isSyncingPendingWrites = true;
+    let anySucceeded = false;
+    try{
+      for(const entry of queue){
+        try{
+          const result = await api(entry.path, {
+            method: entry.method,
+            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+            body: JSON.stringify(entry.body)
+          });
+          if(entry.kind === 'insert' && entry.table === 'calvings'){
+            const idx = calvings.findIndex(c=>c.id === entry.tempId);
+            if(idx !== -1 && result && result[0]) calvings[idx] = result[0];
+          } else if(entry.kind === 'update' && entry.table === 'cows'){
+            const idx = cows.findIndex(c=>c.number === entry.cowNumber);
+            if(idx !== -1){
+              cows[idx] = Object.assign({}, cows[idx], result && result[0] ? result[0] : {});
+              delete cows[idx]._pendingCalvedSync;
+            }
+            document.querySelectorAll('[data-pending-num="'+CSS.escape(entry.cowNumber)+'"]').forEach(el=> el.style.display='none');
+          }
+          removePendingWrite(entry.localId);
+          anySucceeded = true;
+        }catch(err){
+          if(err && err.isNetworkFailure){
+            break; // still no signal — leave the rest queued and try again later
+          } else {
+            console.error('A pending entry could not be saved and was dropped', entry, err);
+            removePendingWrite(entry.localId);
+          }
+        }
+      }
+    } finally {
+      isSyncingPendingWrites = false;
+      if(anySucceeded){
+        saveOfflineCache();
+        renderCalvingList();
+        if(currentCalvingCow) renderCalvingDetail();
+        renderProfileList();
+        if(currentProfileCow) renderProfile();
+        renderList();
+        updateCalvedBadge();
+      }
     }
   }
 
@@ -1315,6 +1375,40 @@
     if(hrs < 24) return hrs + ' hour' + (hrs===1?'':'s') + ' ago';
     const days = Math.round(hrs/24);
     return days + ' day' + (days===1?'':'s') + ' ago';
+  }
+
+  const PENDING_WRITES_KEY = 'cattleMedsPendingWrites_v1';
+
+  function getPendingWrites(){
+    try{
+      const raw = localStorage.getItem(PENDING_WRITES_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){
+      console.error('Could not read pending writes', e);
+      return [];
+    }
+  }
+
+  function savePendingWrites(list){
+    try{
+      localStorage.setItem(PENDING_WRITES_KEY, JSON.stringify(list));
+    }catch(e){
+      console.error('Could not save pending writes', e);
+    }
+  }
+
+  function queuePendingWrite(entry){
+    const list = getPendingWrites();
+    list.push(entry);
+    savePendingWrites(list);
+  }
+
+  function removePendingWrite(localId){
+    savePendingWrites(getPendingWrites().filter(w=>w.localId !== localId));
+  }
+
+  function makeLocalId(prefix){
+    return prefix + '-' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
   }
 
   let isLoadingAll = false;
@@ -1384,6 +1478,7 @@
       hayingBillSettings = (hayingBillSettingsRes && hayingBillSettingsRes[0]) || null;
       homeStatsSettings = (homeStatsSettingsRes && homeStatsSettingsRes[0]) || null;
       saveOfflineCache();
+      syncPendingWrites();
     }catch(e){
       const cached = loadOfflineCache();
       if(cached){
@@ -3019,14 +3114,15 @@
       const outcomeLabel = r.calf_outcome === 'sold' ? 'Sold' : r.calf_outcome === 'died' ? 'Died' : null;
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
-        <button class="record-edit" data-id="${r.id}">&#9998;</button>
+        ${r._pendingSync ? '' : `<button class="record-edit" data-id="${r.id}">&#9998;</button>`}
+        ${r._pendingSync ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;">Not synced yet</div>` : ''}
         <div class="record-date">${fmtDate(r.calving_date)}</div>
         <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
         ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
         ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
         ${r.promoted_to_cow_number
           ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(r.promoted_to_cow_number)}</div>`
-          : `${outcomeLabel ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#A05A2C;">${outcomeLabel}</div>` : ''}<button class="btn btn-nav-tool btn-sm calf-record-btn" data-id="${r.id}" style="margin-top:8px;">🐄 Calf Record</button>`}
+          : `${outcomeLabel ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#A05A2C;">${outcomeLabel}</div>` : ''}${r._pendingSync ? '' : `<button class="btn btn-nav-tool btn-sm calf-record-btn" data-id="${r.id}" style="margin-top:8px;">🐄 Calf Record</button>`}`}
       `;
       div.querySelector('.calf-record-btn')?.addEventListener('click', (e)=>{
         e.stopPropagation();
@@ -3036,7 +3132,7 @@
         e.stopPropagation();
         deleteCalvingRecord(r.id);
       });
-      div.querySelector('.record-edit').addEventListener('click', (e)=>{
+      div.querySelector('.record-edit')?.addEventListener('click', (e)=>{
         e.stopPropagation();
         editCalvingModal(r);
       });
@@ -4097,6 +4193,15 @@
   }
 
   async function deleteCalvingRecord(id){
+    if(String(id).startsWith('pending-calving-')){
+      const pw = getPendingWrites().find(w=>w.tempId===id);
+      if(pw) removePendingWrite(pw.localId);
+      calvings = calvings.filter(c=>c.id!==id);
+      renderCalvingDetail();
+      renderCalvingList();
+      showToast('Removed — it was never synced, so nothing to undo on the database');
+      return;
+    }
     try{
       const record = calvings.find(c=>c.id===id);
       if(record) await snapshotBeforeDelete('calvings', record);
@@ -4505,6 +4610,7 @@
           const cowIdx = cows.findIndex(c=>c.number===currentCalvingCow);
           if(cowIdx !== -1) cows[cowIdx] = Object.assign({}, cows[cowIdx], { calved:false });
         }
+        saveOfflineCache();
         closeModal();
         if(onSaved){
           onSaved(savedRecord);
@@ -4517,8 +4623,31 @@
         }
         showToast(isEdit ? 'Calving updated' : 'Calving logged');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure && !isEdit){
+          const tempId = makeLocalId('pending-calving');
+          const tempRecord = Object.assign({ id: tempId, cow_number: currentCalvingCow, _pendingSync: true }, body);
+          calvings.push(tempRecord);
+          const cowIdx = cows.findIndex(c=>c.number===currentCalvingCow);
+          if(cowIdx !== -1) cows[cowIdx] = Object.assign({}, cows[cowIdx], { calved:false });
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'insert', table: 'calvings', tempId,
+            method: 'POST', path: '/calvings',
+            body: Object.assign({ cow_number: currentCalvingCow }, body)
+          });
+          saveOfflineCache();
+          closeModal();
+          renderCalvingDetail();
+          renderCalvingList();
+          renderProfileList();
+          renderList();
+          updateCalvedBadge();
+          window.scrollTo(0,0);
+          showToast('Calving saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
@@ -6069,7 +6198,10 @@
     }
   }
   function calvedCheckboxHtml(cow){
-    return `<input type="checkbox" class="calved-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.calved ? 'checked' : ''} title="Calved" style="--rc-color:#0274BA;"/>`;
+    return `<span style="position:relative;display:inline-block;">
+      <input type="checkbox" class="calved-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.calved ? 'checked' : ''} title="Calved" style="--rc-color:#0274BA;"/>
+      <span class="calved-pending-dot" data-pending-num="${escapeHtml(cow.number)}" style="display:${cow._pendingCalvedSync ? 'block' : 'none'};position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#A32D2D;border:1.5px solid #fff;"></span>
+    </span>`;
   }
   function wireCalvedCheckboxes(container){
     container.querySelectorAll('.calved-check').forEach(cb=>{
@@ -6084,16 +6216,32 @@
     });
   }
   async function toggleCalved(num, checked){
+    const body = { calved: checked, calved_marked_at: checked ? new Date().toISOString() : null };
     try{
       const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ calved: checked, calved_marked_at: checked ? new Date().toISOString() : null })
+        body: JSON.stringify(body)
       });
       const idx = cows.findIndex(c=>c.number===num);
       if(idx !== -1) cows[idx] = updated[0];
+      saveOfflineCache();
     }catch(e){
-      showToast('Could not save — try again');
+      if(e && e.isNetworkFailure){
+        const idx = cows.findIndex(c=>c.number===num);
+        if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingCalvedSync: true });
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'cows', cowNumber: num,
+          method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(num),
+          body
+        });
+        saveOfflineCache();
+        document.querySelectorAll('[data-pending-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
+        showToast('Saved on this phone — will sync when you have signal');
+      } else {
+        showToast('Could not save — try again');
+      }
     }
   }
   async function toggleHerdSeason(num, season){
@@ -10162,6 +10310,7 @@
     if(document.visibilityState === 'visible') loadAll();
   });
   window.addEventListener('focus', ()=> loadAll());
+  window.addEventListener('online', ()=> syncPendingWrites());
 
 })();
 </script>
