@@ -250,6 +250,8 @@
     </div>
   </div>
 
+  <div id="connBanner" class="banner hidden" style="margin:0 14px 10px;"></div>
+
   <div class="view" id="homeView">
     <div style="text-align:center;padding:4px 10px;">
       <button class="btn btn-full" id="homeProfileBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;padding:14px 16px;font-size:16px;margin-bottom:16px;margin-top:0;display:flex;align-items:center;justify-content:center;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">🐮</span>Cow Profile</span></button>
@@ -864,7 +866,6 @@
 
   <div class="view hidden" id="listView">
     <button class="btn btn-outline btn-full" id="listHomeBtn" style="margin-bottom:14px;">🏠 Home</button>
-    <div id="connBanner" class="banner hidden"></div>
     <div id="backupBanner" class="banner banner-note hidden">
       <span id="backupBannerText"></span>
       <span class="banner-actions">
@@ -1412,7 +1413,7 @@
         hayingBills = cached.hayingBills || [];
         hayingBillSettings = cached.hayingBillSettings || null;
         homeStatsSettings = cached.homeStatsSettings || null;
-        showConnError('No connection — showing saved data from ' + offlineCacheAgeLabel(cached.savedAt) + '.');
+        setTimeout(()=> showConnError('No connection — showing saved data from ' + offlineCacheAgeLabel(cached.savedAt) + '.'), 60);
       } else {
       cows = []; treatments = []; calvings = []; generalNotes = []; weights = []; breedingRecords = []; cowPhotos = []; hayingLog = []; equipmentMaintenance = []; equipmentList = []; calfTreatments = []; calfWeights = []; farmNotes = []; bulls = []; hayingFields = []; medicines = []; locationsList = []; ownersList = []; groupsList = []; reasonsList = []; todos = []; hayingCustomers = []; hayingBills = []; hayingBillSettings = null; homeStatsSettings = null;
       }
