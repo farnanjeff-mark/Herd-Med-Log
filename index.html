@@ -506,6 +506,7 @@
     <div class="section-label">Herd Reports</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
       <button class="btn" id="headcountByOwnerBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📊</span>Headcount</button>
+      <button class="btn" id="fieldCountBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">✅</span>Field Count</button>
       <button class="btn" id="openCowsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐄</span>Open Cows</button>
       <button class="btn" id="upcomingCalvingsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📅</span>Upcoming Calvings</button>
       <button class="btn" id="calvingReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐮</span>Calving Report</button>
@@ -516,6 +517,21 @@
 
     <div class="section-label">Records</div>
     <button class="btn btn-outline btn-full" id="recentlyDeletedBtn" style="text-align:left;display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:14px;"><span style="font-size:18px;">🗑️</span>Recently Deleted</button>
+  </div>
+
+  <div class="view hidden" id="fieldCountView">
+    <button class="btn btn-outline btn-full" id="fieldCountHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:14px;">Field Count</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <select id="fieldCountLocationFilter" style="flex:1;"></select>
+      <select id="fieldCountGroupFilter" style="flex:1;"></select>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;background:#E6F1FB;border-radius:8px;padding:10px 12px;margin-bottom:14px;">
+      <span id="fieldCountTally" style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0C447C;">0 of 0 checked</span>
+      <button class="btn" id="fieldCountClearBtn" style="background:#A32D2D;color:#fff;border:none;font-size:12px;padding:8px 14px;">Clear all</button>
+    </div>
+    <div id="fieldCountList" style="display:flex;flex-direction:column;gap:6px;"></div>
+    <p id="noFieldCountCows" class="empty hidden">No cows match this filter.</p>
   </div>
 
   <div class="view hidden" id="advancedSearchView">
@@ -1210,6 +1226,7 @@
   const manageReasonsView = document.getElementById('manageReasonsView');
   const advancedSearchView = document.getElementById('advancedSearchView');
   const reportsView = document.getElementById('reportsView');
+  const fieldCountView = document.getElementById('fieldCountView');
   const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
   const globalSearchView = document.getElementById('globalSearchView');
@@ -1876,6 +1893,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -1925,6 +1943,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -1976,6 +1995,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2021,6 +2041,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2066,6 +2087,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2113,6 +2135,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2237,6 +2260,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2281,6 +2305,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.remove('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2309,6 +2334,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2332,6 +2358,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2353,6 +2380,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2375,6 +2403,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2398,6 +2427,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2421,6 +2451,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2450,6 +2481,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2479,6 +2511,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2508,6 +2541,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2581,6 +2615,7 @@
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2609,6 +2644,7 @@
     setHeaderTitle('Reports', '');
     homeView.classList.add('hidden');
     reportsView.classList.remove('hidden');
+    fieldCountView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
@@ -2633,6 +2669,78 @@
     quickActionView.classList.add('hidden');
     window.scrollTo(0,0);
   }
+  function showFieldCount(){
+    setHeaderTitle('Field', 'Count');
+    homeView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    fieldCountView.classList.remove('hidden');
+    utilitiesView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    populateFieldCountFilters();
+    fieldCountChecked.clear();
+    renderFieldCountList();
+    window.scrollTo(0,0);
+  }
+  let fieldCountChecked = new Set();
+  function populateFieldCountFilters(){
+    const locSel = document.getElementById('fieldCountLocationFilter');
+    const grpSel = document.getElementById('fieldCountGroupFilter');
+    const usedLots = [...new Set(cows.map(c=>c.lot).filter(Boolean))].sort();
+    const usedGroups = [...new Set(cows.map(c=>c.cow_group).filter(Boolean))].sort();
+    locSel.innerHTML = `<option value="">All Locations</option>` + usedLots.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+    grpSel.innerHTML = `<option value="">All Groups</option>` + usedGroups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+  }
+  function renderFieldCountList(){
+    const locVal = document.getElementById('fieldCountLocationFilter').value;
+    const grpVal = document.getElementById('fieldCountGroupFilter').value;
+    const matched = cows.filter(c=> isActiveStatus(c) && (!locVal || c.lot===locVal) && (!grpVal || c.cow_group===grpVal))
+      .sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const listEl = document.getElementById('fieldCountList');
+    const noneEl = document.getElementById('noFieldCountCows');
+    listEl.innerHTML = '';
+    noneEl.classList.toggle('hidden', matched.length !== 0);
+    matched.forEach(cow=>{
+      const isChecked = fieldCountChecked.has(cow.number);
+      const row = document.createElement('div');
+      row.style.cssText = `display:flex;align-items:center;gap:10px;background:${isChecked ? '#EAF3DE' : '#fff'};border:1px solid ${isChecked ? '#C0DD97' : '#ddd'};border-radius:10px;padding:10px 12px;cursor:pointer;`;
+      row.innerHTML = `
+        <input type="checkbox" ${isChecked ? 'checked' : ''} style="width:20px;height:20px;accent-color:${isChecked ? '#27500A' : '#0274BA'};pointer-events:none;">
+        <span style="font-family:Arial,sans-serif;font-size:16px;font-weight:700;color:${isChecked ? '#27500A' : '#333'};">#${escapeHtml(cow.number)}</span>
+      `;
+      row.addEventListener('click', ()=>{
+        if(fieldCountChecked.has(cow.number)) fieldCountChecked.delete(cow.number);
+        else fieldCountChecked.add(cow.number);
+        renderFieldCountList();
+      });
+      listEl.appendChild(row);
+    });
+    document.getElementById('fieldCountTally').textContent = `${fieldCountChecked.size} of ${matched.length} checked`;
+  }
+  document.getElementById('fieldCountBtn').addEventListener('click', showFieldCount);
+  document.getElementById('fieldCountHomeBtn').addEventListener('click', showHome);
+  document.getElementById('fieldCountLocationFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountGroupFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountClearBtn').addEventListener('click', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
   function showFarmOperations(){
     setHeaderTitle('Farm', 'Operations');
     homeView.classList.add('hidden');
@@ -2649,6 +2757,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2674,6 +2783,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2703,6 +2813,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2734,6 +2845,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2868,6 +2980,7 @@
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -6496,7 +6609,11 @@
     }
     const latestBreeding = [...breedingFor(num)].sort((a,b)=>b.breed_date.localeCompare(a.breed_date))[0];
     if(latestBreeding){
-      const detail = latestBreeding.bred_to ? `Bred to: ${latestBreeding.bred_to}` : '';
+      const parts = [];
+      if(latestBreeding.bred_to) parts.push(`Bred to: ${latestBreeding.bred_to}`);
+      else if(latestBreeding.pregnancy_status === 'Open') parts.push('Open');
+      if(latestBreeding.notes) parts.push(latestBreeding.notes);
+      const detail = parts.join(', ');
       lines.push(`<span style="color:#8a8163;">Last breeding:</span> ${fmtDateShort(latestBreeding.breed_date)}${detail ? ' — '+truncateText(detail) : ''}`);
     }
     const latestNote = [...generalNotesFor(num)].sort((a,b)=>b.note_date.localeCompare(a.note_date))[0];
@@ -6507,6 +6624,13 @@
     return `<div style="border-top:1px solid #eee;padding-top:8px;margin-top:10px;display:flex;flex-direction:column;gap:3px;">
       ${lines.map(l=>`<div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;">${l}</div>`).join('')}
     </div>`;
+  }
+  function locationGroupPillsHtml(cow){
+    const pills = [];
+    if(cow.lot && cow.lot !== 'None') pills.push(`<span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#0C447C;background:#E6F1FB;padding:3px 9px;border-radius:20px;">${escapeHtml(cow.lot)}</span>`);
+    if(cow.cow_group && cow.cow_group !== 'None') pills.push(`<span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#27500A;background:#EAF3DE;padding:3px 9px;border-radius:20px;">${escapeHtml(cow.cow_group)}</span>`);
+    if(pills.length === 0) return '';
+    return `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">${pills.join('')}</div>`;
   }
   function quickAddCardHtml(cow){
     const inactiveStyle = isActiveStatus(cow) ? '' : 'opacity:0.55;';
@@ -6533,6 +6657,7 @@
               </div>
             </div>
           </div>
+          ${locationGroupPillsHtml(cow)}
           ${cardRecentInfoHtml(cow.number)}
         </div>
         <div style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);padding:14px;">
