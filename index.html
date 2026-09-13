@@ -526,6 +526,10 @@
       <select id="fieldCountLocationFilter" style="flex:1;"></select>
       <select id="fieldCountGroupFilter" style="flex:1;"></select>
     </div>
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;background:#F7F2E6;border-radius:8px;padding:8px 12px;cursor:pointer;">
+      <input type="checkbox" id="fieldCountCalvesOnly" style="width:18px;height:18px;accent-color:#0274BA;"/>
+      <span style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#0C447C;">Calves only</span>
+    </label>
     <div style="display:flex;justify-content:space-between;align-items:center;background:#E6F1FB;border-radius:8px;padding:10px 12px;margin-bottom:14px;">
       <span id="fieldCountTally" style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0C447C;">0 of 0 checked</span>
       <button class="btn" id="fieldCountClearBtn" style="background:#A32D2D;color:#fff;border:none;font-size:12px;padding:8px 14px;">Clear all</button>
@@ -2710,22 +2714,29 @@
     locSel.innerHTML = `<option value="">All Locations</option>` + usedLots.map(l=>`<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
     grpSel.innerHTML = `<option value="">All Groups</option>` + usedGroups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
   }
+  function activeCalfFor(num){
+    return calvingsFor(num).filter(c=>!c.promoted_to_cow_number && !c.calf_outcome).sort((a,b)=>b.calving_date.localeCompare(a.calving_date))[0] || null;
+  }
   function renderFieldCountList(){
     const locVal = document.getElementById('fieldCountLocationFilter').value;
     const grpVal = document.getElementById('fieldCountGroupFilter').value;
-    const matched = cows.filter(c=> isActiveStatus(c) && (!locVal || c.lot===locVal) && (!grpVal || c.cow_group===grpVal))
-      .sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const calvesOnly = document.getElementById('fieldCountCalvesOnly').checked;
+    let matched = cows.filter(c=> isActiveStatus(c) && (!locVal || c.lot===locVal) && (!grpVal || c.cow_group===grpVal));
+    if(calvesOnly) matched = matched.filter(c=> !!activeCalfFor(c.number));
+    matched.sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
     const listEl = document.getElementById('fieldCountList');
     const noneEl = document.getElementById('noFieldCountCows');
     listEl.innerHTML = '';
     noneEl.classList.toggle('hidden', matched.length !== 0);
     matched.forEach(cow=>{
       const isChecked = fieldCountChecked.has(cow.number);
+      const calf = calvesOnly ? activeCalfFor(cow.number) : null;
       const row = document.createElement('div');
       row.style.cssText = `display:flex;align-items:center;gap:10px;background:${isChecked ? '#EAF3DE' : '#fff'};border:1px solid ${isChecked ? '#C0DD97' : '#ddd'};border-radius:10px;padding:10px 12px;cursor:pointer;`;
       row.innerHTML = `
         <input type="checkbox" ${isChecked ? 'checked' : ''} style="width:20px;height:20px;accent-color:${isChecked ? '#27500A' : '#0274BA'};pointer-events:none;">
         <span style="font-family:Arial,sans-serif;font-size:16px;font-weight:700;color:${isChecked ? '#27500A' : '#333'};">#${escapeHtml(cow.number)}</span>
+        ${calf ? `<span style="font-family:Arial,sans-serif;font-size:12px;color:${isChecked ? '#6b8f4a' : '#6b6350'};">— ${calfSexLabel(calf.calf_sex).charAt(0)} calf</span>` : ''}
       `;
       row.addEventListener('click', ()=>{
         if(fieldCountChecked.has(cow.number)) fieldCountChecked.delete(cow.number);
@@ -2740,6 +2751,7 @@
   document.getElementById('fieldCountHomeBtn').addEventListener('click', showHome);
   document.getElementById('fieldCountLocationFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
   document.getElementById('fieldCountGroupFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountCalvesOnly').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
   document.getElementById('fieldCountClearBtn').addEventListener('click', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
   function showFarmOperations(){
     setHeaderTitle('Farm', 'Operations');
@@ -6592,6 +6604,13 @@
   }
   function cardRecentInfoHtml(num){
     const lines = [];
+    const cow = cows.find(c=>c.number===num);
+    if(cow){
+      const locParts = [];
+      if(cow.lot && cow.lot !== 'None') locParts.push(cow.lot);
+      if(cow.cow_group && cow.cow_group !== 'None') locParts.push(cow.cow_group);
+      if(locParts.length) lines.push(`<span style="color:#8a8163;">Location:</span> ${escapeHtml(locParts.join(' · '))}`);
+    }
     const latestMed = [...recordsFor(num)].sort((a,b)=>b.date.localeCompare(a.date))[0];
     if(latestMed){
       const desc = latestMed.medicine ? `${latestMed.medicine}${latestMed.reason ? ' / '+latestMed.reason : ''}` : (latestMed.notes||'note');
@@ -6625,13 +6644,6 @@
       ${lines.map(l=>`<div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;">${l}</div>`).join('')}
     </div>`;
   }
-  function locationGroupPillsHtml(cow){
-    const pills = [];
-    if(cow.lot && cow.lot !== 'None') pills.push(`<span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#0C447C;background:#E6F1FB;padding:3px 9px;border-radius:20px;">${escapeHtml(cow.lot)}</span>`);
-    if(cow.cow_group && cow.cow_group !== 'None') pills.push(`<span style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#27500A;background:#EAF3DE;padding:3px 9px;border-radius:20px;">${escapeHtml(cow.cow_group)}</span>`);
-    if(pills.length === 0) return '';
-    return `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">${pills.join('')}</div>`;
-  }
   function quickAddCardHtml(cow){
     const inactiveStyle = isActiveStatus(cow) ? '' : 'opacity:0.55;';
     return `
@@ -6657,7 +6669,6 @@
               </div>
             </div>
           </div>
-          ${locationGroupPillsHtml(cow)}
           ${cardRecentInfoHtml(cow.number)}
         </div>
         <div style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);padding:14px;">
