@@ -6620,6 +6620,7 @@
     if(latestCalving){
       const details = [`${calfSexLabel(latestCalving.calf_sex)} calf`];
       if(latestCalving.birth_weight!=null) details.push(`${latestCalving.birth_weight} lb`);
+      if(latestCalving.notes) details.push(latestCalving.notes);
       lines.push(`<span style="color:#8a8163;">Last calving:</span> ${fmtDateShort(latestCalving.calving_date)} — ${truncateText(details.join(', '))}`);
     }
     const latestWeight = [...weightsFor(num)].sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date))[0];
