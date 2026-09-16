@@ -322,7 +322,8 @@
     <button class="btn btn-nav-tool btn-full" id="bulkEditBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🔧</span>&nbsp;&nbsp;Bulk Entry</button>
 
     <div class="section-label">Herd Tools</div>
-    <button class="btn btn-nav-tool btn-full" id="vetPregCheckBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🩺</span>&nbsp;&nbsp;Vet Preg Check</button>
+    <button class="btn btn-nav-tool btn-full" id="vetPregCheckBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🩺</span>&nbsp;&nbsp;Vet Preg Check</button>
+    <button class="btn btn-nav-tool btn-full" id="quickCalfWeightBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">⚖️</span>&nbsp;&nbsp;Quick Calf Weight</button>
 
     <div class="section-label">Reference Lists</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
@@ -496,6 +497,28 @@
     <div id="vetPregEmptyState" class="empty hidden">No entries logged yet this session.</div>
   </div>
 
+  <div class="view hidden" id="quickCalfWeightView">
+    <button class="btn btn-outline btn-full" id="quickCalfWeightHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Quick Calf Weight</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Adds a weight to that calf's record using her mother's number — no need to open her profile.</div>
+    <div class="row2">
+      <div class="field">
+        <label>Cow # (mother)</label>
+        <input type="text" id="qcwCowNum" placeholder="e.g. 214" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label>Weight (lbs)</label>
+        <input type="number" id="qcwWeight" step="0.1" min="0" placeholder="e.g. 550"/>
+      </div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <button class="btn btn-barn btn-full" id="qcwSaveBtn">Save &amp; Next</button>
+    </div>
+    <div class="section-label" style="margin-top:0;">This Session</div>
+    <div id="qcwTallyList"></div>
+    <div id="qcwEmptyState" class="empty hidden">No entries logged yet this session.</div>
+  </div>
+
   <div class="view hidden" id="reportsView">
     <button class="btn btn-outline btn-full" id="reportsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
 
@@ -507,6 +530,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
       <button class="btn" id="headcountByOwnerBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📊</span>Headcount</button>
       <button class="btn" id="fieldCountBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">✅</span>Field Count</button>
+      <button class="btn" id="calfRateOfGainBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📈</span>Calf Rate of Gain</button>
       <button class="btn" id="openCowsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐄</span>Open Cows</button>
       <button class="btn" id="upcomingCalvingsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📅</span>Upcoming Calvings</button>
       <button class="btn" id="calvingReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐮</span>Calving Report</button>
@@ -1231,6 +1255,7 @@
   const advancedSearchView = document.getElementById('advancedSearchView');
   const reportsView = document.getElementById('reportsView');
   const fieldCountView = document.getElementById('fieldCountView');
+  const quickCalfWeightView = document.getElementById('quickCalfWeightView');
   const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
   const globalSearchView = document.getElementById('globalSearchView');
@@ -1350,6 +1375,9 @@
           } else if(entry.kind === 'insert' && entry.table === 'breeding_records'){
             const idx = breedingRecords.findIndex(b=>b.id === entry.tempId);
             if(idx !== -1 && result && result[0]) breedingRecords[idx] = result[0];
+          } else if(entry.kind === 'insert' && entry.table === 'calf_weights'){
+            const idx = calfWeights.findIndex(w=>w.id === entry.tempId);
+            if(idx !== -1 && result && result[0]) calfWeights[idx] = result[0];
           } else if(entry.kind === 'update' && entry.table === 'cows'){
             const idx = cows.findIndex(c=>c.number === entry.cowNumber);
             const meta = PENDING_COW_FIELD_META[entry.field];
@@ -1898,6 +1926,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -1948,6 +1977,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2000,6 +2030,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2046,6 +2077,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2092,6 +2124,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2140,6 +2173,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2265,6 +2299,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2310,6 +2345,7 @@
     utilitiesView.classList.remove('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2339,6 +2375,7 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2357,12 +2394,47 @@
     renderVetPregTally();
     window.scrollTo(0,0);
   }
+  function showQuickCalfWeight(){
+    setHeaderTitle('Quick Calf', 'Weight');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    quickCalfWeightView.classList.remove('hidden');
+    document.getElementById('qcwCowNum').value = '';
+    document.getElementById('qcwWeight').value = '';
+    qcwSessionEntries = [];
+    renderQcwTally();
+    window.scrollTo(0,0);
+  }
   function showManageBulls(){
     setHeaderTitle('Manage', 'Bulls');
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2385,6 +2457,7 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2408,6 +2481,7 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2432,6 +2506,7 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2456,6 +2531,7 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2486,6 +2562,7 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2516,6 +2593,7 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2546,6 +2624,7 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2620,6 +2699,7 @@
     utilitiesView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2649,6 +2729,7 @@
     homeView.classList.add('hidden');
     reportsView.classList.remove('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
@@ -2678,6 +2759,7 @@
     homeView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.remove('hidden');
+    quickCalfWeightView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
@@ -2748,6 +2830,7 @@
     document.getElementById('fieldCountTally').textContent = `${fieldCountChecked.size} of ${matched.length} checked`;
   }
   document.getElementById('fieldCountBtn').addEventListener('click', showFieldCount);
+  document.getElementById('calfRateOfGainBtn').addEventListener('click', calfRateOfGainModal);
   document.getElementById('fieldCountHomeBtn').addEventListener('click', showHome);
   document.getElementById('fieldCountLocationFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
   document.getElementById('fieldCountGroupFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
@@ -2770,6 +2853,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -2796,6 +2880,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2826,6 +2911,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2858,6 +2944,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2993,6 +3080,7 @@
     advancedSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -4890,6 +4978,7 @@
     const weightsHtml = weightsList.map(w=>`
       <div class="record" style="padding:8px 30px 8px 10px;">
         <button class="record-del calf-weight-del" data-id="${w.id}" style="top:6px;right:6px;">&times;</button>
+        ${w._pendingSync ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;">Not synced yet</div>` : ''}
         <div class="record-date" style="font-size:13px;">${fmtDate(w.weigh_date)} — ${w.weight!=null?w.weight+' lbs':''}</div>
         ${w.notes ? `<div class="record-notes" style="font-size:12px;">${escapeHtml(w.notes)}</div>` : ''}
       </div>
@@ -5124,6 +5213,14 @@
   }
   async function deleteCalfWeight(id, modal, calvingRecord){
     if(!confirm('Remove this entry?')) return;
+    if(String(id).startsWith('pending-calfweight-')){
+      const pw = getPendingWrites().find(w=>w.tempId===id);
+      if(pw) removePendingWrite(pw.localId);
+      calfWeights = calfWeights.filter(w=>w.id!==id);
+      refreshCalfRecordModal(modal, calvingRecord);
+      showToast('Removed — it was never synced, so nothing to undo on the database');
+      return;
+    }
     try{
       await api('/calf_weights?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       calfWeights = calfWeights.filter(w=>w.id!==id);
@@ -6053,6 +6150,72 @@
   }
   function editBreedingModal(record){ breedingModal(record); }
 
+  let qcwSessionEntries = [];
+  function renderQcwTally(){
+    const listEl = document.getElementById('qcwTallyList');
+    const emptyEl = document.getElementById('qcwEmptyState');
+    if(!listEl) return;
+    emptyEl.classList.toggle('hidden', qcwSessionEntries.length !== 0);
+    listEl.innerHTML = [...qcwSessionEntries].reverse().map(e=> `
+      <div class="record" style="padding:10px 14px;">
+        <div class="record-med" style="font-size:16px;">#${escapeHtml(e.cowNum)} — ${e.weight} lbs</div>
+        ${e.pending ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:4px;">Not synced yet</div>` : ''}
+      </div>
+    `).join('');
+  }
+  async function saveQuickCalfWeightEntry(){
+    const cowNumInput = document.getElementById('qcwCowNum');
+    const weightInput = document.getElementById('qcwWeight');
+    const cowNum = cowNumInput.value.trim();
+    const weightVal = weightInput.value.trim();
+    if(!cowNum){ showToast('Enter the mother\'s cow number'); return; }
+    if(weightVal === ''){ showToast('Enter a weight'); return; }
+    const cow = cows.find(c=>c.number.toLowerCase()===cowNum.toLowerCase());
+    if(!cow){ showToast(`No cow #${cowNum} found`); return; }
+    const calving = activeCalfFor(cow.number);
+    if(!calving){ showToast(`No active calf on file for #${cowNum}`); return; }
+
+    const btn = document.getElementById('qcwSaveBtn');
+    btn.disabled = true;
+    const body = { weigh_date: todayLocal(), weight: parseFloat(weightVal) };
+    try{
+      const inserted = await api('/calf_weights', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify(Object.assign({ calving_id: calving.id }, body))
+      });
+      calfWeights.push(inserted[0]);
+      saveOfflineCache();
+      qcwSessionEntries.push({ cowNum, weight: weightVal, pending:false });
+      renderQcwTally();
+      showToast(`#${cowNum} — ${weightVal} lbs logged`);
+      cowNumInput.value = '';
+      weightInput.value = '';
+      cowNumInput.focus();
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        const tempId = makeLocalId('pending-calfweight');
+        calfWeights.push(Object.assign({ id: tempId, calving_id: calving.id, _pendingSync: true }, body));
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'insert', table: 'calf_weights', tempId,
+          method: 'POST', path: '/calf_weights',
+          body: Object.assign({ calving_id: calving.id }, body)
+        });
+        saveOfflineCache();
+        qcwSessionEntries.push({ cowNum, weight: weightVal, pending:true });
+        renderQcwTally();
+        showToast(`#${cowNum} saved on this phone — will sync when you have signal`);
+        cowNumInput.value = '';
+        weightInput.value = '';
+        cowNumInput.focus();
+      } else {
+        showToast('Could not save — try again');
+      }
+    }
+    btn.disabled = false;
+  }
+
   function generalNoteModal(existingRecord){
     const isEdit = !!existingRecord;
     const today = todayLocal();
@@ -6146,6 +6309,9 @@
   document.getElementById('vetPregCheckBtn').addEventListener('click', showVetPregCheck);
   document.getElementById('vetPregCheckHomeBtn').addEventListener('click', showHome);
   document.getElementById('vetPregSaveBtn').addEventListener('click', saveVetPregCheckEntry);
+  document.getElementById('quickCalfWeightBtn').addEventListener('click', showQuickCalfWeight);
+  document.getElementById('quickCalfWeightHomeBtn').addEventListener('click', showHome);
+  document.getElementById('qcwSaveBtn').addEventListener('click', saveQuickCalfWeightEntry);
   document.getElementById('vetPregOpenBtn').addEventListener('click', markVetPregOpenEntry);
   document.getElementById('vetPregDaysAlong').addEventListener('keydown', (e)=>{
     if(e.key === 'Enter') saveVetPregCheckEntry();
@@ -9392,6 +9558,37 @@
       return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(c.number)}</td><td style="padding:8px;">${escapeHtml(c.owner||'')}</td><td style="padding:8px;">${escapeHtml(bredTo)}</td></tr>`;
     }).join('');
     reportCardModal('Calved Cows', list, ['Cow #','Owner','Bred To'], rows);
+  }
+
+  function calfRateOfGainModal(){
+    const entries = [];
+    cows.forEach(cow=>{
+      calvingsFor(cow.number).filter(c=>!c.promoted_to_cow_number && !c.calf_outcome).forEach(calving=>{
+        if(calving.birth_weight == null) return;
+        const latestWeight = [...calfWeights.filter(w=>w.calving_id===calving.id)].sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date))[0];
+        if(!latestWeight || latestWeight.weight == null) return;
+        const birthMs = new Date(calving.calving_date).getTime();
+        const weighMs = new Date(latestWeight.weigh_date).getTime();
+        const daysOld = Math.round((weighMs - birthMs) / 86400000);
+        if(daysOld <= 0) return;
+        const gain = latestWeight.weight - calving.birth_weight;
+        const adg = gain / daysOld;
+        entries.push({ cow, calving, latestWeight, daysOld, gain, adg });
+      });
+    });
+    entries.sort((a,b)=> b.adg - a.adg);
+    const list = entries.map(e=>e.cow);
+    const rows = entries.map((e,i)=> `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+      <td style="padding:8px;">#${escapeHtml(e.cow.number)}</td>
+      <td style="padding:8px;">${calfSexLabel(e.calving.calf_sex).charAt(0)}</td>
+      <td style="padding:8px;">${fmtDate(e.calving.calving_date)}</td>
+      <td style="padding:8px;">${e.calving.birth_weight} lb</td>
+      <td style="padding:8px;">${e.latestWeight.weight} lb</td>
+      <td style="padding:8px;">${e.daysOld}</td>
+      <td style="padding:8px;">${e.gain.toFixed(0)} lb</td>
+      <td style="padding:8px;font-weight:700;">${e.adg.toFixed(2)}</td>
+    </tr>`).join('');
+    reportCardModal('Calf Rate of Gain', list, ['Cow #','Sex','Birth Date','Birth Wt','Wean Wt','Days Old','Gain','ADG'], rows);
   }
 
   function openCowsReportModal(){
