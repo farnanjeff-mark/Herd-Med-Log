@@ -569,6 +569,7 @@
     <div style="display:flex;align-items:center;gap:10px;background:#E6F1FB;border-radius:8px;padding:10px 12px;margin-bottom:14px;flex-wrap:wrap;">
       <span style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#0C447C;">Vet coming on:</span>
       <input type="date" id="pregCheckDate"/>
+      <button class="btn" id="pregCheckPrintBtn" style="margin-left:auto;background:#A32D2D;color:#fff;border:none;font-size:12px;padding:8px 14px;">🖨️ Print</button>
     </div>
     <div style="overflow-x:auto;">
       <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:13px;">
@@ -2867,6 +2868,8 @@
     renderPregCheckReport();
     window.scrollTo(0,0);
   }
+  let lastPregCheckEntries = [];
+  let lastPregCheckDate = '';
   function renderPregCheckReport(){
     const pickedDate = document.getElementById('pregCheckDate').value;
     const pickedMs = new Date(pickedDate+'T00:00:00').getTime();
@@ -2880,6 +2883,8 @@
       entries.push({ cow, breeding: latest });
     });
     entries.sort((a,b)=> a.cow.number.localeCompare(b.cow.number, undefined, {numeric:true}));
+    lastPregCheckEntries = entries;
+    lastPregCheckDate = pickedDate;
     const tbody = document.getElementById('pregCheckReportBody');
     const emptyEl = document.getElementById('pregCheckReportEmpty');
     emptyEl.classList.toggle('hidden', entries.length !== 0);
@@ -2894,6 +2899,33 @@
         <td style="padding:8px 10px;font-weight:700;color:#27500A;">${daysBred}</td>
       </tr>`;
     }).join('');
+  }
+  function printPregCheckReport(){
+    if(lastPregCheckEntries.length === 0){ showToast('Nothing to print'); return; }
+    const pickedMs = new Date(lastPregCheckDate+'T00:00:00').getTime();
+    const rowsHtml = lastPregCheckEntries.map((e,i)=>{
+      const breedMs = new Date(e.breeding.breed_date+'T00:00:00').getTime();
+      const daysBred = Math.round((pickedMs - breedMs) / 86400000);
+      const sire = e.breeding.bred_to || e.breeding.natural_sire || '';
+      return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+        <td style="padding:6px;">#${escapeHtml(e.cow.number)}</td>
+        <td style="padding:6px;">${escapeHtml(sire)}</td>
+        <td style="padding:6px;">${fmtDateShort(e.breeding.breed_date)}</td>
+        <td style="padding:6px;">${daysBred}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('printListOutput').innerHTML = `
+      <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+        <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Pre-Preg Check Report</h2>
+        <div style="font-size:13px;color:#555;margin-bottom:16px;">Vet visit date: ${fmtDate(lastPregCheckDate)} · ${lastPregCheckEntries.length} cow${lastPregCheckEntries.length!==1?'s':''}</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Sire</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Breed Date</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Days Bred</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    `;
+    document.body.classList.add('printing-list');
+    requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
   }
   let fieldCountChecked = new Set();
   function populateFieldCountFilters(){
@@ -2942,6 +2974,7 @@
   document.getElementById('pregCheckReportBtn').addEventListener('click', showPregCheckReport);
   document.getElementById('pregCheckReportHomeBtn').addEventListener('click', showHome);
   document.getElementById('pregCheckDate').addEventListener('change', renderPregCheckReport);
+  document.getElementById('pregCheckPrintBtn').addEventListener('click', printPregCheckReport);
   document.getElementById('fieldCountHomeBtn').addEventListener('click', showHome);
   document.getElementById('fieldCountLocationFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
   document.getElementById('fieldCountGroupFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
