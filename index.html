@@ -488,6 +488,16 @@
         <input type="number" id="vetPregDaysAlong" min="0" placeholder="e.g. 60"/>
       </div>
     </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>Method (optional)</label>
+      <select id="vetPregMethod">
+        <option value="">-- Select if known --</option>
+        <option value="AI">AI</option>
+        <option value="ET">ET</option>
+        <option value="BB">BB (Bull Bred)</option>
+      </select>
+      <div style="font-family:Arial,sans-serif;font-size:11px;color:#8a8163;margin-top:4px;">If AI or ET, the recorded breed date is trusted as exact — the days-along number won't override it.</div>
+    </div>
     <div style="display:flex;gap:8px;margin-bottom:20px;">
       <button class="btn btn-barn" id="vetPregSaveBtn" style="flex:1;">Save &amp; Next</button>
       <button class="btn btn-outline" id="vetPregOpenBtn" style="flex:1;border-color:#7A2E27;color:#7A2E27;">Mark Open</button>
@@ -532,6 +542,7 @@
       <button class="btn" id="fieldCountBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">✅</span>Field Count</button>
       <button class="btn" id="calfRateOfGainBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📈</span>Calf Rate of Gain</button>
       <button class="btn" id="pregCheckReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🩺</span>Pre-Preg Check Report</button>
+      <button class="btn" id="vetCallReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Vet Call Report</button>
       <button class="btn" id="openCowsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐄</span>Open Cows</button>
       <button class="btn" id="upcomingCalvingsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📅</span>Upcoming Calvings</button>
       <button class="btn" id="calvingReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐮</span>Calving Report</button>
@@ -586,6 +597,19 @@
     </div>
     <p id="pregCheckReportEmpty" class="empty hidden">No currently-bred cows on file.</p>
     <p style="font-family:Arial,sans-serif;font-size:11px;color:#8a8163;margin-top:10px;">Sorted by cow number &middot; change the date above to recalculate</p>
+  </div>
+
+  <div class="view hidden" id="vetCallReportView">
+    <button class="btn btn-outline btn-full" id="vetCallReportHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Vet Call Report</div>
+    <div style="display:flex;align-items:center;gap:10px;background:#E6F1FB;border-radius:8px;padding:10px 12px;margin-bottom:14px;flex-wrap:wrap;">
+      <span style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#0C447C;">Vet call date:</span>
+      <input type="date" id="vetCallReportDate"/>
+      <button class="btn" id="vetCallReportPrintBtn" style="margin-left:auto;background:#A32D2D;color:#fff;border:none;font-size:12px;padding:8px 14px;">🖨️ Print</button>
+    </div>
+    <div id="vetCallReportBody"></div>
+    <p id="vetCallReportEmpty" class="empty hidden">No vet calls recorded for this date.</p>
+    <p style="font-family:Arial,sans-serif;font-size:11px;color:#8a8163;margin-top:10px;">Grouped by location &middot; furthest along (soonest due) first within each location</p>
   </div>
 
   <div class="view hidden" id="advancedSearchView">
@@ -1282,6 +1306,7 @@
   const reportsView = document.getElementById('reportsView');
   const fieldCountView = document.getElementById('fieldCountView');
   const pregCheckReportView = document.getElementById('pregCheckReportView');
+  const vetCallReportView = document.getElementById('vetCallReportView');
   const quickCalfWeightView = document.getElementById('quickCalfWeightView');
   const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
@@ -1955,6 +1980,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2007,6 +2033,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2061,6 +2088,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2109,6 +2137,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2157,6 +2186,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2207,6 +2237,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2334,6 +2365,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2381,6 +2413,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2412,6 +2445,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2426,6 +2460,7 @@
     vetPregCheckView.classList.remove('hidden');
     document.getElementById('vetPregCowNum').value = '';
     document.getElementById('vetPregDaysAlong').value = '';
+    document.getElementById('vetPregMethod').value = '';
     vetPregSessionEntries = [];
     renderVetPregTally();
     window.scrollTo(0,0);
@@ -2437,6 +2472,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
     manageHayingFieldsView.classList.add('hidden');
@@ -2473,6 +2509,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2497,6 +2534,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2522,6 +2560,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2548,6 +2587,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2574,6 +2614,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2606,6 +2647,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2638,6 +2680,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2670,6 +2713,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2746,6 +2790,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2777,6 +2822,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
@@ -2808,6 +2854,7 @@
     fieldCountView.classList.remove('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
@@ -2841,6 +2888,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     pregCheckReportView.classList.remove('hidden');
+    vetCallReportView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -2927,6 +2975,133 @@
     document.body.classList.add('printing-list');
     requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
   }
+  function showVetCallReport(){
+    setHeaderTitle('Vet Call', 'Report');
+    homeView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
+    pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.remove('hidden');
+    quickCalfWeightView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    document.getElementById('vetCallReportDate').value = todayLocal();
+    renderVetCallReport();
+    window.scrollTo(0,0);
+  }
+  let lastVetCallGroups = [];
+  let lastVetCallDate = '';
+  function buildVetCallGroups(pickedDate){
+    const matches = breedingRecords.filter(b=> b.vet_call_date === pickedDate);
+    const byLocation = {};
+    matches.forEach(b=>{
+      const cow = cows.find(c=>c.number===b.cow_number) || { number: b.cow_number };
+      const loc = (cow.lot && cow.lot !== 'None') ? cow.lot : 'No Location';
+      if(!byLocation[loc]) byLocation[loc] = [];
+      byLocation[loc].push({ cow, breeding: b });
+    });
+    const locNames = Object.keys(byLocation).filter(l=>l!=='No Location').sort();
+    if(byLocation['No Location']) locNames.push('No Location');
+    return locNames.map(loc=>{
+      const entries = byLocation[loc].sort((a,b)=>{
+        const aDue = a.breeding.expected_due_date, bDue = b.breeding.expected_due_date;
+        if(aDue && bDue) return aDue.localeCompare(bDue);
+        if(aDue && !bDue) return -1;
+        if(!aDue && bDue) return 1;
+        return a.cow.number.localeCompare(b.cow.number, undefined, {numeric:true});
+      });
+      return { location: loc, entries };
+    });
+  }
+  function renderVetCallReport(){
+    const pickedDate = document.getElementById('vetCallReportDate').value;
+    const groups = buildVetCallGroups(pickedDate);
+    lastVetCallGroups = groups;
+    lastVetCallDate = pickedDate;
+    const totalCount = groups.reduce((sum,g)=> sum+g.entries.length, 0);
+    const bodyEl = document.getElementById('vetCallReportBody');
+    const emptyEl = document.getElementById('vetCallReportEmpty');
+    emptyEl.classList.toggle('hidden', totalCount !== 0);
+    bodyEl.innerHTML = groups.map(g=>`
+      <div style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#27500A;background:#EAF3DE;padding:6px 10px;border-radius:6px;margin:12px 0 4px;">${escapeHtml(g.location)}</div>
+      <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:12px;">
+        <thead>
+          <tr style="background:#E6F1FB;">
+            <th style="text-align:left;padding:6px;color:#0C447C;border-bottom:2px solid #2E88C4;">Cow #</th>
+            <th style="text-align:left;padding:6px;color:#0C447C;border-bottom:2px solid #2E88C4;">Sire</th>
+            <th style="text-align:left;padding:6px;color:#0C447C;border-bottom:2px solid #2E88C4;">Breed Date</th>
+            <th style="text-align:left;padding:6px;color:#0C447C;border-bottom:2px solid #2E88C4;">Vet Call</th>
+            <th style="text-align:left;padding:6px;color:#0C447C;border-bottom:2px solid #2E88C4;">Due Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${g.entries.map((e,i)=>{
+            const sire = e.breeding.bred_to || e.breeding.natural_sire || '';
+            const vetCall = e.breeding.pregnancy_status === 'Open' ? 'Open' : (e.breeding.vet_calls || '');
+            return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+              <td style="padding:6px;font-weight:700;">#${escapeHtml(e.cow.number)}</td>
+              <td style="padding:6px;">${escapeHtml(sire)}</td>
+              <td style="padding:6px;">${fmtDateShort(e.breeding.breed_date)}</td>
+              <td style="padding:6px;">${escapeHtml(vetCall)}</td>
+              <td style="padding:6px;">${e.breeding.expected_due_date ? fmtDateShort(e.breeding.expected_due_date) : ''}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `).join('');
+  }
+  function printVetCallReport(){
+    const totalCount = lastVetCallGroups.reduce((sum,g)=> sum+g.entries.length, 0);
+    if(totalCount === 0){ showToast('Nothing to print'); return; }
+    const groupsHtml = lastVetCallGroups.map(g=>`
+      <div style="font-weight:700;background:#eee;padding:6px;margin-top:14px;">${escapeHtml(g.location)}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Sire</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Breed Date</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Vet Call</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Due Date</th></tr></thead>
+        <tbody>
+          ${g.entries.map((e,i)=>{
+            const sire = e.breeding.bred_to || e.breeding.natural_sire || '';
+            const vetCall = e.breeding.pregnancy_status === 'Open' ? 'Open' : (e.breeding.vet_calls || '');
+            return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+              <td style="padding:6px;">#${escapeHtml(e.cow.number)}</td>
+              <td style="padding:6px;">${escapeHtml(sire)}</td>
+              <td style="padding:6px;">${fmtDateShort(e.breeding.breed_date)}</td>
+              <td style="padding:6px;">${escapeHtml(vetCall)}</td>
+              <td style="padding:6px;">${e.breeding.expected_due_date ? fmtDateShort(e.breeding.expected_due_date) : ''}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `).join('');
+    document.getElementById('printListOutput').innerHTML = `
+      <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+        <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Vet Call Report</h2>
+        <div style="font-size:13px;color:#555;margin-bottom:8px;">Vet call date: ${fmtDate(lastVetCallDate)} &middot; ${totalCount} cow${totalCount!==1?'s':''}</div>
+        ${groupsHtml}
+      </div>
+    `;
+    document.body.classList.add('printing-list');
+    requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
+  }
   let fieldCountChecked = new Set();
   function populateFieldCountFilters(){
     const locSel = document.getElementById('fieldCountLocationFilter');
@@ -2975,6 +3150,10 @@
   document.getElementById('pregCheckReportHomeBtn').addEventListener('click', showHome);
   document.getElementById('pregCheckDate').addEventListener('change', renderPregCheckReport);
   document.getElementById('pregCheckPrintBtn').addEventListener('click', printPregCheckReport);
+  document.getElementById('vetCallReportBtn').addEventListener('click', showVetCallReport);
+  document.getElementById('vetCallReportHomeBtn').addEventListener('click', showHome);
+  document.getElementById('vetCallReportDate').addEventListener('change', renderVetCallReport);
+  document.getElementById('vetCallReportPrintBtn').addEventListener('click', printVetCallReport);
   document.getElementById('fieldCountHomeBtn').addEventListener('click', showHome);
   document.getElementById('fieldCountLocationFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
   document.getElementById('fieldCountGroupFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
@@ -2999,6 +3178,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
@@ -3027,6 +3207,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3059,6 +3240,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3093,6 +3275,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3230,6 +3413,7 @@
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -6232,6 +6416,7 @@
   async function markVetPregOpenEntry(){
     const cowNumInput = document.getElementById('vetPregCowNum');
     const daysInput = document.getElementById('vetPregDaysAlong');
+    const methodSelect = document.getElementById('vetPregMethod');
     const cowNum = cowNumInput.value.trim();
     if(!cowNum){ showToast('Enter a cow number'); return; }
     const cow = cows.find(c=>c.number.toLowerCase()===cowNum.toLowerCase());
@@ -6245,7 +6430,7 @@
       const updated = await api('/breeding_records?id=eq.' + encodeURIComponent(latest.id), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ pregnancy_status: 'Open', vet_calls: null, expected_due_date: null, open_date: todayLocal() })
+        body: JSON.stringify({ pregnancy_status: 'Open', vet_calls: null, expected_due_date: null, open_date: todayLocal(), vet_call_date: todayLocal() })
       });
       const idx = breedingRecords.findIndex(b=>b.id===latest.id);
       if(idx !== -1) breedingRecords[idx] = updated[0];
@@ -6255,6 +6440,7 @@
       showToast(`#${cowNum} marked open`);
       cowNumInput.value = '';
       daysInput.value = '';
+      methodSelect.value = '';
       cowNumInput.focus();
     }catch(e){
       showToast('Could not save — try again');
@@ -6265,8 +6451,10 @@
   async function saveVetPregCheckEntry(){
     const cowNumInput = document.getElementById('vetPregCowNum');
     const daysInput = document.getElementById('vetPregDaysAlong');
+    const methodSelect = document.getElementById('vetPregMethod');
     const cowNum = cowNumInput.value.trim();
     const daysAlongVal = daysInput.value.trim();
+    const methodVal = methodSelect.value;
     if(!cowNum){ showToast('Enter a cow number'); return; }
     if(daysAlongVal === ''){ showToast('Enter days along'); return; }
     const cow = cows.find(c=>c.number.toLowerCase()===cowNum.toLowerCase());
@@ -6277,11 +6465,17 @@
     const btn = document.getElementById('vetPregSaveBtn');
     btn.disabled = true;
     try{
-      const resolved = resolveExpectedDueDate(latest.breed_date, daysAlongVal);
+      // AI/ET breed dates are exact -- always trust the recorded breed date, skip the vet-days-along override.
+      const trustBreedDate = methodVal === 'AI' || methodVal === 'ET';
+      const resolved = trustBreedDate
+        ? { dueDate: computeDueDate(latest.breed_date), usedVetCheck: false, diffDays: 0 }
+        : resolveExpectedDueDate(latest.breed_date, daysAlongVal);
+      const body = { vet_calls: daysAlongVal, expected_due_date: resolved.dueDate, pregnancy_status: 'Bred', vet_call_date: todayLocal() };
+      if(methodVal) body.pregnancy_method = methodVal;
       const updated = await api('/breeding_records?id=eq.' + encodeURIComponent(latest.id), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ vet_calls: daysAlongVal, expected_due_date: resolved.dueDate, pregnancy_status: 'Bred' })
+        body: JSON.stringify(body)
       });
       const idx = breedingRecords.findIndex(b=>b.id===latest.id);
       if(idx !== -1) breedingRecords[idx] = updated[0];
@@ -6291,6 +6485,7 @@
       showToast(`#${cowNum} updated`);
       cowNumInput.value = '';
       daysInput.value = '';
+      methodSelect.value = '';
       cowNumInput.focus();
     }catch(e){
       showToast('Could not save — try again');
