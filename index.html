@@ -496,7 +496,7 @@
         <option value="ET">ET</option>
         <option value="BB">BB (Bull Bred)</option>
       </select>
-      <div style="font-family:Arial,sans-serif;font-size:11px;color:#8a8163;margin-top:4px;">If AI or ET, the recorded breed date is trusted as exact — the days-along number won't override it.</div>
+      <div style="font-family:Arial,sans-serif;font-size:11px;color:#8a8163;margin-top:4px;">If AI or ET, Days Along fills in automatically from the recorded breed date — the breed date is trusted as exact either way.</div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:20px;">
       <button class="btn btn-barn" id="vetPregSaveBtn" style="flex:1;">Save &amp; Next</button>
@@ -6413,6 +6413,18 @@
     }).join('');
   }
 
+  function autoFillVetPregDaysAlong(){
+    const methodVal = document.getElementById('vetPregMethod').value;
+    if(methodVal !== 'AI' && methodVal !== 'ET') return;
+    const cowNum = document.getElementById('vetPregCowNum').value.trim();
+    if(!cowNum) return;
+    const cow = cows.find(c=>c.number.toLowerCase()===cowNum.toLowerCase());
+    if(!cow) return;
+    const latest = [...breedingFor(cow.number)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+    if(!latest) return;
+    const daysAlong = Math.round((new Date(todayLocal()+'T00:00:00') - new Date(latest.breed_date+'T00:00:00')) / 86400000);
+    if(daysAlong >= 0) document.getElementById('vetPregDaysAlong').value = daysAlong;
+  }
   async function markVetPregOpenEntry(){
     const cowNumInput = document.getElementById('vetPregCowNum');
     const daysInput = document.getElementById('vetPregDaysAlong');
@@ -6653,6 +6665,8 @@
   document.getElementById('vetPregCheckBtn').addEventListener('click', showVetPregCheck);
   document.getElementById('vetPregCheckHomeBtn').addEventListener('click', showHome);
   document.getElementById('vetPregSaveBtn').addEventListener('click', saveVetPregCheckEntry);
+  document.getElementById('vetPregMethod').addEventListener('change', autoFillVetPregDaysAlong);
+  document.getElementById('vetPregCowNum').addEventListener('blur', autoFillVetPregDaysAlong);
   document.getElementById('quickCalfWeightBtn').addEventListener('click', showQuickCalfWeight);
   document.getElementById('quickCalfWeightHomeBtn').addEventListener('click', showHome);
   document.getElementById('qcwSaveBtn').addEventListener('click', saveQuickCalfWeightEntry);
