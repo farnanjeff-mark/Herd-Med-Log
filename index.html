@@ -323,7 +323,8 @@
 
     <div class="section-label">Herd Tools</div>
     <button class="btn btn-nav-tool btn-full" id="vetPregCheckBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🩺</span>&nbsp;&nbsp;Vet Preg Check</button>
-    <button class="btn btn-nav-tool btn-full" id="quickCalfWeightBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">⚖️</span>&nbsp;&nbsp;Quick Calf Weight</button>
+    <button class="btn btn-nav-tool btn-full" id="quickCalfWeightBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">⚖️</span>&nbsp;&nbsp;Quick Calf Weight</button>
+    <button class="btn btn-nav-tool btn-full" id="quickCowWeightBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">⚖️</span>&nbsp;&nbsp;Quick Cow Weight</button>
 
     <div class="section-label">Reference Lists</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
@@ -527,6 +528,28 @@
     <div class="section-label" style="margin-top:0;">This Session</div>
     <div id="qcwTallyList"></div>
     <div id="qcwEmptyState" class="empty hidden">No entries logged yet this session.</div>
+  </div>
+
+  <div class="view hidden" id="quickCowWeightView">
+    <button class="btn btn-outline btn-full" id="quickCowWeightHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Quick Cow Weight</div>
+    <div class="banner banner-note" style="display:block;margin-bottom:14px;">Adds a weight straight to her own record — no need to open her profile.</div>
+    <div class="row2">
+      <div class="field">
+        <label>Cow #</label>
+        <input type="text" id="qcowWCowNum" placeholder="e.g. 214" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label>Weight (lbs)</label>
+        <input type="number" id="qcowWWeight" step="0.1" min="0" placeholder="e.g. 1150"/>
+      </div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <button class="btn btn-barn btn-full" id="qcowWSaveBtn">Save &amp; Next</button>
+    </div>
+    <div class="section-label" style="margin-top:0;">This Session</div>
+    <div id="qcowWTallyList"></div>
+    <div id="qcowWEmptyState" class="empty hidden">No entries logged yet this session.</div>
   </div>
 
   <div class="view hidden" id="reportsView">
@@ -1314,6 +1337,7 @@
   const pregCheckReportView = document.getElementById('pregCheckReportView');
   const vetCallReportView = document.getElementById('vetCallReportView');
   const quickCalfWeightView = document.getElementById('quickCalfWeightView');
+  const quickCowWeightView = document.getElementById('quickCowWeightView');
   const farmOperationsView = document.getElementById('farmOperationsView');
   const importView = document.getElementById('importView');
   const globalSearchView = document.getElementById('globalSearchView');
@@ -1985,6 +2009,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2038,6 +2063,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2093,6 +2119,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2142,6 +2169,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2191,6 +2219,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2242,6 +2271,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2370,6 +2400,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2418,6 +2449,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2450,6 +2482,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2507,6 +2540,43 @@
     renderQcwTally();
     window.scrollTo(0,0);
   }
+  function showQuickCowWeight(){
+    setHeaderTitle('Quick Cow', 'Weight');
+    homeView.classList.add('hidden');
+    utilitiesView.classList.add('hidden');
+    reportsView.classList.add('hidden');
+    fieldCountView.classList.add('hidden');
+    pregCheckReportView.classList.add('hidden');
+    vetCallReportView.classList.add('hidden');
+    vetPregCheckView.classList.add('hidden');
+    quickCalfWeightView.classList.add('hidden');
+    manageBullsView.classList.add('hidden');
+    manageHayingFieldsView.classList.add('hidden');
+    manageMedsView.classList.add('hidden');
+    appInfoView.classList.add('hidden');
+    manageLocationsView.classList.add('hidden');
+    manageOwnersView.classList.add('hidden');
+    manageGroupsView.classList.add('hidden');
+    manageReasonsView.classList.add('hidden');
+    advancedSearchView.classList.add('hidden');
+    farmOperationsView.classList.add('hidden');
+    manageCustomAIView.classList.add('hidden');
+    customAIView.classList.add('hidden');
+    importView.classList.add('hidden');
+    globalSearchView.classList.add('hidden');
+    recentlyDeletedView.classList.add('hidden');
+    farmNotesView.classList.add('hidden');
+    loanCalculatorView.classList.add('hidden');
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    quickActionView.classList.add('hidden');
+    quickCowWeightView.classList.remove('hidden');
+    document.getElementById('qcowWCowNum').value = '';
+    document.getElementById('qcowWWeight').value = '';
+    qcowWSessionEntries = [];
+    renderQcowWTally();
+    window.scrollTo(0,0);
+  }
   function showManageBulls(){
     setHeaderTitle('Manage', 'Bulls');
     homeView.classList.add('hidden');
@@ -2514,6 +2584,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2539,6 +2610,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2565,6 +2637,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2592,6 +2665,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2619,6 +2693,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2652,6 +2727,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2685,6 +2761,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2718,6 +2795,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2795,6 +2873,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -2827,6 +2906,7 @@
     reportsView.classList.remove('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
@@ -2859,6 +2939,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.remove('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
@@ -2896,6 +2977,7 @@
     pregCheckReportView.classList.remove('hidden');
     vetCallReportView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
@@ -2990,6 +3072,7 @@
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.remove('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
     manageBullsView.classList.add('hidden');
@@ -3187,6 +3270,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     importView.classList.add('hidden');
@@ -3216,6 +3300,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -3249,6 +3334,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -3284,6 +3370,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -3422,6 +3509,7 @@
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
+    quickCowWeightView.classList.add('hidden');
     pregCheckReportView.classList.add('hidden');
     vetCallReportView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
@@ -6603,6 +6691,69 @@
     }
     btn.disabled = false;
   }
+  let qcowWSessionEntries = [];
+  function renderQcowWTally(){
+    const listEl = document.getElementById('qcowWTallyList');
+    const emptyEl = document.getElementById('qcowWEmptyState');
+    if(!listEl) return;
+    emptyEl.classList.toggle('hidden', qcowWSessionEntries.length !== 0);
+    listEl.innerHTML = [...qcowWSessionEntries].reverse().map(e=> `
+      <div class="record" style="padding:10px 14px;">
+        <div class="record-med" style="font-size:16px;">#${escapeHtml(e.cowNum)} — ${e.weight} lbs</div>
+        ${e.pending ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:4px;">Not synced yet</div>` : ''}
+      </div>
+    `).join('');
+  }
+  async function saveQuickCowWeightEntry(){
+    const cowNumInput = document.getElementById('qcowWCowNum');
+    const weightInput = document.getElementById('qcowWWeight');
+    const cowNum = cowNumInput.value.trim();
+    const weightVal = weightInput.value.trim();
+    if(!cowNum){ showToast('Enter the cow number'); return; }
+    if(weightVal === ''){ showToast('Enter a weight'); return; }
+    const cow = cows.find(c=>c.number.toLowerCase()===cowNum.toLowerCase());
+    if(!cow){ showToast(`No cow #${cowNum} found`); return; }
+
+    const btn = document.getElementById('qcowWSaveBtn');
+    btn.disabled = true;
+    const body = { weigh_date: todayLocal(), weight: parseFloat(weightVal) };
+    try{
+      const inserted = await api('/weights', {
+        method:'POST',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify(Object.assign({ cow_number: cow.number }, body))
+      });
+      weights.push(inserted[0]);
+      saveOfflineCache();
+      qcowWSessionEntries.push({ cowNum, weight: weightVal, pending:false });
+      renderQcowWTally();
+      showToast(`#${cowNum} — ${weightVal} lbs logged`);
+      cowNumInput.value = '';
+      weightInput.value = '';
+      cowNumInput.focus();
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        const tempId = makeLocalId('pending-weight');
+        weights.push(Object.assign({ id: tempId, cow_number: cow.number, _pendingSync: true }, body));
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'insert', table: 'weights', tempId,
+          method: 'POST', path: '/weights',
+          body: Object.assign({ cow_number: cow.number }, body)
+        });
+        saveOfflineCache();
+        qcowWSessionEntries.push({ cowNum, weight: weightVal, pending:true });
+        renderQcowWTally();
+        showToast(`#${cowNum} saved on this phone — will sync when you have signal`);
+        cowNumInput.value = '';
+        weightInput.value = '';
+        cowNumInput.focus();
+      } else {
+        showToast('Could not save — try again');
+      }
+    }
+    btn.disabled = false;
+  }
 
   function generalNoteModal(existingRecord){
     const isEdit = !!existingRecord;
@@ -6702,6 +6853,9 @@
   document.getElementById('quickCalfWeightBtn').addEventListener('click', showQuickCalfWeight);
   document.getElementById('quickCalfWeightHomeBtn').addEventListener('click', showHome);
   document.getElementById('qcwSaveBtn').addEventListener('click', saveQuickCalfWeightEntry);
+  document.getElementById('quickCowWeightBtn').addEventListener('click', showQuickCowWeight);
+  document.getElementById('quickCowWeightHomeBtn').addEventListener('click', showHome);
+  document.getElementById('qcowWSaveBtn').addEventListener('click', saveQuickCowWeightEntry);
   document.getElementById('vetPregOpenBtn').addEventListener('click', markVetPregOpenEntry);
   document.getElementById('vetPregDaysAlong').addEventListener('keydown', (e)=>{
     if(e.key === 'Enter') saveVetPregCheckEntry();
