@@ -4555,11 +4555,11 @@
           if(r.bred_to) details.push(`Bred to: ${escapeHtml(r.bred_to)}`);
           if(r.pregnancy_method) details.push(escapeHtml(r.pregnancy_method));
           if(r.natural_sire) details.push(`Natural sire: ${escapeHtml(r.natural_sire)}`);
-          if(r.vet_calls) details.push(`Vet: ${escapeHtml(r.vet_calls)}`);
           return `<div class="record"${r.pregnancy_status==='Open' ? ' style="border-left-color:#7A2E27;"' : ''}>
             <div class="record-date">${fmtDate(r.breed_date)}</div>
             ${r.pregnancy_status==='Open' ? `<div class="record-med" style="color:#7A2E27;font-weight:700;">Open${r.open_date ? ' — '+fmtDate(r.open_date) : ''}</div>` : ''}
             ${r.expected_due_date ? `<div class="record-med">Due: ${fmtDate(r.expected_due_date)}</div>` : ''}
+            ${r.vet_call_date && r.pregnancy_status!=='Open' ? `<div style="display:inline-flex;align-items:center;gap:5px;background:#E6F1FB;border:1px solid #85B7EB;color:#0C447C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;margin:4px 0;">🩺 Vet call: ${fmtDate(r.vet_call_date)}${r.vet_calls ? ' — '+escapeHtml(r.vet_calls)+' days' : ''}</div>` : ''}
             ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
             ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
           </div>`;
@@ -4713,13 +4713,13 @@
       if(r.bred_to) details.push(`Bred to: ${escapeHtml(r.bred_to)}`);
       if(r.pregnancy_method) details.push(escapeHtml(r.pregnancy_method));
       if(r.natural_sire) details.push(`Natural sire: ${escapeHtml(r.natural_sire)}`);
-      if(r.vet_calls) details.push(`Vet: ${escapeHtml(r.vet_calls)}`);
       div.innerHTML = `
         <button class="record-del" data-id="${r.id}">&times;</button>
         ${r._pendingSync ? '' : `<button class="record-edit" data-id="${r.id}">&#9998;</button>`}
         ${r._pendingSync ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;">Not synced yet</div>` : ''}
         <div class="record-date">${fmtDate(r.breed_date)}</div>
         ${r.expected_due_date ? `<div class="record-med">Due: ${fmtDate(r.expected_due_date)}</div>` : ''}
+        ${r.vet_call_date ? `<div style="display:inline-flex;align-items:center;gap:5px;background:#E6F1FB;border:1px solid #85B7EB;color:#0C447C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;margin:4px 0;">🩺 Vet call: ${fmtDate(r.vet_call_date)}${r.vet_calls ? ' — '+escapeHtml(r.vet_calls)+' days' : ''}${r.pregnancy_status==='Open' ? ' — Open' : ''}</div>` : ''}
         ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
         ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
       `;
@@ -7166,6 +7166,7 @@
       if(cow.lot && cow.lot !== 'None') locParts.push(cow.lot);
       if(cow.cow_group && cow.cow_group !== 'None') locParts.push(cow.cow_group);
       if(locParts.length) lines.push(`<span style="color:#8a8163;">Location:</span> ${escapeHtml(locParts.join(' · '))}`);
+      if(cow.herd_season) lines.push(`<span style="color:#8a8163;">Season:</span> ${escapeHtml(cow.herd_season)}`);
     }
     const latestMed = [...recordsFor(num)].sort((a,b)=>b.date.localeCompare(a.date))[0];
     if(latestMed){
@@ -7191,6 +7192,12 @@
       if(latestBreeding.notes) parts.push(latestBreeding.notes);
       const detail = parts.join(', ');
       lines.push(`<span style="color:#8a8163;">Last breeding:</span> ${fmtDateShort(latestBreeding.breed_date)}${detail ? ' — '+truncateText(detail) : ''}`);
+      if(latestBreeding.vet_call_date){
+        lines.push(`<span style="color:#8a8163;">Vet call:</span> ${fmtDateShort(latestBreeding.vet_call_date)}${latestBreeding.vet_calls ? ' — '+escapeHtml(latestBreeding.vet_calls)+' days' : ''}`);
+      }
+      if(latestBreeding.expected_due_date && latestBreeding.pregnancy_status !== 'Open'){
+        lines.push(`<span style="color:#8a8163;">Expected calving:</span> ${fmtDateShort(latestBreeding.expected_due_date)}`);
+      }
     }
     const latestNote = [...generalNotesFor(num)].sort((a,b)=>b.note_date.localeCompare(a.note_date))[0];
     if(latestNote){
