@@ -9188,6 +9188,7 @@
     return dates.some(d=> (!fromStr || d >= fromStr) && (!toStr || d <= toStr));
   }
   let lastAdvancedSearchEntries = []; // for print
+  let lastAdvancedSearchCows = []; // for print
   function runAdvancedSearch(){
     const location = document.getElementById('advSearchLocation').value;
     const owner = document.getElementById('advSearchOwner').value;
@@ -9339,15 +9340,16 @@
     });
     reportEntries.sort((a,b)=> b.date.localeCompare(a.date));
     lastAdvancedSearchEntries = reportEntries;
+    lastAdvancedSearchCows = results;
 
     const countEl = document.getElementById('advancedSearchCount');
     const tableEl = document.getElementById('advancedSearchReportTable');
     const printBtn = document.getElementById('advancedSearchPrintBtn');
     const resultsEl = document.getElementById('advancedSearchResults');
     countEl.textContent = `${results.length} cow${results.length!==1?'s':''} matched`;
+    printBtn.classList.toggle('hidden', results.length === 0);
 
     if(reportEntries.length > 0){
-      printBtn.classList.remove('hidden');
       tableEl.innerHTML = `
         <div style="overflow-x:auto;">
           <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
@@ -9366,7 +9368,6 @@
         </div>
       `;
     } else {
-      printBtn.classList.add('hidden');
       tableEl.innerHTML = '';
     }
 
@@ -9422,25 +9423,42 @@
     document.getElementById('advancedSearchPrintBtn').classList.add('hidden');
     document.getElementById('advancedSearchResults').innerHTML = '';
     lastAdvancedSearchEntries = [];
+    lastAdvancedSearchCows = [];
   }
   function printAdvancedSearchResults(){
-    if(lastAdvancedSearchEntries.length === 0){ showToast('Nothing to print'); return; }
-    const rowsHtml = lastAdvancedSearchEntries.map((e,i)=>`
+    if(lastAdvancedSearchCows.length === 0){ showToast('Nothing to print'); return; }
+    const cowRowsHtml = lastAdvancedSearchCows.map((c,i)=>`
       <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-        <td style="padding:6px;">${fmtDateShort(e.date)}</td>
-        <td style="padding:6px;">#${escapeHtml(e.num)}</td>
-        <td style="padding:6px;">${escapeHtml(e.type)}</td>
-        <td style="padding:6px;">${escapeHtml(e.details)}</td>
+        <td style="padding:6px;">#${escapeHtml(c.number)}</td>
+        <td style="padding:6px;">${escapeHtml(c.lot||'')}</td>
+        <td style="padding:6px;">${escapeHtml(c.cow_group||'')}</td>
+        <td style="padding:6px;">${escapeHtml(c.owner||'')}</td>
+        <td style="padding:6px;">${escapeHtml(c.status||'Active')}</td>
       </tr>
     `).join('');
+    const activityHtml = lastAdvancedSearchEntries.length > 0 ? `
+      <h3 style="margin:20px 0 8px;font-size:14px;">Matching Activity</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Date</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Type</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Details</th></tr></thead>
+        <tbody>${lastAdvancedSearchEntries.map((e,i)=>`
+          <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+            <td style="padding:6px;">${fmtDateShort(e.date)}</td>
+            <td style="padding:6px;">#${escapeHtml(e.num)}</td>
+            <td style="padding:6px;">${escapeHtml(e.type)}</td>
+            <td style="padding:6px;">${escapeHtml(e.details)}</td>
+          </tr>
+        `).join('')}</tbody>
+      </table>
+    ` : '';
     document.getElementById('printListOutput').innerHTML = `
       <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
         <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Advanced Search</h2>
-        <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${lastAdvancedSearchEntries.length} matching record${lastAdvancedSearchEntries.length!==1?'s':''}</div>
+        <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${lastAdvancedSearchCows.length} cow${lastAdvancedSearchCows.length!==1?'s':''} matched</div>
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
-          <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Date</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Type</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Details</th></tr></thead>
-          <tbody>${rowsHtml}</tbody>
+          <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Location</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Group</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Owner</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Status</th></tr></thead>
+          <tbody>${cowRowsHtml}</tbody>
         </table>
+        ${activityHtml}
       </div>
     `;
     document.body.classList.add('printing-list');
