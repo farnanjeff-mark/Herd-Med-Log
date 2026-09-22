@@ -278,7 +278,7 @@
         </div>
         <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#fff;border-width:1.5px;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
       </div>
-      <div style="display:flex;gap:6px;padding-top:20px;padding-left:10px;padding-right:10px;">
+      <div style="display:flex;gap:6px;padding-top:12px;padding-left:10px;padding-right:10px;">
         <div id="homeTagNeededWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeTagNeededBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Tag</span>
@@ -313,10 +313,18 @@
           <span id="homeOpenBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Open</span>
         </div>
+      </div>
+      <div style="display:flex;gap:6px;padding-top:6px;margin-bottom:12px;padding-left:10px;padding-right:10px;">
         <div id="homePregBtWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homePregBtBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Preg BT</span>
         </div>
+        <div id="homeSellWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+          <span id="homeSellBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
+          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Sell</span>
+        </div>
+        <div style="flex:1;"></div>
+        <div style="flex:1;"></div>
       </div>
     </div>
   </div>
@@ -1433,7 +1441,8 @@
     calved:      { flag: '_pendingCalvedSync', attr: 'data-pending-calved-num' },
     tag_needed:  { flag: '_pendingTagSync',    attr: 'data-pending-tag-num' },
     needs_entry: { flag: '_pendingFlagSync',   attr: 'data-pending-flag-num' },
-    preg_bt:     { flag: '_pendingPregBtSync', attr: 'data-pending-pregbt-num' }
+    preg_bt:     { flag: '_pendingPregBtSync', attr: 'data-pending-pregbt-num' },
+    sell:        { flag: '_pendingSellSync',   attr: 'data-pending-sell-num' }
   };
 
   let isSyncingPendingWrites = false;
@@ -1518,6 +1527,7 @@
         updateCalvedBadge();
         updateOpenBadge();
         updatePregBtBadge();
+        updateSellBadge();
       }
     }
   }
@@ -1729,6 +1739,7 @@
     updateCalvedBadge();
         updateOpenBadge();
         updatePregBtBadge();
+        updateSellBadge();
     updateFlaggedBadge();
     updateTodoCount();
     updateTodaysActivityBadge();
@@ -1873,6 +1884,8 @@
       if(!c.calved) return false;
     } else if(filterKind === 'pregbt'){
       if(!c.preg_bt) return false;
+    } else if(filterKind === 'sell'){
+      if(!c.sell) return false;
     } else if(filterKind === 'herd'){
       if(c.herd_season !== filterValue) return false;
     } else if(filterKind === 'act'){
@@ -1898,6 +1911,7 @@
     const hasTagNeeded = cows.some(c=>c.tag_needed);
     const hasCalved = cows.some(c=>c.calved);
     const hasPregBt = cows.some(c=>c.preg_bt);
+    const hasSell = cows.some(c=>c.sell);
     const hasSpring = cows.some(c=>c.herd_season==='Spring');
     const hasFall = cows.some(c=>c.herd_season==='Fall');
 
@@ -1922,6 +1936,7 @@
       (hasTagNeeded ? '<option value="tag:1">Tag Needed</option>' : '') +
       (hasCalved ? '<option value="calved:1">Calved</option>' : '') +
       (hasPregBt ? '<option value="pregbt:1">Preg BT</option>' : '') +
+      (hasSell ? '<option value="sell:1">Sell</option>' : '') +
       (hasSpring ? '<option value="herd:Spring">Spring Herd</option>' : '') +
       (hasFall ? '<option value="herd:Fall">Fall Herd</option>' : '');
     sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
@@ -1990,6 +2005,7 @@
     wireCalvedCheckboxes(cowListEl);
     wireOpenCheckboxes(cowListEl);
     wirePregBtCheckboxes(cowListEl);
+    wireSellCheckboxes(cowListEl);
   }
 
   function setHeaderTitle(text, highlight){
@@ -2063,6 +2079,7 @@
     updateCalvedBadge();
         updateOpenBadge();
         updatePregBtBadge();
+        updateSellBadge();
     updateFlaggedBadge();
   }
   function showQuickAction(matchedCows){
@@ -2121,6 +2138,7 @@
     wireCalvedCheckboxes(listEl);
     wireOpenCheckboxes(listEl);
     wirePregBtCheckboxes(listEl);
+    wireSellCheckboxes(listEl);
     window.scrollTo(0,0);
   }
   function showHerdTally(){
@@ -3517,6 +3535,10 @@
     pendingProfileFilterOverride = 'pregbt:1';
     showProfileList();
   }
+  function showProfileListSell(){
+    pendingProfileFilterOverride = 'sell:1';
+    showProfileList();
+  }
   function openProfileCow(num){
     currentProfileCow = num;
     homeView.classList.add('hidden');
@@ -3820,6 +3842,7 @@
     wireCalvedCheckboxes(listEl);
     wireOpenCheckboxes(listEl);
     wirePregBtCheckboxes(listEl);
+    wireSellCheckboxes(listEl);
   }
 
   function renderCalvingDetail(){
@@ -3919,6 +3942,7 @@
     wireCalvedCheckboxes(listEl);
     wireOpenCheckboxes(listEl);
     wirePregBtCheckboxes(listEl);
+    wireSellCheckboxes(listEl);
   }
 
   function renderNotesDetail(){
@@ -4005,6 +4029,7 @@
     wireCalvedCheckboxes(listEl);
     wireOpenCheckboxes(listEl);
     wirePregBtCheckboxes(listEl);
+    wireSellCheckboxes(listEl);
     document.getElementById('profilePrintListBtn').textContent = `🖨️ Print This List (${filtered.length})`;
   }
   function updateTagNeededBadge(){
@@ -4039,6 +4064,14 @@
     const wrap = document.getElementById('homePregBtWrap');
     if(!badge || !wrap) return;
     const count = cows.filter(c=>c.preg_bt).length;
+    wrap.classList.remove('hidden');
+    badge.textContent = count > 99 ? '99+' : count;
+  }
+  function updateSellBadge(){
+    const badge = document.getElementById('homeSellBadge');
+    const wrap = document.getElementById('homeSellWrap');
+    if(!badge || !wrap) return;
+    const count = cows.filter(c=>c.sell).length;
     wrap.classList.remove('hidden');
     badge.textContent = count > 99 ? '99+' : count;
   }
@@ -4760,6 +4793,7 @@
     wireCalvedCheckboxes(listEl);
     wireOpenCheckboxes(listEl);
     wirePregBtCheckboxes(listEl);
+    wireSellCheckboxes(listEl);
   }
 
   function renderWeightsDetail(){
@@ -4850,6 +4884,7 @@
     wireCalvedCheckboxes(listEl);
     wireOpenCheckboxes(listEl);
     wirePregBtCheckboxes(listEl);
+    wireSellCheckboxes(listEl);
   }
 
   function renderBreedingDetail(){
@@ -5432,7 +5467,8 @@
           renderProfileList();
           if(!isEdit){ renderList(); updateCalvedBadge();
         updateOpenBadge();
-        updatePregBtBadge(); }
+        updatePregBtBadge();
+        updateSellBadge(); }
           window.scrollTo(0,0);
         }
         showToast(isEdit ? 'Calving updated' : 'Calving logged');
@@ -5458,6 +5494,7 @@
           updateCalvedBadge();
         updateOpenBadge();
         updatePregBtBadge();
+        updateSellBadge();
           window.scrollTo(0,0);
           showToast('Calving saved on this phone — will sync when you have signal');
         } else {
@@ -7065,6 +7102,10 @@
     e.stopPropagation();
     showProfileListPregBt();
   });
+  document.getElementById('homeSellWrap').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    showProfileListSell();
+  });
   document.getElementById('homeFlaggedWrap').addEventListener('click', (e)=>{
     e.stopPropagation();
     showProfileListFlagged();
@@ -7331,6 +7372,7 @@
       if(idx !== -1) cows[idx] = updated[0];
       saveOfflineCache();
       updatePregBtBadge();
+        updateSellBadge();
     }catch(e){
       if(e && e.isNetworkFailure){
         const idx = cows.findIndex(c=>c.number===num);
@@ -7345,6 +7387,55 @@
         document.querySelectorAll('[data-pending-pregbt-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
         showToast('Saved on this phone — will sync when you have signal');
         updatePregBtBadge();
+        updateSellBadge();
+      } else {
+        showToast('Could not save — try again');
+      }
+    }
+  }
+  function sellCheckboxHtml(cow){
+    return `<span style="position:relative;display:inline-block;">
+      <input type="checkbox" class="sell-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.sell ? 'checked' : ''} title="Sell" style="--rc-color:#0274BA;"/>
+      <span data-pending-sell-num="${escapeHtml(cow.number)}" style="display:${cow._pendingSellSync ? 'block' : 'none'};position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#A32D2D;border:1.5px solid #fff;"></span>
+    </span>`;
+  }
+  function wireSellCheckboxes(container){
+    container.querySelectorAll('.sell-check').forEach(cb=>{
+      cb.addEventListener('click', e=> e.stopPropagation());
+      cb.addEventListener('change', async e=>{
+        e.stopPropagation();
+        await toggleSell(cb.dataset.num, cb.checked);
+        const filterRow = document.getElementById('profileLotFilterRow');
+        if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
+      });
+    });
+  }
+  async function toggleSell(num, checked){
+    const body = { sell: checked };
+    try{
+      const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify(body)
+      });
+      const idx = cows.findIndex(c=>c.number===num);
+      if(idx !== -1) cows[idx] = updated[0];
+      saveOfflineCache();
+      updateSellBadge();
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        const idx = cows.findIndex(c=>c.number===num);
+        if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingSellSync: true });
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'cows', field: 'sell', cowNumber: num,
+          method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(num),
+          body
+        });
+        saveOfflineCache();
+        document.querySelectorAll('[data-pending-sell-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
+        showToast('Saved on this phone — will sync when you have signal');
+        updateSellBadge();
       } else {
         showToast('Could not save — try again');
       }
@@ -7408,6 +7499,7 @@
       renderProfileList();
       updateOpenBadge();
         updatePregBtBadge();
+        updateSellBadge();
     }catch(e){
       if(e && e.isNetworkFailure){
         const idx = breedingRecords.findIndex(b=>b.id===latest.id);
@@ -7439,6 +7531,7 @@
         updateCalvedBadge();
         updateOpenBadge();
         updatePregBtBadge();
+        updateSellBadge();
         const filterRow = document.getElementById('profileLotFilterRow');
         if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
       });
@@ -7569,31 +7662,35 @@
     return `
       <div style="background:#fff;border:2px solid #2E88C4;border-radius:18px;box-shadow:0 1px 2px rgba(43,38,32,.10), 0 6px 16px rgba(43,38,32,.14);overflow:hidden;margin-bottom:18px;${inactiveStyle}">
         <div style="background:#fff;padding:16px 18px;cursor:pointer;border-bottom:1px solid #eee;" data-open-num="${escapeHtml(cow.number)}">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div>
-              <span style="font-family:Arial,sans-serif;font-size:25px;font-weight:700;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
-              <div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#6b6350;margin-top:2px;">Tap for Profile &rsaquo;</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:nowrap;">
+            <div style="min-width:0;flex:1;overflow:hidden;padding-right:6px;">
+              <span style="font-family:Arial,sans-serif;font-size:20px;font-weight:700;white-space:nowrap;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
+              <div style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#6b6350;margin-top:2px;white-space:nowrap;">Tap for Profile &rsaquo;</div>
             </div>
             <div style="display:flex;flex-shrink:0;">
-              <div style="width:36px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;">
                 ${tagNeededCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Tag</span>
+                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Tag</span>
               </div>
-              <div style="width:36px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;">
                 ${calvedCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Calved</span>
+                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Calved</span>
               </div>
-              <div style="width:36px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;">
                 ${needsEntryCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Flag</span>
+                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Flag</span>
               </div>
-              <div style="width:36px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;">
                 ${openCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Open</span>
+                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Open</span>
               </div>
-              <div style="width:40px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:34px;display:flex;flex-direction:column;align-items:center;gap:2px;">
                 ${pregBtCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Preg BT</span>
+                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Preg BT</span>
+              </div>
+              <div style="width:30px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                ${sellCheckboxHtml(cow)}
+                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Sell</span>
               </div>
             </div>
           </div>
@@ -9747,6 +9844,7 @@
     wireCalvedCheckboxes(resultsEl);
     wireOpenCheckboxes(resultsEl);
     wirePregBtCheckboxes(resultsEl);
+    wireSellCheckboxes(resultsEl);
   }
   function applyAdvancedSearchDatePreset(){
     const preset = document.getElementById('advSearchDatePreset').value;
@@ -10006,6 +10104,7 @@
       wireCalvedCheckboxes(listEl);
     wireOpenCheckboxes(listEl);
     wirePregBtCheckboxes(listEl);
+    wireSellCheckboxes(listEl);
     }
     modal.querySelector('#closeReportBtn').addEventListener('click', closeModal);
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
@@ -10164,6 +10263,7 @@
         wireCalvedCheckboxes(resultsEl);
     wireOpenCheckboxes(resultsEl);
     wirePregBtCheckboxes(resultsEl);
+    wireSellCheckboxes(resultsEl);
       }
     }
     refresh();
@@ -10272,6 +10372,7 @@
         wireCalvedCheckboxes(resultsEl);
     wireOpenCheckboxes(resultsEl);
     wirePregBtCheckboxes(resultsEl);
+    wireSellCheckboxes(resultsEl);
       }
     }
     refresh();
@@ -10427,6 +10528,7 @@
       wireCalvedCheckboxes(listEl);
     wireOpenCheckboxes(listEl);
     wirePregBtCheckboxes(listEl);
+    wireSellCheckboxes(listEl);
     }
     modal.querySelector('#closeOpenCowsBtn').addEventListener('click', closeModal);
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
@@ -10541,6 +10643,7 @@
         wireCalvedCheckboxes(resultsEl);
     wireOpenCheckboxes(resultsEl);
     wirePregBtCheckboxes(resultsEl);
+    wireSellCheckboxes(resultsEl);
       }
     }
     refresh();
@@ -10681,6 +10784,7 @@
         wireCalvedCheckboxes(resultsEl);
     wireOpenCheckboxes(resultsEl);
     wirePregBtCheckboxes(resultsEl);
+    wireSellCheckboxes(resultsEl);
       }
     }
     refresh();
