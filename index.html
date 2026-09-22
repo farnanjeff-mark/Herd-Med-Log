@@ -710,6 +710,14 @@
       <input type="checkbox" id="advSearchOpenOnly" style="width:20px;height:20px;"/>
       <label style="margin:0;" for="advSearchOpenOnly">Open cows only</label>
     </div>
+    <div class="field" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="advSearchPregBtOnly" style="width:20px;height:20px;"/>
+      <label style="margin:0;" for="advSearchPregBtOnly">Preg BT only</label>
+    </div>
+    <div class="field" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="advSearchSellOnly" style="width:20px;height:20px;"/>
+      <label style="margin:0;" for="advSearchSellOnly">Sell only</label>
+    </div>
 
     <div class="section-label">Meds &amp; Notes</div>
     <div class="row2">
@@ -9659,6 +9667,8 @@
     const method = document.getElementById('advSearchMethod').value;
     const naturalSire = document.getElementById('advSearchNaturalSire').value.trim().toLowerCase();
     const openOnly = document.getElementById('advSearchOpenOnly').checked;
+    const pregBtOnly = document.getElementById('advSearchPregBtOnly').checked;
+    const sellOnly = document.getElementById('advSearchSellOnly').checked;
     const medicine = document.getElementById('advSearchMedicine').value;
     const reason = document.getElementById('advSearchReason').value;
     const calfSire = document.getElementById('advSearchCalfSire').value;
@@ -9728,6 +9738,8 @@
       if(owner){ if(owner==='__undefined__' ? c.owner : c.owner !== owner) return false; }
       if(group){ if(group==='__undefined__' ? c.cow_group : c.cow_group !== group) return false; }
       if(herdSeason){ if(herdSeason==='__undefined__' ? c.herd_season : c.herd_season !== herdSeason) return false; }
+      if(pregBtOnly && !c.preg_bt) return false;
+      if(sellOnly && !c.sell) return false;
       if(breedingFieldsUsed && matchingBreedingRecords(c.number).length === 0) return false;
       if(medFieldsUsed && matchingMedRecords(c.number).length === 0 && matchingCalfMedRecords(c.number).length === 0) return false;
       if(calvingFieldsUsed && matchingCalvingRecords(c.number).length === 0) return false;
@@ -9871,6 +9883,8 @@
     document.getElementById('advSearchMethod').value = '';
     document.getElementById('advSearchNaturalSire').value = '';
     document.getElementById('advSearchOpenOnly').checked = false;
+    document.getElementById('advSearchPregBtOnly').checked = false;
+    document.getElementById('advSearchSellOnly').checked = false;
     document.getElementById('advSearchMedicine').value = '';
     document.getElementById('advSearchReason').value = '';
     document.getElementById('advSearchCalfSire').value = '';
