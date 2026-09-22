@@ -309,6 +309,14 @@
           <span id="homeCalvedSinceBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span id="homeCalvedSinceLabel" style="font-family:Arial,sans-serif;font-size:9px;color:#fff;font-weight:500;">Set a date</span>
         </div>
+        <div id="homeOpenWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#7A2E27;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+          <span id="homeOpenBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
+          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Open</span>
+        </div>
+        <div id="homePregBtWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+          <span id="homePregBtBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
+          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Preg BT</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1424,7 +1432,8 @@
   const PENDING_COW_FIELD_META = {
     calved:      { flag: '_pendingCalvedSync', attr: 'data-pending-calved-num' },
     tag_needed:  { flag: '_pendingTagSync',    attr: 'data-pending-tag-num' },
-    needs_entry: { flag: '_pendingFlagSync',   attr: 'data-pending-flag-num' }
+    needs_entry: { flag: '_pendingFlagSync',   attr: 'data-pending-flag-num' },
+    preg_bt:     { flag: '_pendingPregBtSync', attr: 'data-pending-pregbt-num' }
   };
 
   let isSyncingPendingWrites = false;
@@ -1468,6 +1477,16 @@
               if(meta) delete cows[idx][meta.flag];
             }
             if(meta) document.querySelectorAll('['+meta.attr+'="'+CSS.escape(entry.cowNumber)+'"]').forEach(el=> el.style.display='none');
+          } else if(entry.kind === 'update' && entry.table === 'breeding_records'){
+            const idx = breedingRecords.findIndex(b=>b.id === entry.recordId);
+            if(idx !== -1){
+              breedingRecords[idx] = Object.assign({}, breedingRecords[idx], result && result[0] ? result[0] : {});
+              delete breedingRecords[idx]._pendingSync;
+              const cowNum = breedingRecords[idx].cow_number;
+              const cIdx = cows.findIndex(c=>c.number===cowNum);
+              if(cIdx !== -1) delete cows[cIdx]._pendingOpenSync;
+              document.querySelectorAll('[data-pending-open-num="'+CSS.escape(cowNum)+'"]').forEach(el=> el.style.display='none');
+            }
           }
           removePendingWrite(entry.localId);
           anySucceeded = true;
@@ -1497,6 +1516,8 @@
         if(currentProfileCow) renderProfile();
         renderList();
         updateCalvedBadge();
+        updateOpenBadge();
+        updatePregBtBadge();
       }
     }
   }
@@ -1706,6 +1727,8 @@
     checkBackupReminder();
     updateTagNeededBadge();
     updateCalvedBadge();
+        updateOpenBadge();
+        updatePregBtBadge();
     updateFlaggedBadge();
     updateTodoCount();
     updateTodaysActivityBadge();
@@ -1848,6 +1871,8 @@
       if(!c.tag_needed) return false;
     } else if(filterKind === 'calved'){
       if(!c.calved) return false;
+    } else if(filterKind === 'pregbt'){
+      if(!c.preg_bt) return false;
     } else if(filterKind === 'herd'){
       if(c.herd_season !== filterValue) return false;
     } else if(filterKind === 'act'){
@@ -1872,6 +1897,7 @@
     const hasFlagged = cows.some(c=>c.needs_entry);
     const hasTagNeeded = cows.some(c=>c.tag_needed);
     const hasCalved = cows.some(c=>c.calved);
+    const hasPregBt = cows.some(c=>c.preg_bt);
     const hasSpring = cows.some(c=>c.herd_season==='Spring');
     const hasFall = cows.some(c=>c.herd_season==='Fall');
 
@@ -1895,6 +1921,7 @@
     const statusOptions = (hasFlagged ? '<option value="flag:1">Flagged</option>' : '') +
       (hasTagNeeded ? '<option value="tag:1">Tag Needed</option>' : '') +
       (hasCalved ? '<option value="calved:1">Calved</option>' : '') +
+      (hasPregBt ? '<option value="pregbt:1">Preg BT</option>' : '') +
       (hasSpring ? '<option value="herd:Spring">Spring Herd</option>' : '') +
       (hasFall ? '<option value="herd:Fall">Fall Herd</option>' : '');
     sel.innerHTML = '<option value="">All Locations / Groups / Owners</option>' +
@@ -1961,6 +1988,8 @@
     wireNeedsEntryCheckboxes(cowListEl);
     wireTagNeededCheckboxes(cowListEl);
     wireCalvedCheckboxes(cowListEl);
+    wireOpenCheckboxes(cowListEl);
+    wirePregBtCheckboxes(cowListEl);
   }
 
   function setHeaderTitle(text, highlight){
@@ -2032,6 +2061,8 @@
     updateHomeQuickSearchDisplay();
     updateTagNeededBadge();
     updateCalvedBadge();
+        updateOpenBadge();
+        updatePregBtBadge();
     updateFlaggedBadge();
   }
   function showQuickAction(matchedCows){
@@ -2088,6 +2119,8 @@
     wireNeedsEntryCheckboxes(listEl);
     wireTagNeededCheckboxes(listEl);
     wireCalvedCheckboxes(listEl);
+    wireOpenCheckboxes(listEl);
+    wirePregBtCheckboxes(listEl);
     window.scrollTo(0,0);
   }
   function showHerdTally(){
@@ -3480,6 +3513,10 @@
     pendingProfileFilterOverride = 'flag:1';
     showProfileList();
   }
+  function showProfileListPregBt(){
+    pendingProfileFilterOverride = 'pregbt:1';
+    showProfileList();
+  }
   function openProfileCow(num){
     currentProfileCow = num;
     homeView.classList.add('hidden');
@@ -3781,6 +3818,8 @@
     wireNeedsEntryCheckboxes(listEl);
     wireTagNeededCheckboxes(listEl);
     wireCalvedCheckboxes(listEl);
+    wireOpenCheckboxes(listEl);
+    wirePregBtCheckboxes(listEl);
   }
 
   function renderCalvingDetail(){
@@ -3878,6 +3917,8 @@
     wireNeedsEntryCheckboxes(listEl);
     wireTagNeededCheckboxes(listEl);
     wireCalvedCheckboxes(listEl);
+    wireOpenCheckboxes(listEl);
+    wirePregBtCheckboxes(listEl);
   }
 
   function renderNotesDetail(){
@@ -3962,6 +4003,8 @@
     wireNeedsEntryCheckboxes(listEl);
     wireTagNeededCheckboxes(listEl);
     wireCalvedCheckboxes(listEl);
+    wireOpenCheckboxes(listEl);
+    wirePregBtCheckboxes(listEl);
     document.getElementById('profilePrintListBtn').textContent = `🖨️ Print This List (${filtered.length})`;
   }
   function updateTagNeededBadge(){
@@ -3977,6 +4020,25 @@
     const wrap = document.getElementById('homeCalvedWrap');
     if(!badge || !wrap) return;
     const count = cows.filter(c=>c.calved).length;
+    wrap.classList.remove('hidden');
+    badge.textContent = count > 99 ? '99+' : count;
+  }
+  function updateOpenBadge(){
+    const badge = document.getElementById('homeOpenBadge');
+    const wrap = document.getElementById('homeOpenWrap');
+    if(!badge || !wrap) return;
+    let count = 0;
+    cows.forEach(cow=>{
+      if(isCowOpen(cow.number)) count++;
+    });
+    wrap.classList.remove('hidden');
+    badge.textContent = count > 99 ? '99+' : count;
+  }
+  function updatePregBtBadge(){
+    const badge = document.getElementById('homePregBtBadge');
+    const wrap = document.getElementById('homePregBtWrap');
+    if(!badge || !wrap) return;
+    const count = cows.filter(c=>c.preg_bt).length;
     wrap.classList.remove('hidden');
     badge.textContent = count > 99 ? '99+' : count;
   }
@@ -4696,6 +4758,8 @@
     wireNeedsEntryCheckboxes(listEl);
     wireTagNeededCheckboxes(listEl);
     wireCalvedCheckboxes(listEl);
+    wireOpenCheckboxes(listEl);
+    wirePregBtCheckboxes(listEl);
   }
 
   function renderWeightsDetail(){
@@ -4784,6 +4848,8 @@
     wireNeedsEntryCheckboxes(listEl);
     wireTagNeededCheckboxes(listEl);
     wireCalvedCheckboxes(listEl);
+    wireOpenCheckboxes(listEl);
+    wirePregBtCheckboxes(listEl);
   }
 
   function renderBreedingDetail(){
@@ -5364,7 +5430,9 @@
           renderCalvingDetail();
           renderCalvingList();
           renderProfileList();
-          if(!isEdit){ renderList(); updateCalvedBadge(); }
+          if(!isEdit){ renderList(); updateCalvedBadge();
+        updateOpenBadge();
+        updatePregBtBadge(); }
           window.scrollTo(0,0);
         }
         showToast(isEdit ? 'Calving updated' : 'Calving logged');
@@ -5388,6 +5456,8 @@
           renderProfileList();
           renderList();
           updateCalvedBadge();
+        updateOpenBadge();
+        updatePregBtBadge();
           window.scrollTo(0,0);
           showToast('Calving saved on this phone — will sync when you have signal');
         } else {
@@ -6987,6 +7057,14 @@
     e.stopPropagation();
     calvedReportModal();
   });
+  document.getElementById('homeOpenWrap').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    openCowsReportModal();
+  });
+  document.getElementById('homePregBtWrap').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    showProfileListPregBt();
+  });
   document.getElementById('homeFlaggedWrap').addEventListener('click', (e)=>{
     e.stopPropagation();
     showProfileListFlagged();
@@ -7224,11 +7302,133 @@
       }
     }
   }
+  function pregBtCheckboxHtml(cow){
+    return `<span style="position:relative;display:inline-block;">
+      <input type="checkbox" class="preg-bt-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.preg_bt ? 'checked' : ''} title="Preg BT" style="--rc-color:#0274BA;"/>
+      <span data-pending-pregbt-num="${escapeHtml(cow.number)}" style="display:${cow._pendingPregBtSync ? 'block' : 'none'};position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#A32D2D;border:1.5px solid #fff;"></span>
+    </span>`;
+  }
+  function wirePregBtCheckboxes(container){
+    container.querySelectorAll('.preg-bt-check').forEach(cb=>{
+      cb.addEventListener('click', e=> e.stopPropagation());
+      cb.addEventListener('change', async e=>{
+        e.stopPropagation();
+        await togglePregBt(cb.dataset.num, cb.checked);
+        const filterRow = document.getElementById('profileLotFilterRow');
+        if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
+      });
+    });
+  }
+  async function togglePregBt(num, checked){
+    const body = { preg_bt: checked };
+    try{
+      const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify(body)
+      });
+      const idx = cows.findIndex(c=>c.number===num);
+      if(idx !== -1) cows[idx] = updated[0];
+      saveOfflineCache();
+      updatePregBtBadge();
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        const idx = cows.findIndex(c=>c.number===num);
+        if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingPregBtSync: true });
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'cows', field: 'preg_bt', cowNumber: num,
+          method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(num),
+          body
+        });
+        saveOfflineCache();
+        document.querySelectorAll('[data-pending-pregbt-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
+        showToast('Saved on this phone — will sync when you have signal');
+        updatePregBtBadge();
+      } else {
+        showToast('Could not save — try again');
+      }
+    }
+  }
   function calvedCheckboxHtml(cow){
     return `<span style="position:relative;display:inline-block;">
       <input type="checkbox" class="calved-check rc-check" data-num="${escapeHtml(cow.number)}" ${cow.calved ? 'checked' : ''} title="Calved" style="--rc-color:#0274BA;"/>
       <span data-pending-calved-num="${escapeHtml(cow.number)}" style="display:${cow._pendingCalvedSync ? 'block' : 'none'};position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#A32D2D;border:1.5px solid #fff;"></span>
     </span>`;
+  }
+  function isCowOpen(num){
+    const latest = [...breedingFor(num)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+    return !!(latest && latest.pregnancy_status === 'Open');
+  }
+  function openCheckboxHtml(cow){
+    const isOpen = isCowOpen(cow.number);
+    return `<span style="position:relative;display:inline-block;">
+      <input type="checkbox" class="open-check rc-check" data-num="${escapeHtml(cow.number)}" ${isOpen ? 'checked' : ''} title="Mark Open" style="--rc-color:#A32D2D;"/>
+      <span data-pending-open-num="${escapeHtml(cow.number)}" style="display:${cow._pendingOpenSync ? 'block' : 'none'};position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#A32D2D;border:1.5px solid #fff;"></span>
+    </span>`;
+  }
+  function wireOpenCheckboxes(container){
+    container.querySelectorAll('.open-check').forEach(cb=>{
+      cb.addEventListener('click', e=> e.stopPropagation());
+      cb.addEventListener('change', async e=>{
+        e.stopPropagation();
+        if(!cb.checked){
+          cb.checked = true;
+          showToast('To change this, log a new breeding record');
+          return;
+        }
+        await markCowOpenQuick(cb.dataset.num, cb);
+      });
+    });
+  }
+  async function markCowOpenQuick(num, checkboxEl){
+    const cow = cows.find(c=>c.number===num);
+    if(!cow) return;
+    const latest = [...breedingFor(num)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+    if(!latest){
+      showToast(`No breeding record for #${num}`);
+      if(checkboxEl) checkboxEl.checked = false;
+      return;
+    }
+    const noteInput = window.prompt(`Mark #${num} open — any note? (optional)`, '');
+    const newNote = (noteInput && noteInput.trim()) ? noteInput.trim() : null;
+    const combinedNotes = newNote ? (latest.notes ? latest.notes + ' | ' + newNote : newNote) : (latest.notes || null);
+    const body = { pregnancy_status:'Open', vet_calls:null, expected_due_date:null, open_date:todayLocal(), vet_call_date:todayLocal(), notes: combinedNotes };
+    try{
+      const updated = await api('/breeding_records?id=eq.' + encodeURIComponent(latest.id), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+        body: JSON.stringify(body)
+      });
+      const idx = breedingRecords.findIndex(b=>b.id===latest.id);
+      if(idx !== -1) breedingRecords[idx] = updated[0];
+      saveOfflineCache();
+      showToast(`#${num} marked open`);
+      renderList();
+      renderProfileList();
+      updateOpenBadge();
+        updatePregBtBadge();
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        const idx = breedingRecords.findIndex(b=>b.id===latest.id);
+        if(idx !== -1) breedingRecords[idx] = Object.assign({}, breedingRecords[idx], body, { _pendingSync:true });
+        cow._pendingOpenSync = true;
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'breeding_records', recordId: latest.id,
+          method: 'PATCH', path: '/breeding_records?id=eq.' + encodeURIComponent(latest.id),
+          body
+        });
+        saveOfflineCache();
+        document.querySelectorAll('[data-pending-open-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
+        showToast(`#${num} saved on this phone — will sync when you have signal`);
+        renderList();
+        renderProfileList();
+      } else {
+        showToast('Could not save — try again');
+        if(checkboxEl) checkboxEl.checked = false;
+      }
+    }
   }
   function wireCalvedCheckboxes(container){
     container.querySelectorAll('.calved-check').forEach(cb=>{
@@ -7237,6 +7437,8 @@
         e.stopPropagation();
         await toggleCalved(cb.dataset.num, cb.checked);
         updateCalvedBadge();
+        updateOpenBadge();
+        updatePregBtBadge();
         const filterRow = document.getElementById('profileLotFilterRow');
         if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
       });
@@ -7373,17 +7575,25 @@
               <div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#6b6350;margin-top:2px;">Tap for Profile &rsaquo;</div>
             </div>
             <div style="display:flex;flex-shrink:0;">
-              <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:36px;display:flex;flex-direction:column;align-items:center;gap:2px;">
                 ${tagNeededCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Tag</span>
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Tag</span>
               </div>
-              <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:36px;display:flex;flex-direction:column;align-items:center;gap:2px;">
                 ${calvedCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Calved</span>
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Calved</span>
               </div>
-              <div style="width:46px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:36px;display:flex;flex-direction:column;align-items:center;gap:2px;">
                 ${needsEntryCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;">Flag</span>
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Flag</span>
+              </div>
+              <div style="width:36px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                ${openCheckboxHtml(cow)}
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Open</span>
+              </div>
+              <div style="width:40px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                ${pregBtCheckboxHtml(cow)}
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Preg BT</span>
               </div>
             </div>
           </div>
@@ -9535,6 +9745,8 @@
     wireNeedsEntryCheckboxes(resultsEl);
     wireTagNeededCheckboxes(resultsEl);
     wireCalvedCheckboxes(resultsEl);
+    wireOpenCheckboxes(resultsEl);
+    wirePregBtCheckboxes(resultsEl);
   }
   function applyAdvancedSearchDatePreset(){
     const preset = document.getElementById('advSearchDatePreset').value;
@@ -9792,6 +10004,8 @@
       wireNeedsEntryCheckboxes(listEl);
       wireTagNeededCheckboxes(listEl);
       wireCalvedCheckboxes(listEl);
+    wireOpenCheckboxes(listEl);
+    wirePregBtCheckboxes(listEl);
     }
     modal.querySelector('#closeReportBtn').addEventListener('click', closeModal);
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
@@ -9948,6 +10162,8 @@
         wireNeedsEntryCheckboxes(resultsEl);
         wireTagNeededCheckboxes(resultsEl);
         wireCalvedCheckboxes(resultsEl);
+    wireOpenCheckboxes(resultsEl);
+    wirePregBtCheckboxes(resultsEl);
       }
     }
     refresh();
@@ -10054,6 +10270,8 @@
         wireNeedsEntryCheckboxes(resultsEl);
         wireTagNeededCheckboxes(resultsEl);
         wireCalvedCheckboxes(resultsEl);
+    wireOpenCheckboxes(resultsEl);
+    wirePregBtCheckboxes(resultsEl);
       }
     }
     refresh();
@@ -10207,6 +10425,8 @@
       wireNeedsEntryCheckboxes(listEl);
       wireTagNeededCheckboxes(listEl);
       wireCalvedCheckboxes(listEl);
+    wireOpenCheckboxes(listEl);
+    wirePregBtCheckboxes(listEl);
     }
     modal.querySelector('#closeOpenCowsBtn').addEventListener('click', closeModal);
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
@@ -10319,6 +10539,8 @@
         wireNeedsEntryCheckboxes(resultsEl);
         wireTagNeededCheckboxes(resultsEl);
         wireCalvedCheckboxes(resultsEl);
+    wireOpenCheckboxes(resultsEl);
+    wirePregBtCheckboxes(resultsEl);
       }
     }
     refresh();
@@ -10457,6 +10679,8 @@
         wireNeedsEntryCheckboxes(resultsEl);
         wireTagNeededCheckboxes(resultsEl);
         wireCalvedCheckboxes(resultsEl);
+    wireOpenCheckboxes(resultsEl);
+    wirePregBtCheckboxes(resultsEl);
       }
     }
     refresh();
