@@ -4062,7 +4062,7 @@
     if(!badge || !wrap) return;
     let count = 0;
     cows.forEach(cow=>{
-      if(isCowOpen(cow.number)) count++;
+      if(isActiveStatus(cow) && isCowOpen(cow.number)) count++;
     });
     wrap.classList.remove('hidden');
     badge.textContent = count > 99 ? '99+' : count;
@@ -10498,6 +10498,7 @@
   function openCowsReportModal(){
     const entries = [];
     cows.forEach(cow=>{
+      if(!isActiveStatus(cow)) return;
       const list = breedingFor(cow.number);
       if(list.length === 0) return;
       const latest = [...list].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
