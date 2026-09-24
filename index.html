@@ -804,6 +804,7 @@
     <div id="advancedSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
     <div id="advancedSearchReportTable" style="margin-bottom:14px;"></div>
     <button class="btn btn-outline btn-full hidden" id="advancedSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
+    <button class="btn btn-outline btn-full hidden" id="advancedSearchTextBtn" style="margin-bottom:16px;">📱 Text List</button>
     <div id="advancedSearchResults"></div>
   </div>
 
@@ -7069,6 +7070,7 @@
   document.getElementById('advSearchDatePreset').addEventListener('change', applyAdvancedSearchDatePreset);
   document.getElementById('clearAdvancedSearchBtn').addEventListener('click', clearAdvancedSearch);
   document.getElementById('advancedSearchPrintBtn').addEventListener('click', printAdvancedSearchResults);
+  document.getElementById('advancedSearchTextBtn').addEventListener('click', textAdvancedSearchResults);
   document.getElementById('homeGlobalSearchBtn').addEventListener('click', showGlobalSearch);
   document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
@@ -9810,9 +9812,11 @@
     const countEl = document.getElementById('advancedSearchCount');
     const tableEl = document.getElementById('advancedSearchReportTable');
     const printBtn = document.getElementById('advancedSearchPrintBtn');
+    const textBtn = document.getElementById('advancedSearchTextBtn');
     const resultsEl = document.getElementById('advancedSearchResults');
     countEl.textContent = `${results.length} cow${results.length!==1?'s':''} matched`;
     printBtn.classList.toggle('hidden', results.length === 0);
+    textBtn.classList.toggle('hidden', results.length === 0);
 
     if(reportEntries.length > 0){
       tableEl.innerHTML = `
@@ -9891,9 +9895,18 @@
     document.getElementById('advancedSearchCount').textContent = '';
     document.getElementById('advancedSearchReportTable').innerHTML = '';
     document.getElementById('advancedSearchPrintBtn').classList.add('hidden');
+    document.getElementById('advancedSearchTextBtn').classList.add('hidden');
     document.getElementById('advancedSearchResults').innerHTML = '';
     lastAdvancedSearchEntries = [];
     lastAdvancedSearchCows = [];
+  }
+  function textAdvancedSearchResults(){
+    if(lastAdvancedSearchCows.length === 0){ showToast('Nothing to send'); return; }
+    const numbers = lastAdvancedSearchCows
+      .map(c=>c.number)
+      .sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}))
+      .join(', ');
+    window.location.href = 'sms:?body=' + encodeURIComponent(numbers);
   }
   function printAdvancedSearchResults(){
     if(lastAdvancedSearchCows.length === 0){ showToast('Nothing to print'); return; }
