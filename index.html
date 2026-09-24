@@ -10183,6 +10183,16 @@
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
   }
 
+  function calvedReportModal(){
+    const list = cows.filter(c=> isActiveStatus(c) && c.calved).sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const rows = list.map((c,i)=>{
+      const latest = [...breedingFor(c.number)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
+      const bredTo = latest ? (latest.bred_to || latest.natural_sire || '') : '';
+      return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(c.number)}</td><td style="padding:8px;">${escapeHtml(c.owner||'')}</td><td style="padding:8px;">${escapeHtml(bredTo)}</td></tr>`;
+    }).join('');
+    reportCardModal('Calved Cows', list, ['Cow #','Owner','Bred To'], rows, calvedReportModal);
+  }
+
   function soldDeceasedModal(){
     const list = cows.filter(c=> c.status && c.status !== 'Active').sort((a,b)=>a.number.localeCompare(b.number, undefined, {numeric:true}));
     const rows = list.map((c,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(c.number)}</td><td style="padding:8px;">${escapeHtml(c.status)}</td><td style="padding:8px;">${escapeHtml(c.lot||'')}</td><td style="padding:8px;">${escapeHtml(c.owner||'')}</td></tr>`).join('');
