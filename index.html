@@ -9902,11 +9902,9 @@
   }
   function textAdvancedSearchResults(){
     if(lastAdvancedSearchCows.length === 0){ showToast('Nothing to send'); return; }
-    const numbers = lastAdvancedSearchCows
-      .map(c=>c.number)
-      .sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}))
-      .join(', ');
-    window.location.href = 'sms:?body=' + encodeURIComponent(numbers);
+    const sorted = [...lastAdvancedSearchCows].sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
+    const entries = sorted.map(c=>({ id: c.number, line: '#' + c.number }));
+    sendTextListModal('Advanced Search Results', entries, textAdvancedSearchResults);
   }
   function printAdvancedSearchResults(){
     if(lastAdvancedSearchCows.length === 0){ showToast('Nothing to print'); return; }
@@ -11066,8 +11064,7 @@
     });
   }
 
-  function textListSelectionModal(category, days){
-    const { title, entries } = computeTextListEntries(category, days);
+  function sendTextListModal(title, entries, reopenFn){
     if(entries.length === 0){ showToast('Nothing to send for that selection'); return; }
     const recipients = getRecipients();
     const recipOptionsHtml = recipients.map((r,i)=>`
@@ -11099,7 +11096,7 @@
     modal.querySelector('#manageRecipLink').addEventListener('click', (e)=>{
       e.preventDefault();
       closeModal();
-      manageRecipientsModal(()=> textListSelectionModal(category, days));
+      manageRecipientsModal(()=> sendTextListModal(title, entries, reopenFn));
     });
     modal.querySelector('#sendTextListBtn').addEventListener('click', async ()=>{
       const checkedIds = new Set([...modal.querySelectorAll('.text-list-entry-check')].filter(cb=>cb.checked).map(cb=>cb.dataset.id));
@@ -11129,6 +11126,11 @@
       }
     });
   }
+  function textListSelectionModal(category, days){
+    const { title, entries } = computeTextListEntries(category, days);
+    sendTextListModal(title, entries, ()=> textListSelectionModal(category, days));
+  }
+
 
   function buildMedsRows(){
     const header = ['Cow Number','Location','Owner','Date','Medicine','Reason','Notes'];
