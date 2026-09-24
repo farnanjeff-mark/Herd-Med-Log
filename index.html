@@ -228,9 +228,9 @@
   body.printing-list #printListOutput{ display:block !important; }
 }
 #printListOutput{ display:none; }
-.rc-check{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:6px;border:2px solid var(--rc-color);background:#fff;flex-shrink:0;cursor:pointer;position:relative;margin:0;}
+.rc-check{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:7px;border:2px solid var(--rc-color);background:#fff;flex-shrink:0;cursor:pointer;position:relative;margin:0;}
 .rc-check:checked{background:var(--rc-color);}
-.rc-check:checked::after{content:'\2713';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:13px;font-weight:700;line-height:1;}
+.rc-check:checked::after{content:'\2713';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:16px;font-weight:700;line-height:1;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
@@ -7665,34 +7665,34 @@
       <div style="background:#fff;border:2px solid #2E88C4;border-radius:18px;box-shadow:0 1px 2px rgba(43,38,32,.10), 0 6px 16px rgba(43,38,32,.14);overflow:hidden;margin-bottom:18px;${inactiveStyle}">
         <div style="background:#fff;padding:16px 18px;cursor:pointer;border-bottom:1px solid #eee;" data-open-num="${escapeHtml(cow.number)}">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:nowrap;">
-            <div style="min-width:0;flex:1;overflow:hidden;padding-right:6px;">
-              <span style="font-family:Arial,sans-serif;font-size:20px;font-weight:700;white-space:nowrap;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
-              <div style="font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#6b6350;margin-top:2px;white-space:nowrap;">Tap for Profile &rsaquo;</div>
+            <div style="flex:0 0 92px;min-width:0;overflow:hidden;padding-right:4px;">
+              <span style="font-family:Arial,sans-serif;font-size:19px;font-weight:700;white-space:nowrap;">${ownerNumHtml(cow.number, cow.owner)}${statusBadgeHtml(cow)}</span>
+              <div style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#6b6350;margin-top:2px;white-space:nowrap;">Tap for Profile &rsaquo;</div>
             </div>
             <div style="display:flex;flex-shrink:0;">
-              <div style="width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:41px;display:flex;flex-direction:column;align-items:center;gap:3px;">
                 ${tagNeededCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Tag</span>
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Tag</span>
               </div>
-              <div style="width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:41px;display:flex;flex-direction:column;align-items:center;gap:3px;">
                 ${calvedCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Calved</span>
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Calved</span>
               </div>
-              <div style="width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:41px;display:flex;flex-direction:column;align-items:center;gap:3px;">
                 ${needsEntryCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Flag</span>
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Flag</span>
               </div>
-              <div style="width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:41px;display:flex;flex-direction:column;align-items:center;gap:3px;">
                 ${openCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Open</span>
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Open</span>
               </div>
-              <div style="width:34px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:44px;display:flex;flex-direction:column;align-items:center;gap:3px;">
                 ${pregBtCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Preg BT</span>
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Preg BT</span>
               </div>
-              <div style="width:30px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:38px;display:flex;flex-direction:column;align-items:center;gap:3px;">
                 ${sellCheckboxHtml(cow)}
-                <span style="font-family:Arial,sans-serif;font-size:8px;font-weight:700;color:#6b6350;">Sell</span>
+                <span style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#6b6350;">Sell</span>
               </div>
             </div>
           </div>
