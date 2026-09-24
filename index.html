@@ -579,16 +579,12 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
       <button class="btn" id="pregCheckReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🩺</span>Pre-Preg Check Report</button>
       <button class="btn" id="vetCallReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Vet Call Report</button>
-      <button class="btn" id="openCowsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐄</span>Open Cows</button>
     </div>
 
     <div class="section-label">Herd Reports</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
       <button class="btn" id="headcountByOwnerBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📊</span>Headcount</button>
       <button class="btn" id="fieldCountBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">✅</span>Field Count</button>
-      <button class="btn" id="calfRateOfGainBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📈</span>Calf Rate of Gain</button>
-      <button class="btn" id="upcomingCalvingsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📅</span>Upcoming Calvings</button>
-      <button class="btn" id="calvingReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐮</span>Calving Report</button>
       <button class="btn" id="biggestGainersBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📈</span>Biggest Gainers</button>
       <button class="btn" id="deadCalvesBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">💔</span>Dead Calves</button>
       <button class="btn" id="soldDeceasedBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Sold / Deceased</button>
@@ -3297,7 +3293,6 @@
     document.getElementById('fieldCountTally').textContent = `${fieldCountChecked.size} of ${matched.length} checked`;
   }
   document.getElementById('fieldCountBtn').addEventListener('click', showFieldCount);
-  document.getElementById('calfRateOfGainBtn').addEventListener('click', calfRateOfGainModal);
   document.getElementById('pregCheckReportBtn').addEventListener('click', showPregCheckReport);
   document.getElementById('pregCheckReportHomeBtn').addEventListener('click', showHome);
   document.getElementById('pregCheckDate').addEventListener('change', renderPregCheckReport);
@@ -7081,9 +7076,6 @@
   document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
   document.getElementById('biggestGainersBtn').addEventListener('click', biggestGainersModal);
   document.getElementById('deadCalvesBtn').addEventListener('click', deadCalvesModal);
-  document.getElementById('calvingReportBtn').addEventListener('click', calvingReportModal);
-  document.getElementById('upcomingCalvingsBtn').addEventListener('click', upcomingCalvingsModal);
-  document.getElementById('openCowsBtn').addEventListener('click', openCowsReportModal);
   document.getElementById('recentlyDeletedHomeBtn').addEventListener('click', showHome);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
   document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
@@ -10318,181 +10310,6 @@
         showToast('Exported');
       }catch(e){ showToast('Export failed — try again'); }
     });
-  }
-
-  function calvingReportModal(){
-    const modal = openModal(`
-      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>Calving Report</span>
-        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
-      </div>
-      <div class="field">
-        <label>Time Frame</label>
-        <select id="calvingReportTimeframe">
-          <option value="0" selected>Today</option>
-          <option value="7">1 Week</option>
-          <option value="30">1 Month</option>
-          <option value="99999">All</option>
-        </select>
-      </div>
-      <div id="calvingReportCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
-      <div id="calvingReportTable" style="overflow-x:auto;margin-bottom:14px;"></div>
-      <div id="calvingReportResults" style="margin-bottom:14px;"></div>
-      <div class="modal-actions">
-        <button class="btn btn-outline" id="calvingReportPrintBtn">🖨️ Print</button>
-        <button class="btn btn-outline" id="calvingReportExportBtn">📊 Export</button>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-barn btn-full" id="closeCalvingReportBtn">Close</button>
-      </div>
-    `);
-    function currentRows(){
-      const days = parseInt(modal.querySelector('#calvingReportTimeframe').value, 10);
-      const list = calvings.filter(c=> daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
-      return { list, headerCells: ['Date','Cow #','Sex','Birth Wt','Sire','Assist','Outcome','Notes'], rowsHtml: list.map((c,i)=>{
-        const outcome = c.promoted_to_cow_number ? `Kept (#${c.promoted_to_cow_number})` : (c.calf_outcome === 'sold' ? 'Sold' : c.calf_outcome === 'died' ? 'Died' : 'Active');
-        return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${fmtDateShort(c.calving_date)}</td><td style="padding:8px;">#${escapeHtml(c.cow_number)}</td><td style="padding:8px;">${calfSexLabel(c.calf_sex)}</td><td style="padding:8px;">${c.birth_weight!=null ? c.birth_weight : ''}</td><td style="padding:8px;">${escapeHtml(c.sire||'')}</td><td style="padding:8px;">${escapeHtml(c.birth_assist||'')}</td><td style="padding:8px;">${outcome}</td><td style="padding:8px;">${escapeHtml(c.notes||'')}</td></tr>`;
-      }).join('') };
-    }
-    function refresh(){
-      const { list, headerCells, rowsHtml } = currentRows();
-      const countEl = modal.querySelector('#calvingReportCount');
-      const tableEl = modal.querySelector('#calvingReportTable');
-      const resultsEl = modal.querySelector('#calvingReportResults');
-      countEl.textContent = `${list.length} calving${list.length!==1?'s':''} matched`;
-      if(list.length === 0){
-        tableEl.innerHTML = '';
-        resultsEl.innerHTML = '<p class="empty">No calvings in this timeframe.</p>';
-      } else {
-        tableEl.innerHTML = `
-          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
-            <thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead>
-            <tbody>${rowsHtml}</tbody>
-          </table>
-        `;
-        const seen = new Set();
-        const cowList = [];
-        list.forEach(c=>{
-          if(seen.has(c.cow_number)) return;
-          seen.add(c.cow_number);
-          const cow = cows.find(cw=>cw.number===c.cow_number);
-          if(cow) cowList.push(cow);
-        });
-        resultsEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
-        wireQuickAddCardOpen(resultsEl, calvingReportModal, '← Back to Calving Report');
-        wireProfileQuickAddButtons(resultsEl);
-        wireNeedsEntryCheckboxes(resultsEl);
-        wireTagNeededCheckboxes(resultsEl);
-        wireCalvedCheckboxes(resultsEl);
-    wireOpenCheckboxes(resultsEl);
-    wirePregBtCheckboxes(resultsEl);
-    wireSellCheckboxes(resultsEl);
-      }
-    }
-    refresh();
-    modal.querySelector('#calvingReportTimeframe').addEventListener('change', refresh);
-    modal.querySelector('#closeCalvingReportBtn').addEventListener('click', closeModal);
-    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
-    modal.querySelector('#calvingReportPrintBtn').addEventListener('click', ()=>{
-      const { headerCells, rowsHtml } = currentRows();
-      document.getElementById('printListOutput').innerHTML = `
-        <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
-          <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Calving Report</h2>
-          <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())}</div>
-          <table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>${headerCells.map(h=>`<th style="text-align:left;padding:6px;border-bottom:2px solid #000;">${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table>
-        </div>
-      `;
-      document.body.classList.add('printing-list');
-      requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
-    });
-    modal.querySelector('#calvingReportExportBtn').addEventListener('click', async ()=>{
-      if(typeof ExcelJS === 'undefined'){ showToast('Could not load spreadsheet library'); return; }
-      try{
-        const { headerCells, rowsHtml } = currentRows();
-        const wb = new ExcelJS.Workbook();
-        const ws = wb.addWorksheet('Calving Report');
-        ws.addRow(headerCells);
-        ws.getRow(1).font = { bold:true };
-        const tmp = document.createElement('table');
-        tmp.innerHTML = rowsHtml;
-        [...tmp.querySelectorAll('tr')].forEach(tr=> ws.addRow([...tr.querySelectorAll('td')].map(td=>td.textContent)));
-        ws.columns.forEach(col=>{ col.width = 16; });
-        const buffer = await wb.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'calving-report-' + todayLocal() + '.xlsx';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast('Exported');
-      }catch(e){ showToast('Export failed — try again'); }
-    });
-  }
-
-  function upcomingCalvingsModal(){
-    const today = todayDate();
-    const entries = [];
-    cows.forEach(cow=>{
-      const list = breedingFor(cow.number).filter(b=>b.expected_due_date);
-      if(list.length === 0) return;
-      const latest = [...list].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
-      // If she's already calved since this breeding, that pregnancy is accounted
-      // for — don't keep showing her as still due.
-      const alreadyCalved = calvingsFor(cow.number).some(c=> c.calving_date >= latest.breed_date);
-      if(alreadyCalved) return;
-      const dueDate = new Date(latest.expected_due_date+'T00:00:00');
-      entries.push({ cow, breeding: latest, dueDate });
-    });
-    entries.sort((a,b)=> a.dueDate - b.dueDate);
-    const rows = entries.map((e,i)=>{
-      const daysUntil = Math.round((e.dueDate - today)/86400000);
-      const daysUntilHtml = daysUntil < 0
-        ? `<span style="color:var(--barn);font-weight:700;">${daysUntil}</span>`
-        : daysUntil;
-      return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(e.cow.number)}</td><td style="padding:8px;">${fmtDateShort(e.breeding.expected_due_date)}</td><td style="padding:8px;">${daysUntilHtml}</td><td style="padding:8px;">${escapeHtml(e.breeding.bred_to||'')}</td><td style="padding:8px;">${escapeHtml(e.breeding.pregnancy_method||'')}</td></tr>`;
-    }).join('');
-    reportCardModal('Upcoming Calvings', entries.map(e=>e.cow), ['Cow #','Due Date','Days Until','Bred To','Method'], rows, upcomingCalvingsModal);
-  }
-
-  function calvedReportModal(){
-    const list = [...cows].filter(c=>c.calved).sort((a,b)=> (b.calved_marked_at||'').localeCompare(a.calved_marked_at||''));
-    const rows = list.map((c,i)=>{
-      const latestBreeding = [...breedingFor(c.number)].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
-      const bredTo = latestBreeding ? (latestBreeding.bred_to||'') : '';
-      return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(c.number)}</td><td style="padding:8px;">${escapeHtml(c.owner||'')}</td><td style="padding:8px;">${escapeHtml(bredTo)}</td></tr>`;
-    }).join('');
-    reportCardModal('Calved Cows', list, ['Cow #','Owner','Bred To'], rows, calvedReportModal);
-  }
-
-  function calfRateOfGainModal(){
-    const entries = [];
-    cows.forEach(cow=>{
-      calvingsFor(cow.number).filter(c=>!c.promoted_to_cow_number && !c.calf_outcome).forEach(calving=>{
-        if(calving.birth_weight == null) return;
-        const latestWeight = [...calfWeights.filter(w=>w.calving_id===calving.id)].sort((a,b)=>b.weigh_date.localeCompare(a.weigh_date))[0];
-        if(!latestWeight || latestWeight.weight == null) return;
-        const birthMs = new Date(calving.calving_date).getTime();
-        const weighMs = new Date(latestWeight.weigh_date).getTime();
-        const daysOld = Math.round((weighMs - birthMs) / 86400000);
-        if(daysOld <= 0) return;
-        const gain = latestWeight.weight - calving.birth_weight;
-        const adg = gain / daysOld;
-        entries.push({ cow, calving, latestWeight, daysOld, gain, adg });
-      });
-    });
-    entries.sort((a,b)=> b.adg - a.adg);
-    const list = entries.map(e=>e.cow);
-    const rows = entries.map((e,i)=> `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-      <td style="padding:8px;">#${escapeHtml(e.cow.number)}</td>
-      <td style="padding:8px;">${calfSexLabel(e.calving.calf_sex).charAt(0)}</td>
-      <td style="padding:8px;">${fmtDate(e.calving.calving_date)}</td>
-      <td style="padding:8px;">${e.calving.birth_weight} lb</td>
-      <td style="padding:8px;">${e.latestWeight.weight} lb</td>
-      <td style="padding:8px;">${e.daysOld}</td>
-      <td style="padding:8px;">${e.gain.toFixed(0)} lb</td>
-      <td style="padding:8px;font-weight:700;">${e.adg.toFixed(2)}</td>
-    </tr>`).join('');
-    reportCardModal('Calf Rate of Gain', list, ['Cow #','Sex','Birth Date','Birth Wt','Wean Wt','Days Old','Gain','ADG'], rows, calfRateOfGainModal);
   }
 
   function openCowsReportModal(){
