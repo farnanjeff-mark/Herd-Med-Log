@@ -586,6 +586,7 @@
       <button class="btn" id="headcountByOwnerBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📊</span>Headcount</button>
       <button class="btn" id="fieldCountBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">✅</span>Field Count</button>
       <button class="btn" id="biggestGainersBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📈</span>Biggest Gainers</button>
+      <button class="btn" id="calvingReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐮</span>Calving Report</button>
       <button class="btn" id="deadCalvesBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">💔</span>Dead Calves</button>
       <button class="btn" id="soldDeceasedBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Sold / Deceased</button>
     </div>
@@ -7080,6 +7081,7 @@
   document.getElementById('globalSearchPrintBtn').addEventListener('click', printGlobalSearchResults);
   document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
   document.getElementById('biggestGainersBtn').addEventListener('click', biggestGainersModal);
+  document.getElementById('calvingReportBtn').addEventListener('click', calvingReportModal);
   document.getElementById('deadCalvesBtn').addEventListener('click', deadCalvesModal);
   document.getElementById('recentlyDeletedHomeBtn').addEventListener('click', showHome);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
@@ -10231,6 +10233,115 @@
     reportCardModal('Biggest Gainers', gains.map(g=>g.cow), ['Cow #','First Weigh','Last Weigh','Days','Total Gain','ADG'], rows, biggestGainersModal, 'Active cows with at least two weigh-ins, ranked by total pounds gained between the first and most recent.');
   }
 
+  function calvingReportModal(){
+    const modal = openModal(`
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Calving Report</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Every calving on record, within the time frame you pick below.</div>
+      <div class="field">
+        <label>Time Frame</label>
+        <select id="calvingReportTimeframe">
+          <option value="0">Today</option>
+          <option value="7">1 Week</option>
+          <option value="30">1 Month</option>
+          <option value="99999" selected>All</option>
+        </select>
+      </div>
+      <div id="calvingReportCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
+      <div id="calvingReportTable" style="overflow-x:auto;margin-bottom:14px;"></div>
+      <div id="calvingReportResults" style="margin-bottom:14px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="calvingReportPrintBtn">🖨️ Print</button>
+        <button class="btn btn-outline" id="calvingReportExportBtn">📊 Export</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-barn btn-full" id="closeCalvingReportBtn">Close</button>
+      </div>
+    `);
+    function currentRows(){
+      const days = parseInt(modal.querySelector('#calvingReportTimeframe').value, 10);
+      const list = calvings.filter(c=> daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
+      return { list, headerCells: ['Date','Cow #','Sex','Birth Wt','Sire','Outcome','Notes'], rowsHtml: list.map((c,i)=>{
+        const outcome = c.promoted_to_cow_number ? `Kept (#${c.promoted_to_cow_number})` : (c.calf_outcome || 'Active');
+        return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${fmtDateShort(c.calving_date)}</td><td style="padding:8px;">#${escapeHtml(c.cow_number)}</td><td style="padding:8px;">${calfSexLabel(c.calf_sex)}</td><td style="padding:8px;">${c.birth_weight!=null ? c.birth_weight : ''}</td><td style="padding:8px;">${escapeHtml(c.sire||'')}</td><td style="padding:8px;">${escapeHtml(outcome)}</td><td style="padding:8px;">${escapeHtml(c.notes||'')}</td></tr>`;
+      }).join('') };
+    }
+    function refresh(){
+      const { list, headerCells, rowsHtml } = currentRows();
+      const countEl = modal.querySelector('#calvingReportCount');
+      const tableEl = modal.querySelector('#calvingReportTable');
+      const resultsEl = modal.querySelector('#calvingReportResults');
+      countEl.textContent = `${list.length} calving${list.length!==1?'s':''} matched`;
+      if(list.length === 0){
+        tableEl.innerHTML = '';
+        resultsEl.innerHTML = '<p class="empty">No calvings in this timeframe.</p>';
+      } else {
+        tableEl.innerHTML = `
+          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+            <thead><tr style="background:#EFE8D8;">${headerCells.map(h=>`<th style="text-align:left;padding:8px;">${h}</th>`).join('')}</tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        `;
+        const seen = new Set();
+        const cowList = [];
+        list.forEach(c=>{
+          if(seen.has(c.cow_number)) return;
+          seen.add(c.cow_number);
+          const cow = cows.find(cw=>cw.number===c.cow_number);
+          if(cow) cowList.push(cow);
+        });
+        resultsEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
+        wireQuickAddCardOpen(resultsEl, calvingReportModal, '← Back to Calving Report');
+        wireProfileQuickAddButtons(resultsEl);
+        wireNeedsEntryCheckboxes(resultsEl);
+        wireTagNeededCheckboxes(resultsEl);
+        wireCalvedCheckboxes(resultsEl);
+        wireOpenCheckboxes(resultsEl);
+        wirePregBtCheckboxes(resultsEl);
+        wireSellCheckboxes(resultsEl);
+      }
+    }
+    refresh();
+    modal.querySelector('#calvingReportTimeframe').addEventListener('change', refresh);
+    modal.querySelector('#closeCalvingReportBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
+    modal.querySelector('#calvingReportPrintBtn').addEventListener('click', ()=>{
+      const { headerCells, rowsHtml } = currentRows();
+      document.getElementById('printListOutput').innerHTML = `
+        <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+          <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Calving Report</h2>
+          <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())}</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>${headerCells.map(h=>`<th style="text-align:left;padding:6px;border-bottom:2px solid #000;">${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table>
+        </div>
+      `;
+      document.body.classList.add('printing-list');
+      requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
+    });
+    modal.querySelector('#calvingReportExportBtn').addEventListener('click', async ()=>{
+      if(typeof ExcelJS === 'undefined'){ showToast('Could not load spreadsheet library'); return; }
+      try{
+        const { headerCells, rowsHtml } = currentRows();
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Calving Report');
+        ws.addRow(headerCells);
+        ws.getRow(1).font = { bold:true };
+        const tmp = document.createElement('table');
+        tmp.innerHTML = rowsHtml;
+        [...tmp.querySelectorAll('tr')].forEach(tr=> ws.addRow([...tr.querySelectorAll('td')].map(td=>td.textContent)));
+        ws.columns.forEach(col=>{ col.width = 16; });
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'calving-report-' + todayLocal() + '.xlsx';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      }catch(e){ showToast('Export failed — try again'); }
+    });
+  }
+
   function deadCalvesModal(){
     const modal = openModal(`
       <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
@@ -10430,7 +10541,6 @@
         if(daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0){
           const parts = [`${calfSexLabel(c.calf_sex)} calf`];
           if(c.birth_weight!=null) parts.push(c.birth_weight+' lbs');
-          if(c.sire) parts.push('Sire: '+c.sire);
           entries.push({ date: c.calving_date, num: c.cow_number, type: 'Calving', details: parts.join(', ') });
         }
       });
