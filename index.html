@@ -10217,6 +10217,7 @@
 
   function biggestGainersModal(){
     const gains = cows.map(cow=>{
+      if(!isActiveStatus(cow)) return null;
       const w = [...weightsFor(cow.number)].sort((a,b)=>a.weigh_date.localeCompare(b.weigh_date));
       if(w.length < 2) return null;
       const first = w[0], last = w[w.length-1];
@@ -10227,7 +10228,7 @@
       return { cow, first, last, days, totalGain, adg };
     }).filter(Boolean).sort((a,b)=> b.totalGain - a.totalGain);
     const rows = gains.map((g,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(g.cow.number)}</td><td style="padding:8px;">${fmtDateShort(g.first.weigh_date)}</td><td style="padding:8px;">${fmtDateShort(g.last.weigh_date)}</td><td style="padding:8px;">${g.days}</td><td style="padding:8px;">${g.totalGain} lbs</td><td style="padding:8px;">${g.adg}</td></tr>`).join('');
-    reportCardModal('Biggest Gainers', gains.map(g=>g.cow), ['Cow #','First Weigh','Last Weigh','Days','Total Gain','ADG'], rows, biggestGainersModal, 'Cows with at least two weigh-ins, ranked by total pounds gained between the first and most recent.');
+    reportCardModal('Biggest Gainers', gains.map(g=>g.cow), ['Cow #','First Weigh','Last Weigh','Days','Total Gain','ADG'], rows, biggestGainersModal, 'Active cows with at least two weigh-ins, ranked by total pounds gained between the first and most recent.');
   }
 
   function deadCalvesModal(){
@@ -10427,7 +10428,10 @@
       });
       calvings.forEach(c=>{
         if(daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0){
-          entries.push({ date: c.calving_date, num: c.cow_number, type: 'Calving', details: `${calfSexLabel(c.calf_sex)} calf${c.birth_weight!=null ? ', '+c.birth_weight+' lbs' : ''}` });
+          const parts = [`${calfSexLabel(c.calf_sex)} calf`];
+          if(c.birth_weight!=null) parts.push(c.birth_weight+' lbs');
+          if(c.sire) parts.push('Sire: '+c.sire);
+          entries.push({ date: c.calving_date, num: c.cow_number, type: 'Calving', details: parts.join(', ') });
         }
       });
       generalNotes.forEach(n=>{
@@ -10518,6 +10522,7 @@
     const cutoff = new Date(today); cutoff.setDate(cutoff.getDate()+14);
     const entries = [];
     cows.forEach(cow=>{
+      if(!isActiveStatus(cow)) return;
       const list = breedingFor(cow.number).filter(b=>b.expected_due_date);
       if(list.length === 0) return;
       const latest = [...list].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
@@ -10555,7 +10560,7 @@
         if(seenCows.has(c.cow_number)) return;
         seenCows.add(c.cow_number);
         const cow = cows.find(cw=>cw.number===c.cow_number);
-        if(!cow) return;
+        if(!cow || !isActiveStatus(cow)) return;
         entries.push({ cow, calving: c });
       });
     return entries;
