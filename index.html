@@ -644,7 +644,7 @@
   <div class="view hidden" id="vetCallReportView">
     <button class="btn btn-outline btn-full" id="vetCallReportHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
     <div class="modal-title" style="margin-bottom:6px;">Vet Call Report</div>
-    <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Every vet call logged on the date you pick below, pulled from your breeding records.</div>
+    <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Every vet call logged on the date you pick below for active cows, pulled from your breeding records.</div>
     <div style="display:flex;align-items:center;gap:10px;background:#E6F1FB;border-radius:8px;padding:10px 12px;margin-bottom:14px;flex-wrap:wrap;">
       <span style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#0C447C;">Vet call date:</span>
       <input type="date" id="vetCallReportDate"/>
@@ -1898,6 +1898,7 @@
     } else if(filterKind === 'herd'){
       if(c.herd_season !== filterValue) return false;
     } else if(filterKind === 'act'){
+      if(!isActiveStatus(c)) return false;
       const [actType, actDaysStr] = filterValue.split(':');
       if(!cowHasRecentActivityOfType(c.number, actType, parseInt(actDaysStr, 10))) return false;
     }
@@ -3165,7 +3166,8 @@
     const matches = breedingRecords.filter(b=> b.vet_call_date === pickedDate);
     const byLocation = {};
     matches.forEach(b=>{
-      const cow = cows.find(c=>c.number===b.cow_number) || { number: b.cow_number };
+      const cow = cows.find(c=>c.number===b.cow_number);
+      if(!cow || !isActiveStatus(cow)) return;
       const loc = (cow.lot && cow.lot !== 'None') ? cow.lot : 'No Location';
       if(!byLocation[loc]) byLocation[loc] = [];
       byLocation[loc].push({ cow, breeding: b });
@@ -10239,7 +10241,7 @@
         <span>Calving Report</span>
         <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
       </div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Every calving on record, within the time frame you pick below.</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Every calving on record for active cows, within the time frame you pick below.</div>
       <div class="field">
         <label>Time Frame</label>
         <select id="calvingReportTimeframe">
@@ -10262,7 +10264,11 @@
     `);
     function currentRows(){
       const days = parseInt(modal.querySelector('#calvingReportTimeframe').value, 10);
-      const list = calvings.filter(c=> daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
+      const list = calvings.filter(c=>{
+        if(daysAgo(c.calving_date) > days || daysAgo(c.calving_date) < 0) return false;
+        const cow = cows.find(cw=>cw.number===c.cow_number);
+        return cow ? isActiveStatus(cow) : true;
+      }).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
       return { list, headerCells: ['Date','Cow #','Sex','Birth Wt','Sire','Outcome','Notes'], rowsHtml: list.map((c,i)=>{
         const outcome = c.promoted_to_cow_number ? `Kept (#${c.promoted_to_cow_number})` : (c.calf_outcome || 'Active');
         return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${fmtDateShort(c.calving_date)}</td><td style="padding:8px;">#${escapeHtml(c.cow_number)}</td><td style="padding:8px;">${calfSexLabel(c.calf_sex)}</td><td style="padding:8px;">${c.birth_weight!=null ? c.birth_weight : ''}</td><td style="padding:8px;">${escapeHtml(c.sire||'')}</td><td style="padding:8px;">${escapeHtml(outcome)}</td><td style="padding:8px;">${escapeHtml(c.notes||'')}</td></tr>`;
@@ -10348,7 +10354,7 @@
         <span>Dead Calves</span>
         <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
       </div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Calvings marked as a lost calf, within the time frame you pick below.</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Active cows' calvings marked as a lost calf, within the time frame you pick below.</div>
       <div class="field">
         <label>Time Frame</label>
         <select id="deadCalvesTimeframe">
@@ -10371,7 +10377,12 @@
     `);
     function currentRows(){
       const days = parseInt(modal.querySelector('#deadCalvesTimeframe').value, 10);
-      const list = calvings.filter(c=> c.calf_outcome === 'died' && daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
+      const list = calvings.filter(c=>{
+        if(c.calf_outcome !== 'died') return false;
+        if(daysAgo(c.calving_date) > days || daysAgo(c.calving_date) < 0) return false;
+        const cow = cows.find(cw=>cw.number===c.cow_number);
+        return cow ? isActiveStatus(cow) : true;
+      }).sort((a,b)=>b.calving_date.localeCompare(a.calving_date));
       return { list, headerCells: ['Date','Cow #','Sex','Birth Wt','Sire','Notes'], rowsHtml: list.map((c,i)=>
         `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">${fmtDateShort(c.calving_date)}</td><td style="padding:8px;">#${escapeHtml(c.cow_number)}</td><td style="padding:8px;">${calfSexLabel(c.calf_sex)}</td><td style="padding:8px;">${c.birth_weight!=null ? c.birth_weight : ''}</td><td style="padding:8px;">${escapeHtml(c.sire||'')}</td><td style="padding:8px;">${escapeHtml(c.notes||'')}</td></tr>`
       ).join('') };
@@ -10512,7 +10523,7 @@
         <span>Today's Activity</span>
         <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
       </div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Every treatment, weight, note, breeding, and calving entry (cow and calf) logged within the time frame you pick below.</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Every treatment, weight, note, breeding, and calving entry (cow and calf) for active cows, logged within the time frame you pick below.</div>
       <div class="field">
         <label>Time Frame</label>
         <select id="todaysActivityTimeframe">
@@ -10531,38 +10542,42 @@
     function currentEntries(){
       const days = parseInt(modal.querySelector('#todaysActivityTimeframe').value, 10);
       const entries = [];
+      function cowIsActive(num){
+        const cow = cows.find(c=>c.number===num);
+        return cow ? isActiveStatus(cow) : true;
+      }
       treatments.forEach(t=>{
-        if(daysAgo(t.date) <= days && daysAgo(t.date) >= 0){
+        if(daysAgo(t.date) <= days && daysAgo(t.date) >= 0 && cowIsActive(t.cow_number)){
           const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
           entries.push({ date: t.date, num: t.cow_number, type: 'Med', details: desc });
         }
       });
       calvings.forEach(c=>{
-        if(daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0){
+        if(daysAgo(c.calving_date) <= days && daysAgo(c.calving_date) >= 0 && cowIsActive(c.cow_number)){
           const parts = [`${calfSexLabel(c.calf_sex)} calf`];
           if(c.birth_weight!=null) parts.push(c.birth_weight+' lbs');
           entries.push({ date: c.calving_date, num: c.cow_number, type: 'Calving', details: parts.join(', ') });
         }
       });
       generalNotes.forEach(n=>{
-        if(daysAgo(n.note_date) <= days && daysAgo(n.note_date) >= 0){
+        if(daysAgo(n.note_date) <= days && daysAgo(n.note_date) >= 0 && cowIsActive(n.cow_number)){
           entries.push({ date: n.note_date, num: n.cow_number, type: 'Note', details: n.note||'' });
         }
       });
       weights.forEach(w=>{
-        if(daysAgo(w.weigh_date) <= days && daysAgo(w.weigh_date) >= 0){
+        if(daysAgo(w.weigh_date) <= days && daysAgo(w.weigh_date) >= 0 && cowIsActive(w.cow_number)){
           entries.push({ date: w.weigh_date, num: w.cow_number, type: 'Weight', details: w.weight!=null ? w.weight+' lbs' : '' });
         }
       });
       breedingRecords.forEach(b=>{
-        if(daysAgo(b.breed_date) <= days && daysAgo(b.breed_date) >= 0){
+        if(daysAgo(b.breed_date) <= days && daysAgo(b.breed_date) >= 0 && cowIsActive(b.cow_number)){
           entries.push({ date: b.breed_date, num: b.cow_number, type: 'Breeding', details: b.bred_to ? 'Bred to: '+b.bred_to : '' });
         }
       });
       calfTreatments.forEach(t=>{
         if(daysAgo(t.date) <= days && daysAgo(t.date) >= 0){
           const cv = calvings.find(c=>c.id===t.calving_id);
-          if(!cv) return;
+          if(!cv || !cowIsActive(cv.cow_number)) return;
           const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
           entries.push({ date: t.date, num: cv.cow_number, type: 'Calf Med', details: desc });
         }
@@ -10570,7 +10585,7 @@
       calfWeights.forEach(w=>{
         if(daysAgo(w.weigh_date) <= days && daysAgo(w.weigh_date) >= 0){
           const cv = calvings.find(c=>c.id===w.calving_id);
-          if(!cv) return;
+          if(!cv || !cowIsActive(cv.cow_number)) return;
           entries.push({ date: w.weigh_date, num: cv.cow_number, type: 'Calf Weight', details: w.weight!=null ? w.weight+' lbs' : '' });
         }
       });
