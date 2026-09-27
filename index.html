@@ -323,7 +323,10 @@
           <span id="homeSellBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Sell</span>
         </div>
-        <div style="flex:1;"></div>
+        <div id="homeSyncHoldWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#3C9142;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+          <span id="homeSyncHoldBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
+          <span id="homeSyncHoldLabel" style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Sync On</span>
+        </div>
         <div style="flex:1;"></div>
       </div>
     </div>
@@ -1414,7 +1417,13 @@
     connBanner.classList.add('hidden');
   }
 
+  let manualHoldMode = false;
   async function api(path, options){
+    if(manualHoldMode){
+      const heldErr = new Error('Sync is turned off — saved on this phone instead.');
+      heldErr.isNetworkFailure = true;
+      throw heldErr;
+    }
     setSync('busy');
     const maxAttempts = 3;
     let res;
@@ -1542,6 +1551,7 @@
         updateOpenBadge();
         updatePregBtBadge();
         updateSellBadge();
+        updateSyncHoldBadge();
       }
     }
   }
@@ -1754,6 +1764,7 @@
         updateOpenBadge();
         updatePregBtBadge();
         updateSellBadge();
+        updateSyncHoldBadge();
     updateFlaggedBadge();
     updateTodoCount();
     updateTodaysActivityBadge();
@@ -2095,6 +2106,7 @@
         updateOpenBadge();
         updatePregBtBadge();
         updateSellBadge();
+        updateSyncHoldBadge();
     updateFlaggedBadge();
   }
   function showQuickAction(matchedCows){
@@ -4139,6 +4151,32 @@
     wrap.classList.remove('hidden');
     badge.textContent = count > 99 ? '99+' : count;
   }
+  function updateSyncHoldBadge(){
+    const badge = document.getElementById('homeSyncHoldBadge');
+    const wrap = document.getElementById('homeSyncHoldWrap');
+    const label = document.getElementById('homeSyncHoldLabel');
+    if(!badge || !wrap || !label) return;
+    const count = getPendingWrites().length;
+    badge.textContent = count > 99 ? '99+' : count;
+    if(manualHoldMode){
+      wrap.style.background = '#A32D2D';
+      label.textContent = 'Sync Off';
+    } else {
+      wrap.style.background = '#3C9142';
+      label.textContent = 'Sync On';
+    }
+  }
+  async function toggleSyncHold(){
+    manualHoldMode = !manualHoldMode;
+    updateSyncHoldBadge();
+    if(manualHoldMode){
+      showToast('Sync turned off — new entries will save to this phone only');
+    } else {
+      showToast('Sync turned on — uploading everything saved on this phone');
+      await syncPendingWrites();
+      updateSyncHoldBadge();
+    }
+  }
   function updateFlaggedBadge(){
     const badge = document.getElementById('homeFlaggedBadge');
     const wrap = document.getElementById('homeFlaggedWrap');
@@ -5532,7 +5570,8 @@
           if(!isEdit){ renderList(); updateCalvedBadge();
         updateOpenBadge();
         updatePregBtBadge();
-        updateSellBadge(); }
+        updateSellBadge();
+        updateSyncHoldBadge(); }
           window.scrollTo(0,0);
         }
         showToast(isEdit ? 'Calving updated' : 'Calving logged');
@@ -5559,6 +5598,7 @@
         updateOpenBadge();
         updatePregBtBadge();
         updateSellBadge();
+        updateSyncHoldBadge();
           window.scrollTo(0,0);
           showToast('Calving saved on this phone — will sync when you have signal');
         } else {
@@ -7169,6 +7209,10 @@
     e.stopPropagation();
     showProfileListSell();
   });
+  document.getElementById('homeSyncHoldWrap').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    toggleSyncHold();
+  });
   document.getElementById('homeFlaggedWrap').addEventListener('click', (e)=>{
     e.stopPropagation();
     showProfileListFlagged();
@@ -7436,6 +7480,7 @@
       saveOfflineCache();
       updatePregBtBadge();
         updateSellBadge();
+        updateSyncHoldBadge();
     }catch(e){
       if(e && e.isNetworkFailure){
         const idx = cows.findIndex(c=>c.number===num);
@@ -7451,6 +7496,7 @@
         showToast('Saved on this phone — will sync when you have signal');
         updatePregBtBadge();
         updateSellBadge();
+        updateSyncHoldBadge();
       } else {
         showToast('Could not save — try again');
       }
@@ -7485,6 +7531,7 @@
       if(idx !== -1) cows[idx] = updated[0];
       saveOfflineCache();
       updateSellBadge();
+        updateSyncHoldBadge();
     }catch(e){
       if(e && e.isNetworkFailure){
         const idx = cows.findIndex(c=>c.number===num);
@@ -7499,6 +7546,7 @@
         document.querySelectorAll('[data-pending-sell-num="'+CSS.escape(num)+'"]').forEach(el=> el.style.display='block');
         showToast('Saved on this phone — will sync when you have signal');
         updateSellBadge();
+        updateSyncHoldBadge();
       } else {
         showToast('Could not save — try again');
       }
@@ -7563,6 +7611,7 @@
       updateOpenBadge();
         updatePregBtBadge();
         updateSellBadge();
+        updateSyncHoldBadge();
     }catch(e){
       if(e && e.isNetworkFailure){
         const idx = breedingRecords.findIndex(b=>b.id===latest.id);
@@ -7595,6 +7644,7 @@
         updateOpenBadge();
         updatePregBtBadge();
         updateSellBadge();
+        updateSyncHoldBadge();
         const filterRow = document.getElementById('profileLotFilterRow');
         if(filterRow) populateLocationGroupFilter('profileLotFilterRow', 'profileLocationGroupFilter');
       });
