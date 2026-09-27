@@ -1465,7 +1465,12 @@
     tag_needed:  { flag: '_pendingTagSync',    attr: 'data-pending-tag-num' },
     needs_entry: { flag: '_pendingFlagSync',   attr: 'data-pending-flag-num' },
     preg_bt:     { flag: '_pendingPregBtSync', attr: 'data-pending-pregbt-num' },
-    sell:        { flag: '_pendingSellSync',   attr: 'data-pending-sell-num' }
+    sell:        { flag: '_pendingSellSync',   attr: 'data-pending-sell-num' },
+    status:      { flag: '_pendingStatusSync', attr: 'data-pending-status-num' },
+    lot:         { flag: '_pendingLotSync',    attr: 'data-pending-lot-num' },
+    owner:       { flag: '_pendingOwnerSync',  attr: 'data-pending-owner-num' },
+    cow_group:   { flag: '_pendingGroupSync',  attr: 'data-pending-group-num' },
+    herd_season: { flag: '_pendingSeasonSync', attr: 'data-pending-season-num' }
   };
 
   let isSyncingPendingWrites = false;
@@ -1478,14 +1483,24 @@
     try{
       for(const entry of queue){
         try{
-          const result = await api(entry.path, {
-            method: entry.method,
-            headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-            body: JSON.stringify(entry.body)
-          });
+          const opts = { method: entry.method, headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}) };
+          if(entry.method !== 'DELETE') opts.body = JSON.stringify(entry.body);
+          const result = await api(entry.path, opts);
           if(entry.kind === 'insert' && entry.table === 'calvings'){
             const idx = calvings.findIndex(c=>c.id === entry.tempId);
             if(idx !== -1 && result && result[0]) calvings[idx] = result[0];
+          } else if(entry.kind === 'update' && entry.table === 'calvings'){
+            const idx = calvings.findIndex(c=>c.id === entry.recordId);
+            if(idx !== -1){
+              calvings[idx] = Object.assign({}, calvings[idx], result && result[0] ? result[0] : {});
+              delete calvings[idx]._pendingSync;
+            }
+          } else if(entry.kind === 'insert' && entry.table === 'cows'){
+            const idx = cows.findIndex(c=>c.number === entry.cowNumber);
+            if(idx !== -1){
+              cows[idx] = Object.assign({}, cows[idx], result && result[0] ? result[0] : {});
+              delete cows[idx]._pendingSync;
+            }
           } else if(entry.kind === 'insert' && entry.table === 'treatments'){
             const idx = treatments.findIndex(t=>t.id === entry.tempId);
             if(idx !== -1 && result && result[0]) treatments[idx] = result[0];
@@ -1501,6 +1516,9 @@
           } else if(entry.kind === 'insert' && entry.table === 'calf_weights'){
             const idx = calfWeights.findIndex(w=>w.id === entry.tempId);
             if(idx !== -1 && result && result[0]) calfWeights[idx] = result[0];
+          } else if(entry.kind === 'insert' && entry.table === 'calf_treatments'){
+            const idx = calfTreatments.findIndex(t=>t.id === entry.tempId);
+            if(idx !== -1 && result && result[0]) calfTreatments[idx] = result[0];
           } else if(entry.kind === 'update' && entry.table === 'cows'){
             const idx = cows.findIndex(c=>c.number === entry.cowNumber);
             const meta = PENDING_COW_FIELD_META[entry.field];
@@ -1519,6 +1537,16 @@
               if(cIdx !== -1) delete cows[cIdx]._pendingOpenSync;
               document.querySelectorAll('[data-pending-open-num="'+CSS.escape(cowNum)+'"]').forEach(el=> el.style.display='none');
             }
+          } else if(entry.kind === 'delete'){
+            const arrays = { calf_treatments: 'calfTreatments', calf_weights: 'calfWeights', treatments: 'treatments', weights: 'weights', general_notes: 'generalNotes', breeding_records: 'breedingRecords', calvings: 'calvings' };
+            const varName = arrays[entry.table];
+            if(varName === 'calfTreatments') calfTreatments = calfTreatments.filter(x=>x.id!==entry.recordId);
+            else if(varName === 'calfWeights') calfWeights = calfWeights.filter(x=>x.id!==entry.recordId);
+            else if(varName === 'treatments') treatments = treatments.filter(x=>x.id!==entry.recordId);
+            else if(varName === 'weights') weights = weights.filter(x=>x.id!==entry.recordId);
+            else if(varName === 'generalNotes') generalNotes = generalNotes.filter(x=>x.id!==entry.recordId);
+            else if(varName === 'breedingRecords') breedingRecords = breedingRecords.filter(x=>x.id!==entry.recordId);
+            else if(varName === 'calvings') calvings = calvings.filter(x=>x.id!==entry.recordId);
           }
           removePendingWrite(entry.localId);
           anySucceeded = true;
@@ -5052,10 +5080,22 @@
       if(record) await snapshotBeforeDelete('treatments', record);
       await api('/treatments?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       treatments = treatments.filter(t=>t.id!==id);
+      saveOfflineCache();
       renderDetail();
       renderList();
       showToast('Treatment removed');
-    }catch(e){ showToast('Could not remove — try again'); }
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        treatments = treatments.filter(t=>t.id!==id);
+        queuePendingWrite({ localId: makeLocalId('pw'), kind:'delete', table:'treatments', recordId:id, method:'DELETE', path:'/treatments?id=eq.'+encodeURIComponent(id), body:null });
+        saveOfflineCache();
+        renderDetail();
+        renderList();
+        showToast('Will remove once you have signal');
+      } else {
+        showToast('Could not remove — try again');
+      }
+    }
   }
 
   async function deleteGeneralNote(id){
@@ -5073,10 +5113,22 @@
       if(record) await snapshotBeforeDelete('general_notes', record);
       await api('/general_notes?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       generalNotes = generalNotes.filter(n=>n.id!==id);
+      saveOfflineCache();
       renderNotesDetail();
       renderNotesList();
       showToast('Note removed');
-    }catch(e){ showToast('Could not remove — try again'); }
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        generalNotes = generalNotes.filter(n=>n.id!==id);
+        queuePendingWrite({ localId: makeLocalId('pw'), kind:'delete', table:'general_notes', recordId:id, method:'DELETE', path:'/general_notes?id=eq.'+encodeURIComponent(id), body:null });
+        saveOfflineCache();
+        renderNotesDetail();
+        renderNotesList();
+        showToast('Will remove once you have signal');
+      } else {
+        showToast('Could not remove — try again');
+      }
+    }
   }
 
   async function deleteWeight(id){
@@ -5094,10 +5146,22 @@
       if(record) await snapshotBeforeDelete('weights', record);
       await api('/weights?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       weights = weights.filter(w=>w.id!==id);
+      saveOfflineCache();
       renderWeightsDetail();
       renderWeightsList();
       showToast('Weight removed');
-    }catch(e){ showToast('Could not remove — try again'); }
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        weights = weights.filter(w=>w.id!==id);
+        queuePendingWrite({ localId: makeLocalId('pw'), kind:'delete', table:'weights', recordId:id, method:'DELETE', path:'/weights?id=eq.'+encodeURIComponent(id), body:null });
+        saveOfflineCache();
+        renderWeightsDetail();
+        renderWeightsList();
+        showToast('Will remove once you have signal');
+      } else {
+        showToast('Could not remove — try again');
+      }
+    }
   }
 
   async function deleteBreedingRecord(id){
@@ -5115,10 +5179,22 @@
       if(record) await snapshotBeforeDelete('breeding_records', record);
       await api('/breeding_records?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       breedingRecords = breedingRecords.filter(b=>b.id!==id);
+      saveOfflineCache();
       renderBreedingDetail();
       renderBreedingList();
       showToast('Breeding record removed');
-    }catch(e){ showToast('Could not remove — try again'); }
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        breedingRecords = breedingRecords.filter(b=>b.id!==id);
+        queuePendingWrite({ localId: makeLocalId('pw'), kind:'delete', table:'breeding_records', recordId:id, method:'DELETE', path:'/breeding_records?id=eq.'+encodeURIComponent(id), body:null });
+        saveOfflineCache();
+        renderBreedingDetail();
+        renderBreedingList();
+        showToast('Will remove once you have signal');
+      } else {
+        showToast('Could not remove — try again');
+      }
+    }
   }
 
   async function deleteCalvingRecord(id){
@@ -5136,10 +5212,22 @@
       if(record) await snapshotBeforeDelete('calvings', record);
       await api('/calvings?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       calvings = calvings.filter(c=>c.id!==id);
+      saveOfflineCache();
       renderCalvingDetail();
       renderCalvingList();
       showToast('Calving record removed');
-    }catch(e){ showToast('Could not remove — try again'); }
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        calvings = calvings.filter(c=>c.id!==id);
+        queuePendingWrite({ localId: makeLocalId('pw'), kind:'delete', table:'calvings', recordId:id, method:'DELETE', path:'/calvings?id=eq.'+encodeURIComponent(id), body:null });
+        saveOfflineCache();
+        renderCalvingDetail();
+        renderCalvingList();
+        showToast('Will remove once you have signal');
+      } else {
+        showToast('Could not remove — try again');
+      }
+    }
   }
 
   async function deleteCowFromProfile(){
@@ -5239,13 +5327,15 @@
         const num = modal.querySelector('#newCowNum').value.trim();
         if(!num){ showToast('Enter a cow number'); confirmBtn.disabled = false; return; }
         if(cows.some(c=>c.number.toLowerCase()===num.toLowerCase())){ showToast('That cow already exists'); confirmBtn.disabled = false; return; }
+        const cowBody = { number: num, lot: lot||null, owner: owner||null };
         try{
           const inserted = await api('/cows', {
             method:'POST',
             headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-            body: JSON.stringify({ number: num, lot: lot||null, owner: owner||null })
+            body: JSON.stringify(cowBody)
           });
           cows.push(inserted[0]);
+          saveOfflineCache();
           closeModal();
           showToast(`Cow #${num} added`);
           if(cameFromCalving){
@@ -5265,8 +5355,37 @@
             openCow(num);
           }
         }catch(e){
-          confirmBtn.disabled = false;
-          showToast('Could not add cow — try again');
+          if(e && e.isNetworkFailure){
+            cows.push(Object.assign({ _pendingSync: true }, cowBody));
+            queuePendingWrite({
+              localId: makeLocalId('pw'),
+              kind: 'insert', table: 'cows', cowNumber: num,
+              method: 'POST', path: '/cows',
+              body: cowBody
+            });
+            saveOfflineCache();
+            closeModal();
+            showToast(`#${num} saved on this phone — will sync when you have signal`);
+            if(cameFromCalving){
+              renderCalvingList();
+              openCalvingCow(num);
+            } else if(cameFromNotes){
+              renderNotesList();
+              openNotesCow(num);
+            } else if(cameFromWeights){
+              renderWeightsList();
+              openWeightsCow(num);
+            } else if(cameFromBreeding){
+              renderBreedingList();
+              openBreedingCow(num);
+            } else {
+              renderList();
+              openCow(num);
+            }
+          } else {
+            confirmBtn.disabled = false;
+            showToast('Could not add cow — try again');
+          }
         }
         return;
       }
@@ -5619,6 +5738,7 @@
       return `
         <div class="record" style="padding:8px 30px 8px 10px;">
           <button class="record-del calf-med-del" data-id="${t.id}" style="top:6px;right:6px;">&times;</button>
+          ${t._pendingSync ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;">Not synced yet</div>` : ''}
           <div class="record-date" style="font-size:13px;">${fmtDate(t.date)}</div>
           <div class="record-med" style="font-size:13px;">${escapeHtml(desc)}</div>
           ${t.notes ? `<div class="record-notes" style="font-size:12px;">${escapeHtml(t.notes)}</div>` : ''}
@@ -5715,21 +5835,40 @@
   }
 
   async function setCalfOutcome(calvingRecord, outcome){
+    const body = { calf_outcome: outcome };
     try{
       const updated = await api('/calvings?id=eq.' + encodeURIComponent(calvingRecord.id), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ calf_outcome: outcome })
+        body: JSON.stringify(body)
       });
       const idx = calvings.findIndex(c=>c.id===calvingRecord.id);
       if(idx !== -1){
         calvings[idx] = updated[0];
         Object.assign(calvingRecord, updated[0]);
       }
+      saveOfflineCache();
       renderProfileList();
       showToast(outcome ? `Marked as ${outcome}` : 'Marked as still active');
     }catch(e){
-      showToast('Could not save — try again');
+      if(e && e.isNetworkFailure){
+        const idx = calvings.findIndex(c=>c.id===calvingRecord.id);
+        if(idx !== -1){
+          calvings[idx] = Object.assign({}, calvings[idx], body, { _pendingSync:true });
+          Object.assign(calvingRecord, calvings[idx]);
+        }
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'calvings', recordId: calvingRecord.id,
+          method: 'PATCH', path: '/calvings?id=eq.' + encodeURIComponent(calvingRecord.id),
+          body
+        });
+        saveOfflineCache();
+        renderProfileList();
+        showToast('Saved on this phone — will sync when you have signal');
+      } else {
+        showToast('Could not save — try again');
+      }
     }
   }
 
@@ -5785,12 +5924,28 @@
           });
           calfTreatments.push(inserted[0]);
         }
+        saveOfflineCache();
         closeModal();
         refreshCalfRecordModal(parentModal, calvingRecord);
         showToast('Saved');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure && !isEdit){
+          const tempId = makeLocalId('pending-calftreatment');
+          calfTreatments.push(Object.assign({ id: tempId, _pendingSync: true }, body));
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'insert', table: 'calf_treatments', tempId,
+            method: 'POST', path: '/calf_treatments',
+            body
+          });
+          saveOfflineCache();
+          closeModal();
+          refreshCalfRecordModal(parentModal, calvingRecord);
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
@@ -5843,18 +5998,42 @@
           });
           calfWeights.push(inserted[0]);
         }
+        saveOfflineCache();
         closeModal();
         refreshCalfRecordModal(parentModal, calvingRecord);
         showToast('Saved');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure && !isEdit){
+          const tempId = makeLocalId('pending-calfweight');
+          calfWeights.push(Object.assign({ id: tempId, _pendingSync: true }, body));
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'insert', table: 'calf_weights', tempId,
+            method: 'POST', path: '/calf_weights',
+            body
+          });
+          saveOfflineCache();
+          closeModal();
+          refreshCalfRecordModal(parentModal, calvingRecord);
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
 
   async function deleteCalfTreatment(id, modal, calvingRecord){
     if(!confirm('Remove this entry?')) return;
+    if(String(id).startsWith('pending-calftreatment-')){
+      const pw = getPendingWrites().find(w=>w.tempId===id);
+      if(pw) removePendingWrite(pw.localId);
+      calfTreatments = calfTreatments.filter(t=>t.id!==id);
+      refreshCalfRecordModal(modal, calvingRecord);
+      showToast('Removed — it was never synced, so nothing to undo on the database');
+      return;
+    }
     try{
       await api('/calf_treatments?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
       calfTreatments = calfTreatments.filter(t=>t.id!==id);
@@ -5899,15 +6078,15 @@
       if(cows.some(c=>c.number.toLowerCase()===newNum.toLowerCase())){ showToast('That tag number is already in use'); return; }
       const btn = modal.querySelector('#confirmPromote');
       btn.disabled = true;
+      const lineageParts = [`Born ${fmtDate(calvingRecord.calving_date)} to #${calvingRecord.cow_number}`];
+      if(calvingRecord.sire) lineageParts.push(`Sire: ${calvingRecord.sire}`);
+      if(calvingRecord.birth_weight != null) lineageParts.push(`Birth weight: ${calvingRecord.birth_weight} lbs`);
+      const lineageNote = lineageParts.join(' · ');
+      const cowBody = { number: newNum, lot: mother.lot||null, owner: mother.owner||null, added_at: todayLocal() };
       try{
-        const lineageParts = [`Born ${fmtDate(calvingRecord.calving_date)} to #${calvingRecord.cow_number}`];
-        if(calvingRecord.sire) lineageParts.push(`Sire: ${calvingRecord.sire}`);
-        if(calvingRecord.birth_weight != null) lineageParts.push(`Birth weight: ${calvingRecord.birth_weight} lbs`);
-        const lineageNote = lineageParts.join(' · ');
-
         const insertedCow = await api('/cows', {
           method:'POST', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ number: newNum, lot: mother.lot||null, owner: mother.owner||null, added_at: todayLocal() })
+          body: JSON.stringify(cowBody)
         });
         cows.push(insertedCow[0]);
 
@@ -5945,6 +6124,7 @@
         const cIdx = calvings.findIndex(c=>c.id===calvingRecord.id);
         if(cIdx !== -1) calvings[cIdx] = updatedCalving[0];
 
+        saveOfflineCache();
         closeModal();
         closeModal();
         renderCalvingDetail();
@@ -5952,8 +6132,58 @@
         renderProfileList();
         showToast(`#${newNum} created`);
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not complete — try again');
+        if(e && e.isNetworkFailure){
+          // Everything below is built once, locally -- newNum is already fixed by what you typed,
+          // so unlike most offline inserts, nothing here has to wait on a server-generated ID.
+          const newCow = Object.assign({ _pendingSync: true }, cowBody);
+          cows.push(newCow);
+          queuePendingWrite({ localId: makeLocalId('pw'), kind:'insert', table:'cows', cowNumber:newNum, method:'POST', path:'/cows', body: cowBody });
+
+          const noteBody = { cow_number: newNum, note_date: calvingRecord.calving_date, note: lineageNote };
+          const noteTempId = makeLocalId('pending-note');
+          generalNotes.push(Object.assign({ id: noteTempId, _pendingSync:true }, noteBody));
+          queuePendingWrite({ localId: makeLocalId('pw'), kind:'insert', table:'general_notes', tempId: noteTempId, method:'POST', path:'/general_notes', body: noteBody });
+
+          const medsToMove = calfTreatments.filter(t=>t.calving_id===calvingRecord.id);
+          medsToMove.forEach(t=>{
+            const body = { cow_number: newNum, date: t.date, medicine: t.medicine, reason: t.reason, notes: t.notes };
+            const tempId = makeLocalId('pending-treatment');
+            treatments.push(Object.assign({ id: tempId, _pendingSync:true }, body));
+            queuePendingWrite({ localId: makeLocalId('pw'), kind:'insert', table:'treatments', tempId, method:'POST', path:'/treatments', body });
+            if(!String(t.id).startsWith('pending-')){
+              queuePendingWrite({ localId: makeLocalId('pw'), kind:'delete', table:'calf_treatments', recordId: t.id, method:'DELETE', path:'/calf_treatments?id=eq.'+encodeURIComponent(t.id), body:null });
+            }
+          });
+          calfTreatments = calfTreatments.filter(t=>t.calving_id!==calvingRecord.id);
+
+          const weightsToMove = calfWeights.filter(w=>w.calving_id===calvingRecord.id);
+          weightsToMove.forEach(w=>{
+            const body = { cow_number: newNum, weigh_date: w.weigh_date, weight: w.weight, notes: w.notes };
+            const tempId = makeLocalId('pending-weight');
+            weights.push(Object.assign({ id: tempId, _pendingSync:true }, body));
+            queuePendingWrite({ localId: makeLocalId('pw'), kind:'insert', table:'weights', tempId, method:'POST', path:'/weights', body });
+            if(!String(w.id).startsWith('pending-')){
+              queuePendingWrite({ localId: makeLocalId('pw'), kind:'delete', table:'calf_weights', recordId: w.id, method:'DELETE', path:'/calf_weights?id=eq.'+encodeURIComponent(w.id), body:null });
+            }
+          });
+          calfWeights = calfWeights.filter(w=>w.calving_id!==calvingRecord.id);
+
+          const calvingBody = { promoted_to_cow_number: newNum };
+          const cIdx = calvings.findIndex(c=>c.id===calvingRecord.id);
+          if(cIdx !== -1) calvings[cIdx] = Object.assign({}, calvings[cIdx], calvingBody, { _pendingSync:true });
+          queuePendingWrite({ localId: makeLocalId('pw'), kind:'update', table:'calvings', recordId: calvingRecord.id, method:'PATCH', path:'/calvings?id=eq.'+encodeURIComponent(calvingRecord.id), body: calvingBody });
+
+          saveOfflineCache();
+          closeModal();
+          closeModal();
+          renderCalvingDetail();
+          renderCalvingList();
+          renderProfileList();
+          showToast(`#${newNum} saved on this phone — will sync when you have signal`);
+        } else {
+          btn.disabled = false;
+          showToast('Could not complete — try again');
+        }
       }
     });
   }
@@ -6714,11 +6944,13 @@
     if(!listEl) return;
     emptyEl.classList.toggle('hidden', vetPregSessionEntries.length !== 0);
     listEl.innerHTML = vetPregSessionEntries.map((e,idx)=>({e,idx})).reverse().map(({e,idx})=>{
+      const pendingTag = e.pending ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:4px;">Not synced yet</div>` : '';
       if(e.isOpen){
         return `
           <div class="record" style="padding:10px 14px;border-left-color:#7A2E27;">
             <button class="record-edit vet-preg-edit" data-idx="${idx}">&#9998;</button>
             <div class="record-med" style="font-size:16px;">#${escapeHtml(e.cowNum)} — <span style="color:#7A2E27;">Open</span></div>
+            ${pendingTag}
           </div>
         `;
       }
@@ -6727,6 +6959,7 @@
           <button class="record-edit vet-preg-edit" data-idx="${idx}">&#9998;</button>
           <div class="record-med" style="font-size:16px;">#${escapeHtml(e.cowNum)} — ${e.daysAlong} days${e.method ? ' ('+escapeHtml(e.method)+')' : ''}</div>
           <div class="record-reason">Due: ${fmtDate(e.dueDate)}${e.usedVetCheck ? ' (adjusted from vet call)' : ''}</div>
+          ${pendingTag}
         </div>
       `;
     }).join('');
@@ -6769,14 +7002,16 @@
 
     const btn = document.getElementById('vetPregOpenBtn');
     btn.disabled = true;
+    const body = { pregnancy_status: 'Open', vet_calls: null, expected_due_date: null, open_date: todayLocal(), vet_call_date: todayLocal() };
     try{
       const updated = await api('/breeding_records?id=eq.' + encodeURIComponent(latest.id), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ pregnancy_status: 'Open', vet_calls: null, expected_due_date: null, open_date: todayLocal(), vet_call_date: todayLocal() })
+        body: JSON.stringify(body)
       });
       const idx = breedingRecords.findIndex(b=>b.id===latest.id);
       if(idx !== -1) breedingRecords[idx] = updated[0];
+      saveOfflineCache();
 
       vetPregSessionEntries.push({ cowNum, isOpen: true });
       renderVetPregTally();
@@ -6786,7 +7021,29 @@
       methodSelect.value = '';
       cowNumInput.focus();
     }catch(e){
-      showToast('Could not save — try again');
+      if(e && e.isNetworkFailure){
+        const idx = breedingRecords.findIndex(b=>b.id===latest.id);
+        if(idx !== -1) breedingRecords[idx] = Object.assign({}, breedingRecords[idx], body, { _pendingSync:true });
+        cow._pendingOpenSync = true;
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'breeding_records', recordId: latest.id,
+          method: 'PATCH', path: '/breeding_records?id=eq.' + encodeURIComponent(latest.id),
+          body
+        });
+        saveOfflineCache();
+        document.querySelectorAll('[data-pending-open-num="'+CSS.escape(cow.number)+'"]').forEach(el=> el.style.display='block');
+
+        vetPregSessionEntries.push({ cowNum, isOpen: true, pending: true });
+        renderVetPregTally();
+        showToast(`#${cowNum} saved on this phone — will sync when you have signal`);
+        cowNumInput.value = '';
+        daysInput.value = '';
+        methodSelect.value = '';
+        cowNumInput.focus();
+      } else {
+        showToast('Could not save — try again');
+      }
     }
     btn.disabled = false;
   }
@@ -6807,14 +7064,14 @@
 
     const btn = document.getElementById('vetPregSaveBtn');
     btn.disabled = true;
+    // AI/ET breed dates are exact -- always trust the recorded breed date, skip the vet-days-along override.
+    const trustBreedDate = methodVal === 'AI' || methodVal === 'ET';
+    const resolved = trustBreedDate
+      ? { dueDate: computeDueDate(latest.breed_date), usedVetCheck: false, diffDays: 0 }
+      : resolveExpectedDueDate(latest.breed_date, daysAlongVal);
+    const body = { vet_calls: daysAlongVal, expected_due_date: resolved.dueDate, pregnancy_status: 'Bred', vet_call_date: todayLocal() };
+    if(methodVal) body.pregnancy_method = methodVal;
     try{
-      // AI/ET breed dates are exact -- always trust the recorded breed date, skip the vet-days-along override.
-      const trustBreedDate = methodVal === 'AI' || methodVal === 'ET';
-      const resolved = trustBreedDate
-        ? { dueDate: computeDueDate(latest.breed_date), usedVetCheck: false, diffDays: 0 }
-        : resolveExpectedDueDate(latest.breed_date, daysAlongVal);
-      const body = { vet_calls: daysAlongVal, expected_due_date: resolved.dueDate, pregnancy_status: 'Bred', vet_call_date: todayLocal() };
-      if(methodVal) body.pregnancy_method = methodVal;
       const updated = await api('/breeding_records?id=eq.' + encodeURIComponent(latest.id), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
@@ -6822,6 +7079,7 @@
       });
       const idx = breedingRecords.findIndex(b=>b.id===latest.id);
       if(idx !== -1) breedingRecords[idx] = updated[0];
+      saveOfflineCache();
 
       vetPregSessionEntries.push({ cowNum, daysAlong: daysAlongVal, dueDate: resolved.dueDate, usedVetCheck: resolved.usedVetCheck, method: methodVal });
       renderVetPregTally();
@@ -6831,7 +7089,27 @@
       methodSelect.value = '';
       cowNumInput.focus();
     }catch(e){
-      showToast('Could not save — try again');
+      if(e && e.isNetworkFailure){
+        const idx = breedingRecords.findIndex(b=>b.id===latest.id);
+        if(idx !== -1) breedingRecords[idx] = Object.assign({}, breedingRecords[idx], body, { _pendingSync:true });
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'breeding_records', recordId: latest.id,
+          method: 'PATCH', path: '/breeding_records?id=eq.' + encodeURIComponent(latest.id),
+          body
+        });
+        saveOfflineCache();
+
+        vetPregSessionEntries.push({ cowNum, daysAlong: daysAlongVal, dueDate: resolved.dueDate, usedVetCheck: resolved.usedVetCheck, method: methodVal, pending: true });
+        renderVetPregTally();
+        showToast(`#${cowNum} saved on this phone — will sync when you have signal`);
+        cowNumInput.value = '';
+        daysInput.value = '';
+        methodSelect.value = '';
+        cowNumInput.focus();
+      } else {
+        showToast('Could not save — try again');
+      }
     }
     btn.disabled = false;
   }
@@ -7354,7 +7632,8 @@
     return !cow.status || cow.status === 'Active';
   }
   function statusBadgeHtml(cow){
-    return (cow.status && cow.status !== 'Active') ? `<span class="status-badge">${escapeHtml(cow.status)}</span>` : '';
+    if(!cow.status || cow.status === 'Active') return '';
+    return `<span class="status-badge">${escapeHtml(cow.status)}${cow._pendingStatusSync ? ' <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#E24B4A;vertical-align:2px;"></span>' : ''}</span>`;
   }
   function needsEntryCheckboxHtml(cow){
     return `<span style="position:relative;display:inline-block;">
@@ -7680,16 +7959,31 @@
     }
   }
   async function toggleHerdSeason(num, season){
+    const body = { herd_season: season };
     try{
       const updated = await api('/cows?number=eq.' + encodeURIComponent(num), {
         method:'PATCH',
         headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-        body: JSON.stringify({ herd_season: season })
+        body: JSON.stringify(body)
       });
       const idx = cows.findIndex(c=>c.number===num);
       if(idx !== -1) cows[idx] = updated[0];
+      saveOfflineCache();
     }catch(e){
-      showToast('Could not save — try again');
+      if(e && e.isNetworkFailure){
+        const idx = cows.findIndex(c=>c.number===num);
+        if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingSeasonSync: true });
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'cows', field: 'herd_season', cowNumber: num,
+          method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(num),
+          body
+        });
+        saveOfflineCache();
+        showToast('Saved on this phone — will sync when you have signal');
+      } else {
+        showToast('Could not save — try again');
+      }
     }
   }
   const PROFILE_QUICK_ADD_TYPES = [
@@ -7865,14 +8159,16 @@
       const btn = modal.querySelector('#confirmEditLot');
       btn.disabled = true;
       await addLocationIfNew(lot);
+      const body = { lot: lot||null };
       try{
         const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
           method:'PATCH',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ lot: lot||null })
+          body: JSON.stringify(body)
         });
         const idx = cows.findIndex(c=>c.number===targetNum);
         if(idx !== -1) cows[idx] = updated[0];
+        saveOfflineCache();
         closeModal();
         refreshOpenCowHeaders();
         renderList();
@@ -7883,8 +8179,29 @@
         renderProfileList();
         showToast('Location updated');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure){
+          const idx = cows.findIndex(c=>c.number===targetNum);
+          if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingLotSync: true });
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'update', table: 'cows', field: 'lot', cowNumber: targetNum,
+            method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(targetNum),
+            body
+          });
+          saveOfflineCache();
+          closeModal();
+          refreshOpenCowHeaders();
+          renderList();
+          renderCalvingList();
+          renderNotesList();
+          renderWeightsList();
+          renderBreedingList();
+          renderProfileList();
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
@@ -7908,14 +8225,16 @@
       const btn = modal.querySelector('#confirmEditOwner');
       btn.disabled = true;
       await addOwnerIfNew(owner);
+      const body = { owner: owner||null };
       try{
         const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
           method:'PATCH',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ owner: owner||null })
+          body: JSON.stringify(body)
         });
         const idx = cows.findIndex(c=>c.number===targetNum);
         if(idx !== -1) cows[idx] = updated[0];
+        saveOfflineCache();
         closeModal();
         refreshOpenCowHeaders();
         renderList();
@@ -7926,8 +8245,29 @@
         renderProfileList();
         showToast('Owner updated');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure){
+          const idx = cows.findIndex(c=>c.number===targetNum);
+          if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingOwnerSync: true });
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'update', table: 'cows', field: 'owner', cowNumber: targetNum,
+            method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(targetNum),
+            body
+          });
+          saveOfflineCache();
+          closeModal();
+          refreshOpenCowHeaders();
+          renderList();
+          renderCalvingList();
+          renderNotesList();
+          renderWeightsList();
+          renderBreedingList();
+          renderProfileList();
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
@@ -7951,21 +8291,39 @@
       const btn = modal.querySelector('#confirmEditGroup');
       btn.disabled = true;
       await addGroupIfNew(groupVal);
+      const body = { cow_group: groupVal||null };
       try{
         const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
           method:'PATCH',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ cow_group: groupVal||null })
+          body: JSON.stringify(body)
         });
         const idx = cows.findIndex(c=>c.number===targetNum);
         if(idx !== -1) cows[idx] = updated[0];
+        saveOfflineCache();
         closeModal();
         refreshOpenCowHeaders();
         renderProfileList();
         showToast('Group updated');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure){
+          const idx = cows.findIndex(c=>c.number===targetNum);
+          if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingGroupSync: true });
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'update', table: 'cows', field: 'cow_group', cowNumber: targetNum,
+            method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(targetNum),
+            body
+          });
+          saveOfflineCache();
+          closeModal();
+          refreshOpenCowHeaders();
+          renderProfileList();
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
@@ -7992,14 +8350,16 @@
       const status = modal.querySelector('#editStatusSelect').value;
       const btn = modal.querySelector('#confirmEditStatus');
       btn.disabled = true;
+      const body = { status: status };
       try{
         const updated = await api('/cows?number=eq.' + encodeURIComponent(targetNum), {
           method:'PATCH',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ status: status })
+          body: JSON.stringify(body)
         });
         const idx = cows.findIndex(c=>c.number===targetNum);
         if(idx !== -1) cows[idx] = updated[0];
+        saveOfflineCache();
         closeModal();
         refreshOpenCowHeaders();
         renderList();
@@ -8012,8 +8372,31 @@
         if(homeTotalEl) homeTotalEl.textContent = cows.filter(isActiveStatus).length;
         showToast('Status updated');
       }catch(e){
-        btn.disabled = false;
-        showToast('Could not save — try again');
+        if(e && e.isNetworkFailure){
+          const idx = cows.findIndex(c=>c.number===targetNum);
+          if(idx !== -1) cows[idx] = Object.assign({}, cows[idx], body, { _pendingStatusSync: true });
+          queuePendingWrite({
+            localId: makeLocalId('pw'),
+            kind: 'update', table: 'cows', field: 'status', cowNumber: targetNum,
+            method: 'PATCH', path: '/cows?number=eq.' + encodeURIComponent(targetNum),
+            body
+          });
+          saveOfflineCache();
+          closeModal();
+          refreshOpenCowHeaders();
+          renderList();
+          renderCalvingList();
+          renderNotesList();
+          renderWeightsList();
+          renderBreedingList();
+          renderProfileList();
+          const homeTotalEl = document.getElementById('homeTotalCattle');
+          if(homeTotalEl) homeTotalEl.textContent = cows.filter(isActiveStatus).length;
+          showToast('Saved on this phone — will sync when you have signal');
+        } else {
+          btn.disabled = false;
+          showToast('Could not save — try again');
+        }
       }
     });
   }
