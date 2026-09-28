@@ -580,8 +580,8 @@
 
     <div class="section-label">Vet</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-      <button class="btn" id="pregCheckReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🩺</span>Pre-Preg Check Report</button>
-      <button class="btn" id="vetCallReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Vet Call Report</button>
+      <button class="btn" id="pregCheckReportBtn" style="min-height:48px;white-space:nowrap;justify-content:flex-start;background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🩺</span>Pre-Preg Report</button>
+      <button class="btn" id="vetCallReportBtn" style="min-height:48px;white-space:nowrap;justify-content:flex-start;background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Vet Call Report</button>
     </div>
 
     <div class="section-label">Herd Reports</div>
@@ -3071,18 +3071,7 @@
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
     populateFieldCountFilters();
-    const savedFieldCountState = loadFieldCountState();
-    if(savedFieldCountState){
-      fieldCountChecked = new Set(savedFieldCountState.checked || []);
-      const locSel = document.getElementById('fieldCountLocationFilter');
-      const grpSel = document.getElementById('fieldCountGroupFilter');
-      if([...locSel.options].some(o=>o.value===savedFieldCountState.location)) locSel.value = savedFieldCountState.location;
-      if([...grpSel.options].some(o=>o.value===savedFieldCountState.group)) grpSel.value = savedFieldCountState.group;
-      document.getElementById('fieldCountCalvesOnly').checked = !!savedFieldCountState.calvesOnly;
-      document.getElementById('fieldCountBornSince').value = savedFieldCountState.bornSince || '';
-    } else {
-      fieldCountChecked.clear();
-    }
+    fieldCountChecked.clear();
     renderFieldCountList();
     window.scrollTo(0,0);
   }
@@ -3314,24 +3303,6 @@
     requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
   }
   let fieldCountChecked = new Set();
-  const FIELD_COUNT_STATE_KEY = 'fieldCountState_v1';
-  function loadFieldCountState(){
-    try{
-      const raw = localStorage.getItem(FIELD_COUNT_STATE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch(e){ return null; }
-  }
-  function saveFieldCountState(){
-    try{
-      localStorage.setItem(FIELD_COUNT_STATE_KEY, JSON.stringify({
-        checked: [...fieldCountChecked],
-        location: document.getElementById('fieldCountLocationFilter').value,
-        group: document.getElementById('fieldCountGroupFilter').value,
-        calvesOnly: document.getElementById('fieldCountCalvesOnly').checked,
-        bornSince: document.getElementById('fieldCountBornSince').value
-      }));
-    }catch(e){ console.error('Could not save field count state', e); }
-  }
   function populateFieldCountFilters(){
     const locSel = document.getElementById('fieldCountLocationFilter');
     const grpSel = document.getElementById('fieldCountGroupFilter');
@@ -3380,7 +3351,6 @@
       row.addEventListener('click', ()=>{
         if(fieldCountChecked.has(cow.number)) fieldCountChecked.delete(cow.number);
         else fieldCountChecked.add(cow.number);
-        saveFieldCountState();
         renderFieldCountList();
       });
       listEl.appendChild(row);
@@ -3431,11 +3401,11 @@
   document.getElementById('vetCallReportDate').addEventListener('change', renderVetCallReport);
   document.getElementById('vetCallReportPrintBtn').addEventListener('click', printVetCallReport);
   document.getElementById('fieldCountHomeBtn').addEventListener('click', showHome);
-  document.getElementById('fieldCountLocationFilter').addEventListener('change', ()=>{ saveFieldCountState(); renderFieldCountList(); });
-  document.getElementById('fieldCountGroupFilter').addEventListener('change', ()=>{ saveFieldCountState(); renderFieldCountList(); });
-  document.getElementById('fieldCountCalvesOnly').addEventListener('change', ()=>{ saveFieldCountState(); renderFieldCountList(); });
-  document.getElementById('fieldCountBornSince').addEventListener('change', ()=>{ saveFieldCountState(); renderFieldCountList(); });
-  document.getElementById('fieldCountClearBtn').addEventListener('click', ()=>{ fieldCountChecked.clear(); saveFieldCountState(); renderFieldCountList(); });
+  document.getElementById('fieldCountLocationFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountGroupFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountCalvesOnly').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountBornSince').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountClearBtn').addEventListener('click', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
   document.getElementById('fieldCountPrintBtn').addEventListener('click', printFieldCount);
   function showFarmOperations(){
     setHeaderTitle('Farm', 'Operations');
