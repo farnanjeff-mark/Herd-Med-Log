@@ -26,7 +26,7 @@
   body{margin:0;background:var(--paper);color:var(--ink);font-family:'Georgia','Iowan Old Style',serif;-webkit-font-smoothing:antialiased;}
   .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--paper);}
 
-  .header{padding:22px 28px 20px;border-bottom:3px solid var(--ink);}
+  .header{padding:22px 28px 20px;}
   .eyebrow{font-family:Arial,sans-serif;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--barn);margin:0 0 4px;}
   .h1{font-family:Arial,sans-serif;font-weight:700;font-size:15px;margin:4px 0 0;letter-spacing:.08em;text-transform:uppercase;color:var(--barn);}
   .company-name{font-family:Arial,sans-serif;font-weight:700;font-size:26px;margin:0;letter-spacing:.01em;}
@@ -205,6 +205,7 @@
     font-size:28px;line-height:1;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.3);
     display:flex;align-items:center;justify-content:center;
   }
+  #fabAdd{display:none !important;}
   .fab:active{transform:translateX(calc(-50% + (min(480px,100vw) - 40px)/2 - 26px)) scale(.95);}
 
   .modal-backdrop{position:fixed;inset:0;background:rgba(43,38,32,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;}
@@ -243,8 +244,8 @@
     <div style="width:100%;display:flex;justify-content:center;">
       <div style="width:100%;background:#fff;border:2px solid #2E88C4;border-radius:10px;padding:10px 18px;box-shadow:0 3px 8px rgba(0,0,0,.18);">
         <div style="text-align:center;">
-          <p class="company-name" style="margin:0;">Farnan Cattle</p>
-          <h1 class="h1" id="headerTitle" style="margin:0;">Herd <span>Ledger</span></h1>
+          <p class="company-name" style="margin:0;white-space:nowrap;font-size:clamp(17px,5.8vw,26px);">Farnan Cattle Company</p>
+          <h1 class="h1 hidden" id="headerTitle" style="margin:0;"></h1>
         </div>
       </div>
     </div>
@@ -254,11 +255,11 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:4px 10px;">
-      <button class="btn btn-full" id="homeProfileBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;padding:14px 16px;font-size:16px;margin-bottom:16px;margin-top:0;display:flex;align-items:center;justify-content:center;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">🐮</span>Cow Profile</span></button>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button class="btn" id="homeUtilitiesBtn" style="background:#2E88C4;color:#fff;border-color:#fff;border-width:1.5px;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
-        <button class="btn" id="homeReportsBtn" style="background:#2E88C4;color:#fff;border-color:#fff;border-width:1.5px;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
-        <button class="btn" id="homeFarmOperationsBtn" style="background:#2E88C4;color:#fff;border-color:#fff;border-width:1.5px;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🚜</span>Farm Ops</button>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button class="btn" id="homeProfileBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;flex:1 1 0;min-width:0;padding:8px 2px;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;"><span style="font-size:22px;line-height:1;">🐮</span>Profile</button>
+        <button class="btn" id="homeUtilitiesBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;flex:1 1 0;min-width:0;padding:8px 2px;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;"><span style="font-size:22px;line-height:1;">🛠️</span>Utilities</button>
+        <button class="btn" id="homeReportsBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;flex:1 1 0;min-width:0;padding:8px 2px;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;"><span style="font-size:22px;line-height:1;">📊</span>Reports</button>
+        <button class="btn" id="homeFarmOperationsBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;flex:1 1 0;min-width:0;padding:8px 2px;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;"><span style="font-size:22px;line-height:1;">🚜</span>Farm Ops</button>
       </div>
       <div style="max-width:280px;margin:0 auto;padding-top:20px;">
         <div id="homeQuickSearchDisplay" style="background:#fff;border:2px solid #0C5A8E;border-radius:10px;padding:10px;font-size:26px;font-weight:700;text-align:center;min-height:40px;margin-bottom:8px;letter-spacing:.05em;color:var(--ink);">&nbsp;</div>
@@ -327,7 +328,10 @@
           <span id="homeSyncHoldBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
           <span id="homeSyncHoldLabel" style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Sync On</span>
         </div>
-        <div style="flex:1;"></div>
+        <div id="homeAddCowBtn" role="button" aria-label="Add cow" title="Add cow" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--barn);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;color:#fff;font-family:Arial,sans-serif;user-select:none;-webkit-user-select:none;">
+          <span style="font-size:32px;font-weight:700;line-height:1;">+</span>
+          <span style="font-size:10px;font-weight:500;">Add Cow</span>
+        </div>
       </div>
     </div>
   </div>
@@ -2063,7 +2067,9 @@
   }
 
   function setHeaderTitle(text, highlight){
-    document.getElementById('headerTitle').innerHTML = text + (highlight ? ` <span>${highlight}</span>` : '');
+    const ht = document.getElementById('headerTitle');
+    ht.innerHTML = text + (highlight ? ` <span>${highlight}</span>` : '');
+    ht.classList.toggle('hidden', !text && !highlight);
   }
   function showHome(){
     currentCow = null;
@@ -2080,7 +2086,7 @@
     if(profileLocationGroupFilterEl) profileLocationGroupFilterEl.value = '';
     if(weightsSearchBox) weightsSearchBox.value = '';
     if(breedingSearchBox) breedingSearchBox.value = '';
-    setHeaderTitle('Herd', 'Ledger');
+    setHeaderTitle('', '');
     homeView.classList.remove('hidden');
     listView.classList.add('hidden');
     detailView.classList.add('hidden');
@@ -7324,6 +7330,7 @@
   function editGeneralNoteModal(record){ generalNoteModal(record); }
 
   document.getElementById('fabAdd').addEventListener('click', addCowModal);
+  document.getElementById('homeAddCowBtn').addEventListener('click', addCowModal);
   document.getElementById('listHomeBtn').addEventListener('click', showHome);
   document.getElementById('detailHomeBtn').addEventListener('click', showHome);
   document.getElementById('calvingListHomeBtn').addEventListener('click', showHome);
