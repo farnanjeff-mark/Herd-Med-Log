@@ -243,6 +243,32 @@
 .rc-check{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:7px;border:2px solid var(--rc-color);background:#fff;flex-shrink:0;cursor:pointer;position:relative;margin:0;}
 .rc-check:checked{background:var(--rc-color);}
 .rc-check:checked::after{content:'\2713';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:16px;font-weight:700;line-height:1;}
+
+  /* ===== Vault (added) ===== */
+  .vlt{position:fixed;inset:0;z-index:80;background:var(--paper);overflow:auto;overscroll-behavior:contain;}
+  .vlt-wrap{max-width:960px;margin:0 auto;padding:16px 18px 60px;}
+  .vlt-top{display:flex;gap:10px;align-items:center;margin-bottom:16px;}
+  .vlt-warn{background:#f6e3e1;border:2px solid var(--barn);color:var(--barn);border-radius:10px;padding:12px 14px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;margin-bottom:14px;line-height:1.45;}
+  .vlt-note{background:#e6f1f9;border:2px solid #2E88C4;color:#0C5A8E;border-radius:10px;padding:12px 14px;font-family:Arial,sans-serif;font-size:14px;margin-bottom:14px;line-height:1.45;}
+  .vlt-msg{font-family:Arial,sans-serif;font-size:14px;color:var(--barn);min-height:20px;margin:6px 0 10px;}
+  .vlt-narrow{max-width:480px;}
+  .vlt-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center;}
+  .vlt-bar input[type="text"],.vlt-bar input[type="search"]{flex:1 1 200px;background:#fff;}
+  .vlt-count{font-family:Arial,sans-serif;font-size:14px;color:#6b6350;margin:0 0 8px;}
+  .vlt-scroll{overflow-x:auto;background:#fff;border:2px solid #2E88C4;border-radius:10px;}
+  .vlt table{border-collapse:collapse;width:100%;min-width:760px;font-family:Arial,sans-serif;font-size:14px;}
+  .vlt th{background:#0C5A8E;color:#fff;text-align:left;padding:10px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
+  .vlt td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:top;word-break:break-word;white-space:pre-wrap;}
+  .vlt tbody tr:nth-child(even) td{background:#f4f9fd;}
+  .vlt td.vlt-pw{font-family:'Courier New',monospace;}
+  .vlt td.vlt-act{white-space:nowrap;}
+  .vlt td.vlt-act .btn{margin:0 4px 4px 0;}
+  .vlt-empty{padding:18px;font-family:Arial,sans-serif;color:#6b6350;text-align:center;}
+  .vlt-toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:20px;font-family:Arial,sans-serif;font-size:13px;z-index:90;opacity:0;transition:opacity .25s;pointer-events:none;max-width:85%;text-align:center;}
+  .vlt-toast.show{opacity:1;}
+  .vlt-check{display:flex;gap:10px;align-items:flex-start;font-family:Arial,sans-serif;font-size:14px;margin:12px 0;line-height:1.4;}
+  .vlt-check input{width:auto;margin-top:3px;flex-shrink:0;}
+  @media print{ #vaultOverlay,.vlt-toast{display:none !important;} }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
@@ -381,6 +407,9 @@
       <button class="btn" id="manageReasonsBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Reasons</button>
       <button class="btn" id="manageCustomAIBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🧪</span>Custom AI</button>
     </div>
+
+    <div class="section-label">Security</div>
+    <button class="btn btn-nav-tool btn-full" id="vaultBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🔐</span>&nbsp;&nbsp;Vault</button>
 
     <div class="section-label">Help</div>
     <button class="btn btn-outline btn-full" id="textListEntryBtn" style="padding:11px 14px;font-size:14px;margin-bottom:8px;"><span style="font-size:18px;">✉️</span>&nbsp;&nbsp;Text a List</button>
@@ -1303,6 +1332,93 @@
 
 
 <div id="toast" class="toast"></div>
+<div id="vaultOverlay" class="vlt hidden" role="dialog" aria-modal="true" aria-label="Vault">
+  <div class="vlt-wrap">
+    <div class="vlt-top">
+      <button class="btn btn-outline" id="vltClose" type="button" style="padding:12px 14px;font-size:14px;"><span style="font-size:20px;">🏠</span>&nbsp;&nbsp;Close Vault</button>
+    </div>
+    <div class="modal-title" style="margin-bottom:12px;">🔐 Vault</div>
+
+    <!-- Unlock -->
+    <div id="vltLockPanel" class="vlt-narrow">
+      <div class="field">
+        <label for="vltPw">Vault password</label>
+        <input type="password" id="vltPw" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      </div>
+      <div class="vlt-msg" id="vltLockMsg" role="alert"></div>
+      <button class="btn btn-pasture btn-full" id="vltUnlockBtn" type="button" style="padding:12px 14px;font-size:15px;margin-bottom:10px;">Unlock</button>
+      <button class="btn btn-outline btn-full" id="vltShowCreateBtn" type="button" style="padding:11px 14px;font-size:14px;">First time? Create Vault</button>
+    </div>
+
+    <!-- Create -->
+    <div id="vltCreatePanel" class="vlt-narrow hidden">
+      <div class="vlt-warn">WARNING: If you forget this Vault password, your passwords CANNOT be recovered. Not by you, not by Claude, not by anyone. There is no reset. Write it down and keep it somewhere safe.</div>
+      <div class="vlt-note">Use a Vault password that is different from every other password. At least 12 characters. A few random words in a row works well.</div>
+      <div class="field">
+        <label for="vltNewPw">New Vault password</label>
+        <input type="password" id="vltNewPw" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      </div>
+      <div class="field">
+        <label for="vltNewPw2">Type it again</label>
+        <input type="password" id="vltNewPw2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      </div>
+      <label class="vlt-check"><input type="checkbox" id="vltAck" /><span>I understand that if I forget this password, my Vault cannot be recovered.</span></label>
+      <div class="vlt-msg" id="vltCreateMsg" role="alert"></div>
+      <button class="btn btn-pasture btn-full" id="vltCreateBtn" type="button" style="padding:12px 14px;font-size:15px;margin-bottom:10px;">Create Vault</button>
+      <button class="btn btn-outline btn-full" id="vltBackBtn" type="button" style="padding:11px 14px;font-size:14px;">Back</button>
+    </div>
+
+    <!-- Main table -->
+    <div id="vltMainPanel" class="hidden">
+      <div class="vlt-bar">
+        <input type="search" id="vltSearch" placeholder="Search holder, name, user name, notes" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="vlt-bar">
+        <button class="btn btn-pasture" id="vltAddBtn" type="button">+ Add</button>
+        <button class="btn btn-nav-tool" id="vltImportBtn" type="button">Import CSV</button>
+        <button class="btn btn-nav-tool" id="vltExportBtn" type="button">Export Backup</button>
+        <button class="btn btn-barn" id="vltLockNowBtn" type="button">Lock Now</button>
+        <input type="file" id="vltFile" accept=".csv,text/csv" class="hidden" />
+      </div>
+      <div class="vlt-count" id="vltCount"></div>
+      <div class="vlt-scroll">
+        <table>
+          <thead><tr><th>Account Holder</th><th>Name</th><th>User Name</th><th>Password</th><th>Notes</th><th>Actions</th></tr></thead>
+          <tbody id="vltBody"></tbody>
+        </table>
+        <div class="vlt-empty hidden" id="vltEmpty"></div>
+      </div>
+    </div>
+
+    <!-- Add / Edit -->
+    <div id="vltFormPanel" class="vlt-narrow hidden">
+      <div class="modal-title" id="vltFormTitle" style="font-size:19px;">Add Entry</div>
+      <div class="field"><label for="vltFH">Account Holder</label><input type="text" id="vltFH" autocomplete="off" spellcheck="false" /></div>
+      <div class="field"><label for="vltFN">Name</label><input type="text" id="vltFN" autocomplete="off" spellcheck="false" /></div>
+      <div class="field"><label for="vltFU">User Name</label><input type="text" id="vltFU" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" /></div>
+      <div class="field"><label for="vltFP">Password</label><input type="text" id="vltFP" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" /></div>
+      <div class="field"><label for="vltFT">Notes</label><textarea id="vltFT" rows="3" autocomplete="off"></textarea></div>
+      <div class="vlt-msg" id="vltFormMsg" role="alert"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="vltFormCancel" type="button">Cancel</button>
+        <button class="btn btn-pasture" id="vltFormSave" type="button">Save</button>
+      </div>
+    </div>
+
+    <!-- Import preview -->
+    <div id="vltImportPanel" class="vlt-narrow hidden">
+      <div class="modal-title" style="font-size:19px;">Import CSV</div>
+      <div class="vlt-note" id="vltImportInfo"></div>
+      <div class="vlt-warn" id="vltImportWarn" style="font-weight:400;">The CSV file on your device is NOT encrypted. After importing, delete that file (and empty your Trash / Recycle Bin).</div>
+      <div class="vlt-msg" id="vltImportMsg" role="alert"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="vltImportCancel" type="button">Cancel</button>
+        <button class="btn btn-pasture" id="vltImportGo" type="button">Import</button>
+      </div>
+    </div>
+  </div>
+  <div class="vlt-toast" id="vltToast" role="status"></div>
+</div>
 
 <script>
 (function(){
@@ -12301,6 +12417,569 @@
 })();
 </script>
 
+<script>
+/* ===== CHAmp Vault (added) =====
+   Everything here is self-contained. It does not touch any other part of the app.
+   Security summary:
+   - All fields are encrypted in the browser (AES-GCM, new random IV every save) BEFORE anything is sent.
+   - Key = PBKDF2(SHA-256, 250,000 iterations, random salt) from the Vault password. Non-extractable, memory only.
+   - The Vault password and key are never stored or sent. Only a separate derived login secret is sent
+     to sign in to the Vault-only Supabase account (it cannot decrypt anything).
+   - No console output anywhere in this block, on purpose.
+*/
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://nuutfigyhjyqhtxotuln.supabase.co';
+  var SB_KEY = 'sb_publishable_jvBVaIs5ZYmOUuE8o28mqQ_RMipD5Xw';
+  var VAULT_EMAIL = 'farnan.jeff@gmail.com';
+  var TABLE = '/rest/v1/vault_entries';
+  var ITER = 250000;
+  var IDLE_MS = 5 * 60 * 1000;
+  var CLIP_MS = 30 * 1000;
+  var MIN_PW = 12;
+  var LOGIN_LABEL = 'champ-vault-login-v1';
+  var VERIFY_TEXT = 'champ-vault-ok';
+
+  var te = new TextEncoder();
+  var td = new TextDecoder();
+
+  // In-memory state only. Nothing here is ever written to storage.
+  var S = { key:null, token:null, refresh:null, meta:null, entries:[], idleT:null, clipT:null, lastAct:0, editId:null, importRows:null };
+
+  function $(id){ return document.getElementById(id); }
+  var overlay = $('vaultOverlay');
+  if(!overlay) return;
+
+  var P = { lock:$('vltLockPanel'), create:$('vltCreatePanel'), main:$('vltMainPanel'), form:$('vltFormPanel'), imp:$('vltImportPanel') };
+  function showPanel(name){
+    for(var k in P){ if(Object.prototype.hasOwnProperty.call(P,k)) P[k].classList.toggle('hidden', k !== name); }
+    overlay.scrollTop = 0;
+  }
+  function setMsg(id, text){ $(id).textContent = text || ''; }
+
+  var toastT = null;
+  function toast(msg){
+    var t = $('vltToast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+  }
+
+  // ---------- base64 ----------
+  function b64(buf){
+    var u = new Uint8Array(buf), s = '';
+    for(var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]);
+    return btoa(s);
+  }
+  function unb64(str){
+    var s = atob(str), u = new Uint8Array(s.length);
+    for(var i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+    return u;
+  }
+
+  // ---------- crypto ----------
+  function baseKey(password){
+    return crypto.subtle.importKey('raw', te.encode(password.normalize('NFKC')), 'PBKDF2', false, ['deriveBits','deriveKey']);
+  }
+  // Login secret: used ONLY to sign in to the Vault-only account. Different derivation from the encryption key.
+  async function loginSecret(password){
+    var bk = await baseKey(password);
+    var bits = await crypto.subtle.deriveBits({ name:'PBKDF2', hash:'SHA-256', salt:te.encode(LOGIN_LABEL), iterations:ITER }, bk, 256);
+    return b64(bits);
+  }
+  // Encryption key: random per-vault salt, non-extractable, AES-GCM.
+  async function deriveEncKey(password, saltBytes, iterations){
+    var bk = await baseKey(password);
+    return crypto.subtle.deriveKey({ name:'PBKDF2', hash:'SHA-256', salt:saltBytes, iterations:iterations }, bk, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
+  }
+  async function encryptText(str){
+    var iv = crypto.getRandomValues(new Uint8Array(12));   // new random IV for every save
+    var ct = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv:iv }, S.key, te.encode(str)));
+    var out = new Uint8Array(iv.length + ct.length);
+    out.set(iv, 0); out.set(ct, iv.length);
+    return b64(out);
+  }
+  async function decryptText(payload){
+    var all = unb64(payload);
+    var pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv:all.slice(0,12) }, S.key, all.slice(12));
+    return td.decode(pt);
+  }
+
+  // ---------- network ----------
+  async function rawFetch(path, method, body, token, extra){
+    var headers = { 'apikey': SB_KEY, 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token || SB_KEY) };
+    if(extra){ for(var k in extra){ if(Object.prototype.hasOwnProperty.call(extra,k)) headers[k] = extra[k]; } }
+    var res = await fetch(SB_URL + path, { method: method, headers: headers, body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store' });
+    var json = null;
+    try{ json = await res.json(); }catch(e){ json = null; }
+    return { ok: res.ok, status: res.status, json: json };
+  }
+  function setSession(j){
+    S.token = j.access_token;
+    S.refresh = j.refresh_token || null;
+  }
+  async function refreshSession(){
+    if(!S.refresh) return false;
+    try{
+      var r = await rawFetch('/auth/v1/token?grant_type=refresh_token', 'POST', { refresh_token: S.refresh });
+      if(r.ok && r.json && r.json.access_token){ setSession(r.json); return true; }
+    }catch(e){}
+    return false;
+  }
+  // Authenticated call. On an expired sign-in it refreshes once, otherwise locks.
+  async function api(path, method, body, extra){
+    var r = await rawFetch(path, method, body, S.token, extra);
+    if(r.status === 401){
+      if(await refreshSession()){ r = await rawFetch(path, method, body, S.token, extra); }
+      if(r.status === 401){ lock('Your session expired. Please unlock again.'); throw new Error('expired'); }
+    }
+    return r;
+  }
+  function signOutQuiet(token){
+    if(!token) return;
+    try{ rawFetch('/auth/v1/logout', 'POST', {}, token).catch(function(){}); }catch(e){}
+  }
+
+  // ---------- lock / idle ----------
+  function touch(){
+    if(!S.key) return;
+    S.lastAct = Date.now();
+    clearTimeout(S.idleT);
+    S.idleT = setTimeout(function(){ lock('Locked after 5 minutes of no activity.'); }, IDLE_MS);
+  }
+  function wipeFields(){
+    ['vltPw','vltNewPw','vltNewPw2','vltSearch','vltFH','vltFN','vltFU','vltFP','vltFT','vltFile'].forEach(function(id){ var e = $(id); if(e) e.value = ''; });
+    $('vltAck').checked = false;
+    $('vltBody').textContent = '';
+    $('vltCount').textContent = '';
+    setMsg('vltCreateMsg',''); setMsg('vltFormMsg',''); setMsg('vltImportMsg','');
+  }
+  function lock(message){
+    var tok = S.token;
+    clearTimeout(S.idleT); S.idleT = null;
+    S.key = null; S.token = null; S.refresh = null; S.meta = null;
+    S.entries = []; S.editId = null; S.importRows = null;
+    wipeFields();
+    signOutQuiet(tok);
+    setMsg('vltLockMsg', message || '');
+    if(!overlay.classList.contains('hidden')){ showPanel('lock'); }
+  }
+  function openVault(){
+    overlay.classList.remove('hidden');
+    wipeFields();
+    setMsg('vltLockMsg','');
+    showPanel('lock');
+    setTimeout(function(){ try{ $('vltPw').focus(); }catch(e){} }, 50);
+  }
+  function closeVault(){
+    lock('');
+    overlay.classList.add('hidden');
+  }
+
+  ['pointerdown','keydown','input','touchstart','wheel'].forEach(function(ev){
+    overlay.addEventListener(ev, touch, { passive: true, capture: true });
+  });
+  overlay.addEventListener('scroll', touch, { passive: true });
+  document.addEventListener('visibilitychange', function(){
+    // Phones can pause timers while the tab is in the background; re-check the idle rule when we come back.
+    if(document.visibilityState === 'visible' && S.key && (Date.now() - S.lastAct) > IDLE_MS){
+      lock('Locked after 5 minutes of no activity.');
+    }
+  });
+  window.addEventListener('pagehide', function(){ lock(''); });
+
+  // ---------- clipboard ----------
+  async function copyPassword(pw){
+    try{
+      await navigator.clipboard.writeText(pw);
+    }catch(e){ toast('Could not copy.'); return; }
+    clearTimeout(S.clipT);
+    S.clipT = setTimeout(clearClipboard, CLIP_MS);
+    toast('Copied. Clears in 30 seconds.');
+  }
+  function clearClipboard(){
+    clearTimeout(S.clipT); S.clipT = null;
+    try{ navigator.clipboard.writeText(' ').catch(function(){}); }catch(e){}
+  }
+
+  // ---------- data load ----------
+  async function fetchAllRows(){
+    var rows = [], offset = 0, page = 1000;
+    for(;;){
+      var r = await api(TABLE + '?select=id,kind,salt,kdf_iterations,payload&order=created_at.asc&limit=' + page + '&offset=' + offset, 'GET');
+      if(!r.ok || !Array.isArray(r.json)) throw new Error('load');
+      rows = rows.concat(r.json);
+      if(r.json.length < page) break;
+      offset += page;
+    }
+    return rows;
+  }
+  async function decryptEntry(row){
+    try{
+      var d = JSON.parse(await decryptText(row.payload));
+      return { id: row.id, payload: row.payload, ok: true, h: d.h || '', n: d.n || '', u: d.u || '', p: d.p || '', t: d.t || '' };
+    }catch(e){
+      return { id: row.id, payload: row.payload, ok: false, h: '(could not decrypt)', n: '', u: '', p: '', t: '' };
+    }
+  }
+
+  // ---------- unlock ----------
+  var busy = false;
+  function setBusy(on, btnId, label){
+    busy = on;
+    var b = $(btnId);
+    if(!b) return;
+    b.disabled = on;
+    if(label !== undefined) b.textContent = on ? 'Working…' : label;
+  }
+
+  async function doUnlock(){
+    if(busy) return;
+    var pw = $('vltPw').value;
+    if(!pw){ setMsg('vltLockMsg','Enter your Vault password.'); return; }
+    setMsg('vltLockMsg','');
+    setBusy(true, 'vltUnlockBtn', 'Unlock');
+    try{
+      var secret = await loginSecret(pw);
+      var r = await rawFetch('/auth/v1/token?grant_type=password', 'POST', { email: VAULT_EMAIL, password: secret });
+      if(!r.ok || !r.json || !r.json.access_token){
+        setMsg('vltLockMsg', r.status === 429 ? 'Too many attempts. Wait a few minutes and try again.' : 'Could not unlock. Check the Vault password, or use "First time? Create Vault".');
+        return;
+      }
+      setSession(r.json);
+      var rows = await fetchAllRows();
+      var meta = null, entryRows = [];
+      rows.forEach(function(x){ if(x.kind === 'meta') meta = x; else entryRows.push(x); });
+      if(!meta){
+        signOutQuiet(S.token); S.token = null; S.refresh = null;
+        setMsg('vltLockMsg','Vault setup was not finished. Tap "First time? Create Vault" and enter the same password.');
+        return;
+      }
+      var iterations = Number(meta.kdf_iterations) || 0;
+      if(iterations < ITER){
+        signOutQuiet(S.token); S.token = null; S.refresh = null;
+        setMsg('vltLockMsg','Could not unlock.');
+        return;
+      }
+      S.key = await deriveEncKey(pw, unb64(meta.salt), iterations);
+      var check = await decryptText(meta.payload);
+      if(check !== VERIFY_TEXT){ throw new Error('verify'); }
+      S.meta = { salt: meta.salt, iterations: iterations, payload: meta.payload };
+      S.entries = await Promise.all(entryRows.map(decryptEntry));
+      $('vltPw').value = '';
+      setMsg('vltLockMsg','');
+      showPanel('main');
+      touch();
+      render();
+    }catch(e){
+      var tok = S.token;
+      S.key = null; S.token = null; S.refresh = null; S.meta = null; S.entries = [];
+      signOutQuiet(tok);
+      setMsg('vltLockMsg','Could not unlock.');
+    }finally{
+      $('vltPw').value = '';
+      setBusy(false, 'vltUnlockBtn', 'Unlock');
+    }
+  }
+
+  // ---------- create ----------
+  async function doCreate(){
+    if(busy) return;
+    var pw1 = $('vltNewPw').value, pw2 = $('vltNewPw2').value;
+    setMsg('vltCreateMsg','');
+    if(pw1.length < MIN_PW){ setMsg('vltCreateMsg','Use at least ' + MIN_PW + ' characters.'); return; }
+    if(pw1 !== pw2){ setMsg('vltCreateMsg','The two passwords do not match.'); return; }
+    if(!$('vltAck').checked){ setMsg('vltCreateMsg','Please tick the box to confirm you understand.'); return; }
+    setBusy(true, 'vltCreateBtn', 'Create Vault');
+    try{
+      var secret = await loginSecret(pw1);
+      var r = await rawFetch('/auth/v1/signup', 'POST', { email: VAULT_EMAIL, password: secret });
+      var code = r.json && (r.json.error_code || r.json.code);
+      if(r.ok && r.json && r.json.access_token){
+        setSession(r.json);
+      }else if(r.ok && r.json && !r.json.access_token){
+        setMsg('vltCreateMsg','Supabase is still asking for email confirmation. Turn off "Confirm email" in Supabase (Authentication, Sign In / Providers, Email), then try again.');
+        return;
+      }else if(code === 'user_already_exists' || code === 'email_exists' || r.status === 422 && code !== 'signup_disabled'){
+        var r2 = await rawFetch('/auth/v1/token?grant_type=password', 'POST', { email: VAULT_EMAIL, password: secret });
+        if(r2.ok && r2.json && r2.json.access_token){ setSession(r2.json); }
+        else{ setMsg('vltCreateMsg','A Vault already exists with a different password. Go back and use Unlock.'); return; }
+      }else if(code === 'signup_disabled'){
+        setMsg('vltCreateMsg','New sign-ups are turned off in Supabase. Turn them on just for setup, create the Vault, then turn them off again.');
+        return;
+      }else if(r.status === 429){
+        setMsg('vltCreateMsg','Too many attempts. Wait a few minutes and try again.');
+        return;
+      }else{
+        setMsg('vltCreateMsg','Could not create the Vault. Please try again.');
+        return;
+      }
+      // Already have a Vault on this account? Never overwrite it.
+      var existing = await api(TABLE + '?select=id&kind=eq.meta', 'GET');
+      if(existing.ok && Array.isArray(existing.json) && existing.json.length){
+        var tok0 = S.token; S.token = null; S.refresh = null; signOutQuiet(tok0);
+        setMsg('vltCreateMsg','A Vault already exists. Go back and use Unlock.');
+        return;
+      }
+      var salt = crypto.getRandomValues(new Uint8Array(16));
+      S.key = await deriveEncKey(pw1, salt, ITER);
+      var verifier = await encryptText(VERIFY_TEXT);
+      var ins = await api(TABLE, 'POST', { kind:'meta', salt: b64(salt), kdf_iterations: ITER, payload: verifier }, { 'Prefer': 'return=minimal' });
+      if(!ins.ok){
+        var tok1 = S.token; S.key = null; S.token = null; S.refresh = null; signOutQuiet(tok1);
+        setMsg('vltCreateMsg','Could not finish setup. Please try again.');
+        return;
+      }
+      S.meta = { salt: b64(salt), iterations: ITER, payload: verifier };
+      S.entries = [];
+      $('vltNewPw').value = ''; $('vltNewPw2').value = ''; $('vltAck').checked = false;
+      showPanel('main');
+      touch();
+      render();
+      toast('Vault created.');
+    }catch(e){
+      var tok2 = S.token; S.key = null; S.token = null; S.refresh = null; S.meta = null;
+      signOutQuiet(tok2);
+      setMsg('vltCreateMsg','Could not create the Vault. Please try again.');
+    }finally{
+      $('vltNewPw').value = ''; $('vltNewPw2').value = '';
+      setBusy(false, 'vltCreateBtn', 'Create Vault');
+    }
+  }
+
+  // ---------- table ----------
+  function mkBtn(label, cls, fn){
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn btn-sm ' + cls; b.textContent = label;
+    b.addEventListener('click', fn);
+    return b;
+  }
+  function cell(text, cls){
+    var td = document.createElement('td');
+    if(cls) td.className = cls;
+    td.textContent = text;
+    return td;
+  }
+  function render(){
+    var q = $('vltSearch').value.trim().toLowerCase();
+    var list = S.entries.filter(function(e){
+      if(!q) return true;
+      return (e.h + '\n' + e.n + '\n' + e.u + '\n' + e.t).toLowerCase().indexOf(q) !== -1;
+    });
+    list.sort(function(a,b){
+      return (a.h || '').localeCompare(b.h || '', undefined, { sensitivity:'base' }) || (a.n || '').localeCompare(b.n || '', undefined, { sensitivity:'base' });
+    });
+    var body = $('vltBody');
+    body.textContent = '';
+    list.forEach(function(e){
+      var tr = document.createElement('tr');
+      tr.appendChild(cell(e.h)); tr.appendChild(cell(e.n)); tr.appendChild(cell(e.u));
+      tr.appendChild(cell(e.p, 'vlt-pw')); tr.appendChild(cell(e.t));
+      var act = document.createElement('td'); act.className = 'vlt-act';
+      if(e.ok){
+        act.appendChild(mkBtn('Copy', 'btn-nav-tool', function(){ copyPassword(e.p); }));
+        act.appendChild(mkBtn('Edit', 'btn-outline', function(){ openForm(e); }));
+      }
+      act.appendChild(mkBtn('Delete', 'btn-barn', function(){ deleteEntry(e); }));
+      tr.appendChild(act);
+      body.appendChild(tr);
+    });
+    var total = S.entries.length;
+    $('vltCount').textContent = q ? (list.length + ' of ' + total + ' entries') : (total + (total === 1 ? ' entry' : ' entries'));
+    var empty = $('vltEmpty');
+    empty.classList.toggle('hidden', list.length !== 0);
+    empty.textContent = total === 0 ? 'No entries yet. Tap + Add or Import CSV.' : 'No entries match your search.';
+  }
+
+  // ---------- add / edit / delete ----------
+  function openForm(entry){
+    S.editId = entry ? entry.id : null;
+    $('vltFormTitle').textContent = entry ? 'Edit Entry' : 'Add Entry';
+    $('vltFH').value = entry ? entry.h : '';
+    $('vltFN').value = entry ? entry.n : '';
+    $('vltFU').value = entry ? entry.u : '';
+    $('vltFP').value = entry ? entry.p : '';
+    $('vltFT').value = entry ? entry.t : '';
+    setMsg('vltFormMsg','');
+    showPanel('form');
+    setTimeout(function(){ try{ $('vltFH').focus(); }catch(e){} }, 50);
+  }
+  function closeForm(){
+    ['vltFH','vltFN','vltFU','vltFP','vltFT'].forEach(function(id){ $(id).value = ''; });
+    S.editId = null;
+    showPanel('main');
+    render();
+  }
+  async function saveForm(){
+    if(busy || !S.key) return;
+    var d = { h: $('vltFH').value.trim(), n: $('vltFN').value.trim(), u: $('vltFU').value, p: $('vltFP').value, t: $('vltFT').value };
+    if(!d.h && !d.n){ setMsg('vltFormMsg','Enter an Account Holder or a Name.'); return; }
+    setBusy(true, 'vltFormSave', 'Save');
+    try{
+      var payload = await encryptText(JSON.stringify(d));
+      if(S.editId){
+        var r = await api(TABLE + '?id=eq.' + encodeURIComponent(S.editId) + '&kind=eq.entry', 'PATCH', { payload: payload, updated_at: new Date().toISOString() }, { 'Prefer': 'return=minimal' });
+        if(!r.ok) throw new Error('save');
+        var id = S.editId;
+        S.entries.forEach(function(e){ if(e.id === id){ e.payload = payload; e.ok = true; e.h = d.h; e.n = d.n; e.u = d.u; e.p = d.p; e.t = d.t; } });
+      }else{
+        var r2 = await api(TABLE, 'POST', { kind:'entry', payload: payload }, { 'Prefer': 'return=representation' });
+        if(!r2.ok || !Array.isArray(r2.json) || !r2.json[0]) throw new Error('save');
+        S.entries.push({ id: r2.json[0].id, payload: payload, ok: true, h: d.h, n: d.n, u: d.u, p: d.p, t: d.t });
+      }
+      closeForm();
+      toast('Saved.');
+    }catch(e){
+      if(S.key) setMsg('vltFormMsg','Could not save. Please try again.');
+    }finally{
+      setBusy(false, 'vltFormSave', 'Save');
+    }
+  }
+  async function deleteEntry(entry){
+    if(busy || !S.key) return;
+    if(!window.confirm('Delete this entry? This cannot be undone.')) return;
+    try{
+      var r = await api(TABLE + '?id=eq.' + encodeURIComponent(entry.id) + '&kind=eq.entry', 'DELETE', undefined, { 'Prefer': 'return=minimal' });
+      if(!r.ok) throw new Error('del');
+      S.entries = S.entries.filter(function(e){ return e.id !== entry.id; });
+      render();
+      toast('Deleted.');
+    }catch(e){
+      if(S.key) toast('Could not delete.');
+    }
+  }
+
+  // ---------- export (encrypted backup) ----------
+  function exportBackup(){
+    if(!S.key || !S.meta) return;
+    var pad = function(n){ return (n < 10 ? '0' : '') + n; };
+    var now = new Date();
+    var stamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+    var file = {
+      app: 'CHAmp Vault encrypted backup',
+      version: 1,
+      exported: now.toISOString(),
+      kdf: { name: 'PBKDF2-SHA-256', iterations: S.meta.iterations, salt: S.meta.salt },
+      cipher: 'AES-256-GCM (payload = base64 of 12-byte IV followed by ciphertext)',
+      verifier: S.meta.payload,
+      entries: S.entries.map(function(e){ return e.payload; })
+    };
+    var blob = new Blob([JSON.stringify(file, null, 1)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'champ-vault-backup-' + stamp + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    toast('Encrypted backup downloaded.');
+  }
+
+  // ---------- import CSV ----------
+  function parseCSV(text){
+    if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    var rows = [], row = [], f = '', q = false, i = 0, c;
+    while(i < text.length){
+      c = text[i];
+      if(q){
+        if(c === '"'){ if(text[i+1] === '"'){ f += '"'; i += 2; continue; } q = false; i++; continue; }
+        f += c; i++; continue;
+      }
+      if(c === '"'){ q = true; i++; continue; }
+      if(c === ','){ row.push(f); f = ''; i++; continue; }
+      if(c === '\r'){ i++; continue; }
+      if(c === '\n'){ row.push(f); rows.push(row); row = []; f = ''; i++; continue; }
+      f += c; i++;
+    }
+    if(f !== '' || row.length){ row.push(f); rows.push(row); }
+    return rows;
+  }
+  function handleFile(file){
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onerror = function(){ toast('Could not read that file.'); $('vltFile').value = ''; };
+    reader.onload = function(){
+      var text = String(reader.result || '');
+      $('vltFile').value = '';
+      var rows = parseCSV(text);
+      text = '';
+      var want = ['account holder','name','user name','password','notes'];
+      var head = (rows[0] || []).map(function(h){ return String(h).trim().toLowerCase(); });
+      var okHead = want.length === head.length && want.every(function(w, i){ return head[i] === w; });
+      if(!okHead){
+        toast('Headers must be: Account Holder, Name, User Name, Password, Notes');
+        return;
+      }
+      var out = [];
+      for(var r = 1; r < rows.length; r++){
+        var x = rows[r];
+        if(!x || x.every(function(v){ return String(v).trim() === ''; })) continue;
+        out.push({ h:(x[0]||'').trim(), n:(x[1]||'').trim(), u:x[2]||'', p:x[3]||'', t:x[4]||'' });
+      }
+      if(!out.length){ toast('That file has no entries.'); return; }
+      S.importRows = out;
+      $('vltImportInfo').textContent = 'Found ' + out.length + (out.length === 1 ? ' entry' : ' entries') + ' to import. They will be encrypted here in your browser before being saved.';
+      setMsg('vltImportMsg','');
+      showPanel('imp');
+    };
+    reader.readAsText(file);
+  }
+  async function runImport(){
+    if(busy || !S.key || !S.importRows) return;
+    var rows = S.importRows, done = 0, size = 50;
+    setBusy(true, 'vltImportGo', 'Import');
+    try{
+      for(var i = 0; i < rows.length; i += size){
+        var chunk = rows.slice(i, i + size);
+        var payloads = await Promise.all(chunk.map(function(d){ return encryptText(JSON.stringify(d)); }));
+        var r = await api(TABLE, 'POST', payloads.map(function(p){ return { kind:'entry', payload:p }; }), { 'Prefer': 'return=representation' });
+        if(!r.ok || !Array.isArray(r.json) || r.json.length !== chunk.length) throw new Error('import');
+        for(var j = 0; j < chunk.length; j++){
+          var d = chunk[j];
+          S.entries.push({ id: r.json[j].id, payload: payloads[j], ok: true, h:d.h, n:d.n, u:d.u, p:d.p, t:d.t });
+        }
+        done += chunk.length;
+      }
+      S.importRows = null;
+      showPanel('main');
+      render();
+      toast('Imported ' + done + (done === 1 ? ' entry.' : ' entries.') + ' Now delete the CSV file.');
+    }catch(e){
+      if(S.key){
+        // Reload from the database so the screen matches what was actually saved.
+        try{ await reloadEntries(); }catch(e2){}
+        setMsg('vltImportMsg','Stopped after ' + done + ' of ' + rows.length + ' entries. Check the table before trying again.');
+      }
+    }finally{
+      setBusy(false, 'vltImportGo', 'Import');
+    }
+  }
+  async function reloadEntries(){
+    var rows = await fetchAllRows();
+    S.entries = await Promise.all(rows.filter(function(x){ return x.kind !== 'meta'; }).map(decryptEntry));
+  }
+
+  // ---------- wiring ----------
+  var openBtn = $('vaultBtn');
+  if(openBtn) openBtn.addEventListener('click', openVault);
+  $('vltClose').addEventListener('click', closeVault);
+  $('vltUnlockBtn').addEventListener('click', doUnlock);
+  $('vltPw').addEventListener('keydown', function(e){ if(e.key === 'Enter') doUnlock(); });
+  $('vltShowCreateBtn').addEventListener('click', function(){ setMsg('vltLockMsg',''); $('vltPw').value = ''; showPanel('create'); });
+  $('vltBackBtn').addEventListener('click', function(){ wipeFields(); showPanel('lock'); });
+  $('vltCreateBtn').addEventListener('click', doCreate);
+  $('vltLockNowBtn').addEventListener('click', function(){ lock(''); });
+  $('vltSearch').addEventListener('input', render);
+  $('vltAddBtn').addEventListener('click', function(){ openForm(null); });
+  $('vltFormCancel').addEventListener('click', closeForm);
+  $('vltFormSave').addEventListener('click', saveForm);
+  $('vltExportBtn').addEventListener('click', exportBackup);
+  $('vltImportBtn').addEventListener('click', function(){ $('vltFile').click(); });
+  $('vltFile').addEventListener('change', function(e){ handleFile(e.target.files && e.target.files[0]); });
+  $('vltImportCancel').addEventListener('click', function(){ S.importRows = null; showPanel('main'); });
+  $('vltImportGo').addEventListener('click', runImport);
+})();
+</script>
 <div id="printListOutput"></div>
 <script>
   if ('serviceWorker' in navigator) {
