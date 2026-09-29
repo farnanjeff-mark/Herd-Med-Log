@@ -26,7 +26,7 @@
   body{margin:0;background:var(--paper);color:var(--ink);font-family:'Georgia','Iowan Old Style',serif;-webkit-font-smoothing:antialiased;}
   .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--paper);}
 
-  .header{padding:22px 28px 20px;border-bottom:3px solid var(--ink);}
+  .header{padding:22px 28px 20px;}
   .eyebrow{font-family:Arial,sans-serif;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--barn);margin:0 0 4px;}
   .h1{font-family:Arial,sans-serif;font-weight:700;font-size:15px;margin:4px 0 0;letter-spacing:.08em;text-transform:uppercase;color:var(--barn);}
   .company-name{font-family:Arial,sans-serif;font-weight:700;font-size:26px;margin:0;letter-spacing:.01em;}
@@ -216,6 +216,7 @@
     font-size:28px;line-height:1;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.3);
     display:flex;align-items:center;justify-content:center;
   }
+  #fabAdd{display:none !important;}
   .fab:active{transform:translateX(calc(-50% + (min(480px,100vw) - 40px)/2 - 26px)) scale(.95);}
 
   .modal-backdrop{position:fixed;inset:0;background:rgba(43,38,32,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;}
@@ -254,8 +255,8 @@
     <div style="width:100%;display:flex;justify-content:center;">
       <div style="width:100%;background:#fff;border:2px solid #2E88C4;border-radius:10px;padding:10px 18px;box-shadow:0 3px 8px rgba(0,0,0,.18);">
         <div style="text-align:center;">
-          <p class="company-name" style="margin:0;">Farnan Cattle</p>
-          <h1 class="h1" id="headerTitle" style="margin:0;">Herd <span>Ledger</span></h1>
+          <p class="company-name" style="margin:0;white-space:nowrap;font-size:clamp(17px,5.8vw,26px);">Farnan Cattle Company</p>
+          <h1 class="h1 hidden" id="headerTitle" style="margin:0;"></h1>
         </div>
       </div>
     </div>
@@ -266,11 +267,11 @@
 
   <div class="view" id="homeView">
     <div style="text-align:center;padding:4px 10px;">
-      <button class="btn btn-full" id="homeProfileBtn" style="background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;padding:14px 16px;font-size:16px;margin-bottom:16px;margin-top:0;display:flex;align-items:center;justify-content:center;"><span style="display:flex;align-items:center;gap:10px;"><span style="font-size:26px;">🐮</span>Cow Profile</span></button>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button class="btn" id="homeUtilitiesBtn" style="background:#2E88C4;color:#fff;border-color:#fff;border-width:1.5px;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🛠️</span>Utilities</button>
-        <button class="btn" id="homeReportsBtn" style="background:#2E88C4;color:#fff;border-color:#fff;border-width:1.5px;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">📊</span>Reports</button>
-        <button class="btn" id="homeFarmOperationsBtn" style="background:#2E88C4;color:#fff;border-color:#fff;border-width:1.5px;flex:1;padding:10px 4px;font-size:12px;flex-direction:column;gap:2px;"><span style="font-size:20px;">🚜</span>Farm Ops</button>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button class="btn" id="homeProfileBtn" style="min-height:62px;box-sizing:border-box;background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;flex:1 1 0;min-width:0;padding:8px 2px;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;"><span style="font-size:22px;line-height:1;">🐮</span>Profile</button>
+        <button class="btn" id="homeUtilitiesBtn" style="min-height:62px;box-sizing:border-box;background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;flex:1 1 0;min-width:0;padding:8px 2px;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;"><span style="font-size:22px;line-height:1;">🛠️</span>Utilities</button>
+        <button class="btn" id="homeReportsBtn" style="min-height:62px;box-sizing:border-box;background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;flex:1 1 0;min-width:0;padding:8px 2px;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;"><span style="font-size:22px;line-height:1;">📊</span>Reports</button>
+        <button class="btn" id="homeFarmOperationsBtn" style="min-height:62px;box-sizing:border-box;background:linear-gradient(135deg, #2E88C4, #0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;flex:1 1 0;min-width:0;padding:8px 2px;font-size:11px;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;"><span style="font-size:22px;line-height:1;">🚜</span>Farm Ops</button>
       </div>
       <div style="max-width:280px;margin:0 auto;padding-top:20px;">
         <div id="homeQuickSearchDisplay" style="background:#fff;border:2px solid #0C5A8E;border-radius:10px;padding:10px;font-size:26px;font-weight:700;text-align:center;min-height:40px;margin-bottom:8px;letter-spacing:.05em;color:var(--ink);">&nbsp;</div>
@@ -290,56 +291,68 @@
         </div>
         <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#fff;border-width:1.5px;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
       </div>
-      <div style="display:flex;gap:6px;padding-top:12px;padding-left:10px;padding-right:10px;">
-        <div id="homeCalvedWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+      <div style="display:flex;gap:6px;padding-top:12px;">
+        <div id="homeCalvedWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeCalvedBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Calved</span>
+          <span style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Calved</span>
         </div>
-        <div id="homeDueSoonWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeDueSoonWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeDueSoonBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Due Soon</span>
+          <span style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Due Soon</span>
         </div>
-        <div id="homeCalvedSinceWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeCalvedSinceWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeCalvedSinceBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span id="homeCalvedSinceLabel" style="font-family:Arial,sans-serif;font-size:9px;color:#fff;font-weight:500;">Set a date</span>
+          <span id="homeCalvedSinceLabel" style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Set date</span>
         </div>
-        <div id="homeTodaysActivityWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeTodaysActivityWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeTodaysActivityBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Activity</span>
+          <span style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Activity</span>
         </div>
       </div>
-      <div style="display:flex;gap:6px;padding-top:6px;padding-left:10px;padding-right:10px;">
-        <div id="homeTagNeededWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+      <div style="display:flex;gap:6px;padding-top:6px;">
+        <div id="homeTagNeededWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeTagNeededBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Tag</span>
+          <span style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Tag</span>
         </div>
-        <div id="homeFlaggedWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeFlaggedWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeFlaggedBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Flagged</span>
+          <span style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Flagged</span>
         </div>
-        <div id="homeOpenWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeOpenWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeOpenBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Open</span>
+          <span style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Open</span>
         </div>
-        <div id="homePregBtWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homePregBtWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homePregBtBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Preg BT</span>
+          <span style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Preg BT</span>
         </div>
       </div>
-      <div style="display:flex;gap:6px;padding-top:6px;margin-bottom:12px;padding-left:10px;padding-right:10px;">
-        <div id="homeTodoWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+      <div style="display:flex;gap:6px;padding-top:6px;">
+        <div id="homeTodoWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeTodoBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">To Do</span>
+          <span style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">To Do</span>
         </div>
-        <div id="homeSellWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#2E88C4;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeSellWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeSellBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Sell</span>
+          <span style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Sell</span>
         </div>
-        <div id="homeSyncHoldWrap" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#3C9142;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
+        <div id="homeSyncHoldWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#3C9142;border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
           <span id="homeSyncHoldBadge" style="font-size:26px;font-weight:700;color:#fff;line-height:1;">0</span>
-          <span id="homeSyncHoldLabel" style="font-family:Arial,sans-serif;font-size:10px;color:#fff;font-weight:500;">Sync On</span>
+          <span id="homeSyncHoldLabel" style="font-family:Arial,sans-serif;font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Sync On</span>
         </div>
-        <div style="flex:1;"></div>
+        <div id="homeAddCowBtn" role="button" aria-label="Add cow" title="Add cow" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--barn);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;color:#fff;font-family:Arial,sans-serif;user-select:none;-webkit-user-select:none;">
+          <span style="font-size:26px;font-weight:700;line-height:1;">+</span>
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">Add Cow</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;padding-top:6px;margin-bottom:12px;">
+        <div id="fieldCountBtn" role="button" aria-label="Field Count" style="flex:1;min-width:0;min-height:62px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;color:#fff;font-family:Arial,sans-serif;user-select:none;-webkit-user-select:none;">
+          <span style="font-size:24px;line-height:1;">✅</span>
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;line-height:1.1;text-align:center;">Field Count</span>
+        </div>
+        <div style="flex:1;min-width:0;"></div>
+        <div style="flex:1;min-width:0;"></div>
+        <div style="flex:1;min-width:0;"></div>
       </div>
     </div>
   </div>
@@ -592,14 +605,13 @@
 
     <div class="section-label">Vet</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-      <button class="btn" id="pregCheckReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🩺</span>Pre-Preg Check Report</button>
-      <button class="btn" id="vetCallReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Vet Call Report</button>
+      <button class="btn" id="pregCheckReportBtn" style="min-height:48px;white-space:nowrap;justify-content:flex-start;background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🩺</span>Pre-Preg Report</button>
+      <button class="btn" id="vetCallReportBtn" style="min-height:48px;white-space:nowrap;justify-content:flex-start;background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Vet Call Report</button>
     </div>
 
     <div class="section-label">Herd Reports</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
       <button class="btn" id="headcountByOwnerBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📊</span>Headcount</button>
-      <button class="btn" id="fieldCountBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">✅</span>Field Count</button>
       <button class="btn" id="biggestGainersBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📈</span>Biggest Gainers</button>
       <button class="btn" id="calvingReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐮</span>Calving Report</button>
       <button class="btn" id="deadCalvesBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">💔</span>Dead Calves</button>
@@ -2126,7 +2138,9 @@
   }
 
   function setHeaderTitle(text, highlight){
-    document.getElementById('headerTitle').innerHTML = text + (highlight ? ` <span>${highlight}</span>` : '');
+    const ht = document.getElementById('headerTitle');
+    ht.innerHTML = text + (highlight ? ` <span>${highlight}</span>` : '');
+    ht.classList.toggle('hidden', !text && !highlight);
   }
   function showHome(){
     currentCow = null;
@@ -2143,7 +2157,7 @@
     if(profileLocationGroupFilterEl) profileLocationGroupFilterEl.value = '';
     if(weightsSearchBox) weightsSearchBox.value = '';
     if(breedingSearchBox) breedingSearchBox.value = '';
-    setHeaderTitle('Herd', 'Ledger');
+    setHeaderTitle('', '');
     homeView.classList.remove('hidden');
     listView.classList.add('hidden');
     detailView.classList.add('hidden');
@@ -3134,18 +3148,7 @@
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
     populateFieldCountFilters();
-    const savedFieldCountState = loadFieldCountState();
-    if(savedFieldCountState){
-      fieldCountChecked = new Set(savedFieldCountState.checked || []);
-      const locSel = document.getElementById('fieldCountLocationFilter');
-      const grpSel = document.getElementById('fieldCountGroupFilter');
-      if([...locSel.options].some(o=>o.value===savedFieldCountState.location)) locSel.value = savedFieldCountState.location;
-      if([...grpSel.options].some(o=>o.value===savedFieldCountState.group)) grpSel.value = savedFieldCountState.group;
-      document.getElementById('fieldCountCalvesOnly').checked = !!savedFieldCountState.calvesOnly;
-      document.getElementById('fieldCountBornSince').value = savedFieldCountState.bornSince || '';
-    } else {
-      fieldCountChecked.clear();
-    }
+    fieldCountChecked.clear();
     renderFieldCountList();
     window.scrollTo(0,0);
   }
@@ -3377,24 +3380,6 @@
     requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
   }
   let fieldCountChecked = new Set();
-  const FIELD_COUNT_STATE_KEY = 'fieldCountState_v1';
-  function loadFieldCountState(){
-    try{
-      const raw = localStorage.getItem(FIELD_COUNT_STATE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch(e){ return null; }
-  }
-  function saveFieldCountState(){
-    try{
-      localStorage.setItem(FIELD_COUNT_STATE_KEY, JSON.stringify({
-        checked: [...fieldCountChecked],
-        location: document.getElementById('fieldCountLocationFilter').value,
-        group: document.getElementById('fieldCountGroupFilter').value,
-        calvesOnly: document.getElementById('fieldCountCalvesOnly').checked,
-        bornSince: document.getElementById('fieldCountBornSince').value
-      }));
-    }catch(e){ console.error('Could not save field count state', e); }
-  }
   function populateFieldCountFilters(){
     const locSel = document.getElementById('fieldCountLocationFilter');
     const grpSel = document.getElementById('fieldCountGroupFilter');
@@ -3443,7 +3428,6 @@
       row.addEventListener('click', ()=>{
         if(fieldCountChecked.has(cow.number)) fieldCountChecked.delete(cow.number);
         else fieldCountChecked.add(cow.number);
-        saveFieldCountState();
         renderFieldCountList();
       });
       listEl.appendChild(row);
@@ -3494,11 +3478,11 @@
   document.getElementById('vetCallReportDate').addEventListener('change', ()=> runWithBusyBanner('Building report…', 'Still building the report — this is taking longer than usual.', renderVetCallReport));
   document.getElementById('vetCallReportPrintBtn').addEventListener('click', printVetCallReport);
   document.getElementById('fieldCountHomeBtn').addEventListener('click', showHome);
-  document.getElementById('fieldCountLocationFilter').addEventListener('change', ()=>{ saveFieldCountState(); renderFieldCountList(); });
-  document.getElementById('fieldCountGroupFilter').addEventListener('change', ()=>{ saveFieldCountState(); renderFieldCountList(); });
-  document.getElementById('fieldCountCalvesOnly').addEventListener('change', ()=>{ saveFieldCountState(); renderFieldCountList(); });
-  document.getElementById('fieldCountBornSince').addEventListener('change', ()=>{ saveFieldCountState(); renderFieldCountList(); });
-  document.getElementById('fieldCountClearBtn').addEventListener('click', ()=>{ fieldCountChecked.clear(); saveFieldCountState(); renderFieldCountList(); });
+  document.getElementById('fieldCountLocationFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountGroupFilter').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountCalvesOnly').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountBornSince').addEventListener('change', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
+  document.getElementById('fieldCountClearBtn').addEventListener('click', ()=>{ fieldCountChecked.clear(); renderFieldCountList(); });
   document.getElementById('fieldCountPrintBtn').addEventListener('click', printFieldCount);
   function showFarmOperations(){
     setHeaderTitle('Farm', 'Operations');
@@ -7417,6 +7401,7 @@
   function editGeneralNoteModal(record){ generalNoteModal(record); }
 
   document.getElementById('fabAdd').addEventListener('click', addCowModal);
+  document.getElementById('homeAddCowBtn').addEventListener('click', addCowModal);
   document.getElementById('listHomeBtn').addEventListener('click', showHome);
   document.getElementById('detailHomeBtn').addEventListener('click', showHome);
   document.getElementById('calvingListHomeBtn').addEventListener('click', showHome);
@@ -11277,7 +11262,7 @@
     if(!badge || !label) return;
     if(!homeStatsSettings || !homeStatsSettings.calved_since_date){
       badge.textContent = '0';
-      label.textContent = 'Set a date';
+      label.textContent = 'Set date';
       return;
     }
     badge.textContent = calvedSinceEntries().length;
