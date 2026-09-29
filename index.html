@@ -1353,7 +1353,7 @@
     <!-- Create -->
     <div id="vltCreatePanel" class="vlt-narrow hidden">
       <div class="vlt-warn">WARNING: If you forget this Vault password, your passwords CANNOT be recovered. Not by you, not by Claude, not by anyone. There is no reset. Write it down and keep it somewhere safe.</div>
-      <div class="vlt-note">Use a Vault password that is different from every other password. At least 12 characters. A few random words in a row works well.</div>
+      <div class="vlt-note">Use a Vault password that is different from every other password. At least 8 characters. Longer is safer; a few random words in a row works well.</div>
       <div class="field">
         <label for="vltNewPw">New Vault password</label>
         <input type="password" id="vltNewPw" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
@@ -12437,7 +12437,7 @@
   var ITER = 250000;
   var IDLE_MS = 5 * 60 * 1000;
   var CLIP_MS = 30 * 1000;
-  var MIN_PW = 12;
+  var MIN_PW = 8;
   var LOGIN_LABEL = 'champ-vault-login-v1';
   var VERIFY_TEXT = 'champ-vault-ok';
 
