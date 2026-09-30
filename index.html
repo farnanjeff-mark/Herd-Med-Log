@@ -10788,12 +10788,27 @@
     const searchOn = f.search_on || 'cows';
     const inRange = d => (!dFrom || (d || '') >= dFrom) && (!dTo || (d || '') <= dTo);
 
-    const breedingUsed = !!(f.bred_to || f.pregnancy_method || f.natural_sire || f.open_only || f.preg_check_result) || searchOn === 'breedings';
+    // When the question is about calves, Bred To / ET / AI / Natural Sire describe the breeding that
+    // produced each calf (see linkedBreeding), and the date range means the calf's birth date.
+    const calfContext = searchOn === 'calvings';
+    const breedFilterActive = !!(f.bred_to || f.pregnancy_method || f.natural_sire);
+    const breedingUsed = calfContext
+      ? !!(f.open_only || f.preg_check_result)
+      : (breedFilterActive || !!(f.open_only || f.preg_check_result) || searchOn === 'breedings');
     const medUsed = !!(f.medicine || f.reason) || searchOn === 'treatments';
     const calvingUsed = !!(f.sire || f.calf_sex || f.birth_assist || f.calf_outcome || bwMin != null || bwMax != null || f.dam_cow) || searchOn === 'calvings';
     const weightUsed = wMin != null || wMax != null || searchOn === 'weights';
 
     const latestBreeding = n => [...breedingFor(n)].sort((a,b)=> (b.breed_date || '').localeCompare(a.breed_date || ''))[0];
+    // The app doesn't record which breeding made which calf, so use this cow's latest breeding
+    // on or before the birth date (ignored if it's more than 400 days earlier).
+    function linkedBreeding(n, cv){
+      const cands = breedingFor(n).filter(b=> b.breed_date && cv.calving_date && b.breed_date <= cv.calving_date)
+        .sort((a,b)=> b.breed_date.localeCompare(a.breed_date));
+      if(!cands.length) return null;
+      const days = (new Date(cv.calving_date + 'T00:00:00') - new Date(cands[0].breed_date + 'T00:00:00')) / 86400000;
+      return days <= 400 ? cands[0] : null;
+    }
     function mBreeding(n){
       const latest = latestBreeding(n);
       return breedingFor(n).filter(b=>{
@@ -10823,6 +10838,13 @@
       if(f.calf_outcome){
         const o = cv.promoted_to_cow_number ? 'kept' : (cv.calf_outcome || 'active');
         if(o !== f.calf_outcome) return false;
+      }
+      if(calfContext && breedFilterActive){
+        const lb = linkedBreeding(n, cv);
+        if(!lb) return false;
+        if(f.bred_to && lb.bred_to !== f.bred_to) return false;
+        if(f.pregnancy_method && lb.pregnancy_method !== f.pregnancy_method) return false;
+        if(f.natural_sire && !lc(lb.natural_sire).includes(lc(f.natural_sire))) return false;
       }
       return inRange(cv.calving_date);
     });
@@ -10873,7 +10895,10 @@
           };
           return (breedingUsed && !calvingUsed) ? (fromBreeding() || fromCalving()) : (fromCalving() || fromBreeding());
         }
-        case 'calving_date': return latestOf(mCalvings(n).map(x=>x.calving_date));
+        case 'calving_date': {
+          const ds = mCalvings(n).map(x=>x.calving_date).filter(Boolean).sort();
+          return ds.length ? (dir === 1 ? ds[0] : ds[ds.length - 1]) : '';
+        }
         case 'birth_weight': { const v = mCalvings(n).map(x=>x.birth_weight).filter(x=>x != null); return v.length ? Math.max(...v.map(Number)) : ''; }
         case 'breed_date': return latestOf(mBreeding(n).map(x=>x.breed_date));
         case 'weigh_date': return latestOf(weightsFor(n).map(x=>x.weigh_date));
@@ -10934,6 +10959,10 @@
           if(cv.sire) detail.push(`Sire: ${cv.sire}`);
           if(cv.birth_assist) detail.push(cv.birth_assist);
           if(cv.birth_weight != null) detail.push(`${cv.birth_weight} lbs`);
+          if(calfContext && breedFilterActive){
+            const lb = linkedBreeding(num, cv);
+            if(lb) detail.push(`Bred ${fmtDateShort(lb.breed_date)}${lb.pregnancy_method ? ' (' + lb.pregnancy_method + ')' : ''}`);
+          }
           entries.push({ date: cv.calving_date, num, type: 'Calving', details: detail.join(' — ') });
         });
       }
@@ -10966,7 +10995,11 @@
     // keep the table in the same order as the cows (so group headers line up), newest first within a cow
     const order = {};
     results.forEach((c, i)=>{ order[c.number] = i; });
-    entries.sort((a, b)=> (order[a.num] - order[b.num]) || (b.date || '').localeCompare(a.date || ''));
+    if(calfContext && sortBy === 'calving_date'){
+      entries.sort((a, b)=> ((a.date || '').localeCompare(b.date || '')) * dir || (order[a.num] - order[b.num]));
+    } else {
+      entries.sort((a, b)=> (order[a.num] - order[b.num]) || (b.date || '').localeCompare(a.date || ''));
+    }
 
     return { results, entries, groupOf, hasGroups: !!groupPrefix };
   }
