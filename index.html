@@ -885,6 +885,48 @@
       <label for="aiSearchBox">What do you want to find?</label>
       <textarea id="aiSearchBox" rows="3" maxlength="500" placeholder="Example: open cows in the south pasture, sorted by sire" style="background:#ffffff;resize:none;"></textarea>
     </div>
+    <div id="aiSearchHelpBox" style="background:#FFFFFF;border:2px solid #2E88C4;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);overflow:hidden;margin-bottom:14px;">
+      <button type="button" id="aiSearchHelpToggle" aria-expanded="false" aria-controls="aiSearchHelpPanel" style="width:100%;min-height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:#FFFFFF;color:#0C5A8E;border:none;padding:12px 14px;cursor:pointer;"><span>What can I search?</span><span id="aiSearchHelpArrow" style="font-size:16px;">&#9662;</span></button>
+      <div id="aiSearchHelpPanel" class="hidden" style="background:#F7F2E6;border-top:2px solid #2E88C4;padding:4px 14px 14px;">
+        <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;line-height:1.5;margin-top:10px;">Mix and match. For example: <b style="color:#2B2620;">open cows in the south pasture, sorted by sire</b></div>
+        <div style="margin-top:12px;">
+          <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Herd</div>
+          <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Location, Owner, Group, Herd Season (Spring, Fall, Undefined), Status (Active, Sold, Deceased)</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Cow checkboxes</div>
+          <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Tag needed, Flag, Calved, Open, Preg BT, Sell</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Breeding</div>
+          <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Bred To, Pregnancy Method (AI, ET, BB), Natural Sire, Preg check result (open or pregnant)</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Meds</div>
+          <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Medicine, Reason</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Calving</div>
+          <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Sire, Out of cow, Calf Sex, Birth Assist, Calf Outcome, Birth Weight (min or max)</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Weights</div>
+          <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Weight (min or max)</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Dates</div>
+          <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">From and To. Applies to whatever records you are searching.</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Sort by</div>
+          <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Sire, Location, Owner, Group, Cow #, Calving date, Birth weight, Breed date, Weigh date, Weight, Treatment date. High to low or low to high.</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Not searchable</div>
+          <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Cow age, notes text, sorting by tag.</div>
+        </div>
+      </div>
+    </div>
     <div style="display:flex;gap:10px;margin-bottom:14px;">
       <button class="btn btn-profile-tool" id="aiSearchRunBtn" style="flex:2;min-height:46px;">🔍 Search</button>
       <button class="btn btn-barn" id="aiSearchClearBtn" style="flex:1;min-height:46px;">Clear</button>
@@ -7696,6 +7738,7 @@
   document.getElementById('aiSearchClearBtn').addEventListener('click', clearAiSearch);
   document.getElementById('aiSearchPrintBtn').addEventListener('click', printAiSearchResults);
   document.getElementById('aiSearchTextBtn').addEventListener('click', textAiSearchResults);
+  document.getElementById('aiSearchHelpToggle').addEventListener('click', toggleAiSearchHelp);
   document.getElementById('homeGlobalSearchBtn').addEventListener('click', showGlobalSearch);
   document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
@@ -10702,6 +10745,14 @@
     aiSearchView.classList.remove('hidden');
     setHeaderTitle('AI', 'Search');
     window.scrollTo(0,0);
+  }
+  function toggleAiSearchHelp(){
+    const panel = document.getElementById('aiSearchHelpPanel');
+    const btn = document.getElementById('aiSearchHelpToggle');
+    const open = panel.classList.contains('hidden');   // hidden now => opening
+    panel.classList.toggle('hidden', !open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.getElementById('aiSearchHelpArrow').innerHTML = open ? '&#9652;' : '&#9662;';
   }
   function aiSearchSetMsg(text, kind){
     const el = document.getElementById('aiSearchMsg');
