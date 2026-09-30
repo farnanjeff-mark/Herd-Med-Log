@@ -1340,16 +1340,18 @@
       <div id="profileBreedingList"></div>
     </div>
 
-    <div class="section-label">Photos</div>
-    <div id="profilePhotosList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
+    <div id="profileSecPhotos" class="hidden">
+      <div class="section-label">Photos</div>
+      <div id="profilePhotosList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
+    </div>
     <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;"/>
-    <button class="btn btn-outline btn-full" id="profileAddPhotoBtn" style="height:46px;margin-bottom:20px;">📷 Add Photo</button>
 
     <div class="section-label">Manage Cow</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
       <button class="btn btn-profile-tool" id="profilePrintBtn" style="height:46px;padding:0 10px;">🖨️ Print</button>
-      <button class="btn btn-barn" id="profileRemoveCowBtn" style="height:46px;padding:0 10px;">Remove Cow</button>
+      <button class="btn btn-profile-tool" id="profileAddPhotoBtn" style="height:46px;padding:0 10px;">📷 Add Photo</button>
     </div>
+    <button class="btn btn-barn btn-full" id="profileRemoveCowBtn" style="height:46px;">Remove Cow</button>
   </div>
 
   <div class="view hidden" id="weightsListView">
@@ -5033,8 +5035,10 @@
     const el = document.getElementById('profilePhotosList');
     if(!el) return;
     const photos = [...photosFor(num)].sort((a,b)=> b.taken_at.localeCompare(a.taken_at));
+    const sec = document.getElementById('profileSecPhotos');
+    if(sec) sec.classList.toggle('hidden', photos.length === 0);   // no photos: no Photos section (Add Photo is in the bottom buttons)
     if(photos.length === 0){
-      el.innerHTML = '<p class="empty" style="padding:6px 0;">No photos yet.</p>';
+      el.innerHTML = '';
       return;
     }
     el.innerHTML = photos.map(p => `
