@@ -201,6 +201,7 @@
   #profileView .record{background:#fff;padding:9px 12px;}
   #profileView .record-med{font-size:17px;}
   #profileView .record-reason{font-size:15px;}
+  #profileView .record.has-tools{padding-right:84px;}
 
   .field{margin-bottom:12px;}
   .field label{display:block;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#6b6350;margin-bottom:5px;}
@@ -244,6 +245,7 @@
   body.printing-list #printListOutput{ display:block !important; }
   /* cow profile printout: no buttons, plain banner (backgrounds may not print) */
   .profile-tile-btn{ display:none !important; }
+  #profileView .record-del, #profileView .record-edit, #profileView .calf-record-btn{ display:none !important; }
   #profileBanner{ background:#fff !important; box-shadow:none !important; border:1px solid #999; }
   #profileInfoRows, #profileInfoRows div{ color:#2B2620 !important; border-color:#999 !important; }
   #profileStatusBadge{ background:#fff !important; color:#2B2620 !important; border:1px solid #999 !important; }
@@ -1313,12 +1315,10 @@
     <div id="profileSecMeds">
       <div class="section-label">Meds &amp; Notes</div>
       <div id="profileMedsList"></div>
-      <button class="btn btn-profile-nav btn-full" id="profileGoMeds" style="height:46px;margin-bottom:6px;">Go to Meds &amp; Notes →</button>
     </div>
     <div id="profileSecCalving">
       <div class="section-label">Calving Records</div>
       <div id="profileCalvingList"></div>
-      <button class="btn btn-profile-nav btn-full" id="profileGoCalving" style="height:46px;margin-bottom:6px;">Go to Calving Records →</button>
     </div>
 
     <div class="section-label" id="profileCalfActivityLabel" style="display:none;">Calf Activity</div>
@@ -1327,17 +1327,14 @@
     <div id="profileSecNotes">
       <div class="section-label">General Notes</div>
       <div id="profileNotesList"></div>
-      <button class="btn btn-profile-nav btn-full" id="profileGoNotes" style="height:46px;margin-bottom:6px;">Go to General Notes →</button>
     </div>
     <div id="profileSecWeights">
       <div class="section-label">Weights</div>
       <div id="profileWeightsList"></div>
-      <button class="btn btn-profile-nav btn-full" id="profileGoWeights" style="height:46px;margin-bottom:6px;">Go to Weights →</button>
     </div>
     <div id="profileSecBreeding">
       <div class="section-label">Breeding Records</div>
       <div id="profileBreedingList"></div>
-      <button class="btn btn-profile-nav btn-full" id="profileGoBreeding" style="height:46px;margin-bottom:6px;">Go to Breeding Records →</button>
     </div>
 
     <div class="section-label">Photos</div>
@@ -5125,6 +5122,12 @@
     }
     el.innerHTML = html;
   }
+  // pencil / x (and "Not synced yet") on a profile record -- same icons the full screens use
+  function profileRecordTools(r, kind){
+    return `<button class="record-del" data-kind="${kind}" data-id="${escapeHtml(r.id)}" title="Delete">&times;</button>`
+      + (r._pendingSync ? '' : `<button class="record-edit" data-kind="${kind}" data-id="${escapeHtml(r.id)}" title="Edit">&#9998;</button>`)
+      + (r._pendingSync ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:6px;">Not synced yet</div>` : '');
+  }
   function renderProfile(){
     const num = currentProfileCow;
     const cow = cows.find(c=>c.number===num) || {};
@@ -5140,7 +5143,8 @@
       ? '<p class="empty" style="padding:10px 0;">No entries yet.</p>'
       : meds.map(r=>{
           const isNote = !r.medicine;
-          return `<div class="record${isNote ? ' note-entry' : ''}">
+          return `<div class="record has-tools${isNote ? ' note-entry' : ''}">
+            ${profileRecordTools(r, 'meds')}
             <div class="record-date">${fmtDate(r.date)}${isNote ? ' · NOTE' : ''}</div>
             ${isNote ? '' : `<div class="record-med">${escapeHtml(r.medicine)}</div><div class="record-reason">${escapeHtml(r.reason||'')}</div>`}
             ${r.notes ? `<div class="${isNote ? 'record-reason' : 'record-notes'}">${escapeHtml(r.notes)}</div>` : ''}
@@ -5157,11 +5161,16 @@
           if(r.birth_weight != null) details.push(`${r.birth_weight} lbs`);
           if(r.sire) details.push(`Sire: ${escapeHtml(r.sire)}`);
           if(r.birth_assist && r.birth_assist !== 'None') details.push(escapeHtml(r.birth_assist));
-          return `<div class="record">
+          const outcomeLabel = r.calf_outcome === 'sold' ? 'Sold' : r.calf_outcome === 'died' ? 'Died' : null;
+          return `<div class="record has-tools">
+            ${profileRecordTools(r, 'calving')}
             <div class="record-date">${fmtDate(r.calving_date)}</div>
             <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
             ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
             ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
+            ${r.promoted_to_cow_number
+              ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(r.promoted_to_cow_number)}</div>`
+              : `${outcomeLabel ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#A05A2C;">${outcomeLabel}</div>` : ''}${r._pendingSync ? '' : `<button class="btn btn-nav-tool btn-sm calf-record-btn" data-id="${escapeHtml(r.id)}" style="margin-top:8px;">🐄 Calf Record</button>`}`}
           </div>`;
         }).join('');
 
@@ -5190,8 +5199,7 @@
           <div class="record-med">${w.weight!=null ? w.weight+' lbs' : ''}</div>
           ${w.notes ? `<div class="record-notes">${escapeHtml(w.notes)}</div>` : ''}
         </div>`).join('');
-        calfActivityEl.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:6px;">From #${escapeHtml(num)}'s ${fmtDate(currentCalf.calving_date)} calf — not her own record</div>${medsHtml}${wtsHtml}<button class="btn btn-profile-nav btn-full" id="profileGoCalfRecord" style="margin-top:8px;">Go to Calf Record →</button>`;
-        calfActivityEl.querySelector('#profileGoCalfRecord').addEventListener('click', ()=> calfRecordModal(currentCalf));
+        calfActivityEl.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:6px;">From #${escapeHtml(num)}'s ${fmtDate(currentCalf.calving_date)} calf — not her own record</div>${medsHtml}${wtsHtml}`;
       }
     } else {
       calfActivityLabel.style.display = 'none';
@@ -5203,7 +5211,8 @@
     const notesEl = document.getElementById('profileNotesList');
     notesEl.innerHTML = notesRecs.length === 0
       ? '<p class="empty" style="padding:10px 0;">No entries yet.</p>'
-      : notesRecs.map(r=>`<div class="record note-entry">
+      : notesRecs.map(r=>`<div class="record has-tools note-entry">
+          ${profileRecordTools(r, 'notes')}
           <div class="record-date">${fmtDate(r.note_date)}</div>
           <div class="record-reason">${escapeHtml(r.note||'')}</div>
         </div>`).join('');
@@ -5222,7 +5231,8 @@
             const color = diff > 0 ? 'var(--pasture)' : (diff < 0 ? 'var(--barn)' : '#6b6350');
             changeHtml = `<div class="record-reason" style="color:${color};font-weight:700;">${sign}${diff} lbs since ${fmtDateShort(prev.weigh_date)}</div>`;
           }
-          return `<div class="record">
+          return `<div class="record has-tools">
+            ${profileRecordTools(r, 'weights')}
             <div class="record-date">${fmtDate(r.weigh_date)}</div>
             <div class="record-med">${r.weight!=null ? r.weight + ' lbs' : ''}</div>
             ${changeHtml}
@@ -5240,7 +5250,8 @@
           if(r.bred_to) details.push(`Bred to: ${escapeHtml(r.bred_to)}`);
           if(r.pregnancy_method) details.push(escapeHtml(r.pregnancy_method));
           if(r.natural_sire) details.push(`Natural sire: ${escapeHtml(r.natural_sire)}`);
-          return `<div class="record"${r.pregnancy_status==='Open' ? ' style="border-left-color:#7A2E27;"' : ''}>
+          return `<div class="record has-tools"${r.pregnancy_status==='Open' ? ' style="border-left-color:#7A2E27;"' : ''}>
+            ${profileRecordTools(r, 'breeding')}
             <div class="record-date">${fmtDate(r.breed_date)}</div>
             ${r.pregnancy_status==='Open' ? `<div class="record-med" style="color:#7A2E27;font-weight:700;">Open${r.open_date ? ' — '+fmtDate(r.open_date) : ''}</div>` : ''}
             ${r.expected_due_date ? `<div class="record-med">Due: ${fmtDate(r.expected_due_date)}</div>` : ''}
@@ -7891,9 +7902,6 @@
   document.getElementById('profileExportListBtn').addEventListener('click', ()=> printListModal(lastFilteredProfileCows, 'Export This List', 'export'));
   document.getElementById('profileBulkLogBtn').addEventListener('click', bulkLogEntryModal);
   document.getElementById('profileSortBy').addEventListener('change', renderProfileList);
-  document.getElementById('profileGoMeds').addEventListener('click', ()=> openCow(currentProfileCow));
-  document.getElementById('profileGoCalving').addEventListener('click', ()=> openCalvingCow(currentProfileCow));
-  document.getElementById('profileGoNotes').addEventListener('click', ()=> openNotesCow(currentProfileCow));
   document.getElementById('detailViewProfile').addEventListener('click', ()=> openProfileCow(currentCow));
   document.getElementById('calvingViewProfile').addEventListener('click', ()=> openProfileCow(currentCalvingCow));
   document.getElementById('notesViewProfile').addEventListener('click', ()=> openProfileCow(currentNotesCow));
@@ -7904,7 +7912,6 @@
   document.getElementById('addWeightBtn').addEventListener('click', addWeightModal);
   document.getElementById('weightsSearchBox').addEventListener('input', renderWeightsList);
   document.getElementById('weightsSortBy').addEventListener('change', renderWeightsList);
-  document.getElementById('profileGoWeights').addEventListener('click', ()=> openWeightsCow(currentProfileCow));
   document.getElementById('breedingListHomeBtn').addEventListener('click', showHome);
   document.getElementById('breedingDetailHomeBtn').addEventListener('click', showHome);
   document.getElementById('breedingBackBtn').addEventListener('click', closeBreedingCow);
@@ -7912,7 +7919,6 @@
   document.getElementById('addBreedingBtn').addEventListener('click', addBreedingModal);
   document.getElementById('breedingSearchBox').addEventListener('input', renderBreedingList);
   document.getElementById('breedingSortBy').addEventListener('change', renderBreedingList);
-  document.getElementById('profileGoBreeding').addEventListener('click', ()=> openBreedingCow(currentProfileCow));
   document.getElementById('profileLotBtn').addEventListener('click', editLotModal);
   document.getElementById('profileOwnerBtn').addEventListener('click', editOwnerModal);
   document.getElementById('profileGroupBtn').addEventListener('click', editGroupModal);
@@ -7932,6 +7938,34 @@
       }
     }
   }).observe(document.body, { childList: true });
+  // Pencil / x / Calf Record buttons on the profile's records
+  document.getElementById('profileView').addEventListener('click', async e=>{
+    const del = e.target.closest('.record-del[data-kind]');
+    const ed = e.target.closest('.record-edit[data-kind]');
+    const calfBtn = e.target.closest('.calf-record-btn[data-id]');
+    const b = del || ed;
+    if(calfBtn){
+      const rec = calvings.find(c=> String(c.id) === String(calfBtn.dataset.id));
+      if(rec) calfRecordModal(rec);
+      return;
+    }
+    if(!b) return;
+    const kind = b.dataset.kind, id = b.dataset.id;
+    const spec = {
+      meds:     { list: ()=> treatments,      label: 'med / note entry', edit: r=>{ currentCow = r.cow_number; editRecordModal(r); },                     del: ()=>{ currentCow = currentProfileCow; return deleteRecord(id); } },
+      calving:  { list: ()=> calvings,        label: 'calving record',   edit: r=>{ currentCalvingCow = r.cow_number; editCalvingModal(r); },              del: ()=>{ currentCalvingCow = currentProfileCow; return deleteCalvingRecord(id); } },
+      notes:    { list: ()=> generalNotes,    label: 'note',             edit: r=>{ currentNotesCow = r.cow_number; editGeneralNoteModal(r); },             del: ()=>{ currentNotesCow = currentProfileCow; return deleteGeneralNote(id); } },
+      weights:  { list: ()=> weights,         label: 'weight entry',     edit: r=>{ currentWeightsCow = r.cow_number; editWeightModal(r); },                del: ()=>{ currentWeightsCow = currentProfileCow; return deleteWeight(id); } },
+      breeding: { list: ()=> breedingRecords, label: 'breeding record',  edit: r=>{ currentBreedingCow = r.cow_number; editBreedingModal(r); },             del: ()=>{ currentBreedingCow = currentProfileCow; return deleteBreedingRecord(id); } }
+    }[kind];
+    if(!spec) return;
+    const rec = spec.list().find(r=> String(r.id) === String(id));
+    if(!rec) return;
+    if(ed){ spec.edit(rec); return; }
+    if(!window.confirm(`Delete this ${spec.label}? It will be moved to Recently Deleted.`)) return;
+    await spec.del();
+    if(currentProfileCow && !profileView.classList.contains('hidden')) renderProfile();
+  });
   document.getElementById('profileTiles').addEventListener('click', e=>{
     const btn = e.target.closest('button[data-type]');
     if(!btn) return;
