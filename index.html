@@ -238,6 +238,8 @@
   .record{border-color:#999;background:#fff;}
   body.printing-list .app{ display:none !important; }
   body.printing-list #printListOutput{ display:block !important; }
+  /* AI Search: never print the cow cards (or the help box / messages) if this screen is printed */
+  #aiSearchResults, #aiSearchHelpBox, #aiSearchMsg{ display:none !important; }
 }
 #printListOutput{ display:none; }
 .rc-check{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:7px;border:2px solid var(--rc-color);background:#fff;flex-shrink:0;cursor:pointer;position:relative;margin:0;}
