@@ -633,6 +633,7 @@
 
     <div class="section-label">Search</div>
     <button class="btn btn-nav-tool btn-full" id="advancedSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🔍</span>&nbsp;&nbsp;Advanced Search</button>
+    <button class="btn btn-nav-tool btn-full" id="aiSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🤖</span>&nbsp;&nbsp;AI Search</button>
     <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
 
     <div class="section-label">Vet</div>
@@ -874,6 +875,31 @@
     <button class="btn btn-outline btn-full hidden" id="advancedSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
     <button class="btn btn-outline btn-full hidden" id="advancedSearchTextBtn" style="margin-bottom:16px;">📱 Text List</button>
     <div id="advancedSearchResults"></div>
+  </div>
+
+  <div class="view hidden" id="aiSearchView">
+    <button class="btn btn-outline btn-full" id="aiSearchHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:14px;">AI Search</div>
+    <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;line-height:1.5;margin-bottom:14px;">Type what you're looking for in plain English. Needs a phone signal — use Advanced Search in dead zones.</div>
+    <div class="field">
+      <label for="aiSearchBox">What do you want to find?</label>
+      <textarea id="aiSearchBox" rows="3" maxlength="500" placeholder="Example: open cows in the south pasture, sorted by sire" style="background:#ffffff;resize:none;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <button class="btn btn-profile-tool" id="aiSearchRunBtn" style="flex:2;min-height:46px;">🔍 Search</button>
+      <button class="btn btn-barn" id="aiSearchClearBtn" style="flex:1;min-height:46px;">Clear</button>
+    </div>
+    <div id="aiSearchMsg" class="banner hidden"></div>
+    <div id="aiSearchInterp" class="hidden">
+      <div class="section-label" style="color:#0C447C;margin-top:6px;">I searched for</div>
+      <div id="aiSearchPills" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;line-height:1.5;margin-bottom:14px;">Not what you meant? Reword it and search again.</div>
+    </div>
+    <div id="aiSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
+    <div id="aiSearchReportTable" style="margin-bottom:14px;"></div>
+    <button class="btn btn-outline btn-full hidden" id="aiSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
+    <button class="btn btn-outline btn-full hidden" id="aiSearchTextBtn" style="margin-bottom:16px;">📱 Text List</button>
+    <div id="aiSearchResults"></div>
   </div>
 
   <div class="view hidden" id="farmOperationsView">
@@ -1503,6 +1529,7 @@
   const manageGroupsView = document.getElementById('manageGroupsView');
   const manageReasonsView = document.getElementById('manageReasonsView');
   const advancedSearchView = document.getElementById('advancedSearchView');
+  const aiSearchView = document.getElementById('aiSearchView');
   const reportsView = document.getElementById('reportsView');
   const fieldCountView = document.getElementById('fieldCountView');
   const pregCheckReportView = document.getElementById('pregCheckReportView');
@@ -2296,6 +2323,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2354,6 +2382,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2413,6 +2442,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2463,6 +2493,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2513,6 +2544,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2565,6 +2597,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2694,6 +2727,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2770,6 +2804,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showVetPregCheck(){
@@ -2819,6 +2854,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2856,6 +2892,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3010,6 +3047,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -3044,6 +3082,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -3078,6 +3117,7 @@
     manageOwnersView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -3217,6 +3257,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3250,6 +3291,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3286,6 +3328,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3381,6 +3424,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3613,6 +3657,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -3643,6 +3688,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -3677,6 +3723,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -3713,6 +3760,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -3860,6 +3908,7 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -7641,6 +7690,12 @@
   document.getElementById('clearAdvancedSearchBtn').addEventListener('click', clearAdvancedSearch);
   document.getElementById('advancedSearchPrintBtn').addEventListener('click', printAdvancedSearchResults);
   document.getElementById('advancedSearchTextBtn').addEventListener('click', textAdvancedSearchResults);
+  document.getElementById('aiSearchBtn').addEventListener('click', showAiSearch);
+  document.getElementById('aiSearchHomeBtn').addEventListener('click', showHome);
+  document.getElementById('aiSearchRunBtn').addEventListener('click', runAiSearch);
+  document.getElementById('aiSearchClearBtn').addEventListener('click', clearAiSearch);
+  document.getElementById('aiSearchPrintBtn').addEventListener('click', printAiSearchResults);
+  document.getElementById('aiSearchTextBtn').addEventListener('click', textAiSearchResults);
   document.getElementById('homeGlobalSearchBtn').addEventListener('click', showGlobalSearch);
   document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
@@ -10632,6 +10687,422 @@
     requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
   }
 
+
+  // ===================== AI SEARCH =====================
+  // The typed question goes to the "ai-search" Supabase function, which sends back filters.
+  // Those filters are applied HERE, on this phone, to the herd data already loaded.
+  // No cow data is ever sent to the AI. Advanced Search is not used or changed.
+  let lastAiSearchCows = [];
+  let lastAiSearchEntries = [];
+  let lastAiSearchQuestion = '';
+
+  function showAiSearch(){
+    showAdvancedSearch(); // hides every other screen
+    advancedSearchView.classList.add('hidden');
+    aiSearchView.classList.remove('hidden');
+    setHeaderTitle('AI', 'Search');
+    window.scrollTo(0,0);
+  }
+  function aiSearchSetMsg(text, kind){
+    const el = document.getElementById('aiSearchMsg');
+    if(!text){ el.classList.add('hidden'); el.textContent = ''; return; }
+    el.textContent = text;
+    el.style.cssText = kind === 'note' ? 'background:#fbeecb;border-color:#E3A93C;color:#6b4e12;' : '';
+    el.classList.remove('hidden');
+  }
+  function aiSearchOptionLists(){
+    const uniq = a => [...new Set(a.filter(Boolean))];
+    return {
+      locations: uniq([...getLocationOptions(), ...cows.map(c=>c.lot)]),
+      owners: uniq([...getOwnerOptions(), ...cows.map(c=>c.owner)]),
+      groups: uniq([...getGroupOptions(), ...cows.map(c=>c.cow_group)]),
+      medicines: getMedicineOptions(),
+      reasons: getReasonOptions(),
+      sires: getBullOptionsWithExtras(),
+      statuses: STATUS_OPTIONS
+    };
+  }
+
+  // Applies the AI's filters to the herd data. Returns the matching cows, the
+  // line-by-line activity table, and (when sorting by sire/location/owner/group) the group labels.
+  function aiSearchRun(f){
+    const lc = s => String(s == null ? '' : s).trim().toLowerCase();
+    const numOrNull = v => (v === undefined || v === null || v === '' || isNaN(Number(v))) ? null : Number(v);
+    const dFrom = f.date_from || '';
+    const dTo = f.date_to || '';
+    const wMin = numOrNull(f.weight_min), wMax = numOrNull(f.weight_max);
+    const bwMin = numOrNull(f.birth_weight_min), bwMax = numOrNull(f.birth_weight_max);
+    const searchOn = f.search_on || 'cows';
+    const inRange = d => (!dFrom || (d || '') >= dFrom) && (!dTo || (d || '') <= dTo);
+
+    const breedingUsed = !!(f.bred_to || f.pregnancy_method || f.natural_sire || f.open_only || f.preg_check_result) || searchOn === 'breedings';
+    const medUsed = !!(f.medicine || f.reason) || searchOn === 'treatments';
+    const calvingUsed = !!(f.sire || f.calf_sex || f.birth_assist || f.calf_outcome || bwMin != null || bwMax != null || f.dam_cow) || searchOn === 'calvings';
+    const weightUsed = wMin != null || wMax != null || searchOn === 'weights';
+
+    const latestBreeding = n => [...breedingFor(n)].sort((a,b)=> (b.breed_date || '').localeCompare(a.breed_date || ''))[0];
+    function mBreeding(n){
+      const latest = latestBreeding(n);
+      return breedingFor(n).filter(b=>{
+        if(f.bred_to && b.bred_to !== f.bred_to) return false;
+        if(f.pregnancy_method && b.pregnancy_method !== f.pregnancy_method) return false;
+        if(f.natural_sire && !lc(b.natural_sire).includes(lc(f.natural_sire))) return false;
+        if(f.open_only && !(latest && b.id === latest.id && b.pregnancy_status === 'Open')) return false;
+        if(f.preg_check_result){
+          const want = f.preg_check_result === 'open' ? 'Open' : 'Bred';
+          if(!(latest && b.id === latest.id && b.pregnancy_status === want)) return false;
+        }
+        return inRange(f.preg_check_result ? (b.vet_call_date || b.breed_date) : b.breed_date);
+      });
+    }
+    const medMatch = t => (!f.medicine || t.medicine === f.medicine) && (!f.reason || t.reason === f.reason) && inRange(t.date);
+    const mMeds = n => recordsFor(n).filter(medMatch);
+    const mCalfMeds = n => {
+      const ids = calvingsFor(n).map(cv=>cv.id);
+      return calfTreatments.filter(t=> ids.includes(t.calving_id) && medMatch(t));
+    };
+    const mCalvings = n => calvingsFor(n).filter(cv=>{
+      if(f.sire && cv.sire !== f.sire) return false;
+      if(f.calf_sex && cv.calf_sex !== f.calf_sex) return false;
+      if(f.birth_assist && cv.birth_assist !== f.birth_assist) return false;
+      if(bwMin != null && !(cv.birth_weight != null && cv.birth_weight >= bwMin)) return false;
+      if(bwMax != null && !(cv.birth_weight != null && cv.birth_weight <= bwMax)) return false;
+      if(f.calf_outcome){
+        const o = cv.promoted_to_cow_number ? 'kept' : (cv.calf_outcome || 'active');
+        if(o !== f.calf_outcome) return false;
+      }
+      return inRange(cv.calving_date);
+    });
+    const weightOk = w => w.weight != null && (wMin == null || Number(w.weight) >= wMin) && (wMax == null || Number(w.weight) <= wMax) && inRange(w.weigh_date);
+    const mWeights = n => {
+      const own = weightsFor(n).filter(weightOk).map(w=>({ date: w.weigh_date, weight: w.weight, type: 'Weight' }));
+      const ids = calvingsFor(n).map(cv=>cv.id);
+      const calf = calfWeights.filter(w=> ids.includes(w.calving_id) && weightOk(w)).map(w=>({ date: w.weigh_date, weight: w.weight, type: 'Calf Weight' }));
+      return [...own, ...calf];
+    };
+
+    let results = cows.filter(c=>{
+      if(f.location && lc(c.lot) !== lc(f.location)) return false;
+      if(f.owner && lc(c.owner) !== lc(f.owner)) return false;
+      if(f.group && lc(c.cow_group) !== lc(f.group)) return false;
+      if(f.herd_season){ if(f.herd_season === 'Undefined' ? c.herd_season : c.herd_season !== f.herd_season) return false; }
+      if(f.status && lc(c.status || 'Active') !== lc(f.status)) return false;
+      if(f.preg_bt_only && !c.preg_bt) return false;
+      if(f.sell_only && !c.sell) return false;
+      if(f.tag_needed && !c.tag_needed) return false;
+      if(f.flagged && !c.needs_entry) return false;
+      if(f.calved_pending && !c.calved) return false;
+      if(f.dam_cow && String(c.number) !== String(f.dam_cow)) return false;
+      if(breedingUsed && mBreeding(c.number).length === 0) return false;
+      if(medUsed && mMeds(c.number).length === 0 && mCalfMeds(c.number).length === 0) return false;
+      if(calvingUsed && mCalvings(c.number).length === 0) return false;
+      if(weightUsed && mWeights(c.number).length === 0) return false;
+      if(!breedingUsed && !medUsed && !calvingUsed && !weightUsed && (dFrom || dTo) && !cowHasActivityInDateRange(c.number, dFrom, dTo)) return false;
+      return true;
+    });
+
+    // ---- sorting ----
+    const sortBy = f.sort_by || 'cow_number';
+    const descByDefault = ['calving_date','breed_date','weigh_date','weight','treatment_date','birth_weight'].includes(sortBy);
+    const dir = (f.sort_dir || (descByDefault ? 'desc' : 'asc')) === 'desc' ? -1 : 1;
+    const latestOf = arr => arr.filter(Boolean).sort().pop() || '';
+    function sortVal(c){
+      const n = c.number;
+      switch(sortBy){
+        case 'location': return c.lot || '';
+        case 'owner': return c.owner || '';
+        case 'group': return c.cow_group || '';
+        case 'sire': {
+          const fromBreeding = () => { const b = latestBreeding(n); return (b && (b.bred_to || b.natural_sire)) || ''; };
+          const fromCalving = () => {
+            const cv = [...mCalvings(n)].sort((a,b)=> (b.calving_date || '').localeCompare(a.calving_date || ''))[0];
+            return (cv && cv.sire) || '';
+          };
+          return (breedingUsed && !calvingUsed) ? (fromBreeding() || fromCalving()) : (fromCalving() || fromBreeding());
+        }
+        case 'calving_date': return latestOf(mCalvings(n).map(x=>x.calving_date));
+        case 'birth_weight': { const v = mCalvings(n).map(x=>x.birth_weight).filter(x=>x != null); return v.length ? Math.max(...v.map(Number)) : ''; }
+        case 'breed_date': return latestOf(mBreeding(n).map(x=>x.breed_date));
+        case 'weigh_date': return latestOf(weightsFor(n).map(x=>x.weigh_date));
+        case 'weight': {
+          const latest = [...weightsFor(n)].filter(x=>x.weight != null).sort((a,b)=> (b.weigh_date || '').localeCompare(a.weigh_date || ''))[0];
+          return latest ? Number(latest.weight) : '';
+        }
+        case 'treatment_date': return latestOf([...mMeds(n), ...mCalfMeds(n)].map(x=>x.date));
+        default: return c.number;
+      }
+    }
+    const blank = v => v === '' || v === null || v === undefined;
+    const cmp = (a, b) => {
+      if(blank(a) && blank(b)) return 0;
+      if(blank(a)) return 1;   // blanks always go last
+      if(blank(b)) return -1;
+      if(typeof a === 'number' && typeof b === 'number') return (a - b) * dir;
+      return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }) * dir;
+    };
+    const keyed = results.map(c=>({ c, k: sortVal(c) }));
+    keyed.sort((x, y)=> cmp(x.k, y.k) || String(x.c.number).localeCompare(String(y.c.number), undefined, { numeric: true }));
+    results = keyed.map(x=>x.c);
+
+    const groupPrefix = { sire: 'Sire', location: 'Location', owner: 'Owner', group: 'Group' }[sortBy];
+    const groupOf = {};
+    if(groupPrefix){
+      keyed.forEach(x=>{ groupOf[x.c.number] = groupPrefix + ': ' + (blank(x.k) ? '(none)' : x.k); });
+    }
+
+    // ---- line-by-line activity table ----
+    const entries = [];
+    results.forEach(c=>{
+      const num = c.number;
+      if(breedingUsed){
+        mBreeding(num).forEach(b=>{
+          const detail = [];
+          if(b.bred_to) detail.push(`Bred to: ${b.bred_to}`);
+          if(b.pregnancy_method) detail.push(b.pregnancy_method);
+          if(b.natural_sire) detail.push(`Natural sire: ${b.natural_sire}`);
+          if(b.pregnancy_status === 'Open') detail.push(`Open${b.open_date ? ' ('+fmtDate(b.open_date)+')' : ''}`);
+          else if(b.pregnancy_status === 'Bred' && b.vet_calls) detail.push(`Vet check: ${b.vet_calls} days`);
+          entries.push({ date: b.breed_date, num, type: 'Breeding', details: detail.join(' — ') });
+        });
+      }
+      if(medUsed){
+        mMeds(num).forEach(t=>{
+          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes || 'note');
+          entries.push({ date: t.date, num, type: 'Med', details: desc });
+        });
+        mCalfMeds(num).forEach(t=>{
+          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes || 'note');
+          entries.push({ date: t.date, num, type: 'Calf Med', details: desc });
+        });
+      }
+      if(calvingUsed){
+        mCalvings(num).forEach(cv=>{
+          const detail = [`${calfSexLabel(cv.calf_sex)} calf`];
+          if(cv.sire) detail.push(`Sire: ${cv.sire}`);
+          if(cv.birth_assist) detail.push(cv.birth_assist);
+          if(cv.birth_weight != null) detail.push(`${cv.birth_weight} lbs`);
+          entries.push({ date: cv.calving_date, num, type: 'Calving', details: detail.join(' — ') });
+        });
+      }
+      if(weightUsed){
+        mWeights(num).forEach(w=>{
+          entries.push({ date: w.date, num, type: w.type, details: `${w.weight} lb` });
+        });
+      }
+      if(!breedingUsed && !medUsed && !calvingUsed && !weightUsed && (dFrom || dTo)){
+        recordsFor(num).forEach(t=>{
+          if(inRange(t.date)){
+            const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes || 'note');
+            entries.push({ date: t.date, num, type: 'Med', details: desc });
+          }
+        });
+        calvingsFor(num).forEach(cv=>{
+          if(inRange(cv.calving_date)) entries.push({ date: cv.calving_date, num, type: 'Calving', details: `${calfSexLabel(cv.calf_sex)} calf` });
+        });
+        generalNotesFor(num).forEach(nt=>{
+          if(inRange(nt.note_date)) entries.push({ date: nt.note_date, num, type: 'Note', details: nt.note || '' });
+        });
+        weightsFor(num).forEach(w=>{
+          if(inRange(w.weigh_date)) entries.push({ date: w.weigh_date, num, type: 'Weight', details: w.weight != null ? w.weight + ' lb' : '' });
+        });
+        breedingFor(num).forEach(b=>{
+          if(inRange(b.breed_date)) entries.push({ date: b.breed_date, num, type: 'Breeding', details: b.bred_to ? 'Bred to: ' + b.bred_to : '' });
+        });
+      }
+    });
+    // keep the table in the same order as the cows (so group headers line up), newest first within a cow
+    const order = {};
+    results.forEach((c, i)=>{ order[c.number] = i; });
+    entries.sort((a, b)=> (order[a.num] - order[b.num]) || (b.date || '').localeCompare(a.date || ''));
+
+    return { results, entries, groupOf, hasGroups: !!groupPrefix };
+  }
+
+  function aiSearchPillsHtml(pills, filters){
+    const list = [...pills];
+    if(filters.search_on && filters.search_on !== 'cows') list.unshift({ label: 'Looking at', value: filters.search_on });
+    return list.map(p=>{
+      let v = String(p.value);
+      if(p.label === 'Calf Sex') v = v === 'B' ? 'Bull' : v === 'H' ? 'Heifer' : v;
+      if(p.label === 'Calf Outcome') v = ({ active:'Still Active', kept:'Kept (Promoted)', sold:'Sold', died:'Died' })[v] || v;
+      if(p.label === 'Preg check result') v = v === 'open' ? 'Open' : v === 'pregnant' ? 'Pregnant' : v;
+      if((p.label === 'From' || p.label === 'To') && /^\d{4}-\d{2}-\d{2}$/.test(v)) v = fmtDate(v);
+      if(p.label === 'Sorted by'){
+        v = v.replace(/_/g, ' ') + (filters.sort_dir === 'desc' ? ' (high to low)' : filters.sort_dir === 'asc' ? ' (low to high)' : '');
+      }
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:#E6F1FB;border:2px solid #2E88C4;color:#0C447C;border-radius:16px;padding:6px 12px;font-family:Arial,sans-serif;font-size:13px;"><b>${escapeHtml(p.label)}:</b> ${escapeHtml(v)}</span>`;
+    }).join('');
+  }
+
+  function renderAiSearch(out, filters, pills){
+    const { results, entries, groupOf, hasGroups } = out;
+    lastAiSearchCows = results;
+    lastAiSearchEntries = entries;
+
+    document.getElementById('aiSearchPills').innerHTML = aiSearchPillsHtml(pills, filters);
+    document.getElementById('aiSearchInterp').classList.remove('hidden');
+    document.getElementById('aiSearchCount').textContent = `${results.length} cow${results.length !== 1 ? 's' : ''} matched`;
+    document.getElementById('aiSearchPrintBtn').classList.toggle('hidden', results.length === 0);
+    document.getElementById('aiSearchTextBtn').classList.toggle('hidden', results.length === 0);
+
+    const tableEl = document.getElementById('aiSearchReportTable');
+    if(entries.length > 0){
+      let lastLabel = null;
+      const rows = entries.map((e, i)=>{
+        let head = '';
+        const label = hasGroups ? groupOf[e.num] : null;
+        if(label && label !== lastLabel){
+          head = `<tr><td colspan="4" style="padding:8px 6px;background:#0C5A8E;color:#fff;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;">${escapeHtml(label)}</td></tr>`;
+          lastLabel = label;
+        }
+        return head + `<tr style="background:${i % 2 === 0 ? '#fff' : '#F7F2E6'};">
+          <td style="padding:8px 6px;border-bottom:1px solid #c9bfa4;">${fmtDateShort(e.date)}</td>
+          <td style="padding:8px 6px;border-bottom:1px solid #c9bfa4;font-weight:700;">#${escapeHtml(e.num)}</td>
+          <td style="padding:8px 6px;border-bottom:1px solid #c9bfa4;">${escapeHtml(e.type)}</td>
+          <td style="padding:8px 6px;border-bottom:1px solid #c9bfa4;white-space:normal;">${escapeHtml(e.details)}</td>
+        </tr>`;
+      }).join('');
+      tableEl.innerHTML = `
+        <div style="overflow-x:auto;">
+          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+            <thead><tr>
+              <th style="text-align:left;padding:8px 6px;color:#0C447C;border-bottom:2px solid #2E88C4;">Date</th>
+              <th style="text-align:left;padding:8px 6px;color:#0C447C;border-bottom:2px solid #2E88C4;">Cow #</th>
+              <th style="text-align:left;padding:8px 6px;color:#0C447C;border-bottom:2px solid #2E88C4;">Type</th>
+              <th style="text-align:left;padding:8px 6px;color:#0C447C;border-bottom:2px solid #2E88C4;">Details</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    } else {
+      tableEl.innerHTML = '';
+    }
+
+    const resultsEl = document.getElementById('aiSearchResults');
+    if(results.length === 0){
+      resultsEl.innerHTML = '<p class="empty">No cows match those filters.</p>';
+      return;
+    }
+    let lastCardLabel = null;
+    resultsEl.innerHTML = results.map(cow=>{
+      const label = hasGroups ? groupOf[cow.number] : null;
+      let head = '';
+      if(label && label !== lastCardLabel){
+        head = `<div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#fff;font-weight:700;background:#0C5A8E;padding:8px 10px;border-radius:2px;margin:6px 0 10px;">${escapeHtml(label)}</div>`;
+        lastCardLabel = label;
+      }
+      return head + quickAddCardHtml(cow);
+    }).join('');
+    wireQuickAddCardOpen(resultsEl, showAiSearch, '← Back to AI Search');
+    wireProfileQuickAddButtons(resultsEl);
+    wireNeedsEntryCheckboxes(resultsEl);
+    wireTagNeededCheckboxes(resultsEl);
+    wireCalvedCheckboxes(resultsEl);
+    wireOpenCheckboxes(resultsEl);
+    wirePregBtCheckboxes(resultsEl);
+    wireSellCheckboxes(resultsEl);
+  }
+
+  async function runAiSearch(){
+    const box = document.getElementById('aiSearchBox');
+    const btn = document.getElementById('aiSearchRunBtn');
+    const question = box.value.trim();
+    if(!question){ showToast('Type what you want to find'); return; }
+    if(!navigator.onLine){
+      aiSearchSetMsg('AI Search needs a phone signal. Use Advanced Search here.', 'note');
+      return;
+    }
+    aiSearchSetMsg('');
+    btn.disabled = true;
+    const oldLabel = btn.textContent;
+    btn.textContent = 'Searching…';
+    const ctrl = new AbortController();
+    const timer = setTimeout(()=> ctrl.abort(), 30000);
+    try{
+      const res = await fetch(SUPABASE_URL + '/functions/v1/ai-search', {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, options: aiSearchOptionLists() })
+      });
+      const data = await res.json().catch(()=> null);
+      if(!data){
+        aiSearchSetMsg("Couldn't reach AI Search. Check your signal and try again.");
+        return;
+      }
+      if(!data.ok){
+        const soft = data.error === 'unclear' || data.error === 'key_not_set' || data.error === 'busy';
+        aiSearchSetMsg(data.message || 'AI Search could not answer that. Try rewording it.', soft ? 'note' : 'error');
+        return;
+      }
+      lastAiSearchQuestion = question;
+      const out = aiSearchRun(data.filters || {});
+      renderAiSearch(out, data.filters || {}, data.pills || []);
+    }catch(e){
+      console.error(e);
+      aiSearchSetMsg(e && e.name === 'AbortError' ? 'That took too long. Try again.' : "Couldn't reach AI Search. Check your signal and try again.");
+    }finally{
+      clearTimeout(timer);
+      btn.disabled = false;
+      btn.textContent = oldLabel;
+    }
+  }
+  function clearAiSearch(){
+    document.getElementById('aiSearchBox').value = '';
+    aiSearchSetMsg('');
+    document.getElementById('aiSearchInterp').classList.add('hidden');
+    document.getElementById('aiSearchPills').innerHTML = '';
+    document.getElementById('aiSearchCount').textContent = '';
+    document.getElementById('aiSearchReportTable').innerHTML = '';
+    document.getElementById('aiSearchPrintBtn').classList.add('hidden');
+    document.getElementById('aiSearchTextBtn').classList.add('hidden');
+    document.getElementById('aiSearchResults').innerHTML = '';
+    lastAiSearchCows = [];
+    lastAiSearchEntries = [];
+    lastAiSearchQuestion = '';
+  }
+  function textAiSearchResults(){
+    if(lastAiSearchCows.length === 0){ showToast('Nothing to send'); return; }
+    const entries = lastAiSearchCows.map(c=>({ id: c.number, line: '#' + c.number }));
+    sendTextListModal('AI Search Results', entries, textAiSearchResults);
+  }
+  function printAiSearchResults(){
+    if(lastAiSearchCows.length === 0){ showToast('Nothing to print'); return; }
+    const th = 'text-align:left;padding:6px;border-bottom:2px solid #000;';
+    const cowRowsHtml = lastAiSearchCows.map((c,i)=>`
+      <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+        <td style="padding:6px;">#${escapeHtml(c.number)}</td>
+        <td style="padding:6px;">${escapeHtml(c.lot||'')}</td>
+        <td style="padding:6px;">${escapeHtml(c.cow_group||'')}</td>
+        <td style="padding:6px;">${escapeHtml(c.owner||'')}</td>
+        <td style="padding:6px;">${escapeHtml(c.status||'Active')}</td>
+      </tr>`).join('');
+    const activityHtml = lastAiSearchEntries.length > 0 ? `
+      <h3 style="margin:20px 0 8px;font-size:14px;">Matching Activity</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr><th style="${th}">Date</th><th style="${th}">Cow #</th><th style="${th}">Type</th><th style="${th}">Details</th></tr></thead>
+        <tbody>${lastAiSearchEntries.map((e,i)=>`
+          <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
+            <td style="padding:6px;">${fmtDateShort(e.date)}</td>
+            <td style="padding:6px;">#${escapeHtml(e.num)}</td>
+            <td style="padding:6px;">${escapeHtml(e.type)}</td>
+            <td style="padding:6px;">${escapeHtml(e.details)}</td>
+          </tr>`).join('')}</tbody>
+      </table>` : '';
+    document.getElementById('printListOutput').innerHTML = `
+      <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+        <h2 style="margin:0 0 4px;">Farnan Cattle Co. — AI Search</h2>
+        <div style="font-size:13px;color:#555;margin-bottom:4px;">"${escapeHtml(lastAiSearchQuestion)}"</div>
+        <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${lastAiSearchCows.length} cow${lastAiSearchCows.length!==1?'s':''} matched</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr><th style="${th}">Cow #</th><th style="${th}">Location</th><th style="${th}">Group</th><th style="${th}">Owner</th><th style="${th}">Status</th></tr></thead>
+          <tbody>${cowRowsHtml}</tbody>
+        </table>
+        ${activityHtml}
+      </div>`;
+    document.body.classList.add('printing-list');
+    requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
+  }
 
   function renderGlobalSearchResults(){
     const q = (globalSearchBox.value||'').trim().toLowerCase();
