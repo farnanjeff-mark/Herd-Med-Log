@@ -197,6 +197,10 @@
   .record-notes{font-family:Arial,sans-serif;font-size:14px;color:#6b6350;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px;}
   .record-del{position:absolute;top:10px;right:10px;background:none;border:none;color:#a08f6b;font-size:16px;cursor:pointer;padding:4px;}
   .record-edit{position:absolute;top:6px;right:40px;background:none;border:none;color:#a08f6b;font-size:26px;cursor:pointer;padding:4px 6px;line-height:1;}
+  /* cow profile: white record boxes, compact cards, small "Add / Edit" links */
+  #profileView .record{background:#fff;padding:9px 12px;}
+  #profileView .record-med{font-size:17px;}
+  #profileView .record-reason{font-size:15px;}
 
   .field{margin-bottom:12px;}
   .field label{display:block;font-family:Arial,sans-serif;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#6b6350;margin-bottom:5px;}
@@ -238,6 +242,11 @@
   .record{border-color:#999;background:#fff;}
   body.printing-list .app{ display:none !important; }
   body.printing-list #printListOutput{ display:block !important; }
+  /* cow profile printout: no buttons, plain banner (backgrounds may not print) */
+  .profile-tile-btn{ display:none !important; }
+  #profileBanner{ background:#fff !important; box-shadow:none !important; border:1px solid #999; }
+  #profileInfoRows, #profileInfoRows div{ color:#2B2620 !important; border-color:#999 !important; }
+  #profileStatusBadge{ background:#fff !important; color:#2B2620 !important; border:1px solid #999 !important; }
   /* AI Search: never print the cow cards (or the help box / messages) if this screen is printed */
   #aiSearchResults, #aiSearchHelpBox, #aiSearchMsg{ display:none !important; }
 }
@@ -1286,52 +1295,66 @@
   </div>
 
   <div class="view hidden" id="profileView">
-    <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <button class="btn btn-outline" id="profileHomeBtn" style="flex:1;">🏠 Home</button>
-      <button class="back" id="profileBackBtn" style="margin-bottom:0;flex:1;">&larr; All Cattle</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-outline" id="profileHomeBtn" style="min-height:46px;">🏠 Home</button>
+      <button class="back" id="profileBackBtn" style="margin-bottom:0;min-height:46px;">&larr; All Cattle</button>
     </div>
-    <div class="detail-head">
-      <div>
-        <div class="detail-num" id="profileNum">#000</div>
+
+    <div id="profileBanner" style="background:linear-gradient(135deg,#2E88C4,#0C5A8E);border-radius:14px;padding:16px 18px 8px;box-shadow:0 1px 2px rgba(43,38,32,.10),0 6px 16px rgba(43,38,32,.14);margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div id="profileNumTag" style="background:#fff;border-radius:12px;padding:6px 14px;min-width:0;"><div class="detail-num" id="profileNum">#000</div></div>
+        <div id="profileStatusBadge" style="background:#3C9142;color:#fff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border-radius:14px;">Active</div>
       </div>
+      <div id="profileInfoRows" style="margin-top:12px;border-top:1px solid rgba(255,255,255,.4);"></div>
     </div>
 
-    <div class="section-label">Meds &amp; Notes</div>
-    <div id="profileMedsList"></div>
-    <button class="btn btn-profile-nav btn-full" id="profileGoMeds" style="margin-bottom:20px;">Go to Meds &amp; Notes →</button>
+    <div id="profileTiles"></div>
 
-    <div class="section-label">Calving Records</div>
-    <div id="profileCalvingList"></div>
-    <button class="btn btn-profile-nav btn-full" id="profileGoCalving" style="margin-bottom:20px;">Go to Calving Records →</button>
+    <div id="profileSecMeds">
+      <div class="section-label">Meds &amp; Notes</div>
+      <div id="profileMedsList"></div>
+      <button class="btn btn-profile-nav btn-full" id="profileGoMeds" style="height:46px;margin-bottom:6px;">Go to Meds &amp; Notes →</button>
+    </div>
+    <div id="profileSecCalving">
+      <div class="section-label">Calving Records</div>
+      <div id="profileCalvingList"></div>
+      <button class="btn btn-profile-nav btn-full" id="profileGoCalving" style="height:46px;margin-bottom:6px;">Go to Calving Records →</button>
+    </div>
 
     <div class="section-label" id="profileCalfActivityLabel" style="display:none;">Calf Activity</div>
     <div id="profileCalfActivityList" style="margin-bottom:20px;"></div>
 
-    <div class="section-label">General Notes</div>
-    <div id="profileNotesList"></div>
-    <button class="btn btn-profile-nav btn-full" id="profileGoNotes" style="margin-bottom:20px;">Go to General Notes →</button>
-
-    <div class="section-label">Weights</div>
-    <div id="profileWeightsList"></div>
-    <button class="btn btn-profile-nav btn-full" id="profileGoWeights" style="margin-bottom:20px;">Go to Weights →</button>
-
-    <div class="section-label">Breeding Records</div>
-    <div id="profileBreedingList"></div>
-    <button class="btn btn-profile-nav btn-full" id="profileGoBreeding" style="margin-bottom:20px;">Go to Breeding Records →</button>
+    <div id="profileSecNotes">
+      <div class="section-label">General Notes</div>
+      <div id="profileNotesList"></div>
+      <button class="btn btn-profile-nav btn-full" id="profileGoNotes" style="height:46px;margin-bottom:6px;">Go to General Notes →</button>
+    </div>
+    <div id="profileSecWeights">
+      <div class="section-label">Weights</div>
+      <div id="profileWeightsList"></div>
+      <button class="btn btn-profile-nav btn-full" id="profileGoWeights" style="height:46px;margin-bottom:6px;">Go to Weights →</button>
+    </div>
+    <div id="profileSecBreeding">
+      <div class="section-label">Breeding Records</div>
+      <div id="profileBreedingList"></div>
+      <button class="btn btn-profile-nav btn-full" id="profileGoBreeding" style="height:46px;margin-bottom:6px;">Go to Breeding Records →</button>
+    </div>
 
     <div class="section-label">Photos</div>
     <div id="profilePhotosList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
     <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;"/>
-    <button class="btn btn-outline btn-full" id="profileAddPhotoBtn" style="margin-bottom:20px;">📷 Add Photo</button>
+    <button class="btn btn-outline btn-full" id="profileAddPhotoBtn" style="height:46px;margin-bottom:20px;">📷 Add Photo</button>
 
     <div class="section-label">Manage Cow</div>
-    <button class="btn btn-profile-tool btn-full" id="profileLotBtn" style="margin-bottom:12px;">Set location</button>
-    <button class="btn btn-profile-tool btn-full" id="profileOwnerBtn" style="margin-bottom:12px;">Set owner</button>
-    <button class="btn btn-profile-tool btn-full" id="profileGroupBtn" style="margin-bottom:12px;">Set group</button>
-    <button class="btn btn-profile-tool btn-full" id="profileStatusBtn" style="margin-bottom:12px;">Status: Active</button>
-    <button class="btn btn-profile-tool btn-full" id="profileHerdSeasonBtn" style="margin-bottom:12px;">Herd Season: Not Set</button>
-    <button class="btn btn-profile-tool btn-full" id="profileRemoveCowBtn" style="margin-bottom:12px;">Remove Cow</button>
-    <button class="btn btn-profile-tool btn-full" id="profilePrintBtn">🖨️ Print Summary</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <button class="btn btn-profile-tool" id="profileLotBtn" style="height:46px;padding:0 10px;">Location</button>
+      <button class="btn btn-profile-tool" id="profileOwnerBtn" style="height:46px;padding:0 10px;">Owner</button>
+      <button class="btn btn-profile-tool" id="profileGroupBtn" style="height:46px;padding:0 10px;">Group</button>
+      <button class="btn btn-profile-tool" id="profileStatusBtn" style="height:46px;padding:0 10px;">Status</button>
+      <button class="btn btn-profile-tool" id="profileHerdSeasonBtn" style="height:46px;padding:0 10px;">Herd Season</button>
+      <button class="btn btn-profile-tool" id="profilePrintBtn" style="height:46px;padding:0 10px;">🖨️ Print</button>
+    </div>
+    <button class="btn btn-barn btn-full" id="profileRemoveCowBtn" style="height:46px;">Remove Cow</button>
   </div>
 
   <div class="view hidden" id="weightsListView">
@@ -4096,27 +4119,32 @@
   function updateProfileLotLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileLotBtn');
-    el.textContent = (cow && cow.lot) ? `Location: ${cow.lot}` : 'Set location';
+    el.textContent = 'Location';
+    updateProfileBanner();
   }
   function updateProfileOwnerLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileOwnerBtn');
-    el.textContent = (cow && cow.owner) ? `Owner: ${cow.owner}` : 'Set owner';
+    el.textContent = 'Owner';
+    updateProfileBanner();
   }
   function updateProfileGroupLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileGroupBtn');
-    el.textContent = (cow && cow.cow_group) ? `Group: ${cow.cow_group}` : 'Set group';
+    el.textContent = 'Group';
+    updateProfileBanner();
   }
   function updateProfileStatusLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileStatusBtn');
-    el.textContent = `Status: ${(cow && cow.status) || 'Active'}`;
+    el.textContent = 'Status';
+    updateProfileBanner();
   }
   function updateProfileHerdSeasonLabel(){
     const cow = cows.find(c=>c.number===currentProfileCow);
     const el = document.getElementById('profileHerdSeasonBtn');
-    el.textContent = `Herd Season: ${(cow && cow.herd_season) || 'Not Set'}`;
+    el.textContent = 'Herd Season';
+    updateProfileBanner();
   }
   function refreshOpenCowHeaders(){
     if(currentCow && !detailView.classList.contains('hidden')){
@@ -5045,11 +5073,65 @@
     });
   }
 
+  // Cow profile banner: status badge + plain white rows for location / owner / group / herd season
+  function updateProfileBanner(){
+    const rowsEl = document.getElementById('profileInfoRows');
+    const badge = document.getElementById('profileStatusBadge');
+    if(!rowsEl || !badge) return;
+    const cow = cows.find(c=> c.number === currentProfileCow);
+    if(!cow){ rowsEl.innerHTML = ''; return; }
+    const rows = [['Location', cow.lot], ['Owner', cow.owner], ['Group', cow.cow_group], ['Herd Season', cow.herd_season]];
+    rowsEl.innerHTML = rows.map(([lbl, val], i)=>
+      `<div style="display:flex;align-items:baseline;padding:8px 0;${i < rows.length - 1 ? 'border-bottom:1px solid rgba(255,255,255,.28);' : ''}"><div style="font-family:Arial,sans-serif;width:118px;flex-shrink:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.82);font-weight:700;">${lbl}</div><div style="font-family:Arial,sans-serif;font-size:16px;font-weight:700;color:#fff;min-width:0;overflow-wrap:anywhere;">${val ? escapeHtml(val) : 'Not set'}</div></div>`
+    ).join('');
+    const status = cow.status || 'Active';
+    const colors = ({ Active:['#3C9142','#fff'], Sold:['#E3A93C','#2B2620'], Deceased:['#7A2E27','#fff'] })[status] || ['#6b6350','#fff'];
+    badge.textContent = status;
+    badge.style.background = colors[0];
+    badge.style.color = colors[1];
+  }
+  // Cow profile summary rows: a tile (her most recent entry) with its "+" button beside it
+  function renderProfileTiles(num){
+    const el = document.getElementById('profileTiles');
+    if(!el) return;
+    const none = '<span style="color:#a08f6b;">None yet</span>';
+    const row = (lbl, val, sub, btnText, type, extra, green) => {
+      const accent = green ? '#3C9142' : '#2E88C4';
+      const btnCls = green ? 'btn btn-profile-tool' : 'btn btn-profile-nav';
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="flex:1;min-width:0;background:#FFFFFF;border:1.5px solid #c9bfa4;border-left:6px solid ${accent};border-radius:2px;padding:10px 12px;">
+          <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#0C447C;font-weight:700;">${lbl}</div>
+          <div style="font-size:20px;font-weight:700;margin:3px 0 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${val}</div>
+          <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;">${sub}</div>
+        </div>
+        <div class="profile-tile-btn" style="width:112px;flex-shrink:0;"><button class="${btnCls}" data-type="${type}" ${extra || ''} style="width:100%;height:46px;padding:0 8px;">${btnText}</button></div>
+      </div>`;
+    };
+    const w = [...weightsFor(num)].filter(x=> x.weight != null).sort((a,b)=> (b.weigh_date || '').localeCompare(a.weigh_date || ''))[0];
+    const br = [...breedingFor(num)].sort((a,b)=> (b.breed_date || '').localeCompare(a.breed_date || ''))[0];
+    const cv = [...calvingsFor(num)].sort((a,b)=> (b.calving_date || '').localeCompare(a.calving_date || ''))[0];
+    const m = [...recordsFor(num)].filter(x=> x.medicine).sort((a,b)=> (b.date || '').localeCompare(a.date || ''))[0];
+    const nt = [...generalNotesFor(num)].sort((a,b)=> (b.note_date || '').localeCompare(a.note_date || ''))[0];
+    const calf = latestActiveCalfFor(num);
+    let html = '';
+    html += row('Last weight', w ? Number(w.weight).toLocaleString() + ' lbs' : none, w ? fmtDateShort(w.weigh_date) : '&nbsp;', '+ Weight', 'weights');
+    html += row('Bred to', br ? escapeHtml(br.bred_to || br.natural_sire || 'Unknown') : none, br ? escapeHtml((br.pregnancy_method ? br.pregnancy_method + ' · ' : '') + fmtDateShort(br.breed_date)) : '&nbsp;', '+ Breeding', 'breeding');
+    html += row('Last calving', cv ? escapeHtml(calfSexLabel(cv.calf_sex)) + ' calf' : none, cv ? escapeHtml(fmtDateShort(cv.calving_date) + (cv.birth_weight != null ? ' · ' + cv.birth_weight + ' lbs' : '')) : '&nbsp;', '+ Calving', 'calving');
+    html += row('Last med', m ? escapeHtml(m.medicine) : none, m ? escapeHtml(fmtDateShort(m.date) + (m.reason ? ' · ' + m.reason : '')) : '&nbsp;', '+ Med', 'meds');
+    html += row('Last note', nt ? escapeHtml(nt.note || '') : none, nt ? fmtDateShort(nt.note_date) : '&nbsp;', '+ Note', 'notes');
+    if(calf){
+      const cw = [...calfWeights.filter(x=> x.calving_id === calf.id && x.weight != null)].sort((a,b)=> (b.weigh_date || '').localeCompare(a.weigh_date || ''))[0];
+      html += row('Calf', escapeHtml(calfSexLabel(calf.calf_sex)) + ' calf', cw ? escapeHtml('Last wt ' + cw.weight + ' lbs · ' + fmtDateShort(cw.weigh_date)) : 'No weights yet', '+ Calf', 'calf', `data-calving-id="${escapeHtml(calf.id)}"`, true);
+    }
+    el.innerHTML = html;
+  }
   function renderProfile(){
     const num = currentProfileCow;
     const cow = cows.find(c=>c.number===num) || {};
     document.getElementById('profileNum').innerHTML = ownerNumHtml(num, cow.owner);
     renderProfilePhotos(num);
+    renderProfileTiles(num);
+    updateProfileBanner();
 
     // Meds & Notes
     const meds = [...recordsFor(num)].sort((a,b)=>b.date.localeCompare(a.date));
@@ -5167,6 +5249,13 @@
             ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
           </div>`;
         }).join('');
+
+    // a category with no entries is hidden (its "+" button beside the tile above still adds the first one)
+    [['profileSecMeds', meds.length], ['profileSecCalving', calvingRecs.length], ['profileSecNotes', notesRecs.length],
+     ['profileSecWeights', weightRecs.length], ['profileSecBreeding', breedingRecs.length]].forEach(([id, n])=>{
+      const s = document.getElementById(id);
+      if(s) s.classList.toggle('hidden', n === 0);
+    });
   }
 
   function renderWeightsList(){
@@ -7831,6 +7920,34 @@
   document.getElementById('profileHerdSeasonBtn').addEventListener('click', editHerdSeasonModal);
   document.getElementById('profileRemoveCowBtn').addEventListener('click', deleteCowFromProfile);
   document.getElementById('profilePrintBtn').addEventListener('click', ()=> window.print());
+  // Whenever a pop-up closes while a cow's profile is showing, redraw the profile so new
+  // entries (from + Med / + Weight / + Breeding / + Note) and edits show up right away.
+  new MutationObserver(muts=>{
+    for(const m of muts){
+      for(const n of m.removedNodes){
+        if(n.classList && n.classList.contains('modal-stack-item') && currentProfileCow && !profileView.classList.contains('hidden')){
+          setTimeout(()=>{ if(currentProfileCow && !profileView.classList.contains('hidden')) renderProfile(); }, 0);
+          return;
+        }
+      }
+    }
+  }).observe(document.body, { childList: true });
+  document.getElementById('profileTiles').addEventListener('click', e=>{
+    const btn = e.target.closest('button[data-type]');
+    if(!btn) return;
+    const num = currentProfileCow;
+    if(!num) return;
+    const type = btn.dataset.type;
+    if(type === 'meds'){ currentCow = num; recordModal(null); }
+    else if(type === 'weights'){ currentWeightsCow = num; weightModal(null); }
+    else if(type === 'breeding'){ currentBreedingCow = num; breedingModal(null); }
+    else if(type === 'calving'){ currentCalvingCow = num; calvingModal(null); }
+    else if(type === 'notes'){ currentNotesCow = num; generalNoteModal(null); }
+    else if(type === 'calf'){
+      const rec = calvings.find(c=> c.id === btn.dataset.calvingId);
+      if(rec) calfRecordModal(rec);
+    }
+  });
   document.getElementById('profileAddPhotoBtn').addEventListener('click', ()=>{
     document.getElementById('profilePhotoInput').click();
   });
