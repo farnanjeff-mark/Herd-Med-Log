@@ -10628,6 +10628,8 @@
           </table>
         </div>
       `;
+    } else if(results.length > 0){
+      tableEl.innerHTML = plainCowListTableHtml(results);   // no dated lines for this search: plain tappable cow list
     } else {
       tableEl.innerHTML = '';
     }
@@ -10636,15 +10638,8 @@
       resultsEl.innerHTML = '<p class="empty">No cows match those filters.</p>';
       return;
     }
-    resultsEl.innerHTML = results.map(cow=> quickAddCardHtml(cow)).join('');
-    wireQuickAddCardOpen(resultsEl, showAdvancedSearch, '← Back to Search Results');
-    wireProfileQuickAddButtons(resultsEl);
-    wireNeedsEntryCheckboxes(resultsEl);
-    wireTagNeededCheckboxes(resultsEl);
-    wireCalvedCheckboxes(resultsEl);
-    wireOpenCheckboxes(resultsEl);
-    wirePregBtCheckboxes(resultsEl);
-    wireSellCheckboxes(resultsEl);
+    resultsEl.innerHTML = '';
+    wireTableRowsToCards(tableEl, showAdvancedSearch, '← Back to Search Results');
   }
   function applyAdvancedSearchDatePreset(){
     const preset = document.getElementById('advSearchDatePreset').value;
@@ -11026,9 +11021,13 @@
     }).join('');
   }
 
-  // Tap a cow in the AI Search list -> small pop-up with her card (checkboxes + quick-add buttons),
-  // a Full Profile button (profile has a back button to AI Search), and Close.
-  function openAiCowCard(num){
+  // ===== Tap-a-cow pop-up, shared by AI Search and the reports =====
+  // Tap a cow in a report list -> small pop-up with her card (checkboxes + quick-add buttons),
+  // a Full Profile button (profile's back button returns to the report), and Close.
+  function closeAllModals(){
+    document.querySelectorAll('.modal-stack-item').forEach(el=> el.remove());
+  }
+  function openCowCardPopup(num, returnAction, returnLabel){
     const cow = cows.find(c=> String(c.number) === String(num));
     if(!cow) return;
     const modal = openModal(`
@@ -11043,15 +11042,18 @@
       </div>
     `);
     const box = modal.querySelector('#aiCowCardBox');
+    const goProfile = ()=>{
+      closeAllModals();   // pop-up plus the report underneath it, if the report is a pop-up too
+      profileReturnAction = returnAction || null;
+      profileReturnLabel = returnAction ? (returnLabel || '← Back to Report') : '← All Cattle';
+      openProfileCow(cow.number);
+    };
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
     modal.querySelector('#aiCowCardClose').addEventListener('click', closeModal);
-    modal.querySelector('#aiCowCardProfile').addEventListener('click', ()=>{
-      closeModal();
-      profileReturnAction = showAiSearch;
-      profileReturnLabel = '← Back to AI Search';
-      openProfileCow(cow.number);
+    modal.querySelector('#aiCowCardProfile').addEventListener('click', goProfile);
+    box.querySelectorAll('[data-open-num]').forEach(el=>{
+      el.addEventListener('click', e=>{ e.stopPropagation(); goProfile(); });
     });
-    wireQuickAddCardOpen(box, showAiSearch, '← Back to AI Search');
     wireProfileQuickAddButtons(box);
     wireNeedsEntryCheckboxes(box);
     wireTagNeededCheckboxes(box);
@@ -11059,6 +11061,43 @@
     wireOpenCheckboxes(box);
     wirePregBtCheckboxes(box);
     wireSellCheckboxes(box);
+  }
+  function openAiCowCard(num){ openCowCardPopup(num, showAiSearch, '← Back to AI Search'); }
+
+  // Makes the rows of a report table tappable (finds the "Cow #" column; rows that don't
+  // match a cow are simply left alone) and adds a one-line "tap a cow" hint above the table.
+  function wireTableRowsToCards(tableWrapEl, returnAction, returnLabel){
+    if(!tableWrapEl) return;
+    const hint = tableWrapEl.previousElementSibling;
+    if(hint && hint.classList && hint.classList.contains('card-tap-hint')) hint.remove();
+    const table = tableWrapEl.querySelector('table');
+    if(!table) return;
+    const heads = [...table.querySelectorAll('thead th')].map(th=> th.textContent.trim().toLowerCase());
+    let col = heads.findIndex(h=> h === 'cow #' || h === 'cow' || h === 'cow number');
+    if(col < 0) col = 0;
+    let wired = 0;
+    table.querySelectorAll('tbody tr').forEach(tr=>{
+      const cell = tr.children[col];
+      if(!cell || cell.colSpan > 1) return;
+      const num = cell.textContent.replace(/^\s*#/, '').trim();
+      const cow = cows.find(c=> String(c.number) === num);
+      if(!cow) return;
+      tr.style.cursor = 'pointer';
+      cell.style.color = '#0C5A8E';
+      cell.style.textDecoration = 'underline';
+      cell.style.fontWeight = '700';
+      tr.addEventListener('click', ()=> openCowCardPopup(cow.number, returnAction, returnLabel));
+      wired++;
+    });
+    if(wired > 0){
+      tableWrapEl.insertAdjacentHTML('beforebegin', '<div class="card-tap-hint" style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:6px;">Tap a cow to open her card</div>');
+    }
+  }
+  // Plain Cow # / Location / Owner / Status list, for searches that have no dated lines.
+  function plainCowListTableHtml(list){
+    const th = 'text-align:left;padding:8px;';
+    const rows = list.map((c,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};"><td style="padding:8px;">#${escapeHtml(c.number)}</td><td style="padding:8px;">${escapeHtml(c.lot || '')}</td><td style="padding:8px;">${escapeHtml(c.owner || '')}</td><td style="padding:8px;">${escapeHtml(c.status || 'Active')}</td></tr>`).join('');
+    return `<div style="overflow-x:auto;"><table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;"><thead><tr style="background:#EFE8D8;"><th style="${th}">Cow #</th><th style="${th}">Location</th><th style="${th}">Owner</th><th style="${th}">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderAiSearch(out, filters, pills){
@@ -11394,15 +11433,8 @@
           <tbody>${rowsHtml}</tbody>
         </table>
       `;
-      listEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
-      wireQuickAddCardOpen(listEl, reopenFn, `← Back to ${title}`);
-      wireProfileQuickAddButtons(listEl);
-      wireNeedsEntryCheckboxes(listEl);
-      wireTagNeededCheckboxes(listEl);
-      wireCalvedCheckboxes(listEl);
-    wireOpenCheckboxes(listEl);
-    wirePregBtCheckboxes(listEl);
-    wireSellCheckboxes(listEl);
+      listEl.innerHTML = '';
+      wireTableRowsToCards(tableEl, reopenFn, `← Back to ${title}`);
     }
     modal.querySelector('#closeReportBtn').addEventListener('click', closeModal);
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
@@ -11571,15 +11603,8 @@
           const cow = cows.find(cw=>cw.number===c.cow_number);
           if(cow) cowList.push(cow);
         });
-        resultsEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
-        wireQuickAddCardOpen(resultsEl, calvingReportModal, '← Back to Calving Report');
-        wireProfileQuickAddButtons(resultsEl);
-        wireNeedsEntryCheckboxes(resultsEl);
-        wireTagNeededCheckboxes(resultsEl);
-        wireCalvedCheckboxes(resultsEl);
-        wireOpenCheckboxes(resultsEl);
-        wirePregBtCheckboxes(resultsEl);
-        wireSellCheckboxes(resultsEl);
+        resultsEl.innerHTML = '';
+        wireTableRowsToCards(tableEl, calvingReportModal, '← Back to Calving Report');
       }
     }
     refresh();
@@ -11684,15 +11709,8 @@
           const cow = cows.find(cw=>cw.number===c.cow_number);
           if(cow) cowList.push(cow);
         });
-        resultsEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
-        wireQuickAddCardOpen(resultsEl, deadCalvesModal, '← Back to Dead Calves');
-        wireProfileQuickAddButtons(resultsEl);
-        wireNeedsEntryCheckboxes(resultsEl);
-        wireTagNeededCheckboxes(resultsEl);
-        wireCalvedCheckboxes(resultsEl);
-    wireOpenCheckboxes(resultsEl);
-    wirePregBtCheckboxes(resultsEl);
-    wireSellCheckboxes(resultsEl);
+        resultsEl.innerHTML = '';
+        wireTableRowsToCards(tableEl, deadCalvesModal, '← Back to Dead Calves');
       }
     }
     refresh();
@@ -11776,15 +11794,8 @@
           <tbody>${rowsHtml}</tbody>
         </table>
       `;
-      listEl.innerHTML = entries.map(e=> quickAddCardHtml(e.cow)).join('');
-      wireQuickAddCardOpen(listEl, openCowsReportModal, '← Back to Open Cows');
-      wireProfileQuickAddButtons(listEl);
-      wireNeedsEntryCheckboxes(listEl);
-      wireTagNeededCheckboxes(listEl);
-      wireCalvedCheckboxes(listEl);
-    wireOpenCheckboxes(listEl);
-    wirePregBtCheckboxes(listEl);
-    wireSellCheckboxes(listEl);
+      listEl.innerHTML = '';
+      wireTableRowsToCards(tableEl, openCowsReportModal, '← Back to Open Cows');
     }
     modal.querySelector('#closeOpenCowsBtn').addEventListener('click', closeModal);
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
@@ -11898,15 +11909,8 @@
           const cow = cows.find(cw=>cw.number===e.num);
           if(cow) cowList.push(cow);
         });
-        resultsEl.innerHTML = cowList.map(cow=> quickAddCardHtml(cow)).join('');
-        wireQuickAddCardOpen(resultsEl, todaysActivityModal, '← Back to Report');
-        wireProfileQuickAddButtons(resultsEl);
-        wireNeedsEntryCheckboxes(resultsEl);
-        wireTagNeededCheckboxes(resultsEl);
-        wireCalvedCheckboxes(resultsEl);
-    wireOpenCheckboxes(resultsEl);
-    wirePregBtCheckboxes(resultsEl);
-    wireSellCheckboxes(resultsEl);
+        resultsEl.innerHTML = '';
+        wireTableRowsToCards(tableEl, todaysActivityModal, '← Back to Report');
       }
     }
     refresh();
@@ -12041,15 +12045,8 @@
             <tbody>${rows}</tbody>
           </table>
         `;
-        resultsEl.innerHTML = entries.map(e=> quickAddCardHtml(e.cow)).join('');
-        wireQuickAddCardOpen(resultsEl, calvedSinceModal, '← Back to Report');
-        wireProfileQuickAddButtons(resultsEl);
-        wireNeedsEntryCheckboxes(resultsEl);
-        wireTagNeededCheckboxes(resultsEl);
-        wireCalvedCheckboxes(resultsEl);
-    wireOpenCheckboxes(resultsEl);
-    wirePregBtCheckboxes(resultsEl);
-    wireSellCheckboxes(resultsEl);
+        resultsEl.innerHTML = '';
+        wireTableRowsToCards(tableEl, calvedSinceModal, '← Back to Report');
       }
     }
     refresh();
