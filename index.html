@@ -246,7 +246,7 @@
 
   /* ===== Vault (added) ===== */
   .vlt{position:fixed;inset:0;z-index:80;background:var(--paper);overflow:auto;overscroll-behavior:contain;}
-  .vlt-wrap{max-width:960px;margin:0 auto;padding:16px 18px 60px;}
+  .vlt-wrap{max-width:480px;margin:0 auto;padding:16px 18px 60px;}
   .vlt-top{display:flex;gap:10px;align-items:center;margin-bottom:16px;}
   .vlt-warn{background:#f6e3e1;border:2px solid var(--barn);color:var(--barn);border-radius:10px;padding:12px 14px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;margin-bottom:14px;line-height:1.45;}
   .vlt-note{background:#e6f1f9;border:2px solid #2E88C4;color:#0C5A8E;border-radius:10px;padding:12px 14px;font-family:Arial,sans-serif;font-size:14px;margin-bottom:14px;line-height:1.45;}
@@ -255,15 +255,18 @@
   .vlt-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center;}
   .vlt-bar input[type="text"],.vlt-bar input[type="search"]{flex:1 1 200px;background:#fff;}
   .vlt-count{font-family:Arial,sans-serif;font-size:14px;color:#6b6350;margin:0 0 8px;}
-  .vlt-scroll{overflow-x:auto;background:#fff;border:2px solid #2E88C4;border-radius:10px;}
-  .vlt table{border-collapse:collapse;width:100%;min-width:760px;font-family:Arial,sans-serif;font-size:14px;}
-  .vlt th{background:#0C5A8E;color:#fff;text-align:left;padding:10px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
-  .vlt td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:top;word-break:break-word;white-space:pre-wrap;}
-  .vlt tbody tr:nth-child(even) td{background:#f4f9fd;}
-  .vlt td.vlt-pw{font-family:'Courier New',monospace;}
-  .vlt td.vlt-act{white-space:nowrap;}
-  .vlt td.vlt-act .btn{margin:0 4px 4px 0;}
-  .vlt-empty{padding:18px;font-family:Arial,sans-serif;color:#6b6350;text-align:center;}
+  .vlt-cards{display:flex;flex-direction:column;gap:12px;}
+  .vlt-card{background:#fff;border:2px solid #2E88C4;border-radius:10px;padding:14px;box-shadow:0 2px 5px rgba(43,38,32,.12);font-family:Arial,sans-serif;}
+  .vlt-card-holder{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--barn);margin-bottom:2px;word-break:break-word;}
+  .vlt-card-name{font-size:19px;font-weight:700;color:#0C5A8E;margin-bottom:10px;word-break:break-word;}
+  .vlt-card-rows{border-top:1px solid var(--line);padding-top:8px;}
+  .vlt-row{display:flex;gap:10px;padding:4px 0;font-size:15px;line-height:1.35;}
+  .vlt-lbl{flex:0 0 82px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6b6350;padding-top:3px;}
+  .vlt-val{flex:1;min-width:0;word-break:break-word;white-space:pre-wrap;color:var(--ink);}
+  .vlt-val.vlt-pw{font-family:'Courier New',monospace;font-size:16px;}
+  .vlt-card-acts{display:flex;gap:8px;margin-top:12px;}
+  .vlt-card-acts .btn{flex:1;padding:11px 6px;font-size:13px;justify-content:center;text-align:center;}
+  .vlt-empty{background:#fff;border:2px solid #2E88C4;border-radius:10px;padding:18px;font-family:Arial,sans-serif;color:#6b6350;text-align:center;}
   .vlt-toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:20px;font-family:Arial,sans-serif;font-size:13px;z-index:90;opacity:0;transition:opacity .25s;pointer-events:none;max-width:85%;text-align:center;}
   .vlt-toast.show{opacity:1;}
   .vlt-check{display:flex;gap:10px;align-items:flex-start;font-family:Arial,sans-serif;font-size:14px;margin:12px 0;line-height:1.4;}
@@ -1381,13 +1384,8 @@
         <input type="file" id="vltFile" accept=".csv,text/csv" class="hidden" />
       </div>
       <div class="vlt-count" id="vltCount"></div>
-      <div class="vlt-scroll">
-        <table>
-          <thead><tr><th>Account Holder</th><th>Name</th><th>User Name</th><th>Password</th><th>Notes</th><th>Actions</th></tr></thead>
-          <tbody id="vltBody"></tbody>
-        </table>
-        <div class="vlt-empty hidden" id="vltEmpty"></div>
-      </div>
+      <div class="vlt-cards" id="vltBody"></div>
+      <div class="vlt-empty hidden" id="vltEmpty"></div>
     </div>
 
     <!-- Add / Edit -->
@@ -12436,8 +12434,7 @@
   var TABLE = '/rest/v1/vault_entries';
   var ITER = 250000;
   var IDLE_MS = 5 * 60 * 1000;
-  var CLIP_MS = 30 * 1000;
-  var MIN_PW = 8;
+    var MIN_PW = 8;
   var LOGIN_LABEL = 'champ-vault-login-v1';
   var VERIFY_TEXT = 'champ-vault-ok';
 
@@ -12445,7 +12442,7 @@
   var td = new TextDecoder();
 
   // In-memory state only. Nothing here is ever written to storage.
-  var S = { key:null, token:null, refresh:null, meta:null, entries:[], idleT:null, clipT:null, lastAct:0, editId:null, importRows:null };
+  var S = { key:null, token:null, refresh:null, meta:null, entries:[], idleT:null, lastAct:0, editId:null, importRows:null };
 
   function $(id){ return document.getElementById(id); }
   var overlay = $('vaultOverlay');
@@ -12589,20 +12586,6 @@
     }
   });
   window.addEventListener('pagehide', function(){ lock(''); });
-
-  // ---------- clipboard ----------
-  async function copyPassword(pw){
-    try{
-      await navigator.clipboard.writeText(pw);
-    }catch(e){ toast('Could not copy.'); return; }
-    clearTimeout(S.clipT);
-    S.clipT = setTimeout(clearClipboard, CLIP_MS);
-    toast('Copied. Clears in 30 seconds.');
-  }
-  function clearClipboard(){
-    clearTimeout(S.clipT); S.clipT = null;
-    try{ navigator.clipboard.writeText(' ').catch(function(){}); }catch(e){}
-  }
 
   // ---------- data load ----------
   async function fetchAllRows(){
@@ -12756,11 +12739,32 @@
     b.addEventListener('click', fn);
     return b;
   }
-  function cell(text, cls){
-    var td = document.createElement('td');
-    if(cls) td.className = cls;
-    td.textContent = text;
-    return td;
+  function addRow(parent, label, value, isPw){
+    if(!value) return;
+    var row = document.createElement('div'); row.className = 'vlt-row';
+    var l = document.createElement('div'); l.className = 'vlt-lbl'; l.textContent = label;
+    var v = document.createElement('div'); v.className = 'vlt-val' + (isPw ? ' vlt-pw' : ''); v.textContent = value;
+    row.appendChild(l); row.appendChild(v); parent.appendChild(row);
+  }
+  function buildCard(e){
+    var card = document.createElement('div'); card.className = 'vlt-card';
+    var title = e.n || e.h;
+    if(e.n && e.h){
+      var hd = document.createElement('div'); hd.className = 'vlt-card-holder'; hd.textContent = e.h; card.appendChild(hd);
+    }
+    var nm = document.createElement('div'); nm.className = 'vlt-card-name'; nm.textContent = title; card.appendChild(nm);
+    var rows = document.createElement('div'); rows.className = 'vlt-card-rows';
+    addRow(rows, 'User Name', e.u, false);
+    addRow(rows, 'Password', e.p, true);
+    addRow(rows, 'Notes', e.t, false);
+    if(rows.childNodes.length) card.appendChild(rows);
+    var acts = document.createElement('div'); acts.className = 'vlt-card-acts';
+    if(e.ok){
+      acts.appendChild(mkBtn('Edit', 'btn-outline', function(){ openForm(e); }));
+    }
+    acts.appendChild(mkBtn('Delete', 'btn-barn', function(){ deleteEntry(e); }));
+    card.appendChild(acts);
+    return card;
   }
   function render(){
     var q = $('vltSearch').value.trim().toLowerCase();
@@ -12773,19 +12777,7 @@
     });
     var body = $('vltBody');
     body.textContent = '';
-    list.forEach(function(e){
-      var tr = document.createElement('tr');
-      tr.appendChild(cell(e.h)); tr.appendChild(cell(e.n)); tr.appendChild(cell(e.u));
-      tr.appendChild(cell(e.p, 'vlt-pw')); tr.appendChild(cell(e.t));
-      var act = document.createElement('td'); act.className = 'vlt-act';
-      if(e.ok){
-        act.appendChild(mkBtn('Copy', 'btn-nav-tool', function(){ copyPassword(e.p); }));
-        act.appendChild(mkBtn('Edit', 'btn-outline', function(){ openForm(e); }));
-      }
-      act.appendChild(mkBtn('Delete', 'btn-barn', function(){ deleteEntry(e); }));
-      tr.appendChild(act);
-      body.appendChild(tr);
-    });
+    list.forEach(function(e){ body.appendChild(buildCard(e)); });
     var total = S.entries.length;
     $('vltCount').textContent = q ? (list.length + ' of ' + total + ' entries') : (total + (total === 1 ? ' entry' : ' entries'));
     var empty = $('vltEmpty');
