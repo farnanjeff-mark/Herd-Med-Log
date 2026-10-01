@@ -613,6 +613,14 @@
     <button class="btn btn-outline btn-full" id="quickCalfWeightHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
     <div class="modal-title" style="margin-bottom:6px;">Quick Calf Weight</div>
     <div class="banner banner-note" style="display:block;margin-bottom:14px;">Adds a weight to that calf's record using her mother's number — no need to open her profile.</div>
+    <button class="btn btn-outline btn-full" id="qcwWeaningToggle" aria-pressed="false" style="height:46px;margin-bottom:10px;">Weaning day: OFF</button>
+    <div id="qcwWeaningBox" class="hidden" style="margin-bottom:10px;">
+      <div class="banner banner-note" style="display:block;margin-bottom:10px;">Weaning day is on. Each weight goes into that calf's weaning weight and date, not the regular weight list.</div>
+      <div class="field">
+        <label>Weaning date</label>
+        <input type="date" id="qcwWeaningDate"/>
+      </div>
+    </div>
     <div class="row2">
       <div class="field">
         <label>Cow # (mother)</label>
@@ -4283,6 +4291,7 @@
         <div class="record-date">${fmtDate(r.calving_date)}</div>
         <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
         ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
+        ${weaningLineHtml(r)}
         ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
         ${r.promoted_to_cow_number
           ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(r.promoted_to_cow_number)}</div>`
@@ -5116,7 +5125,9 @@
     html += row('Last note', nt ? escapeHtml(nt.note || '') : none, nt ? fmtDateShort(nt.note_date) : '&nbsp;', '+ Note', 'notes');
     if(calf){
       const cw = [...calfWeights.filter(x=> x.calving_id === calf.id && x.weight != null)].sort((a,b)=> (b.weigh_date || '').localeCompare(a.weigh_date || ''))[0];
-      html += row('Calf', escapeHtml(calfSexLabel(calf.calf_sex)) + ' calf', cw ? escapeHtml('Last wt ' + cw.weight + ' lbs · ' + fmtDateShort(cw.weigh_date)) : 'No weights yet', '+ Calf', 'calf', `data-calving-id="${escapeHtml(calf.id)}"`, true);
+      const ws = weaningStats(calf);
+      const calfSub = ws ? escapeHtml('Weaned ' + ws.weight + ' lbs' + (ws.gain != null ? ' · ' + ws.gain.toFixed(1) + ' lbs/day' : '')) : (cw ? escapeHtml('Last wt ' + cw.weight + ' lbs · ' + fmtDateShort(cw.weigh_date)) : 'No weights yet');
+      html += row('Calf', escapeHtml(calfSexLabel(calf.calf_sex)) + ' calf', calfSub, '+ Calf', 'calf', `data-calving-id="${escapeHtml(calf.id)}"`, true);
     }
     el.innerHTML = html;
   }
@@ -5165,6 +5176,7 @@
             <div class="record-date">${fmtDate(r.calving_date)}</div>
             <div class="record-med">${calfSexLabel(r.calf_sex)} calf</div>
             ${details.length ? `<div class="record-reason">${details.join(' · ')}</div>` : ''}
+            ${weaningLineHtml(r)}
             ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
             ${r.promoted_to_cow_number
               ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(r.promoted_to_cow_number)}</div>`
@@ -5186,13 +5198,15 @@
         calfActivityLabel.style.display = '';
         const medsHtml = calfMeds.map(t=>{
           const desc = t.medicine ? `${escapeHtml(t.medicine)}${t.reason ? ' / '+escapeHtml(t.reason) : ''}` : '(note only)';
-          return `<div class="record" style="border-left-color:#2E88C4;">
+          return `<div class="record has-tools" style="border-left-color:#2E88C4;">
+            ${profileRecordTools(t, 'calfmed')}
             <div class="record-date">${fmtDate(t.date)}</div>
             <div class="record-med">${desc}</div>
             ${t.notes ? `<div class="record-notes">${escapeHtml(t.notes)}</div>` : ''}
           </div>`;
         }).join('');
-        const wtsHtml = calfWts.map(w=>`<div class="record" style="border-left-color:#2E88C4;">
+        const wtsHtml = calfWts.map(w=>`<div class="record has-tools" style="border-left-color:#2E88C4;">
+          ${profileRecordTools(w, 'calfweight')}
           <div class="record-date">${fmtDate(w.weigh_date)}</div>
           <div class="record-med">${w.weight!=null ? w.weight+' lbs' : ''}</div>
           ${w.notes ? `<div class="record-notes">${escapeHtml(w.notes)}</div>` : ''}
@@ -6145,6 +6159,7 @@
   }
 
   function refreshCalfRecordModal(modal, calvingRecord){
+    if(!modal) return;   // edits made from the cow profile have no Calf Record pop-up behind them
     const { medsHtml, weightsHtml } = calfRecordSectionsHtml(calvingRecord);
     const medsEl = modal.querySelector('#calfMedsList');
     const weightsEl = modal.querySelector('#calfWeightsList');
@@ -6170,7 +6185,21 @@
       <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;">Born ${fmtDate(calvingRecord.calving_date)} to #${escapeHtml(calvingRecord.cow_number)} · ${escapeHtml(summaryParts.join(' · '))}</div>
       <button class="btn btn-outline btn-full" id="calfEditCalvingBtn" style="margin-bottom:14px;">✏️ Edit Calving Details</button>
 
-      <div class="section-label" style="margin-top:0;">Meds &amp; Notes</div>
+      <div class="section-label" style="margin-top:0;">Weaning</div>
+      <div id="calfWeanInfo" style="font-family:Arial,sans-serif;font-size:13px;color:#3C9142;font-weight:700;margin-bottom:8px;"></div>
+      <div class="row2">
+        <div class="field">
+          <label>Weaning date</label>
+          <input type="date" id="calfWeanDate" value="${calvingRecord.weaning_date || ''}"/>
+        </div>
+        <div class="field">
+          <label>Weight (lbs)</label>
+          <input type="number" id="calfWeanWeight" step="0.1" min="0" placeholder="e.g. 585" value="${calvingRecord.weaning_weight != null ? calvingRecord.weaning_weight : ''}"/>
+        </div>
+      </div>
+      <button class="btn btn-nav-tool btn-full" id="calfWeanSaveBtn" style="margin-bottom:14px;">Save Weaning</button>
+
+      <div class="section-label">Meds &amp; Notes</div>
       <button class="btn btn-nav-tool btn-full" id="calfAddMedBtn" style="margin-bottom:10px;">+ Log Med / Note</button>
       <div id="calfMedsList">${medsHtml}</div>
 
@@ -6202,6 +6231,7 @@
         calfRecordModal(updatedRecord);
       });
     });
+    wireCalfWeaning(modal, calvingRecord);
     modal.querySelector('#calfAddMedBtn').addEventListener('click', ()=> calfMedEntryModal(calvingRecord, null, modal));
     modal.querySelector('#calfAddWeightBtn').addEventListener('click', ()=> calfWeightEntryModal(calvingRecord, null, modal));
     const outcomeSelect = modal.querySelector('#calfOutcomeSelect');
@@ -7511,7 +7541,8 @@
     emptyEl.classList.toggle('hidden', qcwSessionEntries.length !== 0);
     listEl.innerHTML = [...qcwSessionEntries].reverse().map(e=> `
       <div class="record" style="padding:10px 14px;">
-        <div class="record-med" style="font-size:16px;">#${escapeHtml(e.cowNum)} — ${e.weight} lbs</div>
+        <div class="record-med" style="font-size:16px;">#${escapeHtml(e.cowNum)} — ${e.weight} lbs${e.weaning ? ' (weaning)' : ''}</div>
+        ${e.weaning && e.line ? `<div style="font-family:Arial,sans-serif;font-size:12px;color:#3C9142;font-weight:700;margin-top:2px;">${escapeHtml(e.line)}</div>` : ''}
         ${e.pending ? `<div style="display:inline-flex;align-items:center;gap:4px;background:#FCEBEB;border:1px solid #E24B4A;color:#791F1F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:4px;">Not synced yet</div>` : ''}
       </div>
     `).join('');
@@ -7730,7 +7761,11 @@
   document.getElementById('vetPregCowNum').addEventListener('blur', autoFillVetPregDaysAlong);
   document.getElementById('quickCalfWeightBtn').addEventListener('click', showQuickCalfWeight);
   document.getElementById('quickCalfWeightHomeBtn').addEventListener('click', showHome);
-  document.getElementById('qcwSaveBtn').addEventListener('click', saveQuickCalfWeightEntry);
+  document.getElementById('qcwSaveBtn').addEventListener('click', ()=>{ if(qcwWeaningOn) saveQcwWeaning(); else saveQuickCalfWeightEntry(); });
+  document.getElementById('qcwWeaningToggle').addEventListener('click', ()=> setQcwWeaning(!qcwWeaningOn));
+  // the switch always starts OFF when the screen is opened, so a weight is never saved as a weaning weight by accident
+  new MutationObserver(()=>{ if(quickCalfWeightView.classList.contains('hidden')) setQcwWeaning(false); })
+    .observe(quickCalfWeightView, { attributes: true, attributeFilter: ['class'] });
   document.getElementById('quickCowWeightBtn').addEventListener('click', showQuickCowWeight);
   document.getElementById('quickCowWeightHomeBtn').addEventListener('click', showHome);
   document.getElementById('qcowWSaveBtn').addEventListener('click', saveQuickCowWeightEntry);
@@ -7957,13 +7992,16 @@
       calving:  { list: ()=> calvings,        label: 'calving record',   edit: r=>{ currentCalvingCow = r.cow_number; editCalvingModal(r); },              del: ()=>{ currentCalvingCow = currentProfileCow; return deleteCalvingRecord(id); } },
       notes:    { list: ()=> generalNotes,    label: 'note',             edit: r=>{ currentNotesCow = r.cow_number; editGeneralNoteModal(r); },             del: ()=>{ currentNotesCow = currentProfileCow; return deleteGeneralNote(id); } },
       weights:  { list: ()=> weights,         label: 'weight entry',     edit: r=>{ currentWeightsCow = r.cow_number; editWeightModal(r); },                del: ()=>{ currentWeightsCow = currentProfileCow; return deleteWeight(id); } },
-      breeding: { list: ()=> breedingRecords, label: 'breeding record',  edit: r=>{ currentBreedingCow = r.cow_number; editBreedingModal(r); },             del: ()=>{ currentBreedingCow = currentProfileCow; return deleteBreedingRecord(id); } }
+      breeding: { list: ()=> breedingRecords, label: 'breeding record',  edit: r=>{ currentBreedingCow = r.cow_number; editBreedingModal(r); },             del: ()=>{ currentBreedingCow = currentProfileCow; return deleteBreedingRecord(id); } },
+      // the calf entries ask "Remove this entry?" themselves, so no second prompt here
+      calfmed:    { ownPrompt: true, list: ()=> calfTreatments, label: 'calf entry', edit: r=>{ const cv = calvings.find(c=> c.id === r.calving_id); if(cv) calfMedEntryModal(cv, r, null); },    del: ()=>{ const r = calfTreatments.find(x=> String(x.id) === String(id)); const cv = r && calvings.find(c=> c.id === r.calving_id); return deleteCalfTreatment(id, null, cv); } },
+      calfweight: { ownPrompt: true, list: ()=> calfWeights,    label: 'calf entry', edit: r=>{ const cv = calvings.find(c=> c.id === r.calving_id); if(cv) calfWeightEntryModal(cv, r, null); }, del: ()=>{ const r = calfWeights.find(x=> String(x.id) === String(id)); const cv = r && calvings.find(c=> c.id === r.calving_id); return deleteCalfWeight(id, null, cv); } }
     }[kind];
     if(!spec) return;
     const rec = spec.list().find(r=> String(r.id) === String(id));
     if(!rec) return;
     if(ed){ spec.edit(rec); return; }
-    if(!window.confirm(`Delete this ${spec.label}? It will be moved to Recently Deleted.`)) return;
+    if(!spec.ownPrompt && !window.confirm(`Delete this ${spec.label}? It will be moved to Recently Deleted.`)) return;
     await spec.del();
     if(currentProfileCow && !profileView.classList.contains('hidden')) renderProfile();
   });
@@ -10994,6 +11032,186 @@
       }
       return _orig.apply(this, arguments);
     }; }
+
+  // ===================== WEANING (date + weight on the calving record) =====================
+  function daysBetween(a, b){
+    return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
+  }
+  // weaning numbers for a calving record, or null if it has no weaning weight
+  function weaningStats(c){
+    if(!c || c.weaning_weight == null || c.weaning_weight === '') return null;
+    const weight = Number(c.weaning_weight);
+    const age = c.weaning_date ? daysBetween(c.calving_date, c.weaning_date) : null;
+    const bw = (c.birth_weight != null && Number(c.birth_weight) > 0) ? Number(c.birth_weight) : null;
+    const gain = (bw != null && age != null && age > 0) ? (weight - bw) / age : null;
+    return { weight, date: c.weaning_date || null, age, gain };
+  }
+  function weaningLineText(c){
+    const s = weaningStats(c);
+    if(!s) return '';
+    const parts = ['Weaned' + (s.date ? ' ' + fmtDateShort(s.date) : ''), s.weight + ' lbs'];
+    if(s.age != null) parts.push(s.age + ' days old');
+    if(s.gain != null) parts.push(s.gain.toFixed(1) + ' lbs/day');
+    return parts.join(' · ');
+  }
+  function weaningLineHtml(c){
+    const txt = weaningLineText(c);
+    return txt ? `<div style="margin-top:6px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#3C9142;">${escapeHtml(txt)}</div>` : '';
+  }
+  // checks shared by the Calf Record pop-up and Quick Calf Weight. Returns an error text, or null if fine.
+  function weaningProblem(calving, dateStr, weight){
+    if(!(weight > 0)) return 'Enter the weaning weight';
+    if(!dateStr) return 'Enter the weaning date';
+    const age = daysBetween(calving.calving_date, dateStr);
+    if(age < 30) return age < 0 ? 'That date is before this calf was born' : 'That is only ' + age + ' days after birth. Check the date';
+    return null;
+  }
+  // questions worth a second look before saving (returns text, or null)
+  function weaningWarning(calving, dateStr, weight){
+    const age = daysBetween(calving.calving_date, dateStr);
+    const bw = (calving.birth_weight != null && Number(calving.birth_weight) > 0) ? Number(calving.birth_weight) : null;
+    const gain = (bw != null && age > 0) ? (weight - bw) / age : null;
+    if(gain != null && (gain < 0.5 || gain > 5)) return `That works out to ${gain.toFixed(1)} lbs per day (${bw} lbs at birth, ${weight} lbs at ${age} days). Save it anyway?`;
+    if(weight < 150 || weight > 1200) return `${weight} lbs is outside the usual weaning range. Save it anyway?`;
+    return null;
+  }
+  async function saveWeaning(calving, dateStr, weight){
+    const body = { weaning_date: dateStr || null, weaning_weight: (weight == null || weight === '') ? null : Number(weight) };
+    try{
+      const updated = await api('/calvings?id=eq.' + encodeURIComponent(calving.id), {
+        method: 'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}), body: JSON.stringify(body)
+      });
+      const idx = calvings.findIndex(c=> c.id === calving.id);
+      if(idx !== -1){ calvings[idx] = updated[0]; Object.assign(calving, updated[0]); }
+      saveOfflineCache();
+      return { ok: true, pending: false };
+    }catch(e){
+      if(e && e.isNetworkFailure){
+        const idx = calvings.findIndex(c=> c.id === calving.id);
+        if(idx !== -1){
+          calvings[idx] = Object.assign({}, calvings[idx], body, { _pendingSync: true });
+          Object.assign(calving, calvings[idx]);
+        }
+        queuePendingWrite({
+          localId: makeLocalId('pw'),
+          kind: 'update', table: 'calvings', recordId: calving.id,
+          method: 'PATCH', path: '/calvings?id=eq.' + encodeURIComponent(calving.id),
+          body
+        });
+        saveOfflineCache();
+        return { ok: true, pending: true };
+      }
+      return { ok: false };
+    }
+  }
+  // Weaning section inside the Calf Record pop-up
+  function wireCalfWeaning(modal, calvingRecord){
+    const infoEl = modal.querySelector('#calfWeanInfo');
+    const dateEl = modal.querySelector('#calfWeanDate');
+    const wtEl = modal.querySelector('#calfWeanWeight');
+    const btn = modal.querySelector('#calfWeanSaveBtn');
+    if(!infoEl || !btn) return;
+    const showInfo = ()=>{ infoEl.textContent = weaningLineText(calvingRecord) || 'Not weaned yet'; infoEl.style.color = weaningStats(calvingRecord) ? '#3C9142' : '#6b6350'; };
+    showInfo();
+    btn.addEventListener('click', async ()=>{
+      const dateStr = dateEl.value;
+      const wtStr = wtEl.value.trim();
+      // both boxes empty = clear the weaning info
+      if(!dateStr && wtStr === ''){
+        if(weaningStats(calvingRecord) == null && !calvingRecord.weaning_date){ showToast('Nothing to save'); return; }
+        if(!confirm('Clear the weaning date and weight for this calf?')) return;
+        btn.disabled = true;
+        const r0 = await saveWeaning(calvingRecord, null, null);
+        btn.disabled = false;
+        showToast(r0.ok ? (r0.pending ? 'Cleared on this phone, will sync when you have signal' : 'Weaning cleared') : 'Could not save, try again');
+        showInfo();
+        return;
+      }
+      const weight = parseFloat(wtStr);
+      const problem = weaningProblem(calvingRecord, dateStr, weight);
+      if(problem){ showToast(problem); return; }
+      const warn = weaningWarning(calvingRecord, dateStr, weight);
+      if(warn && !confirm(warn)) return;
+      btn.disabled = true;
+      const r = await saveWeaning(calvingRecord, dateStr, weight);
+      btn.disabled = false;
+      if(r.ok){
+        showToast(r.pending ? 'Saved on this phone, will sync when you have signal' : 'Weaning saved');
+        showInfo();
+      }else{
+        showToast('Could not save, try again');
+      }
+    });
+  }
+  // ---- Quick Calf Weight: Weaning day switch ----
+  let qcwWeaningOn = false;
+  function setQcwWeaning(on){
+    qcwWeaningOn = !!on;
+    const tg = document.getElementById('qcwWeaningToggle');
+    tg.textContent = qcwWeaningOn ? 'Weaning day: ON' : 'Weaning day: OFF';
+    tg.setAttribute('aria-pressed', qcwWeaningOn ? 'true' : 'false');
+    tg.classList.toggle('btn-profile-tool', qcwWeaningOn);
+    tg.classList.toggle('btn-outline', !qcwWeaningOn);
+    document.getElementById('qcwWeaningBox').classList.toggle('hidden', !qcwWeaningOn);
+    if(qcwWeaningOn){
+      const de = document.getElementById('qcwWeaningDate');
+      if(!de.value) de.value = todayLocal();
+    }
+    document.getElementById('qcwSaveBtn').textContent = qcwWeaningOn ? 'Save Weaning & Next' : 'Save & Next';
+  }
+  // if a cow has more than one current calf (twins), ask which one was weighed
+  function chooseCalf(candidates){
+    return new Promise(resolve=>{
+      const modal = openModal(`
+        <div class="modal-title">Which calf?</div>
+        <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:12px;">This cow has more than one current calf. Pick the one you just weighed.</div>
+        ${candidates.map((c,i)=>`<button class="btn btn-nav-tool btn-full pick-calf" data-i="${i}" style="margin-bottom:8px;">${escapeHtml(calfSexLabel(c.calf_sex))} calf, born ${escapeHtml(fmtDate(c.calving_date))}${c.birth_weight ? ', ' + escapeHtml(String(c.birth_weight)) + ' lbs' : ''}</button>`).join('')}
+        <div class="modal-actions"><button class="btn btn-outline btn-full" id="pickCalfCancel">Cancel</button></div>
+      `);
+      let done = false;
+      const finish = v=>{ if(done) return; done = true; closeModal(); resolve(v); };
+      modal.querySelectorAll('.pick-calf').forEach(b=> b.addEventListener('click', ()=> finish(candidates[Number(b.dataset.i)])));
+      modal.querySelector('#pickCalfCancel').addEventListener('click', ()=> finish(null));
+    });
+  }
+  async function saveQcwWeaning(){
+    const cowNumInput = document.getElementById('qcwCowNum');
+    const weightInput = document.getElementById('qcwWeight');
+    const dateInput = document.getElementById('qcwWeaningDate');
+    const cowNum = cowNumInput.value.trim();
+    const weightVal = weightInput.value.trim();
+    if(!cowNum){ showToast("Enter the mother's cow number"); return; }
+    if(weightVal === ''){ showToast('Enter a weight'); return; }
+    const cow = cows.find(c=> c.number.toLowerCase() === cowNum.toLowerCase());
+    if(!cow){ showToast(`No cow #${cowNum} found`); return; }
+    const candidates = calvingsFor(cow.number).filter(c=> !c.promoted_to_cow_number && !c.calf_outcome).sort((a,b)=> b.calving_date.localeCompare(a.calving_date));
+    if(candidates.length === 0){ showToast(`No active calf on file for #${cowNum}`); return; }
+    let calving = candidates[0];
+    if(candidates.length > 1){
+      calving = await chooseCalf(candidates);
+      if(!calving) return;
+    }
+    const weight = parseFloat(weightVal);
+    const dateStr = dateInput.value || todayLocal();
+    const problem = weaningProblem(calving, dateStr, weight);
+    if(problem){ showToast(problem); return; }
+    if(calving.weaning_weight != null && !confirm(`#${cowNum}'s calf already has a weaning weight of ${calving.weaning_weight} lbs${calving.weaning_date ? ' (' + fmtDateShort(calving.weaning_date) + ')' : ''}. Replace it with ${weight} lbs?`)) return;
+    const warn = weaningWarning(calving, dateStr, weight);
+    if(warn && !confirm(warn)) return;
+    const btn = document.getElementById('qcwSaveBtn');
+    btn.disabled = true;
+    const r = await saveWeaning(calving, dateStr, weight);
+    btn.disabled = false;
+    if(!r.ok){ showToast('Could not save, try again'); return; }
+    const st = weaningStats(calving);
+    const line = st ? [st.age != null ? st.age + ' days old' : null, st.gain != null ? st.gain.toFixed(1) + ' lbs/day' : null].filter(Boolean).join(' · ') : '';
+    qcwSessionEntries.push({ cowNum, weight: weightVal, pending: r.pending, weaning: true, line });
+    renderQcwTally();
+    showToast(r.pending ? `#${cowNum} saved on this phone, will sync when you have signal` : `#${cowNum}: ${weight} lbs weaning saved`);
+    cowNumInput.value = '';
+    weightInput.value = '';
+    cowNumInput.focus();
+  }
 
   // ===================== LIGHTER LISTS =====================
   // The six "pick a cow" lists (Meds & Notes, Calving, Notes, Cattle/Profile, Weights, Breeding) used to
