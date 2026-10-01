@@ -4296,7 +4296,7 @@
         ${weaningLineHtml(r)}
         ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
         ${r.promoted_to_cow_number
-          ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(r.promoted_to_cow_number)}</div>`
+          ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ ${r.calf_outcome === 'bull' ? 'Kept as bull' : 'Promoted to'} #${escapeHtml(r.promoted_to_cow_number)}</div>`
           : `${outcomeLabel ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#A05A2C;">${outcomeLabel}</div>` : ''}${r._pendingSync ? '' : `<button class="btn btn-nav-tool btn-sm calf-record-btn" data-id="${r.id}" style="margin-top:8px;">🐄 Calf Record</button>`}`}
       `;
       div.querySelector('.calf-record-btn')?.addEventListener('click', (e)=>{
@@ -5182,7 +5182,7 @@
             ${weaningLineHtml(r)}
             ${r.notes ? `<div class="record-notes">${escapeHtml(r.notes)}</div>` : ''}
             ${r.promoted_to_cow_number
-              ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(r.promoted_to_cow_number)}</div>`
+              ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#3C9142;">✓ ${r.calf_outcome === 'bull' ? 'Kept as bull' : 'Promoted to'} #${escapeHtml(r.promoted_to_cow_number)}</div>`
               : `${outcomeLabel ? `<div style="margin-top:8px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#A05A2C;">${outcomeLabel}</div>` : ''}${r._pendingSync ? '' : `<button class="btn btn-nav-tool btn-sm calf-record-btn" data-id="${escapeHtml(r.id)}" style="margin-top:8px;">🐄 Calf Record</button>`}`}
           </div>`;
         }).join('');
@@ -6212,12 +6212,13 @@
 
       <div class="section-label">Manage</div>
       ${calvingRecord.promoted_to_cow_number
-        ? `<div style="padding:12px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;font-weight:700;color:#3C9142;">✓ Promoted to #${escapeHtml(calvingRecord.promoted_to_cow_number)}</div>`
+        ? `<div style="padding:12px 14px;background:var(--paper-raised);border:2px solid var(--ink);border-radius:10px;font-weight:700;color:#3C9142;">✓ ${calvingRecord.calf_outcome === 'bull' ? 'Kept as bull' : 'Promoted to'} #${escapeHtml(calvingRecord.promoted_to_cow_number)}</div>`
         : `<div class="field">
              <label>Outcome</label>
              <select id="calfOutcomeSelect">
                <option value="" ${!calvingRecord.calf_outcome ? 'selected' : ''}>Still Active</option>
                <option value="__promote__">Keeping (Promote to Cow)</option>
+               <option value="__promote_bull__">Keeping as Bull (Promote)</option>
                <option value="sold" ${calvingRecord.calf_outcome==='sold' ? 'selected' : ''}>Sold</option>
                <option value="died" ${calvingRecord.calf_outcome==='died' ? 'selected' : ''}>Died</option>
              </select>
@@ -6244,6 +6245,11 @@
         if(val === '__promote__'){
           outcomeSelect.value = calvingRecord.calf_outcome || '';
           promoteCalfModal(calvingRecord, modal);
+          return;
+        }
+        if(val === '__promote_bull__'){
+          outcomeSelect.value = calvingRecord.calf_outcome || '';
+          promoteCalfModal(calvingRecord, modal, 'bull');
           return;
         }
         await setCalfOutcome(calvingRecord, val || null);
@@ -6478,18 +6484,19 @@
     }catch(e){ showToast('Could not remove — try again'); }
   }
 
-  function promoteCalfModal(calvingRecord, parentModal){
+  function promoteCalfModal(calvingRecord, parentModal, kind){
+    const isBull = kind === 'bull';
     const mother = cows.find(c=>c.number===calvingRecord.cow_number) || {};
     const modal = openModal(`
-      <div class="modal-title">Make This Calf a Cow</div>
-      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Creates a new cow record for this calf, carrying over her meds and weights logged so far. This can't be undone.</div>
+      <div class="modal-title">${isBull ? 'Make This Calf a Bull' : 'Make This Calf a Cow'}</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Creates a new record for this ${isBull ? 'bull' : 'calf'}, carrying over ${isBull ? 'his' : 'her'} meds and weights logged so far. This can't be undone.</div>
       <div class="field">
         <label>New Tag Number</label>
         <input type="text" id="promoteTagNumber" placeholder="e.g. 214" autofocus/>
       </div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelPromote">Cancel</button>
-        <button class="btn btn-barn" id="confirmPromote">Create Cow</button>
+        <button class="btn btn-barn" id="confirmPromote">${isBull ? 'Create Bull' : 'Create Cow'}</button>
       </div>
     `);
     modal.querySelector('#cancelPromote').addEventListener('click', closeModal);
@@ -6502,6 +6509,7 @@
       const lineageParts = [`Born ${fmtDate(calvingRecord.calving_date)} to #${calvingRecord.cow_number}`];
       if(calvingRecord.sire) lineageParts.push(`Sire: ${calvingRecord.sire}`);
       if(calvingRecord.birth_weight != null) lineageParts.push(`Birth weight: ${calvingRecord.birth_weight} lbs`);
+      if(isBull) lineageParts.unshift('Kept as a bull');
       const lineageNote = lineageParts.join(' · ');
       const cowBody = { number: newNum, lot: mother.lot||null, owner: mother.owner||null, added_at: todayLocal() };
       try{
@@ -6540,7 +6548,7 @@
 
         const updatedCalving = await api('/calvings?id=eq.' + encodeURIComponent(calvingRecord.id), {
           method:'PATCH', headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ promoted_to_cow_number: newNum })
+          body: JSON.stringify(isBull ? { promoted_to_cow_number: newNum, calf_outcome: 'bull' } : { promoted_to_cow_number: newNum })
         });
         const cIdx = calvings.findIndex(c=>c.id===calvingRecord.id);
         if(cIdx !== -1) calvings[cIdx] = updatedCalving[0];
@@ -6589,7 +6597,7 @@
           });
           calfWeights = calfWeights.filter(w=>w.calving_id!==calvingRecord.id);
 
-          const calvingBody = { promoted_to_cow_number: newNum };
+          const calvingBody = isBull ? { promoted_to_cow_number: newNum, calf_outcome: 'bull' } : { promoted_to_cow_number: newNum };
           const cIdx = calvings.findIndex(c=>c.id===calvingRecord.id);
           if(cIdx !== -1) calvings[cIdx] = Object.assign({}, calvings[cIdx], calvingBody, { _pendingSync:true });
           queuePendingWrite({ localId: makeLocalId('pw'), kind:'update', table:'calvings', recordId: calvingRecord.id, method:'PATCH', path:'/calvings?id=eq.'+encodeURIComponent(calvingRecord.id), body: calvingBody });
@@ -11223,7 +11231,7 @@
     if(!el) return;
     const c = calvings.find(r=> r.promoted_to_cow_number != null && String(r.promoted_to_cow_number) === String(num));
     if(!c){ el.innerHTML = ''; return; }
-    const born = [`Born ${fmtDateShort(c.calving_date)} to #${escapeHtml(c.cow_number)}`];
+    const born = [`${c.calf_outcome === 'bull' ? 'Kept as a bull · ' : ''}Born ${fmtDateShort(c.calving_date)} to #${escapeHtml(c.cow_number)}`];
     if(c.sire) born.push(`Sire: ${escapeHtml(c.sire)}`);
     if(c.birth_weight != null && Number(c.birth_weight) > 0) born.push(`${escapeHtml(String(c.birth_weight))} lbs at birth`);
     const wean = weaningLineText(c);
