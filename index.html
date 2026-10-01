@@ -10961,6 +10961,37 @@
   new MutationObserver(()=>{ if(!appInfoView.classList.contains('hidden')) renderDiagLog(); })
     .observe(appInfoView, { attributes: true, attributeFilter: ['class'] });
 
+  // ===================== LIGHTER LISTS =====================
+  // The six "pick a cow" lists (Meds & Notes, Calving, Notes, Cattle/Profile, Weights, Breeding) used to
+  // be drawn in full, every cow, on every data reload, even though only one screen is showing. With 535
+  // cows that kept ~200,000 elements alive and bogged down iPhones. Now a list is drawn only while its
+  // screen is showing; otherwise it's just marked out of date and drawn the moment you open it. When you
+  // leave a list screen its cards are released, so they never pile back up.
+  function lazyList(orig, viewEl, listEl){
+    let stale = true;
+    const wrapped = function(){
+      if(viewEl.classList.contains('hidden')){ stale = true; return; }
+      stale = false;
+      return orig.apply(this, arguments);
+    };
+    new MutationObserver(()=>{
+      if(viewEl.classList.contains('hidden')){
+        // screen left: let go of its cards so they don't pile up in memory (they are redrawn when it is opened again)
+        if(listEl && listEl.firstChild) listEl.innerHTML = '';
+        stale = true;
+      } else if(stale){
+        wrapped();
+      }
+    }).observe(viewEl, { attributes: true, attributeFilter: ['class'] });
+    return wrapped;
+  }
+  renderList = lazyList(renderList, listView, document.getElementById('cowList'));
+  renderCalvingList = lazyList(renderCalvingList, calvingListView, document.getElementById('calvingCowList'));
+  renderNotesList = lazyList(renderNotesList, notesListView, document.getElementById('notesCowList'));
+  renderProfileList = lazyList(renderProfileList, profileListView, document.getElementById('profileCowList'));
+  renderWeightsList = lazyList(renderWeightsList, weightsListView, document.getElementById('weightsCowList'));
+  renderBreedingList = lazyList(renderBreedingList, breedingListView, document.getElementById('breedingCowList'));
+
   // ===================== AI SEARCH =====================
   // The typed question goes to the "ai-search" Supabase function, which sends back filters.
   // Those filters are applied HERE, on this phone, to the herd data already loaded.
