@@ -1330,6 +1330,8 @@
       <div id="profileInfoRows" style="margin-top:12px;border-top:1px solid rgba(255,255,255,.4);"></div>
     </div>
 
+    <div id="profileOrigin"></div>
+
     <div id="profileTiles"></div>
 
     <div id="profileSecMeds">
@@ -5143,6 +5145,7 @@
     document.getElementById('profileNum').innerHTML = ownerNumHtml(num, cow.owner);
     renderProfilePhotos(num);
     renderProfileTiles(num);
+    renderProfileOrigin(num);
     updateProfileBanner();
 
     // Meds & Notes
@@ -11211,6 +11214,24 @@
     cowNumInput.value = '';
     weightInput.value = '';
     cowNumInput.focus();
+  }
+
+  // For an animal that was kept as a calf (given its own number), show where it came from and its weaning info.
+  // The weaning date and weight stay on the calving record (under the mother); this reads them from there.
+  function renderProfileOrigin(num){
+    const el = document.getElementById('profileOrigin');
+    if(!el) return;
+    const c = calvings.find(r=> r.promoted_to_cow_number != null && String(r.promoted_to_cow_number) === String(num));
+    if(!c){ el.innerHTML = ''; return; }
+    const born = [`Born ${fmtDateShort(c.calving_date)} to #${escapeHtml(c.cow_number)}`];
+    if(c.sire) born.push(`Sire: ${escapeHtml(c.sire)}`);
+    if(c.birth_weight != null && Number(c.birth_weight) > 0) born.push(`${escapeHtml(String(c.birth_weight))} lbs at birth`);
+    const wean = weaningLineText(c);
+    el.innerHTML = `<div style="background:#FFFFFF;border:1.5px solid #c9bfa4;border-left:6px solid #3C9142;border-radius:2px;padding:10px 12px;margin-bottom:10px;">
+      <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#0C447C;font-weight:700;">Born &amp; weaned</div>
+      <div style="font-size:16px;font-weight:700;margin:4px 0 2px;">${born.join(' · ')}</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:${wean ? '#3C9142' : '#6b6350'};">${wean ? escapeHtml(wean) : 'No weaning weight recorded'}</div>
+    </div>`;
   }
 
   // ===================== LIGHTER LISTS =====================
