@@ -4022,9 +4022,11 @@
       const action = profileReturnAction;
       profileReturnAction = null;
       profileReturnLabel = '← All Cattle';
+      restoreProfileScreen();
       action();
       return;
     }
+    profileScreenSnapshot = null;
     profileListView.classList.remove('hidden');
     fabAdd.classList.remove('hidden');
     profileSearchBox.value = '';
@@ -10960,6 +10962,38 @@
   });
   new MutationObserver(()=>{ if(!appInfoView.classList.contains('hidden')) renderDiagLog(); })
     .observe(appInfoView, { attributes: true, attributeFilter: ['class'] });
+
+  // ===================== BACK FROM A PROFILE TO A POP-UP REPORT =====================
+  // Pop-up reports sit on top of a screen (Reports, Home...). Opening a cow profile hides that screen, so
+  // tapping Back used to reopen the report over a blank page. Now the screen that was showing is remembered
+  // when the profile opens, and put back (with its header title) when Back is tapped.
+  let profileScreenSnapshot = null;
+  function restoreProfileScreen(){
+    const s = profileScreenSnapshot;
+    profileScreenSnapshot = null;
+    if(!s) return;
+    s.views.forEach(id=>{
+      if(id === 'profileView') return;
+      const v = document.getElementById(id);
+      if(v) v.classList.remove('hidden');
+    });
+    const ht = document.getElementById('headerTitle');
+    if(ht){ ht.innerHTML = s.header; ht.classList.toggle('hidden', s.headerHidden); }
+    fabAdd.classList.toggle('hidden', !s.fab);
+  }
+  { const _orig = openProfileCow;
+    openProfileCow = function(num){
+      if(profileView.classList.contains('hidden')){   // coming from another screen (not a refresh of the open profile)
+        const ht = document.getElementById('headerTitle');
+        profileScreenSnapshot = {
+          views: [...document.querySelectorAll('.view')].filter(v=> !v.classList.contains('hidden')).map(v=> v.id),
+          header: ht ? ht.innerHTML : '',
+          headerHidden: ht ? ht.classList.contains('hidden') : false,
+          fab: !fabAdd.classList.contains('hidden')
+        };
+      }
+      return _orig.apply(this, arguments);
+    }; }
 
   // ===================== LIGHTER LISTS =====================
   // The six "pick a cow" lists (Meds & Notes, Calving, Notes, Cattle/Profile, Weights, Breeding) used to
