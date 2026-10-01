@@ -924,45 +924,10 @@
       <textarea id="aiSearchBox" rows="3" maxlength="500" placeholder="Example: open cows in the south pasture, sorted by sire" style="width:100%;box-sizing:border-box;font-family:Arial,sans-serif;font-size:16px;background:#F7F2E6;border:2px solid #2E88C4;border-radius:10px;padding:10px 12px;color:#2B2620;resize:none;margin:0;"></textarea>
       <div id="aiSearchHelpBox" style="background:#FFFFFF;border:2px solid #2E88C4;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);overflow:hidden;">
         <button type="button" id="aiSearchHelpToggle" aria-expanded="false" aria-controls="aiSearchHelpPanel" style="width:100%;min-height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:#FFFFFF;color:#0C5A8E;border:none;padding:12px 14px;cursor:pointer;"><span>What can I search?</span><span id="aiSearchHelpArrow" style="font-size:16px;">&#9662;</span></button>
-        <div id="aiSearchHelpPanel" class="hidden" style="background:#F7F2E6;border-top:2px solid #2E88C4;padding:4px 14px 14px;">
-          <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;line-height:1.5;margin-top:10px;">Mix and match. For example: <b style="color:#2B2620;">open cows in the south pasture, sorted by sire</b></div>
-          <div style="margin-top:12px;">
-            <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Herd</div>
-            <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Location, Owner, Group, Herd Season (Spring, Fall, Undefined), Status (Active, Sold, Deceased)</div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Cow checkboxes</div>
-            <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Tag needed, Flag, Calved, Open, Preg BT, Sell</div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Breeding</div>
-            <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Bred To, Pregnancy Method (AI, ET, BB), Natural Sire, Preg check result (open or pregnant)</div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Meds</div>
-            <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Medicine, Reason</div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Calving</div>
-            <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Sire, Out of cow, Calf Sex, Birth Assist, Calf Outcome, Birth Weight (min or max)</div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Weights</div>
-            <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Weight (min or max)</div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Dates</div>
-            <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">From and To. Applies to whatever records you are searching.</div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Sort by</div>
-            <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Sire, Location, Owner, Group, Cow #, Calving date, Birth weight, Breed date, Weigh date, Weight, Treatment date. High to low or low to high.</div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;border-bottom:1px solid #c9bfa4;padding-bottom:5px;margin-bottom:6px;">Not searchable</div>
-            <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:#2B2620;">Cow age, notes text, sorting by tag.</div>
-          </div>
-        </div>
+        <div id="aiSearchHelpPanel" class="hidden" style="background:#F7F2E6;border-top:2px solid #2E88C4;padding:12px 14px 14px;">
+        <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;line-height:1.5;margin-bottom:12px;">Type it the way you'd say it, and mix and match. Say dates your way ("this year", "since August") and numbers your way ("over 600", "under 500"). Tap a section to open it, and tap an example to try it.</div>
+        <div id="aiHelpSections"></div>
+      </div>
       </div>
       <div style="display:flex;gap:10px;">
         <button class="btn btn-profile-tool" id="aiSearchRunBtn" style="flex:2;min-height:50px;">🔍 Search</button>
@@ -11288,10 +11253,78 @@
     setHeaderTitle('AI', 'Search');
     window.scrollTo(0,0);
   }
+  // ----- "What can I search?" help: grouped sections, tappable examples, and your own words -----
+  function aiHelpSectionsData(y){
+    // y = the first real location / reason / bull / medicine in the herd, so the examples use your own words
+    const loc = y.loc || 'the south pasture', bull = y.bull || 'a bull', reason = y.reason || 'pinkeye';
+    return [
+      { title: 'Cows', lines: ['Location, Owner, Group, Herd Season (Spring, Fall, Undefined), Status (Active, Sold, Deceased).', 'Checkboxes: Tag needed, Flag, Calved, Open, Preg BT, Sell.'],
+        examples: [`open cows in ${loc}`, 'cows that need a tag'] },
+      { title: 'Breeding', lines: ['Bred To, method (AI, ET, BB), Natural Sire, preg check result (open or pregnant).'],
+        examples: [`ET cows bred to ${bull}`, 'cows confirmed pregnant by AI'] },
+      { title: 'Calves and calving', lines: ['Sire, mother (out of cow), calf sex, birth assist (None, Easy Pull, Hard Pull, C-Section), outcome (active, kept, sold, died), birth weight (over or under), birth dates.', 'Breeding words here (ET, AI, a bull) describe the breeding that made each calf.'],
+        examples: ['heifer calves born this year', 'calves that needed a hard pull this year'] },
+      { title: 'Weaning and gain', lines: ['Weaning weight, weaning date, age when weaned, rate of gain, and weaned or not weaned yet.', 'Rate of gain is lbs per day from birth weight to weaning weight (also called ADG). A calf with no birth weight has no gain figure, and the results say how many.'],
+        examples: ['calves weaned over 600 lbs, best gain first, top 10', 'calves not weaned yet'] },
+      { title: 'Health', lines: ['Medicine, reason, and dates.', 'Repeat treatments: how many times (2 or more), and "for the same reason". Only medicine entries count, not plain notes.'],
+        examples: ['cows treated more than once this year', `cows treated for ${reason} twice this year`] },
+      { title: 'Weights', lines: ['Weight over or under a number, and cows missing a weight in a time period (with no period it means never weighed).'],
+        examples: ['cows over 1,200 pounds, heaviest first', 'cows missing a weight this year'] },
+      { title: 'Cull list', lines: ['Cows that are open, were treated 2 or more times in the last 12 months, had a hard pull or C-section in their last 2 calvings, or weaned a light calf (under 85% of that year\'s average weaning weight, or a number you name). Most reasons first.', 'You can ask for at least 2 or 3 reasons.'],
+        examples: ['cull list', 'cull list with at least two reasons', 'cull list, light calf under 500'] },
+      { title: 'Sort and top 10', lines: ['Sort by: sire, location, owner, group, cow number, calving date, birth weight, breed date, weigh date, weight, treatment date, weaning weight, weaning date, gain per day, number of treatments, number of cull reasons.', 'High to low or low to high. Add "top 10" (or any number) to any sorted search.'],
+        examples: ['all cows in ' + loc + ' sorted by owner', 'best gain per day, top 5'] },
+      { title: 'Not available yet', lines: ['Cow age, text inside notes, sorting by tag, and averages and totals (like average weaning weight by sire).', 'Sold and deceased cows are left out of Missing a weight, Repeat treatments, and the Cull list. Other searches include them, so use the Status filter to pick.'],
+        examples: [] }
+    ];
+  }
+  function buildAiSearchHelp(){
+    const host = document.getElementById('aiHelpSections');
+    if(!host) return;
+    const o = aiSearchOptionLists();
+    const sections = aiHelpSectionsData({ loc: o.locations[0], bull: o.sires[0], reason: (o.reasons[0] || '').toLowerCase() });
+    const yours = [['Locations', o.locations], ['Owners', o.owners], ['Groups', o.groups], ['Bulls', o.sires], ['Medicines', o.medicines], ['Reasons', o.reasons]]
+      .filter(([, list])=> list && list.length)
+      .map(([name, list])=> `<div style="margin-bottom:6px;"><b>${name}:</b> ${escapeHtml(list.slice(0, 15).join(', '))}${list.length > 15 ? ` …and ${list.length - 15} more` : ''}</div>`).join('');
+    sections.push({ title: 'Your words', html: yours || 'Nothing entered yet.', lines: [], examples: [], intro: 'Type your own names exactly like this:' });
+    const rowStyle = 'width:100%;min-height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:#FFFFFF;color:#0C5A8E;border:1.5px solid #c9bfa4;border-radius:8px;padding:10px 12px;cursor:pointer;text-align:left;';
+    host.innerHTML = sections.map((sec, i)=>`
+      <div class="ai-help-sec" style="margin-bottom:8px;">
+        <button type="button" class="ai-help-head" data-i="${i}" aria-expanded="false" style="${rowStyle}"><span>${escapeHtml(sec.title)}</span><span class="ai-help-arrow" style="font-size:15px;">&#9662;</span></button>
+        <div class="ai-help-body hidden" style="padding:10px 4px 4px;">
+          ${sec.intro ? `<div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:6px;">${escapeHtml(sec.intro)}</div>` : ''}
+          ${sec.html ? `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;color:#2B2620;">${sec.html}</div>` : ''}
+          ${sec.lines.map(l=> `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;color:#2B2620;margin-bottom:6px;">${escapeHtml(l)}</div>`).join('')}
+          ${sec.examples.length ? `<div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#455B3D;font-weight:700;margin:8px 0 6px;">Try asking</div>` : ''}
+          ${sec.examples.map(ex=> `<button type="button" class="ai-help-example" data-ex="${escapeHtml(ex)}" style="width:100%;min-height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:Georgia,serif;font-size:15px;background:#FFFFFF;color:#2B2620;border:2px solid #2E88C4;border-radius:10px;padding:8px 12px;margin-bottom:6px;cursor:pointer;text-align:left;"><span>${escapeHtml(ex)}</span><span style="color:#0C5A8E;font-size:20px;line-height:1;">&rsaquo;</span></button>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+  // one handler for every section row and example (wired once)
+  document.getElementById('aiHelpSections').addEventListener('click', e=>{
+    const head = e.target.closest('.ai-help-head');
+    if(head){
+      const body = head.parentElement.querySelector('.ai-help-body');
+      const open = body.classList.contains('hidden');
+      body.classList.toggle('hidden', !open);
+      head.setAttribute('aria-expanded', open ? 'true' : 'false');
+      head.querySelector('.ai-help-arrow').innerHTML = open ? '&#9652;' : '&#9662;';
+      return;
+    }
+    const ex = e.target.closest('.ai-help-example');
+    if(ex){
+      document.getElementById('aiSearchBox').value = ex.dataset.ex;
+      if(!document.getElementById('aiSearchHelpPanel').classList.contains('hidden')) toggleAiSearchHelp();
+      window.scrollTo(0, 0);
+      showToast('Added. Tap Search.');
+    }
+  });
+
   function toggleAiSearchHelp(){
     const panel = document.getElementById('aiSearchHelpPanel');
     const btn = document.getElementById('aiSearchHelpToggle');
     const open = panel.classList.contains('hidden');   // hidden now => opening
+    if(open) buildAiSearchHelp();
     panel.classList.toggle('hidden', !open);
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     document.getElementById('aiSearchHelpArrow').innerHTML = open ? '&#9652;' : '&#9662;';
@@ -11326,6 +11359,23 @@
     const wMin = numOrNull(f.weight_min), wMax = numOrNull(f.weight_max);
     const bwMin = numOrNull(f.birth_weight_min), bwMax = numOrNull(f.birth_weight_max);
     const searchOn = f.search_on || 'cows';
+    // weaning filters (the weaning date and weight live on each calving record)
+    const wwMin = numOrNull(f.weaning_weight_min), wwMax = numOrNull(f.weaning_weight_max);
+    const gMin = numOrNull(f.gain_min), gMax = numOrNull(f.gain_max);
+    const waMin = numOrNull(f.weaning_age_min), waMax = numOrNull(f.weaning_age_max);
+    const wdFrom = f.weaning_date_from || '', wdTo = f.weaning_date_to || '';
+    const weanStatus = (f.weaning_status === 'weaned' || f.weaning_status === 'not_weaned') ? f.weaning_status : null;
+    const weaningUsed = wwMin != null || wwMax != null || gMin != null || gMax != null || waMin != null || waMax != null || !!wdFrom || !!wdTo || weanStatus !== null
+      || ['weaning_weight', 'gain_per_day', 'weaning_date'].includes(f.sort_by);
+    const gainUsed = gMin != null || gMax != null || f.sort_by === 'gain_per_day';
+    // the three cow lists: missing a weight, repeat treatments, cull list
+    const missingWeight = f.missing_weight === true;
+    const tCountMin = numOrNull(f.treatment_count_min);
+    const sameReason = f.same_reason === true;
+    const cullOn = f.cull_list === true;
+    const cullMin = Math.max(1, Math.min(4, Math.floor(numOrNull(f.cull_min_reasons) || 1)));
+    const lightLbs = numOrNull(f.cull_light_calf_lbs);
+    const noBirthWeight = new Set();   // weaned calves left out of gain numbers because no birth weight is on record
     const inRange = d => (!dFrom || (d || '') >= dFrom) && (!dTo || (d || '') <= dTo);
 
     // When the question is about calves, Bred To / ET / AI / Natural Sire describe the breeding that
@@ -11335,8 +11385,8 @@
     const breedingUsed = calfContext
       ? !!(f.open_only || f.preg_check_result)
       : (breedFilterActive || !!(f.open_only || f.preg_check_result) || searchOn === 'breedings');
-    const medUsed = !!(f.medicine || f.reason) || searchOn === 'treatments';
-    const calvingUsed = !!(f.sire || f.calf_sex || f.birth_assist || f.calf_outcome || bwMin != null || bwMax != null || f.dam_cow) || searchOn === 'calvings';
+    const medUsed = !!(f.medicine || f.reason) || searchOn === 'treatments' || tCountMin != null;
+    const calvingUsed = !!(f.sire || f.calf_sex || f.birth_assist || f.calf_outcome || bwMin != null || bwMax != null || f.dam_cow) || searchOn === 'calvings' || weaningUsed;
     const weightUsed = wMin != null || wMax != null || searchOn === 'weights';
 
     const latestBreeding = n => [...breedingFor(n)].sort((a,b)=> (b.breed_date || '').localeCompare(a.breed_date || ''))[0];
@@ -11386,6 +11436,29 @@
         if(f.pregnancy_method && lb.pregnancy_method !== f.pregnancy_method) return false;
         if(f.natural_sire && !lc(lb.natural_sire).includes(lc(f.natural_sire))) return false;
       }
+      if(weaningUsed){
+        const ws = weaningStats(cv);
+        if(weanStatus === 'weaned' && !ws) return false;
+        if(weanStatus === 'not_weaned'){
+          if(ws || cv.promoted_to_cow_number || cv.calf_outcome) return false;   // "not weaned yet" = current calves with no weaning weight
+        }
+        const needsWean = wwMin != null || wwMax != null || gMin != null || gMax != null || waMin != null || waMax != null || wdFrom || wdTo;
+        if(needsWean){
+          if(!ws) return false;
+          if(wwMin != null && !(ws.weight >= wwMin)) return false;
+          if(wwMax != null && !(ws.weight <= wwMax)) return false;
+          if(waMin != null && !(ws.age != null && ws.age >= waMin)) return false;
+          if(waMax != null && !(ws.age != null && ws.age <= waMax)) return false;
+          if(wdFrom && !(ws.date && ws.date >= wdFrom)) return false;
+          if(wdTo && !(ws.date && ws.date <= wdTo)) return false;
+          if(gMin != null || gMax != null){
+            if(ws.gain == null){ noBirthWeight.add(cv.id); return false; }
+            const shownGain = Math.round(ws.gain * 10) / 10;   // the same rounding as the "lbs/day" you see
+            if(gMin != null && !(shownGain >= gMin)) return false;
+            if(gMax != null && !(shownGain <= gMax)) return false;
+          }
+        }
+      }
       return inRange(cv.calving_date);
     });
     const weightOk = w => w.weight != null && (wMin == null || Number(w.weight) >= wMin) && (wMax == null || Number(w.weight) <= wMax) && inRange(w.weigh_date);
@@ -11394,6 +11467,51 @@
       const ids = calvingsFor(n).map(cv=>cv.id);
       const calf = calfWeights.filter(w=> ids.includes(w.calving_id) && weightOk(w)).map(w=>({ date: w.weigh_date, weight: w.weight, type: 'Calf Weight' }));
       return [...own, ...calf];
+    };
+
+    // ---- helpers for the three cow lists ----
+    const isoOf = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const yearAgoStr = (()=>{ const d = new Date(); d.setFullYear(d.getFullYear() - 1); return isoOf(d); })();
+    const byDateDesc = (x, y)=> (y.calving_date || '').localeCompare(x.calving_date || '');
+    const matchingMeds = n => recordsFor(n).filter(t=> t.medicine && medMatch(t));
+    const treatCount = n => {
+      const ms = matchingMeds(n);
+      if(!sameReason) return ms.length;
+      const g = {};
+      ms.forEach(t=>{ const k = lc(t.reason) || '(no reason)'; g[k] = (g[k] || 0) + 1; });
+      return Math.max(0, ...Object.values(g));
+    };
+    let weanAvgByYear = null;   // average weaning weight of each year's weaned calves (for the "light calf" test)
+    const weanAvg = year => {
+      if(!weanAvgByYear){
+        const acc = {};
+        calvings.forEach(cv=>{ const ws = weaningStats(cv); if(ws && ws.date){ const y = ws.date.slice(0, 4); (acc[y] = acc[y] || []).push(ws.weight); } });
+        weanAvgByYear = {};
+        Object.keys(acc).forEach(y=>{ if(acc[y].length >= 3) weanAvgByYear[y] = acc[y].reduce((p, q)=> p + q, 0) / acc[y].length; });
+      }
+      return weanAvgByYear[year];
+    };
+    const cullCache = {};
+    const cullReasons = c=>{
+      if(cullCache[c.number]) return cullCache[c.number];
+      const n = c.number, reasons = [];
+      const lb = latestBreeding(n);
+      if(lb && lb.pregnancy_status === 'Open') reasons.push('Open' + (lb.open_date ? ' since ' + fmtDateShort(lb.open_date) : ''));
+      const tc = recordsFor(n).filter(t=> t.medicine && (t.date || '') >= yearAgoStr).length;
+      if(tc >= 2) reasons.push(`${tc} treatments in 12 months`);
+      const hard = [...calvingsFor(n)].sort(byDateDesc).slice(0, 2).find(cv=> cv.birth_assist === 'Hard Pull' || cv.birth_assist === 'C-Section');
+      if(hard) reasons.push(`${hard.birth_assist} (${fmtDateShort(hard.calving_date)})`);
+      const lastWeaned = [...calvingsFor(n)].filter(cv=> weaningStats(cv)).sort(byDateDesc)[0];
+      if(lastWeaned){
+        const ws = weaningStats(lastWeaned);
+        if(lightLbs != null){
+          if(ws.weight < lightLbs) reasons.push(`Light calf (${ws.weight} lbs weaned)`);
+        } else if(ws.date){
+          const avg = weanAvg(ws.date.slice(0, 4));
+          if(avg != null && ws.weight < 0.85 * avg) reasons.push(`Light calf (${ws.weight} lbs weaned, herd average ${Math.round(avg)})`);
+        }
+      }
+      return (cullCache[n] = reasons);
     };
 
     let results = cows.filter(c=>{
@@ -11408,17 +11526,21 @@
       if(f.flagged && !c.needs_entry) return false;
       if(f.calved_pending && !c.calved) return false;
       if(f.dam_cow && String(c.number) !== String(f.dam_cow)) return false;
+      if((missingWeight || cullOn || tCountMin != null) && !f.status && (c.status || 'Active') !== 'Active') return false;   // these lists are for active cows
+      if(missingWeight && weightsFor(c.number).some(w=> w.weight != null && inRange(w.weigh_date))) return false;
+      if(tCountMin != null && treatCount(c.number) < tCountMin) return false;
+      if(cullOn && cullReasons(c).length < cullMin) return false;
       if(breedingUsed && mBreeding(c.number).length === 0) return false;
       if(medUsed && mMeds(c.number).length === 0 && mCalfMeds(c.number).length === 0) return false;
       if(calvingUsed && mCalvings(c.number).length === 0) return false;
       if(weightUsed && mWeights(c.number).length === 0) return false;
-      if(!breedingUsed && !medUsed && !calvingUsed && !weightUsed && (dFrom || dTo) && !cowHasActivityInDateRange(c.number, dFrom, dTo)) return false;
+      if(!breedingUsed && !medUsed && !calvingUsed && !weightUsed && !missingWeight && !cullOn && (dFrom || dTo) && !cowHasActivityInDateRange(c.number, dFrom, dTo)) return false;
       return true;
     });
 
     // ---- sorting ----
-    const sortBy = f.sort_by || 'cow_number';
-    const descByDefault = ['calving_date','breed_date','weigh_date','weight','treatment_date','birth_weight'].includes(sortBy);
+    const sortBy = f.sort_by || (cullOn ? 'reason_count' : (tCountMin != null ? 'treatment_count' : 'cow_number'));
+    const descByDefault = ['reason_count','treatment_count','calving_date','breed_date','weigh_date','weight','treatment_date','birth_weight','weaning_weight','gain_per_day','weaning_date'].includes(sortBy);
     const dir = (f.sort_dir || (descByDefault ? 'desc' : 'asc')) === 'desc' ? -1 : 1;
     const latestOf = arr => arr.filter(Boolean).sort().pop() || '';
     function sortVal(c){
@@ -11447,6 +11569,20 @@
           return latest ? Number(latest.weight) : '';
         }
         case 'treatment_date': return latestOf([...mMeds(n), ...mCalfMeds(n)].map(x=>x.date));
+        case 'reason_count': return cullReasons(c).length;
+        case 'treatment_count': return treatCount(n);
+        case 'weaning_weight': case 'gain_per_day': case 'weaning_date': {
+          const vals = mCalvings(n).map(cv=>{
+            const ws = weaningStats(cv);
+            if(!ws) return null;
+            if(sortBy === 'weaning_weight') return ws.weight;
+            if(sortBy === 'gain_per_day') return ws.gain;
+            return ws.date;
+          }).filter(v=> v != null && v !== '');
+          if(!vals.length) return '';
+          vals.sort((x, y)=> x < y ? -1 : x > y ? 1 : 0);
+          return dir === 1 ? vals[0] : vals[vals.length - 1];   // best per cow for the direction asked
+        }
         default: return c.number;
       }
     }
@@ -11461,6 +11597,8 @@
     const keyed = results.map(c=>({ c, k: sortVal(c) }));
     keyed.sort((x, y)=> cmp(x.k, y.k) || String(x.c.number).localeCompare(String(y.c.number), undefined, { numeric: true }));
     results = keyed.map(x=>x.c);
+    const topN = numOrNull(f.limit);
+    if(topN != null && topN >= 1) results = results.slice(0, Math.floor(topN));
 
     const groupPrefix = { sire: 'Sire', location: 'Location', owner: 'Owner', group: 'Group' }[sortBy];
     const groupOf = {};
@@ -11499,6 +11637,7 @@
           if(cv.sire) detail.push(`Sire: ${cv.sire}`);
           if(cv.birth_assist) detail.push(cv.birth_assist);
           if(cv.birth_weight != null) detail.push(`${cv.birth_weight} lbs`);
+          if(weaningUsed){ const wl = weaningLineText(cv); if(wl) detail.push(wl); }
           if(calfContext && breedFilterActive){
             const lb = linkedBreeding(num, cv);
             if(lb) detail.push(`Bred ${fmtDateShort(lb.breed_date)}${lb.pregnancy_method ? ' (' + lb.pregnancy_method + ')' : ''}`);
@@ -11511,7 +11650,14 @@
           entries.push({ date: w.date, num, type: w.type, details: `${w.weight} lb` });
         });
       }
-      if(!breedingUsed && !medUsed && !calvingUsed && !weightUsed && (dFrom || dTo)){
+      if(missingWeight){
+        const ws = [...weightsFor(num)].filter(w=> w.weight != null).sort((x, y)=> (y.weigh_date || '').localeCompare(x.weigh_date || ''));
+        entries.push({ date: ws[0] ? ws[0].weigh_date : '', num, type: 'Weight', details: ws[0] ? `Last weight ${Number(ws[0].weight).toLocaleString()} lb` : 'No weight on record' });
+      }
+      if(cullOn){
+        entries.push({ date: '', num, type: 'Cull', details: cullReasons({ number: num }).join(' · ') });
+      }
+      if(!breedingUsed && !medUsed && !calvingUsed && !weightUsed && !missingWeight && !cullOn && (dFrom || dTo)){
         recordsFor(num).forEach(t=>{
           if(inRange(t.date)){
             const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes || 'note');
@@ -11541,7 +11687,18 @@
       entries.sort((a, b)=> (order[a.num] - order[b.num]) || (b.date || '').localeCompare(a.date || ''));
     }
 
-    return { results, entries, groupOf, hasGroups: !!groupPrefix };
+    const notes = [];
+    if((gMin != null || gMax != null) && noBirthWeight.size) notes.push(`${noBirthWeight.size} weaned calf${noBirthWeight.size !== 1 ? 'ves' : ''} left out of gain numbers (no birth weight on record)`);
+    else if(f.sort_by === 'gain_per_day'){
+      let noGain = 0;
+      results.forEach(c=>{ mCalvings(c.number).forEach(cv=>{ const ws = weaningStats(cv); if(ws && ws.gain == null) noGain++; }); });
+      if(noGain) notes.push(`${noGain} weaned calf${noGain !== 1 ? 'ves' : ''} listed last: no birth weight on record, so no gain figure`);
+    }
+    if(weanStatus === 'not_weaned') notes.push('showing current calves with no weaning weight yet');
+    if(missingWeight) notes.push('active cows with no weight in that time (sold and deceased cows left out)');
+    if(tCountMin != null) notes.push(`active cows with ${tCountMin} or more treatments${sameReason ? ' for the same reason' : ''}`);
+    if(cullOn) notes.push(`cull list: cows with ${cullMin} or more of these: open, 2+ treatments in 12 months, hard pull or C-section in her last 2 calvings, light calf (${lightLbs != null ? 'under ' + lightLbs + ' lbs' : 'under 85% of that year\'s average weaning weight'}); active cows only`);
+    return { results, entries, groupOf, hasGroups: !!groupPrefix, notes };
   }
 
   function aiSearchPillsHtml(pills, filters){
@@ -11552,7 +11709,8 @@
       if(p.label === 'Calf Sex') v = v === 'B' ? 'Bull' : v === 'H' ? 'Heifer' : v;
       if(p.label === 'Calf Outcome') v = ({ active:'Still Active', kept:'Kept (Promoted)', sold:'Sold', died:'Died' })[v] || v;
       if(p.label === 'Preg check result') v = v === 'open' ? 'Open' : v === 'pregnant' ? 'Pregnant' : v;
-      if((p.label === 'From' || p.label === 'To') && /^\d{4}-\d{2}-\d{2}$/.test(v)) v = fmtDate(v);
+      if((p.label === 'From' || p.label === 'To' || p.label === 'Weaned from' || p.label === 'Weaned to') && /^\d{4}-\d{2}-\d{2}$/.test(v)) v = fmtDate(v);
+      if(p.label === 'Weaning') v = v === 'not_weaned' ? 'not weaned yet' : v;
       if(p.label === 'Sorted by'){
         v = v.replace(/_/g, ' ') + (filters.sort_dir === 'desc' ? ' (high to low)' : filters.sort_dir === 'asc' ? ' (low to high)' : '');
       }
@@ -11660,7 +11818,7 @@
 
     document.getElementById('aiSearchPills').innerHTML = aiSearchPillsHtml(pills, filters);
     document.getElementById('aiSearchInterp').classList.remove('hidden');
-    document.getElementById('aiSearchCount').textContent = `${results.length} cow${results.length !== 1 ? 's' : ''} matched` + (results.length ? ' · tap a cow to open her card' : '');
+    document.getElementById('aiSearchCount').textContent = `${results.length} cow${results.length !== 1 ? 's' : ''} matched` + (results.length ? ' · tap a cow to open her card' : '') + ((out.notes && out.notes.length) ? ' · ' + out.notes.join(' · ') : '');
     document.getElementById('aiSearchPrintBtn').classList.toggle('hidden', results.length === 0);
     document.getElementById('aiSearchTextBtn').classList.toggle('hidden', results.length === 0);
 
@@ -11684,7 +11842,7 @@
         const label = hasGroups ? groupOf[e.num] : null;
         if(label && label !== lastLabel){ head = groupRow(label); lastLabel = label; }
         return head + `<tr data-ai-open="${escapeHtml(e.num)}" style="background:${i % 2 === 0 ? '#fff' : '#F7F2E6'};cursor:pointer;">
-          <td style="${tdStyle}">${fmtDateShort(e.date)}</td>
+          <td style="${tdStyle}">${e.date ? fmtDateShort(e.date) : '—'}</td>
           ${numCell(e.num)}
           <td style="${tdStyle}">${escapeHtml(e.type)}</td>
           <td style="${tdStyle}white-space:normal;">${escapeHtml(e.details)}</td>
@@ -11798,7 +11956,7 @@
         <thead><tr><th style="${th}">Date</th><th style="${th}">Cow #</th><th style="${th}">Type</th><th style="${th}">Details</th></tr></thead>
         <tbody>${lastAiSearchEntries.map((e,i)=>`
           <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-            <td style="padding:6px;">${fmtDateShort(e.date)}</td>
+            <td style="padding:6px;">${e.date ? fmtDateShort(e.date) : '—'}</td>
             <td style="padding:6px;">#${escapeHtml(e.num)}</td>
             <td style="padding:6px;">${escapeHtml(e.type)}</td>
             <td style="padding:6px;">${escapeHtml(e.details)}</td>
