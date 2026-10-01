@@ -537,6 +537,15 @@
       <div class="section-label">Access Needed to Maintain This App</div>
       <p>Whoever takes this over will need to be added as a collaborator on the GitHub repo, and given access to the Supabase project (or the login credentials for both). Without that access, this document alone won't be enough — make sure a trusted person actually has a way in, not just this explanation of how things work.</p>
 
+
+      <div class="section-label">Diagnostics (timing log)</div>
+      <p>If the app freezes, open this screen afterward and send a screenshot. It lists what the app did and how long things took. It stays on this phone and doesn't change any records.</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="btn btn-outline" id="diagRefreshBtn" style="flex:1;height:46px;padding:0 8px;">Refresh</button>
+        <button class="btn btn-outline" id="diagCopyBtn" style="flex:1;height:46px;padding:0 8px;">Copy</button>
+        <button class="btn btn-barn" id="diagClearBtn" style="flex:1;height:46px;padding:0 8px;">Clear</button>
+      </div>
+      <div id="diagLogBox" style="background:#fff;border:1.5px solid #c9bfa4;border-radius:2px;padding:10px;font-family:Menlo,Consolas,monospace;font-size:11px;line-height:1.5;max-height:340px;overflow:auto;white-space:pre-wrap;word-break:break-word;"></div>
     </div>
   </div>
 
@@ -7918,6 +7927,7 @@
   // Whenever a pop-up closes while a cow's profile is showing, redraw the profile so new
   // entries (from + Med / + Weight / + Breeding / + Note) and edits show up right away.
   new MutationObserver(muts=>{
+    if(suppressProfileRedraw) return;
     for(const m of muts){
       for(const n of m.removedNodes){
         if(n.classList && n.classList.contains('modal-stack-item') && currentProfileCow && !profileView.classList.contains('hidden')){
@@ -10874,6 +10884,83 @@
   }
 
 
+  // ===================== TIMING LOG (App Info -> Diagnostics) =====================
+  // Short notes about what the app is doing and how long it takes, kept on this phone only,
+  // so a freeze can be diagnosed. It never changes records and nothing is sent anywhere.
+  const DIAG_KEY = 'champ_diag_v1';
+  let diagEntries = [];
+  try{ diagEntries = JSON.parse(localStorage.getItem(DIAG_KEY) || '[]'); if(!Array.isArray(diagEntries)) diagEntries = []; }catch(e){ diagEntries = []; }
+  let diagLastMsg = 'app started';
+  let diagLastBeat = performance.now();
+  let diagLastVisible = performance.now();
+  function diagLog(msg){
+    try{
+      diagLastMsg = String(msg);
+      diagEntries.push({ t: Date.now(), m: String(msg).slice(0, 160) });
+      if(diagEntries.length > 120) diagEntries = diagEntries.slice(-120);
+      localStorage.setItem(DIAG_KEY, JSON.stringify(diagEntries));
+    }catch(e){}
+  }
+  function diagBeat(){
+    const now = performance.now();
+    const gap = now - diagLastBeat;
+    diagLastBeat = now;
+    if(document.visibilityState === 'visible' && gap > 2500 && now - diagLastVisible > 4000){
+      diagLog('⚠ page was stuck for ' + (gap / 1000).toFixed(1) + ' s. Last step: ' + diagLastMsg);
+    }
+  }
+  setInterval(diagBeat, 500);
+  document.addEventListener('visibilitychange', ()=>{ diagLastVisible = performance.now(); diagLastBeat = diagLastVisible; diagLog('app ' + document.visibilityState); });
+  window.addEventListener('focus', ()=>{ diagLastBeat = performance.now(); diagLog('window focus'); });
+  window.addEventListener('online', ()=> diagLog('back online'));
+  window.addEventListener('offline', ()=> diagLog('went offline'));
+  window.addEventListener('error', e=> diagLog('⚠ error: ' + (e && e.message ? e.message : 'unknown')));
+  window.addEventListener('unhandledrejection', e=> diagLog('⚠ error: ' + String((e && e.reason && e.reason.message) || (e && e.reason) || 'unknown').slice(0, 100)));
+  diagLog('app started');
+  { const _orig = openProfileCow;
+    openProfileCow = function(num){
+      const t0 = performance.now();
+      diagLog('opening profile #' + num);
+      try{ return _orig.apply(this, arguments); }
+      finally{ diagLog('profile #' + num + ' ready (' + Math.round(performance.now() - t0) + ' ms)'); }
+    }; }
+  { const _orig = renderProfile;
+    renderProfile = function(){
+      const t0 = performance.now();
+      try{ return _orig.apply(this, arguments); }
+      finally{ const ms = Math.round(performance.now() - t0); if(ms > 150) diagLog('profile drawing took ' + ms + ' ms'); }
+    }; }
+  { const _orig = loadAll;
+    loadAll = async function(){
+      const t0 = performance.now();
+      diagLog('data reload started');
+      try{ return await _orig.apply(this, arguments); }
+      finally{ diagLog('data reload finished (' + Math.round(performance.now() - t0) + ' ms, ' + cows.length + ' cows)'); }
+    }; }
+  { const _orig = openModal;
+    openModal = function(){ diagLog('pop-up opened'); return _orig.apply(this, arguments); }; }
+  { const _orig = closeAllModals;
+    closeAllModals = function(){ const n = document.querySelectorAll('.modal-stack-item').length; diagLog('closing ' + n + ' pop-up' + (n === 1 ? '' : 's')); return _orig.apply(this, arguments); }; }
+  function renderDiagLog(){
+    const box = document.getElementById('diagLogBox');
+    if(!box) return;
+    const rows = diagEntries.slice(-40).reverse().map(e=>{
+      const d = new Date(e.t);
+      const ts = d.toLocaleTimeString('en-US', { hour12: false }) + '.' + Math.floor(d.getMilliseconds() / 100);
+      const line = escapeHtml(ts + '  ' + e.m);
+      return e.m.startsWith('⚠') ? `<div style="color:#A32D2D;font-weight:700;">${line}</div>` : `<div>${line}</div>`;
+    });
+    box.innerHTML = rows.length ? rows.join('') : 'Nothing logged yet.';
+  }
+  document.getElementById('diagRefreshBtn').addEventListener('click', renderDiagLog);
+  document.getElementById('diagClearBtn').addEventListener('click', ()=>{ diagEntries = []; try{ localStorage.removeItem(DIAG_KEY); }catch(e){} renderDiagLog(); });
+  document.getElementById('diagCopyBtn').addEventListener('click', async ()=>{
+    const text = diagEntries.slice(-60).map(e=> new Date(e.t).toLocaleTimeString('en-US', { hour12: false }) + '  ' + e.m).join('\n');
+    try{ await navigator.clipboard.writeText(text); showToast('Copied'); }catch(e){ showToast('Could not copy. Send a screenshot instead.'); }
+  });
+  new MutationObserver(()=>{ if(!appInfoView.classList.contains('hidden')) renderDiagLog(); })
+    .observe(appInfoView, { attributes: true, attributeFilter: ['class'] });
+
   // ===================== AI SEARCH =====================
   // The typed question goes to the "ai-search" Supabase function, which sends back filters.
   // Those filters are applied HERE, on this phone, to the herd data already loaded.
@@ -11164,12 +11251,14 @@
   // ===== Tap-a-cow pop-up, shared by AI Search and the reports =====
   // Tap a cow in a report list -> small pop-up with her card (checkboxes + quick-add buttons),
   // a Full Profile button (profile's back button returns to the report), and Close.
+  let suppressProfileRedraw = false;   // true only while Full Profile swaps screens
   function closeAllModals(){
     document.querySelectorAll('.modal-stack-item').forEach(el=> el.remove());
   }
   function openCowCardPopup(num, returnAction, returnLabel){
     const cow = cows.find(c=> String(c.number) === String(num));
     if(!cow) return;
+    diagLog('card pop-up for #' + cow.number);
     const modal = openModal(`
       <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
         <span>Cow #${escapeHtml(cow.number)}</span>
@@ -11182,11 +11271,23 @@
       </div>
     `);
     const box = modal.querySelector('#aiCowCardBox');
+    let going = false;
     const goProfile = ()=>{
-      closeAllModals();   // pop-up plus the report underneath it, if the report is a pop-up too
-      profileReturnAction = returnAction || null;
-      profileReturnLabel = returnAction ? (returnLabel || '← Back to Report') : '← All Cattle';
-      openProfileCow(cow.number);
+      if(going) return;
+      going = true;
+      diagLog('Full Profile tapped (#' + cow.number + ')');
+      const goBtn = modal.querySelector('#aiCowCardProfile');
+      if(goBtn) goBtn.disabled = true;
+      // Let the tap finish before swapping screens (iPhone Safari can hang if the button being
+      // tapped is removed mid-tap), and redraw the profile once, not twice.
+      setTimeout(()=>{
+        suppressProfileRedraw = true;
+        closeAllModals();   // pop-up plus the report underneath it, if the report is a pop-up too
+        profileReturnAction = returnAction || null;
+        profileReturnLabel = returnAction ? (returnLabel || '← Back to Report') : '← All Cattle';
+        openProfileCow(cow.number);
+        setTimeout(()=>{ suppressProfileRedraw = false; }, 0);
+      }, 60);
     };
     modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
     modal.querySelector('#aiCowCardClose').addEventListener('click', closeModal);
