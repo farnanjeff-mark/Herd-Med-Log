@@ -232,6 +232,20 @@
   #advancedSearchView .adv-tile.has .c{color:#2F7A35;font-weight:700;}
   #advancedSearchView[data-page="calf"] .only-cow{display:none !important;}
   #advancedSearchView[data-page="cow"] .only-calf{display:none !important;}
+
+  /* ---- Saved Reports ---- */
+  #savedReportsView .sr-folder{background:#FFFFFF;border:2px solid #2E88C4;border-radius:8px;margin-bottom:10px;overflow:hidden;}
+  #savedReportsView .sr-folder-head{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;background:#E8F1F9;}
+  #savedReportsView .sr-folder-name{flex:1;font-family:Arial,sans-serif;font-weight:700;font-size:16px;color:#0C447C;cursor:pointer;min-height:44px;display:flex;align-items:center;}
+  #savedReportsView .sr-folder-name .n{font-weight:400;font-size:13px;color:#6b6350;margin-left:8px;}
+  #savedReportsView .sr-row{display:flex;align-items:center;gap:8px;padding:8px;border-top:1px solid #cfe0ee;background:#fff;}
+  #savedReportsView .sr-main{flex:1;min-width:0;cursor:pointer;font-family:Arial,sans-serif;min-height:44px;display:flex;flex-direction:column;justify-content:center;}
+  #savedReportsView .sr-title{font-weight:700;font-size:15px;color:#0C447C;}
+  #savedReportsView .sr-sub{font-size:12px;color:#6b6350;margin-top:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word;}
+  #savedReportsView .sr-star{width:44px;height:44px;flex:0 0 44px;border:2px solid #2E88C4;border-radius:6px;background:#fff;color:#2E88C4;font-size:24px;line-height:1;cursor:pointer;padding:0;}
+  #savedReportsView .sr-star.on{background:#FFF4D6;border-color:#D9A21B;color:#D9A21B;}
+  #savedReportsView .sr-del{height:44px;flex:0 0 auto;padding:0 12px;border:2px solid var(--barn);border-radius:6px;background:#fff;color:var(--barn);font-family:Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+  #savedReportsView .sr-empty{font-family:Arial,sans-serif;font-size:13px;color:#8a8163;padding:12px;background:#fff;}
   #advancedSearchView .adv-tile.open{background:#E6F1FB;box-shadow:inset 0 0 0 2px #0C447C;}
   #advancedSearchView .adv-panel{display:none;background:#FFFFFF;border:2px solid #2E88C4;border-radius:6px;margin:0 0 12px;padding:14px 14px 4px;}
   #advancedSearchView .adv-panel.show{display:block;}
@@ -694,7 +708,8 @@
     <div class="section-label">Search</div>
     <button class="btn btn-nav-tool btn-full" id="advancedSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🔍</span>&nbsp;&nbsp;Advanced Search</button>
     <button class="btn btn-nav-tool btn-full" id="calfSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🐮</span>&nbsp;&nbsp;Calf Search</button>
-    <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
+    <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
+    <button class="btn btn-nav-tool btn-full" id="savedReportsBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">⭐</span>&nbsp;&nbsp;Saved Reports</button>
 
     <div class="section-label">Vet</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
@@ -1132,6 +1147,7 @@
       <button class="btn btn-barn" id="runAdvancedSearchBtn">Search</button>
       <button class="btn btn-outline" id="clearAdvancedSearchBtn">Clear</button>
     </div>
+    <button class="btn btn-full only-cow" id="saveAdvReportBtn" style="margin-bottom:14px;background:#3C9142;color:#fff;border-color:#3C9142;justify-content:center;">💾 Save This Report</button>
 
     <div id="advancedSearchSummary" class="adv-summary"></div>
     <div id="advancedSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
@@ -1204,6 +1220,14 @@
     <div class="modal-title" style="margin-bottom:6px;">Recently Deleted</div>
     <div class="banner banner-note" style="display:block;margin-bottom:14px;">Covers individual entries (meds, calvings, notes, weights, breeding) from the last 30 days. Whole-cow removals aren't recoverable here.</div>
     <div id="recentlyDeletedList"></div>
+  </div>
+
+  <div class="view hidden" id="savedReportsView">
+    <button class="btn btn-outline btn-full" id="savedReportsHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
+    <div class="modal-title" style="margin-bottom:6px;">Saved Reports</div>
+    <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Tap a report to run it on today's herd. Tap the star to keep it at the top.</div>
+    <button class="btn btn-nav-tool btn-full" id="newReportFolderBtn" style="margin-bottom:14px;">+ New Folder</button>
+    <div id="savedReportsContent"></div>
   </div>
 
   <div class="view hidden" id="herdTallyView">
@@ -1787,6 +1811,7 @@
   const importView = document.getElementById('importView');
   const globalSearchView = document.getElementById('globalSearchView');
   const recentlyDeletedView = document.getElementById('recentlyDeletedView');
+  const savedReportsView = document.getElementById('savedReportsView');
   const herdTallyView = document.getElementById('herdTallyView');
   const hayingView = document.getElementById('hayingView');
   const manageCustomAIView = document.getElementById('manageCustomAIView');
@@ -2582,6 +2607,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
@@ -2640,6 +2666,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
@@ -2699,6 +2726,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     hayingView.classList.add('hidden');
@@ -2749,6 +2777,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
@@ -2799,6 +2828,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
@@ -2851,6 +2881,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
@@ -2980,6 +3011,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
@@ -3029,6 +3061,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3062,6 +3095,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3099,6 +3133,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3136,6 +3171,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3164,6 +3200,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3190,6 +3227,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3217,6 +3255,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3245,6 +3284,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3273,6 +3313,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3307,6 +3348,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3341,6 +3383,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3375,6 +3418,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3453,6 +3497,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3497,6 +3542,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3530,6 +3576,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3566,6 +3613,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3661,6 +3709,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3896,6 +3945,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3928,6 +3978,7 @@
     customAIView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     importView.classList.remove('hidden');
@@ -3962,6 +4013,7 @@
     customAIView.classList.add('hidden');
     importView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     globalSearchView.classList.remove('hidden');
@@ -4024,6 +4076,7 @@
     breedingDetailView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -4056,6 +4109,7 @@
     breedingDetailView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -4146,6 +4200,7 @@
     importView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     profileView.classList.remove('hidden');
@@ -4191,6 +4246,7 @@
     profileView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -4220,6 +4276,7 @@
     profileView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -4254,6 +4311,7 @@
     breedingDetailView.classList.add('hidden');
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
+    savedReportsView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -11518,6 +11576,284 @@
     document.getElementById('advancedSearchResults').innerHTML = '';
     lastAdvancedSearchCows = [];
   }
+
+  // ===================== SAVED REPORTS =====================
+  let savedFolders = [];
+  let savedReports = [];
+  let savedReportsLoaded = false;
+  const savedFoldersOpen = new Set();
+
+  async function loadSavedReports(){
+    try{
+      const [f, r] = await Promise.all([
+        api('/saved_report_folders?select=*&order=name.asc', { method:'GET' }),
+        api('/saved_reports?select=*&order=created_at.desc', { method:'GET' })
+      ]);
+      savedFolders = f || [];
+      savedReports = r || [];
+      savedReportsLoaded = true;
+    }catch(e){ showToast('Could not load saved reports'); }
+  }
+
+  // what the Advanced Search screen looks like right now (choices only, not the results)
+  function advCaptureSettings(){
+    const fields = {};
+    document.querySelectorAll('#advPanels .adv-panel:not([data-panel="cols"]) input, #advPanels .adv-panel:not([data-panel="cols"]) select').forEach(el=>{
+      if(!el.id) return;
+      if(el.type === 'checkbox'){ if(el.checked) fields[el.id] = true; }
+      else if(el.value !== '') fields[el.id] = el.value;
+    });
+    // a "last 30 days" style date choice is kept as the choice, so it stays current when you run it later
+    const preset = fields.advSearchDatePreset;
+    if(preset && preset !== 'all'){ delete fields.advSearchDateFrom; delete fields.advSearchDateTo; }
+    return { mode:'cow', fields, cols: advCols.cow.slice() };
+  }
+  function savedSettingsSummary(settings){
+    const f = (settings && settings.fields) || {};
+    const parts = [];
+    Object.keys(f).forEach(id=>{
+      if(id === 'advSearchDatePreset' || /^advSortDir/.test(id)) return;
+      const label = ADV_FIELD_NAMES[id] || (/^advSortField/.test(id) ? 'Sorted' : '');
+      if(!label) return;
+      let txt = (f[id] === true || /^advSortField/.test(id)) ? label : label + ': ' + f[id];
+      if(/^advSortField/.test(id)) txt = 'Sorted';
+      if(!parts.includes(txt)) parts.push(txt);
+    });
+    return parts.length ? parts.join(' · ') : 'All cows';
+  }
+  function runSavedReport(id){
+    const r = savedReports.find(x=> x.id === id);
+    if(!r) return;
+    const st = r.settings || {};
+    if(advMode !== 'cow') setAdvPage('cow');
+    clearAdvancedSearch();
+    const valid = advAllCols('cow').map(c=>c.key);
+    if(Array.isArray(st.cols)) advCols.cow = st.cols.filter(k=> valid.includes(k));
+    renderAdvColumnsPanel();
+    advRefreshSortControls();
+    let skipped = 0;
+    Object.keys(st.fields || {}).forEach(fid=>{
+      const el = document.getElementById(fid);
+      if(!el){ skipped++; return; }
+      if(el.type === 'checkbox'){ el.checked = !!st.fields[fid]; return; }
+      if(el.tagName === 'SELECT' && ![...el.options].some(o=> o.value === String(st.fields[fid]))){ skipped++; return; }
+      el.value = st.fields[fid];
+    });
+    if(document.getElementById('advSearchDatePreset').value && document.getElementById('advSearchDatePreset').value !== 'all') applyAdvancedSearchDatePreset();
+    updateAdvancedSearchBadges();
+    showAdvancedSearch();
+    runAdvancedSearch();
+    if(skipped) showToast('Ran it — ' + skipped + ' choice' + (skipped>1?'s':'') + ' no longer exist and were skipped');
+  }
+
+  function renderSavedReports(){
+    const el = document.getElementById('savedReportsContent');
+    if(!el) return;
+    const row = (r, showFolder)=>{
+      const fol = savedFolders.find(f=> f.id === r.folder_id);
+      return `<div class="sr-row" data-id="${r.id}">
+        <button class="sr-star ${r.starred?'on':''}" data-act="star" data-id="${r.id}" title="Star">${r.starred?'★':'☆'}</button>
+        <div class="sr-main" data-act="run" data-id="${r.id}">
+          <div class="sr-title">${escapeHtml(r.name)}</div>
+          <div class="sr-sub">${showFolder && fol ? '📁 ' + escapeHtml(fol.name) + ' — ' : ''}${escapeHtml(savedSettingsSummary(r.settings))}</div>
+        </div>
+        <button class="sr-del" data-act="delreport" data-id="${r.id}">Delete</button>
+      </div>`;
+    };
+    const starred = savedReports.filter(r=> r.starred);
+    let html = `<div class="section-label" style="margin-top:0;">★ Starred</div>
+      <div class="sr-folder" style="border-color:#D9A21B;">${starred.length ? starred.map(r=> row(r,true)).join('') : '<div class="sr-empty">Nothing starred yet. Tap the ☆ next to a report to put it here.</div>'}</div>
+      <div class="section-label">Folders</div>`;
+    if(savedFolders.length === 0){
+      html += '<div class="empty" style="padding:24px 20px;">No folders yet.<br/>Tap "+ New Folder" above, or save a report from Advanced Search.</div>';
+    }
+    savedFolders.forEach(f=>{
+      const inF = savedReports.filter(r=> r.folder_id === f.id);
+      const open = savedFoldersOpen.has(f.id);
+      html += `<div class="sr-folder">
+        <div class="sr-folder-head">
+          <div class="sr-folder-name" data-act="toggle" data-id="${f.id}">${open?'📂':'📁'}&nbsp;${escapeHtml(f.name)}<span class="n">${inF.length} report${inF.length===1?'':'s'}</span></div>
+          <button class="sr-del" data-act="delfolder" data-id="${f.id}">Delete</button>
+        </div>
+        ${open ? (inF.length ? inF.map(r=> row(r,false)).join('') : '<div class="sr-empty">Empty folder.</div>') : ''}
+      </div>`;
+    });
+    el.innerHTML = html;
+  }
+
+  async function showSavedReports(){
+    setHeaderTitle('Saved', 'Reports');
+    document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+    fabAdd.classList.add('hidden');
+    fabAddEquipment.classList.add('hidden');
+    savedReportsView.classList.remove('hidden');
+    window.scrollTo(0,0);
+    renderSavedReports();
+    await loadSavedReports();
+    renderSavedReports();
+  }
+
+  async function createReportFolder(name){
+    const inserted = await api('/saved_report_folders', {
+      method:'POST',
+      headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+      body: JSON.stringify({ name })
+    });
+    const f = inserted[0];
+    savedFolders.push(f);
+    savedFolders.sort((a,b)=> a.name.localeCompare(b.name));
+    return f;
+  }
+  function folderNameTaken(name){
+    return savedFolders.some(f=> f.name.toLowerCase() === name.toLowerCase());
+  }
+
+  function newReportFolderModal(){
+    const modal = openModal(`
+      <div class="modal-title">New Folder</div>
+      <div class="field">
+        <label>Folder Name</label>
+        <input type="text" id="newReportFolderName" placeholder="e.g. Weaning, Preg Check, Sale Cows" autofocus/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelNewReportFolder">Cancel</button>
+        <button class="btn btn-barn" id="confirmNewReportFolder">Make Folder</button>
+      </div>
+    `);
+    modal.querySelector('#cancelNewReportFolder').addEventListener('click', closeModal);
+    modal.querySelector('#confirmNewReportFolder').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#newReportFolderName').value.trim();
+      if(!name){ showToast('Type a folder name'); return; }
+      if(folderNameTaken(name)){ showToast('That folder already exists'); return; }
+      const btn = modal.querySelector('#confirmNewReportFolder');
+      btn.disabled = true;
+      try{
+        const f = await createReportFolder(name);
+        savedFoldersOpen.add(f.id);
+        closeModal();
+        renderSavedReports();
+        showToast('Folder made');
+      }catch(e){ btn.disabled = false; showToast('Could not make folder — try again'); }
+    });
+  }
+
+  async function saveAdvReportModal(){
+    if(!savedReportsLoaded) await loadSavedReports();
+    const opts = savedFolders.map(f=> `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+    const modal = openModal(`
+      <div class="modal-title">Save This Report</div>
+      <div class="field">
+        <label>Report Name</label>
+        <input type="text" id="svrName" placeholder="e.g. Open cows – North pasture" autofocus/>
+      </div>
+      <div class="field">
+        <label>Folder</label>
+        <select id="svrFolder">${opts}<option value="__new__">+ New folder…</option></select>
+      </div>
+      <div class="field ${savedFolders.length ? 'hidden' : ''}" id="svrNewFolderField">
+        <label>New Folder Name</label>
+        <input type="text" id="svrNewFolder" placeholder="e.g. Weaning"/>
+      </div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:12px;">Saves your choices (filters, sort, columns). When you open it later it runs on the herd as it is that day.</div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelSvr">Cancel</button>
+        <button class="btn btn-barn" id="confirmSvr">Save</button>
+      </div>
+    `);
+    const sel = modal.querySelector('#svrFolder');
+    sel.value = savedFolders.length ? sel.options[0].value : '__new__';
+    sel.addEventListener('change', ()=> modal.querySelector('#svrNewFolderField').classList.toggle('hidden', sel.value !== '__new__'));
+    modal.querySelector('#cancelSvr').addEventListener('click', closeModal);
+    modal.querySelector('#confirmSvr').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#svrName').value.trim();
+      if(!name){ showToast('Type a report name'); return; }
+      let folderId = sel.value;
+      let newName = '';
+      if(folderId === '__new__'){
+        newName = modal.querySelector('#svrNewFolder').value.trim();
+        if(!newName){ showToast('Type a folder name'); return; }
+        const existing = savedFolders.find(f=> f.name.toLowerCase() === newName.toLowerCase());
+        if(existing){ folderId = existing.id; newName = ''; }
+      }
+      if(folderId !== '__new__' && savedReports.some(r=> r.folder_id === folderId && r.name.toLowerCase() === name.toLowerCase())){
+        showToast('That name is already in this folder'); return;
+      }
+      const btn = modal.querySelector('#confirmSvr');
+      btn.disabled = true;
+      try{
+        if(folderId === '__new__'){ const f = await createReportFolder(newName); folderId = f.id; }
+        const inserted = await api('/saved_reports', {
+          method:'POST',
+          headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
+          body: JSON.stringify({ folder_id: folderId, name, report_type:'cow_search', settings: advCaptureSettings(), starred:false })
+        });
+        savedReports.unshift(inserted[0]);
+        savedFoldersOpen.add(folderId);
+        closeModal();
+        showToast('Report saved');
+      }catch(e){ btn.disabled = false; showToast('Could not save — try again'); }
+    });
+  }
+
+  async function toggleReportStar(id){
+    const r = savedReports.find(x=> x.id === id);
+    if(!r) return;
+    const next = !r.starred;
+    r.starred = next;
+    renderSavedReports();
+    try{
+      await api('/saved_reports?id=eq.' + encodeURIComponent(id), {
+        method:'PATCH',
+        headers: Object.assign({}, HEADERS, {'Prefer':'return=minimal'}),
+        body: JSON.stringify({ starred: next })
+      });
+    }catch(e){ r.starred = !next; renderSavedReports(); showToast('Could not change star — try again'); }
+  }
+  async function deleteSavedReport(id){
+    const r = savedReports.find(x=> x.id === id);
+    if(!r) return;
+    if(!confirm('Delete the saved report "' + r.name + '"? This can\'t be undone.')) return;
+    try{
+      await api('/saved_reports?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      savedReports = savedReports.filter(x=> x.id !== id);
+      renderSavedReports();
+      showToast('Report deleted');
+    }catch(e){ showToast('Could not delete — try again'); }
+  }
+  async function deleteReportFolder(id){
+    const f = savedFolders.find(x=> x.id === id);
+    if(!f) return;
+    const n = savedReports.filter(r=> r.folder_id === id).length;
+    const msg = n ? 'Delete the folder "' + f.name + '" and the ' + n + ' saved report' + (n>1?'s':'') + ' inside it? This can\'t be undone.' : 'Delete the empty folder "' + f.name + '"?';
+    if(!confirm(msg)) return;
+    try{
+      await api('/saved_report_folders?id=eq.' + encodeURIComponent(id), { method:'DELETE' });
+      savedFolders = savedFolders.filter(x=> x.id !== id);
+      savedReports = savedReports.filter(r=> r.folder_id !== id);
+      renderSavedReports();
+      showToast('Folder deleted');
+    }catch(e){ showToast('Could not delete — try again'); }
+  }
+
+  (function wireSavedReports(){
+    document.getElementById('savedReportsBtn').addEventListener('click', showSavedReports);
+    document.getElementById('savedReportsHomeBtn').addEventListener('click', showHome);
+    document.getElementById('newReportFolderBtn').addEventListener('click', newReportFolderModal);
+    document.getElementById('saveAdvReportBtn').addEventListener('click', saveAdvReportModal);
+    document.getElementById('savedReportsContent').addEventListener('click', (e)=>{
+      const t = e.target.closest('[data-act]');
+      if(!t) return;
+      const id = t.dataset.id;
+      if(t.dataset.act === 'star') toggleReportStar(id);
+      else if(t.dataset.act === 'run') runSavedReport(id);
+      else if(t.dataset.act === 'delreport') deleteSavedReport(id);
+      else if(t.dataset.act === 'delfolder') deleteReportFolder(id);
+      else if(t.dataset.act === 'toggle'){
+        if(savedFoldersOpen.has(id)) savedFoldersOpen.delete(id); else savedFoldersOpen.add(id);
+        renderSavedReports();
+      }
+    });
+  })();
   function textAdvancedSearchResults(){
     const v = lastAdvancedSearchView;
     if(v.rows.length === 0){ showToast('Nothing to send'); return; }
