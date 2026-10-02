@@ -1081,6 +1081,47 @@
       </div>
     </details>
 
+    <details class="adv-fold" id="advFoldSort">
+      <summary>Sort<span class="adv-badge"></span></summary>
+      <div class="adv-fold-body">
+        <div class="row2">
+          <div class="field">
+            <label>1st sort</label>
+            <select id="advSortField1"><option value="">None</option></select>
+          </div>
+          <div class="field">
+            <label>Order</label>
+            <select id="advSortDir1" data-nobadge="1"><option value="asc">A to Z</option><option value="desc">Z to A</option></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>2nd sort</label>
+            <select id="advSortField2"><option value="">None</option></select>
+          </div>
+          <div class="field">
+            <label>Order</label>
+            <select id="advSortDir2" data-nobadge="1"><option value="asc">A to Z</option><option value="desc">Z to A</option></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>3rd sort</label>
+            <select id="advSortField3"><option value="">None</option></select>
+          </div>
+          <div class="field">
+            <label>Order</label>
+            <select id="advSortDir3" data-nobadge="1"><option value="asc">A to Z</option><option value="desc">Z to A</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Top N (show only the first N)</label>
+          <input type="number" id="advTopN" min="1" step="1" placeholder="All"/>
+        </div>
+        <div class="adv-note">The 1st sort is the main one. The 2nd and 3rd only put rows in order when the ones above them are tied. Rows with nothing in a sort field go to the bottom. Top N is applied after sorting.</div>
+      </div>
+    </details>
+
     <div class="section-label">Show &amp; Columns</div>
     <div class="row2" style="margin-bottom:10px;">
       <button class="btn btn-outline adv-mode-btn on" id="advModeCow">Cows</button>
@@ -10832,6 +10873,101 @@
     ]
   };
   function advAllCols(mode){ return ADV_COL_GROUPS[mode].reduce((a,g)=> a.concat(g.cols), []); }
+
+  // ===================== ADVANCED SEARCH: SORTING =====================
+  // type: 'text' (A-Z), 'num' (low-high), 'date' (oldest-newest). get() returns '' / null when blank.
+  const advNumOrNull = v => (v == null || v === '' || isNaN(Number(v))) ? null : Number(v);
+  const ADV_SORTS = {
+    cow: [
+      { key:'num',  label:'Cow #',                       type:'num',  get:(r)=> advNumOrNull(r.c.number) != null ? Number(r.c.number) : null, alt:(r)=> r.c.number },
+      { key:'lot',  label:'Location',                    type:'text', get:(r)=> r.c.lot },
+      { key:'owner',label:'Owner',                       type:'text', get:(r)=> r.c.owner },
+      { key:'group',label:'Group',                       type:'text', get:(r)=> r.c.cow_group },
+      { key:'sire', label:'Sire (her latest calf)',      type:'text', get:(r,x)=> x.lc ? x.lc.sire : '' },
+      { key:'cdate',label:'Calving date (latest calf)',  type:'date', get:(r,x)=> x.lc ? x.lc.calving_date : '' },
+      { key:'bw',   label:'Birth weight (latest calf)',  type:'num',  get:(r,x)=> x.lc ? advNumOrNull(x.lc.birth_weight) : null },
+      { key:'bdate',label:'Breed date (latest)',         type:'date', get:(r,x)=> x.br ? x.br.breed_date : '' },
+      { key:'wdate2',label:'Weigh date (latest)',        type:'date', get:(r,x)=> x.lw ? x.lw.weigh_date : '' },
+      { key:'wt',   label:'Weight (latest)',             type:'num',  get:(r,x)=> x.lw ? advNumOrNull(x.lw.weight) : null },
+      { key:'tdate',label:'Treatment date (last)',       type:'date', get:(r,x)=> x.lt ? x.lt.date : '' },
+      { key:'ntreat',label:'Number of treatments',       type:'num',  get:(r,x)=> x.tr.length },
+      { key:'ww',   label:'Weaning weight (latest calf)',type:'num',  get:(r,x)=> x.lc && weaningStats(x.lc) ? weaningStats(x.lc).weight : null },
+      { key:'wdate',label:'Weaning date (latest calf)',  type:'date', get:(r,x)=> x.lc ? x.lc.weaning_date : '' },
+      { key:'gain', label:'Gain per day (latest calf)',  type:'num',  get:(r,x)=> x.lc && weaningStats(x.lc) ? weaningStats(x.lc).gain : null },
+      { key:'cull', label:'Cull reasons (how many)',     type:'num',  get:(r,x)=> x.cull ? x.cull().length : null }
+    ],
+    calf: [
+      { key:'num',  label:'Mother #',                    type:'num',  get:(r)=> advNumOrNull(r.c.number) != null ? Number(r.c.number) : null, alt:(r)=> r.c.number },
+      { key:'cdate',label:'Calving date',                type:'date', get:(r)=> r.cv.calving_date },
+      { key:'sire', label:'Sire',                        type:'text', get:(r)=> r.cv.sire },
+      { key:'bw',   label:'Birth weight',                type:'num',  get:(r)=> advNumOrNull(r.cv.birth_weight) },
+      { key:'ww',   label:'Weaning weight',              type:'num',  get:(r)=> weaningStats(r.cv) ? weaningStats(r.cv).weight : null },
+      { key:'wdate',label:'Weaning date',                type:'date', get:(r)=> r.cv.weaning_date },
+      { key:'gain', label:'Gain per day',                type:'num',  get:(r)=> weaningStats(r.cv) ? weaningStats(r.cv).gain : null },
+      { key:'ntreat',label:'Number of treatments',       type:'num',  get:(r)=> calfTreatments.filter(t=> t.calving_id === r.cv.id).length },
+      { key:'lot',  label:"Mother's location",           type:'text', get:(r)=> r.c.lot },
+      { key:'owner',label:"Mother's owner",              type:'text', get:(r)=> r.c.owner },
+      { key:'group',label:"Mother's group",              type:'text', get:(r)=> r.c.cow_group }
+    ]
+  };
+  const ADV_DIR_WORDS = { text:['A to Z','Z to A'], num:['Low to high','High to low'], date:['Oldest first','Newest first'] };
+  // chosen sorts, in order, keeping only ones that exist in the current view
+  function advSortSelections(mode){
+    const list = ADV_SORTS[mode || advMode];
+    const out = [];
+    [1,2,3].forEach(n=>{
+      const key = document.getElementById('advSortField' + n).value;
+      const def = list.find(d=> d.key === key);
+      if(def && !out.some(o=> o.def.key === def.key)) out.push({ def, desc: document.getElementById('advSortDir' + n).value === 'desc' });
+    });
+    return out;
+  }
+  // fill the three dropdowns for the current view (Cows / Calves), keeping choices that still exist
+  function advRefreshSortControls(){
+    const list = ADV_SORTS[advMode];
+    [1,2,3].forEach(n=>{
+      const fSel = document.getElementById('advSortField' + n);
+      const dSel = document.getElementById('advSortDir' + n);
+      const prev = fSel.value;
+      fSel.innerHTML = '<option value="">None</option>' + list.map(d=>`<option value="${d.key}">${escapeHtml(d.label)}</option>`).join('');
+      fSel.value = list.some(d=> d.key === prev) ? prev : '';
+      const def = list.find(d=> d.key === fSel.value);
+      const words = ADV_DIR_WORDS[def ? def.type : 'text'];
+      const keepDesc = dSel.value === 'desc';
+      dSel.innerHTML = `<option value="asc">${words[0]}</option><option value="desc">${words[1]}</option>`;
+      dSel.value = keepDesc ? 'desc' : 'asc';
+    });
+    if(typeof updateAdvancedSearchBadges === 'function') updateAdvancedSearchBadges();
+  }
+  function advSortText(mode){
+    return advSortSelections(mode).map(sel=>{
+      const w = ADV_DIR_WORDS[sel.def.type];
+      return `${sel.def.label} (${sel.desc ? w[1] : w[0]})`;
+    }).join(', then ');
+  }
+  function advIsBlank(v){ return v == null || v === '' || (typeof v === 'number' && isNaN(v)); }
+  function advSortItems(items, mode){
+    const sels = advSortSelections(mode);
+    const numDef = ADV_SORTS[mode].find(d=> d.key === 'num');
+    const cmpNum = (a,b)=> a.r.c.number.localeCompare(b.r.c.number, undefined, {numeric:true});
+    return items.slice().sort((a,b)=>{
+      for(const sel of sels){
+        const va = sel.def.get(a.r, a.x), vb = sel.def.get(b.r, b.x);
+        const ba = advIsBlank(va), bb = advIsBlank(vb);
+        if(ba && bb) continue;
+        if(ba) return 1;            // blanks always last
+        if(bb) return -1;
+        let c;
+        if(sel.def.type === 'num') c = va - vb;
+        else if(sel.def.type === 'date') c = String(va).localeCompare(String(vb));
+        else c = String(va).localeCompare(String(vb), undefined, {sensitivity:'base'});
+        if(c !== 0) return sel.desc ? -c : c;
+      }
+      const n = cmpNum(a,b);
+      if(n !== 0) return n;
+      return mode === 'calf' ? b.r.cv.calving_date.localeCompare(a.r.cv.calving_date) : 0;
+    });
+  }
   let advMode = 'cow';
   let advHasRun = false;
   let advCols = { cow: ADV_COL_DEFAULTS.cow.slice(), calf: ADV_COL_DEFAULTS.calf.slice() };
@@ -10862,7 +10998,7 @@
       tr, lt: advLatestBy(tr, 'date'),
       wr, lw: advLatestBy(wr, 'weigh_date'),
       cut: addDays(todayLocal(), -365).toISOString().slice(0,10),
-      cull: advColumnSelected('cow','cull') ? (()=> cullFn(c)) : null
+      cull: ()=> cullFn(c)
     };
   }
   function advUpdateColumnsBtn(){
@@ -10897,6 +11033,7 @@
     document.getElementById('advModeCow').classList.toggle('on', mode === 'cow');
     document.getElementById('advModeCalf').classList.toggle('on', mode === 'calf');
     renderAdvColumnsPanel();
+    advRefreshSortControls();
     if(changed && advHasRun) runAdvancedSearch();
   }
   (function wireAdvColumns(){
@@ -10928,7 +11065,13 @@
       const hasValue = t.type === 'checkbox' ? t.checked : t.value !== '';
       if(hasValue && advMode !== 'calf') setAdvMode('calf');
     });
+    // sort changes: update the Order wording, and refresh the results if a search is already showing
+    document.getElementById('advFoldSort').addEventListener('change', ()=>{
+      advRefreshSortControls();
+      if(advHasRun) runAdvancedSearch();
+    });
     renderAdvColumnsPanel();
+    advRefreshSortControls();
   })();
   let lastAdvancedSearchView = { mode:'cow', headers:[], rows:[] }; // for print + text list
 
@@ -11071,7 +11214,7 @@
     }
     // cull list: yearly average weaning weights are worked out once per search
     const yearAvg = {};
-    if(cullUsed || advColumnSelected('cow','cull')){
+    if(cullUsed || advColumnSelected('cow','cull') || advSortSelections('cow').some(sel=> sel.def.key === 'cull')){
       const sums = {};
       calvings.forEach(k=>{
         const w = Number(k.weaning_weight);
@@ -11214,8 +11357,6 @@
       }
     });
     reportEntries.sort((a,b)=> b.date.localeCompare(a.date));
-    lastAdvancedSearchEntries = reportEntries;
-    lastAdvancedSearchCows = results;
 
     advHasRun = true;
     const mode = advMode;
@@ -11238,15 +11379,28 @@
     const colDefs = advActiveColumns(mode);
     const firstHead = mode === 'calf' ? 'Mother #' : 'Cow #';
     const headers = [firstHead, ...colDefs.map(d=> d.label)];
-    const bodyRows = rowObjs.map(r=>{
-      const x = mode === 'cow' ? advBuildCowFacts(r.c, cullReasonsFor) : null;
-      return [ '#' + r.c.number, ...colDefs.map(d=> d.get(r, x)) ];
-    });
-    lastAdvancedSearchView = { mode, headers, rows: bodyRows };
+    // work out facts once per row, sort, then keep only the first N if Top N is filled in
+    let items = rowObjs.map(r=> ({ r, x: mode === 'cow' ? advBuildCowFacts(r.c, cullReasonsFor) : null }));
+    items = advSortItems(items, mode);
+    const totalRows = items.length;
+    const topNRaw = numVal('advTopN');
+    const topN = topNRaw != null && topNRaw >= 1 ? Math.floor(topNRaw) : null;
+    if(topN != null) items = items.slice(0, topN);
+    const shownNums = new Set(items.map(it=> it.r.c.number));
+    const lineEntries = mode === 'cow' ? reportEntries.filter(e=> shownNums.has(e.num)) : [];
+    lastAdvancedSearchEntries = lineEntries;
+    lastAdvancedSearchCows = results.filter(c=> shownNums.has(c.number));
+    const bodyRows = items.map(it=> [ '#' + it.r.c.number, ...colDefs.map(d=> d.get(it.r, it.x)) ]);
+    const unitWord = mode === 'calf' ? (totalRows === 1 ? 'calf' : 'calves') : (totalRows === 1 ? 'cow' : 'cows');
+    const countText = topN != null && totalRows > bodyRows.length
+      ? `Top ${bodyRows.length} of ${totalRows} ${unitWord}`
+      : (mode === 'calf'
+          ? `${totalRows} ${unitWord} from ${results.length} cow${results.length!==1?'s':''}`
+          : `${results.length} cow${results.length!==1?'s':''} matched`);
+    const sortText = advSortText(mode);
+    lastAdvancedSearchView = { mode, headers, rows: bodyRows, countText, sortText };
 
-    countEl.textContent = mode === 'calf'
-      ? `${rowObjs.length} ${rowObjs.length===1?'calf':'calves'} from ${results.length} cow${results.length!==1?'s':''}`
-      : `${results.length} cow${results.length!==1?'s':''} matched`;
+    countEl.textContent = countText + (sortText ? ' · sorted by ' + sortText : '');
     printBtn.classList.toggle('hidden', rowObjs.length === 0);
     textBtn.classList.toggle('hidden', rowObjs.length === 0);
 
@@ -11261,14 +11415,14 @@
     }
 
     // the line-by-line "what matched" list stays under the table (Cows view)
-    if(mode === 'cow' && reportEntries.length > 0){
+    if(mode === 'cow' && lineEntries.length > 0){
       linesEl.innerHTML = `
         <div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0C447C;margin:6px 0 8px;">Matching records</div>
         <div style="overflow-x:auto;">
           <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
             <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Type</th><th style="text-align:left;padding:8px;">Details</th></tr></thead>
             <tbody>
-              ${reportEntries.map((e,i)=>`
+              ${lineEntries.map((e,i)=>`
                 <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
                   <td style="padding:8px;">${e.date ? fmtDateShort(e.date) : ''}</td>
                   <td style="padding:8px;">#${escapeHtml(e.num)}</td>
@@ -11320,7 +11474,7 @@
     document.querySelectorAll('#advancedSearchView details.adv-fold:not(.adv-colgroup)').forEach(d=>{
       let n = 0;
       d.querySelectorAll('input, select').forEach(el=>{
-        if(el.id === 'advSearchDatePreset') return;
+        if(el.id === 'advSearchDatePreset' || el.dataset.nobadge) return;
         if(el.type === 'checkbox' ? el.checked : el.value !== '') n++;
       });
       const b = d.querySelector('.adv-badge');
@@ -11355,11 +11509,12 @@
       else if(el.tagName === 'SELECT') el.selectedIndex = 0;
       else el.value = '';
     });
+    advRefreshSortControls();
     updateAdvancedSearchBadges();
     advHasRun = false;
     setAdvMode('cow');
     document.getElementById('advancedSearchLinesTable').innerHTML = '';
-    lastAdvancedSearchView = { mode:'cow', headers:[], rows:[] };
+    lastAdvancedSearchView = { mode:'cow', headers:[], rows:[], countText:'', sortText:'' };
     document.getElementById('advancedSearchCount').textContent = '';
     document.getElementById('advancedSearchReportTable').innerHTML = '';
     document.getElementById('advancedSearchPrintBtn').classList.add('hidden');
@@ -11401,7 +11556,7 @@
         `).join('')}</tbody>
       </table>
     ` : '';
-    const countText = v.mode === 'calf' ? `${v.rows.length} ${v.rows.length===1?'calf':'calves'}` : `${v.rows.length} cow${v.rows.length!==1?'s':''} matched`;
+    const countText = v.countText + (v.sortText ? ' · sorted by ' + v.sortText : '');
     document.getElementById('printListOutput').innerHTML = `
       <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
         <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Advanced Search</h2>
