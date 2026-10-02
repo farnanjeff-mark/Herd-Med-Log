@@ -1137,7 +1137,6 @@
     <div id="advancedSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
     <div id="advancedSearchReportTable" style="margin-bottom:14px;"></div>
     <div id="advancedSearchAverages" class="adv-avg"></div>
-    <div id="advancedSearchLinesTable" style="margin-bottom:14px;"></div>
     <button class="btn btn-outline btn-full hidden" id="advancedSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
     <button class="btn btn-outline btn-full hidden" id="advancedSearchTextBtn" style="margin-bottom:16px;">📱 Text List</button>
     <div id="advancedSearchResults"></div>
@@ -11083,7 +11082,49 @@
     if(!parts.length) return 'No filters set';
     return parts.length > 8 ? parts.slice(0, 8).join(' · ') + ' · +' + (parts.length - 8) + ' more' : parts.join(' · ');
   }
-  // each tile lists, by name, what is chosen in it
+  // what a tile says for each chosen field: the actual choice (North, Hard Pull...), and ranges for min/max pairs
+  const ADV_PAIR = {
+    advSearchCowWtMin:['Weight','min'], advSearchCowWtMax:['Weight','max'],
+    advSearchWeightMin:['Birth wt','min'], advSearchWeightMax:['Birth wt','max'],
+    advSearchWeanWtMin:['Weaning wt','min'], advSearchWeanWtMax:['Weaning wt','max'],
+    advSearchGainMin:['Gain','min'], advSearchGainMax:['Gain','max'],
+    advSearchWeanAgeMin:['Age','min'], advSearchWeanAgeMax:['Age','max'],
+    advSearchWeanFrom:['Weaned','min','date'], advSearchWeanTo:['Weaned','max','date'],
+    advSearchDateFrom:['Dates','min','date'], advSearchDateTo:['Dates','max','date']
+  };
+  const ADV_TEXT_FORMAT = {
+    advSearchOutOfCow: v=> 'Out of #' + v,
+    advSearchMotherNum: v=> 'Mother #' + v,
+    advSearchNaturalSire: v=> 'Natural sire ' + v,
+    advSearchMinTimes: v=> 'Treated ' + v + '+ times'
+  };
+  function advTileChoiceTexts(panel){
+    const out = [];
+    const pairs = {};
+    advChosenFields(panel).forEach(el=>{
+      const pair = ADV_PAIR[el.id];
+      if(pair){
+        if(!pairs[pair[0]]){ pairs[pair[0]] = { label: pair[0], date: pair[2] === 'date', lo: null, hi: null }; out.push(pairs[pair[0]]); }
+        pairs[pair[0]][pair[1] === 'min' ? 'lo' : 'hi'] = el.value;
+        return;
+      }
+      if(el.type === 'checkbox'){ out.push(advFieldName(el, panel)); return; }
+      if(el.tagName === 'SELECT'){
+        out.push(el.value === '__undefined__' ? 'No ' + advFieldName(el, panel).toLowerCase() : el.options[el.selectedIndex].textContent);
+        return;
+      }
+      const fmt = ADV_TEXT_FORMAT[el.id];
+      out.push(fmt ? fmt(el.value) : el.value);
+    });
+    return out.map(x=>{
+      if(typeof x === 'string') return x;
+      const f = v=> x.date ? fmtDateShort(v) : v;
+      if(x.lo != null && x.hi != null) return `${x.label} ${f(x.lo)}–${f(x.hi)}`;
+      if(x.lo != null) return x.date ? `${x.label} from ${f(x.lo)}` : `${x.label} ${f(x.lo)}+`;
+      return x.date ? `${x.label} to ${f(x.hi)}` : `${x.label} up to ${f(x.hi)}`;
+    });
+  }
+  // each tile lists what is chosen in it
   function updateAdvancedSearchBadges(){
     if(typeof advMode === 'undefined' || typeof advCols === 'undefined') return;
     const stripParens = t => String(t).replace(/\s*\([^)]*\)/g, '').trim();
@@ -11098,7 +11139,7 @@
         const tn = document.getElementById('advTopN').value;
         if(tn !== '') names.push('Top ' + tn);
       } else if(panel){
-        advChosenFields(panel).forEach(el=>{ const n = advFieldName(el, panel); if(!names.includes(n)) names.push(n); });
+        names = advTileChoiceTexts(panel);
       }
       const c = t.querySelector('.c');
       if(pname === 'cols' && names.length === 0){
@@ -11160,7 +11201,6 @@
   })();
   let lastAdvancedSearchView = { mode:'cow', headers:[], rows:[] }; // for print + text list
 
-  let lastAdvancedSearchEntries = []; // for print
   let lastAdvancedSearchCows = []; // for print
   function runAdvancedSearch(){
     const location = document.getElementById('advSearchLocation').value;
@@ -11321,95 +11361,11 @@
       return true;
     }).sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
 
-    // Build the line-by-line report of exactly which records matched.
-    const reportEntries = [];
-    results.forEach(c=>{
-      const num = c.number;
-      if(breedingFieldsUsed){
-        matchingBreedingRecords(num).forEach(b=>{
-          const detail = [];
-          if(b.bred_to) detail.push(`Bred to: ${b.bred_to}`);
-          if(b.pregnancy_method) detail.push(b.pregnancy_method);
-          if(b.natural_sire) detail.push(`Natural sire: ${b.natural_sire}`);
-          if(b.pregnancy_status === 'Open') detail.push(`Open${b.open_date ? ' ('+fmtDate(b.open_date)+')' : ''}`);
-          reportEntries.push({ date: b.breed_date, num, type: 'Breeding', details: detail.join(' — ') });
-        });
-      }
-      if(medFieldsUsed){
-        matchingMedRecords(num).forEach(t=>{
-          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
-          reportEntries.push({ date: t.date, num, type: 'Med', details: desc });
-        });
-        if(minTimes == null) matchingCalfMedRecords(num).forEach(t=>{
-          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
-          reportEntries.push({ date: t.date, num, type: 'Calf Med', details: desc });
-        });
-      }
-      if(calvingFieldsUsed){
-        matchingCalvingRecords(num).forEach(cv=>{
-          const detail = [`${calfSexLabel(cv.calf_sex)} calf`];
-          if(cv.sire) detail.push(`Sire: ${cv.sire}`);
-          if(cv.birth_assist) detail.push(cv.birth_assist);
-          if(cv.birth_weight != null) detail.push(`${cv.birth_weight} lbs`);
-          if(weaningFieldsUsed){
-            const st = weaningStats(cv);
-            if(st){
-              const w = [`Weaned${st.date ? ' '+fmtDateShort(st.date) : ''}`, `${st.weight} lbs`];
-              if(st.age != null) w.push(`${st.age} days`);
-              if(st.gain != null) w.push(`${st.gain.toFixed(2)} lbs/day`);
-              detail.push(w.join(' · '));
-            } else if(cv.weaning_date){
-              detail.push(`Weaned ${fmtDateShort(cv.weaning_date)}`);
-            } else {
-              detail.push('Not weaned yet');
-            }
-          }
-          reportEntries.push({ date: cv.calving_date, num, type: 'Calving', details: detail.join(' — ') });
-        });
-      }
-      if(weightFieldsUsed){
-        matchingWeightRecords(num).forEach(w=>{
-          reportEntries.push({ date: w.weigh_date, num, type: 'Weight', details: `${w.weight} lb` });
-        });
-      }
-      if(!breedingFieldsUsed && !medFieldsUsed && !calvingFieldsUsed && !weightFieldsUsed && (dateFrom || dateTo)){
-        // Pure date-range search with no other criteria — show all her
-        // activity in that window across every category.
-        recordsFor(num).forEach(t=>{
-          if((!dateFrom || t.date >= dateFrom) && (!dateTo || t.date <= dateTo)){
-            const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
-            reportEntries.push({ date: t.date, num, type: 'Med', details: desc });
-          }
-        });
-        calvingsFor(num).forEach(cv=>{
-          if((!dateFrom || cv.calving_date >= dateFrom) && (!dateTo || cv.calving_date <= dateTo)){
-            reportEntries.push({ date: cv.calving_date, num, type: 'Calving', details: `${calfSexLabel(cv.calf_sex)} calf` });
-          }
-        });
-        generalNotesFor(num).forEach(n=>{
-          if((!dateFrom || n.note_date >= dateFrom) && (!dateTo || n.note_date <= dateTo)){
-            reportEntries.push({ date: n.note_date, num, type: 'Note', details: n.note||'' });
-          }
-        });
-        weightsFor(num).forEach(w=>{
-          if((!dateFrom || w.weigh_date >= dateFrom) && (!dateTo || w.weigh_date <= dateTo)){
-            reportEntries.push({ date: w.weigh_date, num, type: 'Weight', details: w.weight!=null ? w.weight+' lb' : '' });
-          }
-        });
-        breedingFor(num).forEach(b=>{
-          if((!dateFrom || b.breed_date >= dateFrom) && (!dateTo || b.breed_date <= dateTo)){
-            reportEntries.push({ date: b.breed_date, num, type: 'Breeding', details: b.bred_to ? 'Bred to: '+b.bred_to : '' });
-          }
-        });
-      }
-    });
-    reportEntries.sort((a,b)=> b.date.localeCompare(a.date));
 
     advHasRun = true;
     const mode = advMode;
     const countEl = document.getElementById('advancedSearchCount');
     const tableEl = document.getElementById('advancedSearchReportTable');
-    const linesEl = document.getElementById('advancedSearchLinesTable');
     const printBtn = document.getElementById('advancedSearchPrintBtn');
     const textBtn = document.getElementById('advancedSearchTextBtn');
     const resultsEl = document.getElementById('advancedSearchResults');
@@ -11434,11 +11390,24 @@
     const topN = topNRaw != null && topNRaw >= 1 ? Math.floor(topNRaw) : null;
     if(topN != null) items = items.slice(0, topN);
     const shownNums = new Set(items.map(it=> it.r.c.number));
-    const lineEntries = mode === 'cow' ? reportEntries.filter(e=> shownNums.has(e.num)) : [];
-    lastAdvancedSearchEntries = lineEntries;
     lastAdvancedSearchCows = results.filter(c=> shownNums.has(c.number));
     const bodyRows = items.map(it=> [ '#' + it.r.c.number, ...colDefs.map(d=> d.get(it.r, it.x)) ]);
     const unitWord = mode === 'calf' ? (totalRows === 1 ? 'calf' : 'calves') : (totalRows === 1 ? 'cow' : 'cows');
+    // divider lines where the 1st (heavier), 2nd or 3rd sort changes - only for word fields like Location, Owner, Group, Sire
+    const sortSels = advSortSelections(mode);
+    const rowLevels = items.map((it, i)=>{
+      if(i === 0) return -1;
+      const prev = items[i - 1];
+      for(let k = 0; k < sortSels.length; k++){
+        const d = sortSels[k].def;
+        if(d.type !== 'text') return -1;
+        const a = String(d.get(prev.r, prev.x) || '').trim().toLowerCase();
+        const b = String(d.get(it.r, it.x) || '').trim().toLowerCase();
+        if(a !== b) return k;
+      }
+      return -1;
+    });
+    const DIV_SCREEN = ['3px solid #0C447C', '2px solid #2E88C4', '1px solid #8FB8D9'];
     const motherCount = new Set(rowObjs.map(r=> r.c.number)).size;
     const countText = topN != null && totalRows > bodyRows.length
       ? `Top ${bodyRows.length} of ${totalRows} ${unitWord}`
@@ -11466,7 +11435,7 @@
     }
     const avgText = avgParts.join(' · ');
     document.getElementById('advancedSearchAverages').innerHTML = avgParts.length ? `<b>Averages:</b> ${escapeHtml(avgText)}` : '';
-    lastAdvancedSearchView = { mode, headers, rows: bodyRows, countText, sortText, avgText };
+    lastAdvancedSearchView = { mode, headers, rows: bodyRows, countText, sortText, avgText, levels: rowLevels };
 
     countEl.textContent = countText + (sortText ? ' · sorted by ' + sortText : '');
     document.getElementById('advancedSearchSummary').innerHTML = `<span>${escapeHtml(advActiveSummary())}</span><a class="adv-edit-link">Edit search</a>`;
@@ -11477,34 +11446,12 @@
     if(rowObjs.length > 0){
       tableEl.innerHTML = `<div style="overflow-x:auto;"><table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
         <thead><tr style="background:#EFE8D8;">${headers.map(h=>`<th style="${th}">${escapeHtml(h)}</th>`).join('')}</tr></thead>
-        <tbody>${bodyRows.map((cells,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${cells.map(v=>`<td style="padding:8px;">${escapeHtml(v)}</td>`).join('')}</tr>`).join('')}</tbody>
+        <tbody>${bodyRows.map((cells,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${cells.map(v=>`<td style="padding:8px;${rowLevels[i] >= 0 ? 'border-top:' + DIV_SCREEN[Math.min(rowLevels[i], 2)] + ';' : ''}">${escapeHtml(v)}</td>`).join('')}</tr>`).join('')}</tbody>
       </table></div>`;
     } else {
       tableEl.innerHTML = '';
     }
 
-    // the line-by-line "what matched" list stays under the table (Cows view)
-    if(mode === 'cow' && lineEntries.length > 0){
-      linesEl.innerHTML = `
-        <div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0C447C;margin:6px 0 8px;">Matching records</div>
-        <div style="overflow-x:auto;">
-          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
-            <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Type</th><th style="text-align:left;padding:8px;">Details</th></tr></thead>
-            <tbody>
-              ${lineEntries.map((e,i)=>`
-                <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-                  <td style="padding:8px;">${e.date ? fmtDateShort(e.date) : ''}</td>
-                  <td style="padding:8px;">#${escapeHtml(e.num)}</td>
-                  <td style="padding:8px;">${escapeHtml(e.type)}</td>
-                  <td style="padding:8px;white-space:normal;">${escapeHtml(e.details)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>`;
-    } else {
-      linesEl.innerHTML = '';
-    }
 
     if(rowObjs.length === 0){
       resultsEl.innerHTML = mode === 'calf' ? '<p class="empty">No calves match those filters.</p>' : '<p class="empty">No cows match those filters.</p>';
@@ -11512,11 +11459,6 @@
     }
     resultsEl.innerHTML = '';
     wireTableRowsToCards(tableEl, showAdvancedSearch, '← Back to Search Results');
-    if(linesEl.innerHTML){
-      wireTableRowsToCards(linesEl, showAdvancedSearch, '← Back to Search Results');
-      const dupHint = linesEl.previousElementSibling;
-      if(dupHint && dupHint.classList && dupHint.classList.contains('card-tap-hint') && dupHint !== tableEl.previousElementSibling) dupHint.remove();
-    }
   }
   function applyAdvancedSearchDatePreset(){
     const preset = document.getElementById('advSearchDatePreset').value;
@@ -11565,7 +11507,6 @@
     advRefreshSortControls();
     updateAdvancedSearchBadges();
     advHasRun = false;
-    document.getElementById('advancedSearchLinesTable').innerHTML = '';
     document.getElementById('advancedSearchSummary').innerHTML = '';
     advClosePanels();
     lastAdvancedSearchView = { mode:'cow', headers:[], rows:[], countText:'', sortText:'' };
@@ -11575,7 +11516,6 @@
     document.getElementById('advancedSearchPrintBtn').classList.add('hidden');
     document.getElementById('advancedSearchTextBtn').classList.add('hidden');
     document.getElementById('advancedSearchResults').innerHTML = '';
-    lastAdvancedSearchEntries = [];
     lastAdvancedSearchCows = [];
   }
   function textAdvancedSearchResults(){
@@ -11596,22 +11536,8 @@
     const mainTable = `
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead><tr>${v.headers.map(h=>`<th style="${pth}">${escapeHtml(h)}</th>`).join('')}</tr></thead>
-        <tbody>${v.rows.map((cells,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${cells.map(val=>`<td style="padding:6px;">${escapeHtml(val)}</td>`).join('')}</tr>`).join('')}</tbody>
+        <tbody>${v.rows.map((cells,i)=>{ const lv = (v.levels || [])[i]; const bt = lv == null || lv < 0 ? '' : 'border-top:' + (['2px solid #000','1px solid #555','1px dotted #888'][Math.min(lv, 2)]) + ';'; return `<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${cells.map(val=>`<td style="padding:6px;${bt}">${escapeHtml(val)}</td>`).join('')}</tr>`; }).join('')}</tbody>
       </table>`;
-    const activityHtml = (v.mode === 'cow' && lastAdvancedSearchEntries.length > 0) ? `
-      <h3 style="margin:20px 0 8px;font-size:14px;">Matching Activity</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr><th style="${pth}">Date</th><th style="${pth}">Cow #</th><th style="${pth}">Type</th><th style="${pth}">Details</th></tr></thead>
-        <tbody>${lastAdvancedSearchEntries.map((e,i)=>`
-          <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-            <td style="padding:6px;">${e.date ? fmtDateShort(e.date) : ''}</td>
-            <td style="padding:6px;">#${escapeHtml(e.num)}</td>
-            <td style="padding:6px;">${escapeHtml(e.type)}</td>
-            <td style="padding:6px;">${escapeHtml(e.details)}</td>
-          </tr>
-        `).join('')}</tbody>
-      </table>
-    ` : '';
     const countText = v.countText + (v.sortText ? ' · sorted by ' + v.sortText : '');
     document.getElementById('printListOutput').innerHTML = `
       <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
@@ -11619,7 +11545,6 @@
         <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${countText}</div>
         ${mainTable}
         ${v.avgText ? `<div style="margin-top:12px;font-size:13px;font-weight:700;">Averages: ${escapeHtml(v.avgText)}</div>` : ''}
-        ${activityHtml}
       </div>
     `;
     document.body.classList.add('printing-list');
