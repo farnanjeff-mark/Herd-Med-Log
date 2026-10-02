@@ -216,6 +216,15 @@
   #utilitiesView .section-label{font-size:22px;letter-spacing:.02em;margin:24px 0 12px;}
   #farmOperationsView .section-label{font-size:22px;letter-spacing:.02em;margin:24px 0 12px;}
   #advancedSearchView .row2{gap:8px;}
+  #advancedSearchView details.adv-fold{border:1.5px solid #2E88C4;border-radius:2px;background:#FFFFFF;margin:0 0 10px;}
+  #advancedSearchView details.adv-fold > summary{cursor:pointer;list-style:none;padding:13px 14px;font-family:Arial,sans-serif;font-size:16px;font-weight:700;color:#0C447C;display:flex;align-items:center;gap:8px;-webkit-user-select:none;user-select:none;}
+  #advancedSearchView details.adv-fold > summary::-webkit-details-marker{display:none;}
+  #advancedSearchView details.adv-fold > summary::before{content:'\25B8';font-size:16px;color:#0C447C;width:14px;display:inline-block;}
+  #advancedSearchView details.adv-fold[open] > summary::before{content:'\25BE';}
+  #advancedSearchView details.adv-fold[open] > summary{background:#E6F1FB;border-bottom:1.5px solid #2E88C4;}
+  #advancedSearchView .adv-fold-body{padding:12px 14px 4px;}
+  #advancedSearchView .adv-badge{background:#3C9142;color:#FFFFFF;border-radius:20px;font-size:12px;font-weight:700;padding:2px 9px;display:none;}
+  #advancedSearchView .adv-note{font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin:-2px 0 10px;}
 
   .fab{
     position:fixed;bottom:24px;left:50%;transform:translateX(calc(-50% + (min(480px,100vw) - 40px)/2 - 26px));
@@ -754,148 +763,320 @@
     <button class="btn btn-outline btn-full" id="advancedSearchHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
     <div class="modal-title" style="margin-bottom:14px;">Advanced Search</div>
 
-    <div class="section-label" style="margin-top:0;">Herd &amp; Location</div>
-    <div class="row2">
-      <div class="field">
-        <label>Location</label>
-        <select id="advSearchLocation"><option value="">Any</option></select>
+    <details class="adv-fold">
+      <summary>Herd &amp; Location<span class="adv-badge"></span></summary>
+      <div class="adv-fold-body">
+      <div class="row2">
+        <div class="field">
+          <label>Location</label>
+          <select id="advSearchLocation"><option value="">Any</option></select>
+        </div>
+        <div class="field">
+          <label>Owner</label>
+          <select id="advSearchOwner"><option value="">Any</option></select>
+        </div>
       </div>
-      <div class="field">
-        <label>Owner</label>
-        <select id="advSearchOwner"><option value="">Any</option></select>
+      <div class="row2">
+        <div class="field">
+          <label>Group</label>
+          <select id="advSearchGroup"><option value="">Any</option></select>
+        </div>
+        <div class="field">
+          <label>Herd Season</label>
+          <select id="advSearchHerdSeason">
+            <option value="">Any</option>
+            <option value="__undefined__">Undefined</option>
+            <option value="Spring">Spring</option>
+            <option value="Fall">Fall</option>
+          </select>
+        </div>
       </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Group</label>
-        <select id="advSearchGroup"><option value="">Any</option></select>
-      </div>
-      <div class="field">
-        <label>Herd Season</label>
-        <select id="advSearchHerdSeason">
-          <option value="">Any</option>
-          <option value="__undefined__">Undefined</option>
-          <option value="Spring">Spring</option>
-          <option value="Fall">Fall</option>
-        </select>
-      </div>
-    </div>
 
-    <div class="section-label">Breeding</div>
-    <div class="row2">
-      <div class="field">
-        <label>Bred To</label>
-        <select id="advSearchBredTo"><option value="">Any</option></select>
+      <div class="row2">
+        <div class="field">
+          <label>Status</label>
+          <select id="advSearchStatus">
+            <option value="">Any</option>
+            <option value="Active">Active</option>
+            <option value="Sold">Sold</option>
+            <option value="Deceased">Deceased</option>
+          </select>
+        </div>
+        <div class="field"></div>
       </div>
-      <div class="field">
-        <label>Pregnancy Method</label>
-        <select id="advSearchMethod">
-          <option value="">Any</option>
-          <option value="ET">ET</option>
-          <option value="AI">AI</option>
-          <option value="BB">BB</option>
-        </select>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="advSearchTagNeeded" style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="advSearchTagNeeded">Tag needed</label>
       </div>
-    </div>
-    <div class="field">
-      <label>Natural Sire</label>
-      <input type="text" id="advSearchNaturalSire" placeholder="Any"/>
-    </div>
-    <div class="field" style="display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="advSearchOpenOnly" style="width:20px;height:20px;"/>
-      <label style="margin:0;" for="advSearchOpenOnly">Open cows only</label>
-    </div>
-    <div class="field" style="display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="advSearchPregBtOnly" style="width:20px;height:20px;"/>
-      <label style="margin:0;" for="advSearchPregBtOnly">Preg BT only</label>
-    </div>
-    <div class="field" style="display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="advSearchSellOnly" style="width:20px;height:20px;"/>
-      <label style="margin:0;" for="advSearchSellOnly">Sell only</label>
-    </div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="advSearchFlagged" style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="advSearchFlagged">Flagged (needs entry)</label>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="advSearchCalvedPending" style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="advSearchCalvedPending">Calved pending (calved box checked)</label>
+      </div>
+      </div>
+    </details>
 
-    <div class="section-label">Meds &amp; Notes</div>
-    <div class="row2">
-      <div class="field">
-        <label>Medicine</label>
-        <select id="advSearchMedicine"><option value="">Any</option></select>
+    <details class="adv-fold">
+      <summary>Breeding<span class="adv-badge"></span></summary>
+      <div class="adv-fold-body">
+      <div class="row2">
+        <div class="field">
+          <label>Bred To</label>
+          <select id="advSearchBredTo"><option value="">Any</option></select>
+        </div>
+        <div class="field">
+          <label>Pregnancy Method</label>
+          <select id="advSearchMethod">
+            <option value="">Any</option>
+            <option value="ET">ET</option>
+            <option value="AI">AI</option>
+            <option value="BB">BB</option>
+          </select>
+        </div>
       </div>
       <div class="field">
-        <label>Reason</label>
-        <select id="advSearchReason"><option value="">Any</option></select>
+        <label>Natural Sire</label>
+        <input type="text" id="advSearchNaturalSire" placeholder="Any"/>
       </div>
-    </div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="advSearchOpenOnly" style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="advSearchOpenOnly">Open cows only</label>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="advSearchPregBtOnly" style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="advSearchPregBtOnly">Preg BT only</label>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="advSearchSellOnly" style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="advSearchSellOnly">Sell only</label>
+      </div>
 
-    <div class="section-label">Calving</div>
-    <div class="row2">
       <div class="field">
-        <label>Sire</label>
-        <select id="advSearchCalfSire"><option value="">Any</option></select>
-      </div>
-      <div class="field">
-        <label>Calf Sex</label>
-        <select id="advSearchCalfSex">
+        <label>Preg Check Result</label>
+        <select id="advSearchPregCheck">
           <option value="">Any</option>
-          <option value="B">Bull</option>
-          <option value="H">Heifer</option>
+          <option value="open">Open</option>
+          <option value="bred">Checked bred (preg)</option>
+          <option value="none">Not checked yet</option>
         </select>
       </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Birth Assist</label>
-        <select id="advSearchBirthAssist">
-          <option value="">Any</option>
-          <option value="None">None</option>
-          <option value="Easy Pull">Easy Pull</option>
-          <option value="Hard Pull">Hard Pull</option>
-          <option value="C-Section">C-Section</option>
-        </select>
       </div>
-      <div class="field">
-        <label>Calf Outcome</label>
-        <select id="advSearchCalfOutcome">
-          <option value="">Any</option>
-          <option value="active">Still Active</option>
-          <option value="kept">Kept (Promoted)</option>
-          <option value="sold">Sold</option>
-          <option value="died">Died</option>
-        </select>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Birth Weight Min (lbs)</label>
-        <input type="number" id="advSearchWeightMin" step="0.1" min="0" placeholder="Any"/>
-      </div>
-      <div class="field">
-        <label>Birth Weight Max (lbs)</label>
-        <input type="number" id="advSearchWeightMax" step="0.1" min="0" placeholder="Any"/>
-      </div>
-    </div>
+    </details>
 
-    <div class="section-label">Date Range (optional)</div>
-    <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Matches cows with any activity in this range.</div>
-    <div class="field">
-      <label>Quick Range</label>
-      <select id="advSearchDatePreset">
-        <option value="">Custom Range</option>
-        <option value="0">1 Day</option>
-        <option value="7">1 Week</option>
-        <option value="30">1 Month</option>
-        <option value="all">Any</option>
-      </select>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>From</label>
-        <input type="date" id="advSearchDateFrom"/>
+    <details class="adv-fold">
+      <summary>Meds &amp; Notes<span class="adv-badge"></span></summary>
+      <div class="adv-fold-body">
+      <div class="row2">
+        <div class="field">
+          <label>Medicine</label>
+          <select id="advSearchMedicine"><option value="">Any</option></select>
+        </div>
+        <div class="field">
+          <label>Reason</label>
+          <select id="advSearchReason"><option value="">Any</option></select>
+        </div>
       </div>
-      <div class="field">
-        <label>To</label>
-        <input type="date" id="advSearchDateTo"/>
+
+      <div class="row2">
+        <div class="field">
+          <label>Treated at least (times)</label>
+          <input type="number" id="advSearchMinTimes" step="1" min="0" placeholder="Any"/>
+        </div>
+        <div class="field" style="display:flex;align-items:flex-end;padding-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="advSearchSameReason" style="width:20px;height:20px;"/>
+            <label style="margin:0;" for="advSearchSameReason">Same reason</label>
+          </div>
+        </div>
       </div>
-    </div>
+      <div class="adv-note">Counts her own treatments that match the Medicine, Reason and date range above. "Same reason" counts only treatments that share one reason (if you leave times blank it uses 2).</div>
+      </div>
+    </details>
+
+    <details class="adv-fold">
+      <summary>Calving<span class="adv-badge"></span></summary>
+      <div class="adv-fold-body">
+      <div class="row2">
+        <div class="field">
+          <label>Sire</label>
+          <select id="advSearchCalfSire"><option value="">Any</option></select>
+        </div>
+        <div class="field">
+          <label>Calf Sex</label>
+          <select id="advSearchCalfSex">
+            <option value="">Any</option>
+            <option value="B">Bull</option>
+            <option value="H">Heifer</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Birth Assist</label>
+          <select id="advSearchBirthAssist">
+            <option value="">Any</option>
+            <option value="None">None</option>
+            <option value="Easy Pull">Easy Pull</option>
+            <option value="Hard Pull">Hard Pull</option>
+            <option value="C-Section">C-Section</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Calf Outcome</label>
+          <select id="advSearchCalfOutcome">
+            <option value="">Any</option>
+            <option value="active">Still Active</option>
+            <option value="kept">Kept (Promoted)</option>
+            <option value="sold">Sold</option>
+            <option value="died">Died</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Birth Weight Min (lbs)</label>
+          <input type="number" id="advSearchWeightMin" step="0.1" min="0" placeholder="Any"/>
+        </div>
+        <div class="field">
+          <label>Birth Weight Max (lbs)</label>
+          <input type="number" id="advSearchWeightMax" step="0.1" min="0" placeholder="Any"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Out of Cow # (her daughters)</label>
+        <input type="text" id="advSearchOutOfCow" placeholder="Any"/>
+      </div>
+      </div>
+    </details>
+
+    <details class="adv-fold">
+      <summary>Weaning<span class="adv-badge"></span></summary>
+      <div class="adv-fold-body">
+      <div class="field">
+        <label>Weaned</label>
+        <select id="advSearchWeaned">
+          <option value="">Any</option>
+          <option value="yes">Weaned</option>
+          <option value="no">Not weaned yet</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Weaning Weight Min (lbs)</label>
+          <input type="number" id="advSearchWeanWtMin" step="0.1" min="0" placeholder="Any"/>
+        </div>
+        <div class="field">
+          <label>Weaning Weight Max (lbs)</label>
+          <input type="number" id="advSearchWeanWtMax" step="0.1" min="0" placeholder="Any"/>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Gain Min (lbs/day)</label>
+          <input type="number" id="advSearchGainMin" step="0.01" min="0" placeholder="Any"/>
+        </div>
+        <div class="field">
+          <label>Gain Max (lbs/day)</label>
+          <input type="number" id="advSearchGainMax" step="0.01" min="0" placeholder="Any"/>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Age at Weaning Min (days)</label>
+          <input type="number" id="advSearchWeanAgeMin" step="1" min="0" placeholder="Any"/>
+        </div>
+        <div class="field">
+          <label>Age at Weaning Max (days)</label>
+          <input type="number" id="advSearchWeanAgeMax" step="1" min="0" placeholder="Any"/>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Weaned From</label>
+          <input type="date" id="advSearchWeanFrom"/>
+        </div>
+        <div class="field">
+          <label>Weaned To</label>
+          <input type="date" id="advSearchWeanTo"/>
+        </div>
+      </div>
+      <div class="adv-note">Looks at each cow's calves. Gain per day = (weaning weight - birth weight) / days; calves with no birth weight are skipped for gain.</div>
+      </div>
+    </details>
+
+    <details class="adv-fold">
+      <summary>Weights<span class="adv-badge"></span></summary>
+      <div class="adv-fold-body">
+      <div class="row2">
+        <div class="field">
+          <label>Weight Min (lbs)</label>
+          <input type="number" id="advSearchCowWtMin" step="0.1" min="0" placeholder="Any"/>
+        </div>
+        <div class="field">
+          <label>Weight Max (lbs)</label>
+          <input type="number" id="advSearchCowWtMax" step="0.1" min="0" placeholder="Any"/>
+        </div>
+      </div>
+      <div class="adv-note">Uses her most recent weight (inside the date range below, if you set one).</div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="advSearchMissingWeight" style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="advSearchMissingWeight">Missing a weight (active cows with no weight on file)</label>
+      </div>
+      </div>
+    </details>
+
+    <details class="adv-fold">
+      <summary>Lists<span class="adv-badge"></span></summary>
+      <div class="adv-fold-body">
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="advSearchCullList" style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="advSearchCullList">Cull list</label>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>At least (reasons)</label>
+          <input type="number" id="advSearchCullMin" step="1" min="0" placeholder="Any"/>
+        </div>
+        <div class="field">
+          <label>Light calf under (lbs)</label>
+          <input type="number" id="advSearchLightLbs" step="1" min="0" placeholder="Auto"/>
+        </div>
+      </div>
+      <div class="adv-note">Active cows only. Reasons: open, 2+ treatments in the last 12 months, hard pull or C-section in her last 2 calvings, light calf (under 85% of that year's average weaning weight, or the number you type).</div>
+      </div>
+    </details>
+
+    <details class="adv-fold">
+      <summary>Date Range (optional)<span class="adv-badge"></span></summary>
+      <div class="adv-fold-body">
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;">Matches cows with any activity in this range.</div>
+      <div class="field">
+        <label>Quick Range</label>
+        <select id="advSearchDatePreset">
+          <option value="">Custom Range</option>
+          <option value="0">1 Day</option>
+          <option value="7">1 Week</option>
+          <option value="30">1 Month</option>
+          <option value="all">Any</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>From</label>
+          <input type="date" id="advSearchDateFrom"/>
+        </div>
+        <div class="field">
+          <label>To</label>
+          <input type="date" id="advSearchDateTo"/>
+        </div>
+      </div>
+
+      </div>
+    </details>
 
     <button class="btn btn-barn btn-full" id="runAdvancedSearchBtn" style="margin-bottom:8px;">Search</button>
     <button class="btn btn-outline btn-full" id="clearAdvancedSearchBtn" style="margin-bottom:16px;">Clear Filters</button>
@@ -10562,10 +10743,35 @@
     const weightMax = weightMaxRaw !== '' ? parseFloat(weightMaxRaw) : null;
     const dateFrom = document.getElementById('advSearchDateFrom').value;
     const dateTo = document.getElementById('advSearchDateTo').value;
+    const numVal = id => { const v = document.getElementById(id).value; return v !== '' ? parseFloat(v) : null; };
+    const status = document.getElementById('advSearchStatus').value;
+    const tagNeeded = document.getElementById('advSearchTagNeeded').checked;
+    const flagged = document.getElementById('advSearchFlagged').checked;
+    const calvedPending = document.getElementById('advSearchCalvedPending').checked;
+    const pregCheck = document.getElementById('advSearchPregCheck').value;
+    const sameReason = document.getElementById('advSearchSameReason').checked;
+    let minTimes = numVal('advSearchMinTimes');
+    if(minTimes == null && sameReason) minTimes = 2;
+    const outOfCow = document.getElementById('advSearchOutOfCow').value.trim();
+    const weaned = document.getElementById('advSearchWeaned').value;
+    const wwMin = numVal('advSearchWeanWtMin'), wwMax = numVal('advSearchWeanWtMax');
+    const gainMin = numVal('advSearchGainMin'), gainMax = numVal('advSearchGainMax');
+    const ageMin = numVal('advSearchWeanAgeMin'), ageMax = numVal('advSearchWeanAgeMax');
+    const weanFrom = document.getElementById('advSearchWeanFrom').value;
+    const weanTo = document.getElementById('advSearchWeanTo').value;
+    const cowWtMin = numVal('advSearchCowWtMin'), cowWtMax = numVal('advSearchCowWtMax');
+    const missingWeight = document.getElementById('advSearchMissingWeight').checked;
+    const cullList = document.getElementById('advSearchCullList').checked;
+    const cullMinRaw = numVal('advSearchCullMin');
+    const lightLbs = numVal('advSearchLightLbs');
+    const cullUsed = cullList || cullMinRaw != null;
+    const cullMin = Math.max(1, cullMinRaw != null ? cullMinRaw : 1);
 
-    const breedingFieldsUsed = bredTo || method || naturalSire || openOnly;
-    const medFieldsUsed = medicine || reason;
-    const calvingFieldsUsed = calfSire || calfSex || birthAssist || calfOutcome || weightMin != null || weightMax != null;
+    const weaningFieldsUsed = !!(weaned || wwMin != null || wwMax != null || gainMin != null || gainMax != null || ageMin != null || ageMax != null || weanFrom || weanTo);
+    const weightFieldsUsed = cowWtMin != null || cowWtMax != null;
+    const breedingFieldsUsed = bredTo || method || naturalSire || openOnly || pregCheck;
+    const medFieldsUsed = medicine || reason || minTimes != null;
+    const calvingFieldsUsed = calfSire || calfSex || birthAssist || calfOutcome || weightMin != null || weightMax != null || weaningFieldsUsed;
 
     function matchingBreedingRecords(num){
       const records = breedingFor(num);
@@ -10575,6 +10781,7 @@
         (!method || b.pregnancy_method === method) &&
         (!naturalSire || (b.natural_sire||'').toLowerCase().includes(naturalSire)) &&
         (!openOnly || (latest && b.id === latest.id && b.pregnancy_status === 'Open')) &&
+        (!pregCheck || (pregCheck === 'open' ? b.pregnancy_status === 'Open' : pregCheck === 'bred' ? b.pregnancy_status === 'Bred' : !b.pregnancy_status)) &&
         (!dateFrom || b.breed_date >= dateFrom) &&
         (!dateTo || b.breed_date <= dateTo)
       );
@@ -10610,8 +10817,75 @@
         }
         if(dateFrom && cv.calving_date < dateFrom) return false;
         if(dateTo && cv.calving_date > dateTo) return false;
+        if(weaningFieldsUsed){
+          const st = weaningStats(cv);
+          const isWeaned = !!(st || cv.weaning_date);
+          const recordOutcome2 = cv.promoted_to_cow_number ? 'kept' : (cv.calf_outcome || 'active');
+          if(weaned === 'yes' && !isWeaned) return false;
+          if(weaned === 'no' && (isWeaned || recordOutcome2 !== 'active')) return false;
+          if((wwMin != null || wwMax != null) && !st) return false;
+          if(wwMin != null && st.weight < wwMin) return false;
+          if(wwMax != null && st.weight > wwMax) return false;
+          if((gainMin != null || gainMax != null) && !(st && st.gain != null)) return false;
+          if(gainMin != null && st.gain < gainMin) return false;
+          if(gainMax != null && st.gain > gainMax) return false;
+          if((ageMin != null || ageMax != null) && !(st && st.age != null)) return false;
+          if(ageMin != null && st.age < ageMin) return false;
+          if(ageMax != null && st.age > ageMax) return false;
+          if(weanFrom && !(cv.weaning_date && cv.weaning_date >= weanFrom)) return false;
+          if(weanTo && !(cv.weaning_date && cv.weaning_date <= weanTo)) return false;
+        }
         return true;
       });
+    }
+    function matchingWeightRecords(num){
+      const recs = weightsFor(num).filter(w=> w.weight != null && (!dateFrom || w.weigh_date >= dateFrom) && (!dateTo || w.weigh_date <= dateTo));
+      if(!recs.length) return [];
+      const latest = [...recs].sort((a,b)=> b.weigh_date.localeCompare(a.weigh_date))[0];
+      const w = Number(latest.weight);
+      if(cowWtMin != null && w < cowWtMin) return [];
+      if(cowWtMax != null && w > cowWtMax) return [];
+      return [latest];
+    }
+    // times-treated check: her own treatments that match Medicine / Reason / dates
+    function timesTreatedOk(recs){
+      if(minTimes == null) return true;
+      if(!sameReason) return recs.length >= minTimes;
+      const counts = {};
+      recs.forEach(t=>{ if(t.reason) counts[t.reason] = (counts[t.reason]||0) + 1; });
+      return Object.values(counts).some(n=> n >= minTimes);
+    }
+    // cull list: yearly average weaning weights are worked out once per search
+    const yearAvg = {};
+    if(cullUsed){
+      const sums = {};
+      calvings.forEach(k=>{
+        const w = Number(k.weaning_weight);
+        if(k.weaning_weight != null && w > 0){
+          const y = (k.calving_date||'').slice(0,4);
+          if(!sums[y]) sums[y] = { s:0, n:0 };
+          sums[y].s += w; sums[y].n += 1;
+        }
+      });
+      Object.keys(sums).forEach(y=>{ yearAvg[y] = sums[y].s / sums[y].n; });
+    }
+    function cullReasonsFor(c){
+      const reasons = [];
+      const num = c.number;
+      if(isCowOpen(num)) reasons.push('Open');
+      const cutoff = addDays(todayLocal(), -365).toISOString().slice(0,10);
+      const recent = recordsFor(num).filter(t=> t.medicine && t.date >= cutoff).length;
+      if(recent >= 2) reasons.push(`${recent} treatments in 12 months`);
+      const last2 = [...calvingsFor(num)].sort((a,b)=> b.calving_date.localeCompare(a.calving_date)).slice(0,2);
+      if(last2.some(k=> k.birth_assist === 'Hard Pull' || k.birth_assist === 'C-Section')) reasons.push('Hard pull / C-section');
+      const weanedCalvings = calvingsFor(num).filter(k=> k.weaning_weight != null && Number(k.weaning_weight) > 0).sort((a,b)=> b.calving_date.localeCompare(a.calving_date));
+      if(weanedCalvings.length){
+        const k = weanedCalvings[0];
+        const y = (k.calving_date||'').slice(0,4);
+        const cut = lightLbs != null ? lightLbs : (yearAvg[y] ? yearAvg[y] * 0.85 : null);
+        if(cut != null && Number(k.weaning_weight) < cut) reasons.push(`Light calf (${Number(k.weaning_weight)} lbs)`);
+      }
+      return reasons;
     }
 
     const results = cows.filter(c=>{
@@ -10621,10 +10895,22 @@
       if(herdSeason){ if(herdSeason==='__undefined__' ? c.herd_season : c.herd_season !== herdSeason) return false; }
       if(pregBtOnly && !c.preg_bt) return false;
       if(sellOnly && !c.sell) return false;
+      if(status){ if(status === 'Active' ? !isActiveStatus(c) : c.status !== status) return false; }
+      if(tagNeeded && !c.tag_needed) return false;
+      if(flagged && !c.needs_entry) return false;
+      if(calvedPending && !c.calved) return false;
+      if(outOfCow && !calvings.some(k=> k.cow_number === outOfCow && k.promoted_to_cow_number === c.number)) return false;
+      if(missingWeight && !(isActiveStatus(c) && !weightsFor(c.number).some(w=> w.weight != null))) return false;
+      if(weightFieldsUsed && matchingWeightRecords(c.number).length === 0) return false;
+      if(cullUsed && !(isActiveStatus(c) && cullReasonsFor(c).length >= cullMin)) return false;
       if(breedingFieldsUsed && matchingBreedingRecords(c.number).length === 0) return false;
-      if(medFieldsUsed && matchingMedRecords(c.number).length === 0 && matchingCalfMedRecords(c.number).length === 0) return false;
+      if(medFieldsUsed){
+        const mr = matchingMedRecords(c.number);
+        if(minTimes != null){ if(!timesTreatedOk(mr)) return false; }
+        else if(mr.length === 0 && matchingCalfMedRecords(c.number).length === 0) return false;
+      }
       if(calvingFieldsUsed && matchingCalvingRecords(c.number).length === 0) return false;
-      if(!breedingFieldsUsed && !medFieldsUsed && !calvingFieldsUsed && (dateFrom || dateTo) && !cowHasActivityInDateRange(c.number, dateFrom, dateTo)) return false;
+      if(!breedingFieldsUsed && !medFieldsUsed && !calvingFieldsUsed && !weightFieldsUsed && (dateFrom || dateTo) && !cowHasActivityInDateRange(c.number, dateFrom, dateTo)) return false;
       return true;
     }).sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
 
@@ -10647,7 +10933,7 @@
           const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
           reportEntries.push({ date: t.date, num, type: 'Med', details: desc });
         });
-        matchingCalfMedRecords(num).forEach(t=>{
+        if(minTimes == null) matchingCalfMedRecords(num).forEach(t=>{
           const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes||'note');
           reportEntries.push({ date: t.date, num, type: 'Calf Med', details: desc });
         });
@@ -10658,10 +10944,31 @@
           if(cv.sire) detail.push(`Sire: ${cv.sire}`);
           if(cv.birth_assist) detail.push(cv.birth_assist);
           if(cv.birth_weight != null) detail.push(`${cv.birth_weight} lbs`);
+          if(weaningFieldsUsed){
+            const st = weaningStats(cv);
+            if(st){
+              const w = [`Weaned${st.date ? ' '+fmtDateShort(st.date) : ''}`, `${st.weight} lbs`];
+              if(st.age != null) w.push(`${st.age} days`);
+              if(st.gain != null) w.push(`${st.gain.toFixed(2)} lbs/day`);
+              detail.push(w.join(' · '));
+            } else if(cv.weaning_date){
+              detail.push(`Weaned ${fmtDateShort(cv.weaning_date)}`);
+            } else {
+              detail.push('Not weaned yet');
+            }
+          }
           reportEntries.push({ date: cv.calving_date, num, type: 'Calving', details: detail.join(' — ') });
         });
       }
-      if(!breedingFieldsUsed && !medFieldsUsed && !calvingFieldsUsed && (dateFrom || dateTo)){
+      if(weightFieldsUsed){
+        matchingWeightRecords(num).forEach(w=>{
+          reportEntries.push({ date: w.weigh_date, num, type: 'Weight', details: `${w.weight} lb` });
+        });
+      }
+      if(cullUsed){
+        reportEntries.push({ date: '', num, type: 'Cull list', details: cullReasonsFor(c).join('; ') });
+      }
+      if(!breedingFieldsUsed && !medFieldsUsed && !calvingFieldsUsed && !weightFieldsUsed && (dateFrom || dateTo)){
         // Pure date-range search with no other criteria — show all her
         // activity in that window across every category.
         recordsFor(num).forEach(t=>{
@@ -10713,7 +11020,7 @@
             <tbody>
               ${reportEntries.map((e,i)=>`
                 <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-                  <td style="padding:8px;">${fmtDateShort(e.date)}</td>
+                  <td style="padding:8px;">${e.date ? fmtDateShort(e.date) : ''}</td>
                   <td style="padding:8px;">#${escapeHtml(e.num)}</td>
                   <td style="padding:8px;">${escapeHtml(e.type)}</td>
                   <td style="padding:8px;white-space:normal;">${escapeHtml(e.details)}</td>
@@ -10752,6 +11059,19 @@
     toEl.value = todayLocal();
     fromEl.value = addDays(todayLocal(), -days).toISOString().slice(0,10);
   }
+  // green "N set" tag on each folded section that has a filter filled in
+  function updateAdvancedSearchBadges(){
+    document.querySelectorAll('#advancedSearchView details.adv-fold').forEach(d=>{
+      let n = 0;
+      d.querySelectorAll('input, select').forEach(el=>{
+        if(el.id === 'advSearchDatePreset') return;
+        if(el.type === 'checkbox' ? el.checked : el.value !== '') n++;
+      });
+      const b = d.querySelector('.adv-badge');
+      if(b){ b.textContent = n + ' set'; b.style.display = n ? 'inline-block' : 'none'; }
+    });
+  }
+  ['input','change'].forEach(evt=> document.getElementById('advancedSearchView').addEventListener(evt, updateAdvancedSearchBadges));
   function clearAdvancedSearch(){
     document.getElementById('advSearchLocation').value = '';
     document.getElementById('advSearchOwner').value = '';
@@ -10774,6 +11094,12 @@
     document.getElementById('advSearchDatePreset').value = '';
     document.getElementById('advSearchDateFrom').value = '';
     document.getElementById('advSearchDateTo').value = '';
+    document.querySelectorAll('#advancedSearchView details.adv-fold input, #advancedSearchView details.adv-fold select').forEach(el=>{
+      if(el.type === 'checkbox') el.checked = false;
+      else if(el.tagName === 'SELECT') el.selectedIndex = 0;
+      else el.value = '';
+    });
+    updateAdvancedSearchBadges();
     document.getElementById('advancedSearchCount').textContent = '';
     document.getElementById('advancedSearchReportTable').innerHTML = '';
     document.getElementById('advancedSearchPrintBtn').classList.add('hidden');
@@ -10805,7 +11131,7 @@
         <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Date</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Type</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Details</th></tr></thead>
         <tbody>${lastAdvancedSearchEntries.map((e,i)=>`
           <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-            <td style="padding:6px;">${fmtDateShort(e.date)}</td>
+            <td style="padding:6px;">${e.date ? fmtDateShort(e.date) : ''}</td>
             <td style="padding:6px;">#${escapeHtml(e.num)}</td>
             <td style="padding:6px;">${escapeHtml(e.type)}</td>
             <td style="padding:6px;">${escapeHtml(e.details)}</td>
