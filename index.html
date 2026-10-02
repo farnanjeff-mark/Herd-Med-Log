@@ -1147,7 +1147,7 @@
       <button class="btn btn-barn" id="runAdvancedSearchBtn">Search</button>
       <button class="btn btn-outline" id="clearAdvancedSearchBtn">Clear</button>
     </div>
-    <button class="btn btn-full only-cow" id="saveAdvReportBtn" style="margin-bottom:14px;background:#3C9142;color:#fff;border-color:#3C9142;justify-content:center;">💾 Save This Report</button>
+    <button class="btn btn-full" id="saveAdvReportBtn" style="margin-bottom:14px;background:#3C9142;color:#fff;border-color:#3C9142;justify-content:center;">💾 Save This Report</button>
 
     <div id="advancedSearchSummary" class="adv-summary"></div>
     <div id="advancedSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
@@ -11606,7 +11606,7 @@
     // a "last 30 days" style date choice is kept as the choice, so it stays current when you run it later
     const preset = fields.advSearchDatePreset;
     if(preset && preset !== 'all'){ delete fields.advSearchDateFrom; delete fields.advSearchDateTo; }
-    return { mode:'cow', fields, cols: advCols.cow.slice() };
+    return { mode: advMode, fields, cols: advCols[advMode].slice() };
   }
   function savedSettingsSummary(settings){
     const f = (settings && settings.fields) || {};
@@ -11619,16 +11619,17 @@
       if(/^advSortField/.test(id)) txt = 'Sorted';
       if(!parts.includes(txt)) parts.push(txt);
     });
-    return parts.length ? parts.join(' · ') : 'All cows';
+    return parts.length ? parts.join(' · ') : (settings && settings.mode === 'calf' ? 'All calves' : 'All cows');
   }
   function runSavedReport(id){
     const r = savedReports.find(x=> x.id === id);
     if(!r) return;
     const st = r.settings || {};
-    if(advMode !== 'cow') setAdvPage('cow');
+    const mode = (st.mode === 'calf' || r.report_type === 'calf_search') ? 'calf' : 'cow';
+    if(advMode !== mode) setAdvPage(mode);
     clearAdvancedSearch();
-    const valid = advAllCols('cow').map(c=>c.key);
-    if(Array.isArray(st.cols)) advCols.cow = st.cols.filter(k=> valid.includes(k));
+    const valid = advAllCols(mode).map(c=>c.key);
+    if(Array.isArray(st.cols)) advCols[mode] = st.cols.filter(k=> valid.includes(k));
     renderAdvColumnsPanel();
     advRefreshSortControls();
     let skipped = 0;
@@ -11655,7 +11656,7 @@
         <button class="sr-star ${r.starred?'on':''}" data-act="star" data-id="${r.id}" title="Star">${r.starred?'★':'☆'}</button>
         <div class="sr-main" data-act="run" data-id="${r.id}">
           <div class="sr-title">${escapeHtml(r.name)}</div>
-          <div class="sr-sub">${showFolder && fol ? '📁 ' + escapeHtml(fol.name) + ' — ' : ''}${escapeHtml(savedSettingsSummary(r.settings))}</div>
+          <div class="sr-sub">${showFolder && fol ? '📁 ' + escapeHtml(fol.name) + ' — ' : ''}${r.report_type === 'calf_search' ? '🐮 Calf — ' : ''}${escapeHtml(savedSettingsSummary(r.settings))}</div>
         </div>
         <button class="sr-del" data-act="delreport" data-id="${r.id}">Delete</button>
       </div>`;
@@ -11785,7 +11786,7 @@
         const inserted = await api('/saved_reports', {
           method:'POST',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ folder_id: folderId, name, report_type:'cow_search', settings: advCaptureSettings(), starred:false })
+          body: JSON.stringify({ folder_id: folderId, name, report_type: advMode === 'calf' ? 'calf_search' : 'cow_search', settings: advCaptureSettings(), starred:false })
         });
         savedReports.unshift(inserted[0]);
         savedFoldersOpen.add(folderId);
