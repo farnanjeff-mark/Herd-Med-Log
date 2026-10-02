@@ -252,8 +252,6 @@
   #profileBanner{ background:#fff !important; box-shadow:none !important; border:1px solid #999; }
   #profileInfoRows, #profileInfoRows div{ color:#2B2620 !important; border-color:#999 !important; }
   #profileStatusBadge{ background:#fff !important; color:#2B2620 !important; border:1px solid #999 !important; }
-  /* AI Search: never print the cow cards (or the help box / messages) if this screen is printed */
-  #aiSearchResults, #aiSearchHelpBox, #aiSearchMsg{ display:none !important; }
 }
 #printListOutput{ display:none; }
 .rc-check{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:7px;border:2px solid var(--rc-color);background:#fff;flex-shrink:0;cursor:pointer;position:relative;margin:0;}
@@ -666,7 +664,6 @@
 
     <div class="section-label">Search</div>
     <button class="btn btn-nav-tool btn-full" id="advancedSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🔍</span>&nbsp;&nbsp;Advanced Search</button>
-    <button class="btn btn-nav-tool btn-full" id="aiSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🤖</span>&nbsp;&nbsp;AI Search</button>
     <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
 
     <div class="section-label">Vet</div>
@@ -908,61 +905,6 @@
     <button class="btn btn-outline btn-full hidden" id="advancedSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
     <button class="btn btn-outline btn-full hidden" id="advancedSearchTextBtn" style="margin-bottom:16px;">📱 Text List</button>
     <div id="advancedSearchResults"></div>
-  </div>
-
-  <div class="view hidden" id="aiSearchView">
-    <button class="btn btn-outline btn-full" id="aiSearchHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
-    <div style="background:linear-gradient(135deg,#2E88C4,#0C5A8E);border-radius:14px;padding:18px;box-shadow:0 1px 2px rgba(43,38,32,.10),0 6px 16px rgba(43,38,32,.14);display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-      <div style="width:48px;height:48px;border-radius:24px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🤖</div>
-      <div>
-        <div style="font-family:Arial,sans-serif;font-size:24px;font-weight:700;color:#fff;letter-spacing:.02em;">AI Search</div>
-        <div style="font-family:Arial,sans-serif;font-size:13px;color:rgba(255,255,255,.92);line-height:1.4;margin-top:2px;">Tap a ready-made search, or type a question (typing needs a phone signal).</div>
-      </div>
-    </div>
-    <div style="background:#FFFFFF;border:2px solid #2E88C4;border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(43,38,32,.10),0 6px 16px rgba(43,38,32,.14);display:flex;flex-direction:column;gap:12px;margin-bottom:10px;">
-      <label for="aiSearchBox" style="display:block;font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0C447C;font-weight:700;margin:0;">What do you want to find?</label>
-      <textarea id="aiSearchBox" rows="3" maxlength="500" placeholder="Example: open cows in the south pasture, sorted by sire" style="width:100%;box-sizing:border-box;font-family:Arial,sans-serif;font-size:16px;background:#F7F2E6;border:2px solid #2E88C4;border-radius:10px;padding:10px 12px;color:#2B2620;resize:none;margin:0;"></textarea>
-      <div id="aiSearchHelpBox" style="background:#FFFFFF;border:2px solid #2E88C4;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);overflow:hidden;">
-        <button type="button" id="aiSearchHelpToggle" aria-expanded="false" aria-controls="aiSearchHelpPanel" style="width:100%;min-height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:#FFFFFF;color:#0C5A8E;border:none;padding:12px 14px;cursor:pointer;"><span>What can I search?</span><span id="aiSearchHelpArrow" style="font-size:16px;">&#9662;</span></button>
-        <div id="aiSearchHelpPanel" class="hidden" style="background:#F7F2E6;border-top:2px solid #2E88C4;padding:12px 14px 14px;">
-        <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;line-height:1.5;margin-bottom:12px;">Type it the way you'd say it, and mix and match, or tap a quick search below the typing box. Say dates your way ("this year", "since August") and numbers your way ("over 600", "under 500"). Tap a section to open it, and tap an example to try it.</div>
-        <div id="aiHelpSections"></div>
-      </div>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-profile-tool" id="aiSearchRunBtn" style="flex:2;min-height:50px;">🔍 Search</button>
-        <button class="btn btn-barn" id="aiSearchClearBtn" style="flex:1;min-height:50px;">Clear</button>
-      </div>
-    </div>
-    <div id="aiQuickBox" style="margin-bottom:14px;">
-      <button type="button" id="aiQuickToggle" aria-expanded="true" style="width:100%;min-height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:#FFFFFF;color:#0C5A8E;border:2px solid #2E88C4;border-radius:10px;padding:10px 14px;cursor:pointer;text-align:left;box-shadow:0 2px 5px rgba(43,38,32,.16);"><span>Quick searches</span><span id="aiQuickArrow" style="font-size:15px;">&#9652;</span></button>
-      <div id="aiQuickBody" style="padding-top:4px;">
-        <div class="section-label">One-tap searches</div>
-        <div id="aiQuickGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
-        <div class="section-label">Or pick a topic</div>
-        <div id="aiTopicRow" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"></div>
-        <div id="aiTopicList" class="hidden" style="margin-top:10px;"></div>
-        <div id="aiSavedBox" class="hidden"><div class="section-label">Saved</div><div id="aiSavedList"></div></div>
-        <div id="aiRecentBox" class="hidden"><div class="section-label">Recent</div><div id="aiRecentList"></div></div>
-      </div>
-    </div>
-    <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;text-align:center;line-height:1.5;margin-bottom:14px;">No signal? The quick searches above still work, and so does Advanced Search.</div>
-    <div id="aiSearchMsg" class="banner hidden"></div>
-    <div id="aiSearchInterp" class="hidden">
-      <div class="section-label" style="color:#0C447C;margin-top:6px;">I searched for</div>
-      <div id="aiSearchPills" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;line-height:1.5;margin-bottom:14px;">Not what you meant? Reword it and search again.</div>
-    </div>
-    <div id="aiSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
-    <div id="aiSearchColsBar" class="hidden" style="gap:10px;margin-bottom:12px;">
-      <button class="btn btn-profile-nav" id="aiSearchColsBtn" style="flex:1;height:46px;padding:0 10px;">Columns</button>
-      <button class="btn btn-outline hidden" id="aiSearchSaveBtn" style="width:96px;height:46px;padding:0 6px;">&#9734; Save</button>
-      <button class="btn btn-outline" id="aiSearchColsResetBtn" style="width:90px;height:46px;padding:0 6px;">Reset</button>
-    </div>
-    <div id="aiSearchReportTable" style="margin-bottom:14px;"></div>
-    <button class="btn btn-outline btn-full hidden" id="aiSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
-    <button class="btn btn-outline btn-full hidden" id="aiSearchTextBtn" style="margin-bottom:16px;">📱 Text List</button>
-    <div id="aiSearchResults"></div>
   </div>
 
   <div class="view hidden" id="farmOperationsView">
@@ -1600,7 +1542,6 @@
   const manageGroupsView = document.getElementById('manageGroupsView');
   const manageReasonsView = document.getElementById('manageReasonsView');
   const advancedSearchView = document.getElementById('advancedSearchView');
-  const aiSearchView = document.getElementById('aiSearchView');
   const reportsView = document.getElementById('reportsView');
   const fieldCountView = document.getElementById('fieldCountView');
   const pregCheckReportView = document.getElementById('pregCheckReportView');
@@ -2394,7 +2335,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2453,7 +2393,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2513,7 +2452,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2564,7 +2502,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2615,7 +2552,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2668,7 +2604,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2798,7 +2733,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -2875,7 +2809,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     window.scrollTo(0,0);
   }
   function showVetPregCheck(){
@@ -2925,7 +2858,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -2963,7 +2895,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3118,7 +3049,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -3153,7 +3083,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -3188,7 +3117,6 @@
     manageOwnersView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     fabAdd.classList.add('hidden');
     fabAddEquipment.classList.add('hidden');
     quickActionView.classList.add('hidden');
@@ -3328,7 +3256,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3362,7 +3289,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3399,7 +3325,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3495,7 +3420,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     farmOperationsView.classList.add('hidden');
     manageCustomAIView.classList.add('hidden');
     customAIView.classList.add('hidden');
@@ -3728,7 +3652,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -3759,7 +3682,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -3794,7 +3716,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -3831,7 +3752,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -3979,7 +3899,6 @@
     manageGroupsView.classList.add('hidden');
     manageReasonsView.classList.add('hidden');
     advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.add('hidden');
     reportsView.classList.add('hidden');
     fieldCountView.classList.add('hidden');
     quickCalfWeightView.classList.add('hidden');
@@ -7866,13 +7785,6 @@
   document.getElementById('clearAdvancedSearchBtn').addEventListener('click', clearAdvancedSearch);
   document.getElementById('advancedSearchPrintBtn').addEventListener('click', printAdvancedSearchResults);
   document.getElementById('advancedSearchTextBtn').addEventListener('click', textAdvancedSearchResults);
-  document.getElementById('aiSearchBtn').addEventListener('click', showAiSearch);
-  document.getElementById('aiSearchHomeBtn').addEventListener('click', showHome);
-  document.getElementById('aiSearchRunBtn').addEventListener('click', runAiSearch);
-  document.getElementById('aiSearchClearBtn').addEventListener('click', clearAiSearch);
-  document.getElementById('aiSearchPrintBtn').addEventListener('click', printAiSearchResults);
-  document.getElementById('aiSearchTextBtn').addEventListener('click', textAiSearchResults);
-  document.getElementById('aiSearchHelpToggle').addEventListener('click', toggleAiSearchHelp);
   document.getElementById('homeGlobalSearchBtn').addEventListener('click', showGlobalSearch);
   document.getElementById('globalSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('globalSearchBox').addEventListener('input', renderGlobalSearchResults);
@@ -11224,6 +11136,9 @@
     </div>`;
   }
 
+  // AI Search was removed: clear its saved columns and searches from this phone
+  try{ ['champ_ai_cols_cow', 'champ_ai_cols_calf', 'champ_ai_items_v1'].forEach(k=> localStorage.removeItem(k)); }catch(e){}
+
   // ===================== LIGHTER LISTS =====================
   // The six "pick a cow" lists (Meds & Notes, Calving, Notes, Cattle/Profile, Weights, Breeding) used to
   // be drawn in full, every cow, on every data reload, even though only one screen is showing. With 535
@@ -11255,882 +11170,7 @@
   renderWeightsList = lazyList(renderWeightsList, weightsListView, document.getElementById('weightsCowList'));
   renderBreedingList = lazyList(renderBreedingList, breedingListView, document.getElementById('breedingCowList'));
 
-  // ===================== AI SEARCH =====================
-  // The typed question goes to the "ai-search" Supabase function, which sends back filters.
-  // Those filters are applied HERE, on this phone, to the herd data already loaded.
-  // No cow data is ever sent to the AI. Advanced Search is not used or changed.
-  let lastAiSearchCows = [];
-  let lastAiSearchEntries = [];
-  let lastAiSearchQuestion = '';
-  let lastAiSearchTable = null;
-  let lastAiRender = null;   // { out, filters, pills } of the search on screen
-  let currentAiItemId = null;   // the Saved/Recent entry the search on screen belongs to
-
-  function showAiSearch(){
-    showAdvancedSearch(); // hides every other screen
-    advancedSearchView.classList.add('hidden');
-    aiSearchView.classList.remove('hidden');
-    setHeaderTitle('AI', 'Search');
-    window.scrollTo(0,0);
-  }
-  // ----- "What can I search?" help: grouped sections, tappable examples, and your own words -----
-  function aiHelpSectionsData(y){
-    // y = the first real location / reason / bull / medicine in the herd, so the examples use your own words
-    const loc = y.loc || 'the south pasture', bull = y.bull || 'a bull', reason = y.reason || 'pinkeye';
-    return [
-      { title: 'Quick, saved and recent', lines: ['Under the typing box are 8 one-tap searches and 6 topics. Tap a topic to see its ready-made questions, and tap a question to run it. These run on your phone with no AI: instant, free, and they work with no signal.', 'Questions you type are kept under Recent (the last 10). Tap one to run it again, with no AI. Tap the star, or the Save button above the table, to keep it under Saved. The arrow puts the question back in the typing box so the AI can ask it fresh (good for "this year" questions next year).', 'A saved search keeps the columns you picked for it.'],
-        examples: [] },
-      { title: 'Cows', lines: ['Location, Owner, Group, Herd Season (Spring, Fall, Undefined), Status (Active, Sold, Deceased).', 'Checkboxes: Tag needed, Flag, Calved, Open, Preg BT, Sell.'],
-        examples: [`open cows in ${loc}`, 'cows that need a tag'] },
-      { title: 'Breeding', lines: ['Bred To, method (AI, ET, BB), Natural Sire, preg check result (open or pregnant).'],
-        examples: [`ET cows bred to ${bull}`, 'cows confirmed pregnant by AI'] },
-      { title: 'Calves and calving', lines: ['Sire, mother (out of cow), calf sex, birth assist (None, Easy Pull, Hard Pull, C-Section), outcome (active, kept, sold, died), birth weight (over or under), birth dates.', 'Breeding words here (ET, AI, a bull) describe the breeding that made each calf.'],
-        examples: ['heifer calves born this year', 'calves that needed a hard pull this year'] },
-      { title: 'Weaning and gain', lines: ['Weaning weight, weaning date, age when weaned, rate of gain, and weaned or not weaned yet.', 'Rate of gain is lbs per day from birth weight to weaning weight (also called ADG). A calf with no birth weight has no gain figure, and the results say how many.'],
-        examples: ['calves weaned over 600 lbs, best gain first, top 10', 'calves not weaned yet'] },
-      { title: 'Health', lines: ['Medicine, reason, and dates.', 'Repeat treatments: how many times (2 or more), and "for the same reason". Only medicine entries count, not plain notes.'],
-        examples: ['cows treated more than once this year', `cows treated for ${reason} twice this year`] },
-      { title: 'Weights', lines: ['Weight over or under a number, and cows missing a weight in a time period (with no period it means never weighed).'],
-        examples: ['cows over 1,200 pounds, heaviest first', 'cows missing a weight this year'] },
-      { title: 'Cull list', lines: ['Cows that are open, were treated 2 or more times in the last 12 months, had a hard pull or C-section in their last 2 calvings, or weaned a light calf (under 85% of that year\'s average weaning weight, or a number you name). Most reasons first.', 'You can ask for at least 2 or 3 reasons.'],
-        examples: ['cull list', 'cull list with at least two reasons', 'cull list, light calf under 500'] },
-      { title: 'Choose your columns', lines: ['Search first, then tap the Columns button above the table and tick what you want. Tap a group to open it. The table redraws right away, with no new search and no cost, and your choice is remembered. Reset brings back the usual table.', 'Cow searches (one row per cow): cow number, location, owner, group, status, season; bred to, breeding status, method, due date; last medicine, treatments this year; last weight, weight date; and her latest calf\'s sex, sire, born, birth weight, assist, outcome, weaned date, weaning weight, age, gain.', 'Calf searches (one row per calf): the calf\'s own numbers, plus the mother\'s location, owner, group, status.', 'About 5 columns fit on a phone, up to 8 are allowed, and more than 5 swipes sideways. Print and Text List use the same columns. You can also name the columns in your question.'],
-        examples: ['calves weaned this year, show cow number, sire, birth weight, weaning weight and gain per day', `open cows in ${loc}, show cow number, location, owner and last weight`] },
-      { title: 'Sort and top 10', lines: ['Sort by: sire, location, owner, group, cow number, calving date, birth weight, breed date, weigh date, weight, treatment date, weaning weight, weaning date, gain per day, number of treatments, number of cull reasons.', 'High to low or low to high. Add "top 10" (or any number) to any sorted search.'],
-        examples: ['all cows in ' + loc + ' sorted by owner', 'best gain per day, top 5'] },
-      { title: 'Not available yet', lines: ['Cow age, text inside notes, sorting by tag, and averages and totals (like average weaning weight by sire).', 'Sold and deceased cows are left out of Missing a weight, Repeat treatments, and the Cull list. Other searches include them, so use the Status filter to pick.'],
-        examples: [] }
-    ];
-  }
-  function buildAiSearchHelp(){
-    const host = document.getElementById('aiHelpSections');
-    if(!host) return;
-    const o = aiSearchOptionLists();
-    const sections = aiHelpSectionsData({ loc: o.locations[0], bull: o.sires[0], reason: (o.reasons[0] || '').toLowerCase() });
-    const yours = [['Locations', o.locations], ['Owners', o.owners], ['Groups', o.groups], ['Bulls', o.sires], ['Medicines', o.medicines], ['Reasons', o.reasons]]
-      .filter(([, list])=> list && list.length)
-      .map(([name, list])=> `<div style="margin-bottom:6px;"><b>${name}:</b> ${escapeHtml(list.slice(0, 15).join(', '))}${list.length > 15 ? ` …and ${list.length - 15} more` : ''}</div>`).join('');
-    sections.push({ title: 'Your words', html: yours || 'Nothing entered yet.', lines: [], examples: [], intro: 'Type your own names exactly like this:' });
-    const rowStyle = 'width:100%;min-height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:#FFFFFF;color:#0C5A8E;border:1.5px solid #c9bfa4;border-radius:8px;padding:10px 12px;cursor:pointer;text-align:left;';
-    host.innerHTML = sections.map((sec, i)=>`
-      <div class="ai-help-sec" style="margin-bottom:8px;">
-        <button type="button" class="ai-help-head" data-i="${i}" aria-expanded="false" style="${rowStyle}"><span>${escapeHtml(sec.title)}</span><span class="ai-help-arrow" style="font-size:15px;">&#9662;</span></button>
-        <div class="ai-help-body hidden" style="padding:10px 4px 4px;">
-          ${sec.intro ? `<div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:6px;">${escapeHtml(sec.intro)}</div>` : ''}
-          ${sec.html ? `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;color:#2B2620;">${sec.html}</div>` : ''}
-          ${sec.lines.map(l=> `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;color:#2B2620;margin-bottom:6px;">${escapeHtml(l)}</div>`).join('')}
-          ${sec.examples.length ? `<div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#455B3D;font-weight:700;margin:8px 0 6px;">Try asking</div>` : ''}
-          ${sec.examples.map(ex=> `<button type="button" class="ai-help-example" data-ex="${escapeHtml(ex)}" style="width:100%;min-height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:Georgia,serif;font-size:15px;background:#FFFFFF;color:#2B2620;border:2px solid #2E88C4;border-radius:10px;padding:8px 12px;margin-bottom:6px;cursor:pointer;text-align:left;"><span>${escapeHtml(ex)}</span><span style="color:#0C5A8E;font-size:20px;line-height:1;">&rsaquo;</span></button>`).join('')}
-        </div>
-      </div>`).join('');
-  }
-  // one handler for every section row and example (wired once)
-  document.getElementById('aiHelpSections').addEventListener('click', e=>{
-    const head = e.target.closest('.ai-help-head');
-    if(head){
-      const body = head.parentElement.querySelector('.ai-help-body');
-      const open = body.classList.contains('hidden');
-      body.classList.toggle('hidden', !open);
-      head.setAttribute('aria-expanded', open ? 'true' : 'false');
-      head.querySelector('.ai-help-arrow').innerHTML = open ? '&#9652;' : '&#9662;';
-      return;
-    }
-    const ex = e.target.closest('.ai-help-example');
-    if(ex){
-      document.getElementById('aiSearchBox').value = ex.dataset.ex;
-      if(!document.getElementById('aiSearchHelpPanel').classList.contains('hidden')) toggleAiSearchHelp();
-      window.scrollTo(0, 0);
-      showToast('Added. Tap Search.');
-    }
-  });
-
-  // ----- the Columns picker: folded groups, tick what you want -----
-  function openAiColumnsPicker(){
-    if(!lastAiRender) return;
-    const { out } = lastAiRender;
-    const kind = out.kind;
-    let picks = out.table ? [...out.table.keys] : [];
-    const groups = AI_COL_GROUPS[kind].map(name=> ({ name, keys: Object.keys(AI_COLS).filter(k=> AI_COLS[k][kind] && AI_COLS[k][kind][2] === name) })).filter(g=> g.keys.length);
-    const openGroups = new Set();
-    const modal = openModal(`
-      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;"><span>Choose columns</span><span id="aiColsCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;font-weight:400;"></span></div>
-      <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;line-height:1.5;margin-bottom:10px;">Tap a group, then tick what you want. They show in the order you tick them. About 5 fit on a phone; more than that and the table swipes sideways. ${kind === 'calf' ? 'These are calves, one row per calf.' : 'These are cows, one row per cow.'}</div>
-      <div id="aiColsGroups" style="max-height:52vh;overflow-y:auto;margin-bottom:12px;"></div>
-      <div class="modal-actions" style="gap:8px;">
-        <button class="btn btn-outline" id="aiColsCancel" style="flex:1;height:46px;padding:0 6px;">Cancel</button>
-        <button class="btn btn-outline" id="aiColsUsual" style="flex:1;height:46px;padding:0 6px;">Usual</button>
-        <button class="btn btn-profile-tool" id="aiColsDone" style="flex:1;height:46px;padding:0 6px;">Done</button>
-      </div>`);
-    const host = modal.querySelector('#aiColsGroups');
-    const draw = ()=>{
-      modal.querySelector('#aiColsCount').textContent = picks.length ? picks.length + ' picked' : 'none picked';
-      host.innerHTML = groups.map(g=>{
-        const n = g.keys.filter(k=> picks.includes(k)).length;
-        const open = openGroups.has(g.name);
-        return `<div style="margin-bottom:8px;">
-          <button type="button" class="ai-cols-head" data-g="${escapeHtml(g.name)}" aria-expanded="${open}" style="width:100%;min-height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:#FFFFFF;color:#0C5A8E;border:1.5px solid #c9bfa4;border-radius:8px;padding:10px 12px;cursor:pointer;text-align:left;"><span>${escapeHtml(g.name)}${n ? ` · <span style="color:#3C9142;">${n} picked</span>` : ''}</span><span style="font-size:15px;">${open ? '&#9652;' : '&#9662;'}</span></button>
-          ${open ? `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:8px;padding:6px 2px 2px;">${g.keys.map(k=>{
-            const idx = picks.indexOf(k);
-            return `<label style="display:flex;align-items:center;gap:8px;min-height:44px;font-family:Arial,sans-serif;font-size:14px;cursor:pointer;"><input type="checkbox" class="ai-col-box" data-k="${k}" ${idx !== -1 ? 'checked' : ''} style="width:22px;height:22px;flex-shrink:0;"/><span style="flex:1;">${escapeHtml(AI_COLS[k].pick)}</span>${idx !== -1 ? `<span style="font-size:11px;font-weight:700;background:#0274BA;color:#fff;border-radius:10px;padding:1px 7px;">${idx + 1}</span>` : ''}</label>`;
-          }).join('')}</div>` : ''}
-        </div>`;
-      }).join('');
-    };
-    draw();
-    host.addEventListener('click', e=>{
-      const head = e.target.closest('.ai-cols-head');
-      if(head){ const g = head.dataset.g; if(openGroups.has(g)) openGroups.delete(g); else openGroups.add(g); draw(); return; }
-    });
-    host.addEventListener('change', e=>{
-      const box = e.target.closest('.ai-col-box');
-      if(!box) return;
-      const k = box.dataset.k;
-      if(box.checked){
-        if(picks.length >= AI_MAX_COLS){ box.checked = false; showToast(`${AI_MAX_COLS} columns is the most`); return; }
-        picks.push(k);
-      } else {
-        picks = picks.filter(x=> x !== k);
-      }
-      draw();
-    });
-    modal.querySelector('#aiColsCancel').addEventListener('click', closeModal);
-    modal.querySelector('#aiColsUsual').addEventListener('click', ()=>{ closeModal(); aiResetColumns(); });
-    modal.querySelector('#aiColsDone').addEventListener('click', ()=>{
-      closeModal();
-      if(!picks.length){ aiResetColumns(); return; }
-      aiSaveCols(kind, picks);
-      out.table = aiBuildTable(out, picks);
-      aiSetItemCols(picks);
-      renderAiSearch(out, lastAiRender.filters, lastAiRender.pills);
-    });
-  }
-  function aiResetColumns(){
-    if(!lastAiRender) return;
-    const { out, filters, pills } = lastAiRender;
-    aiSaveCols(out.kind, []);
-    out.table = null;
-    aiSetItemCols(null);
-    renderAiSearch(out, filters, pills);
-  }
-  document.getElementById('aiSearchColsBtn').addEventListener('click', openAiColumnsPicker);
-  document.getElementById('aiSearchColsResetBtn').addEventListener('click', aiResetColumns);
-
-  // ===================== QUICK SEARCHES, TOPICS, SAVED AND RECENT =====================
-  // These run on the phone with no AI, so they are instant, free and work with no signal.
-  const AI_FILTER_LABELS = { search_on:'Looking at', location:'Location', owner:'Owner', group:'Group', herd_season:'Herd Season', status:'Status', bred_to:'Bred To',
-    pregnancy_method:'Pregnancy Method', natural_sire:'Natural Sire', open_only:'Open cows only', preg_bt_only:'Preg BT only', sell_only:'Sell only', tag_needed:'Tag needed',
-    flagged:'Flagged', calved_pending:'Calved (pending entry)', medicine:'Medicine', reason:'Reason', sire:'Sire', dam_cow:'Out of cow', calf_sex:'Calf Sex',
-    birth_assist:'Birth Assist', calf_outcome:'Calf Outcome', birth_weight_min:'Birth weight at least (lbs)', birth_weight_max:'Birth weight at most (lbs)',
-    weaning_status:'Weaning', weaning_weight_min:'Weaning weight at least (lbs)', weaning_weight_max:'Weaning weight at most (lbs)', gain_min:'Gain at least (lbs/day)',
-    gain_max:'Gain at most (lbs/day)', weaning_age_min:'Weaned at least (days old)', weaning_age_max:'Weaned at most (days old)', weaning_date_from:'Weaned from',
-    weaning_date_to:'Weaned to', missing_weight:'Missing a weight', treatment_count_min:'Treated at least (times)', same_reason:'Same reason', cull_list:'Cull list',
-    cull_min_reasons:'Cull reasons at least', cull_light_calf_lbs:'Light calf under (lbs)', weight_min:'Weight at least (lbs)', weight_max:'Weight at most (lbs)',
-    preg_check_result:'Preg check result', date_from:'From', date_to:'To', sort_by:'Sorted by', limit:'Top' };
-  function aiLocalPills(f){
-    const pills = [];
-    Object.keys(AI_FILTER_LABELS).forEach(k=>{
-      if(k === 'search_on') return;
-      const v = f[k];
-      if(v === undefined || v === null || v === '' || v === false) return;
-      pills.push({ label: AI_FILTER_LABELS[k], value: v === true ? 'Yes' : String(v) });
-    });
-    return pills;
-  }
-  const aiIso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  const aiYearRange = ()=>{ const y = new Date().getFullYear(); return { date_from: y + '-01-01', date_to: y + '-12-31' }; };
-  const aiYearWeaned = ()=>{ const y = new Date().getFullYear(); return { weaning_date_from: y + '-01-01', weaning_date_to: y + '-12-31' }; };
-  const aiDaysAgo = n =>{ const d = new Date(); d.setDate(d.getDate() - n); return aiIso(d); };
-  // filters are built when you tap, so "this year" is always the current year
-  const AI_QUICK_TILES = [
-    { label: 'Open cows',         sub: 'Latest breeding is open',          f: ()=> ({ search_on:'cows', open_only:true }) },
-    { label: 'Cull list',         sub: 'Open, treated, hard calving, light calf', danger:true, f: ()=> ({ search_on:'cows', cull_list:true }) },
-    { label: 'Missing a weight',  sub: 'No weight this year',              f: ()=> Object.assign({ search_on:'cows', missing_weight:true }, aiYearRange()) },
-    { label: 'Repeat treatments', sub: 'Treated 2 or more times this year', f: ()=> Object.assign({ search_on:'cows', treatment_count_min:2 }, aiYearRange()) },
-    { label: 'Not weaned yet',    sub: 'Current calves, no weaning weight', f: ()=> ({ search_on:'calvings', weaning_status:'not_weaned' }) },
-    { label: 'Best gain per day', sub: 'Top 10 calves',                    f: ()=> ({ search_on:'calvings', weaning_status:'weaned', sort_by:'gain_per_day', sort_dir:'desc', limit:10 }) },
-    { label: 'Heaviest weaning',  sub: 'Top 10 weaned this year',          f: ()=> Object.assign({ search_on:'calvings', weaning_status:'weaned', sort_by:'weaning_weight', sort_dir:'desc', limit:10 }, aiYearWeaned()) },
-    { label: 'Hard pulls this year', sub: 'Calves born this year',         f: ()=> Object.assign({ search_on:'calvings', birth_assist:'Hard Pull' }, aiYearRange()) }
-  ];
-  const AI_TOPICS = [
-    { name: 'Cows', qs: [
-      ['Open cows', ()=> ({ search_on:'cows', open_only:true })],
-      ['Cows that need a tag', ()=> ({ search_on:'cows', tag_needed:true })],
-      ['Flagged cows', ()=> ({ search_on:'cows', flagged:true })],
-      ['Cows marked to sell', ()=> ({ search_on:'cows', sell_only:true })],
-      ['Preg BT cows', ()=> ({ search_on:'cows', preg_bt_only:true })],
-      ['Cows missing a weight this year', ()=> Object.assign({ search_on:'cows', missing_weight:true }, aiYearRange())],
-      ['Cull list', ()=> ({ search_on:'cows', cull_list:true })] ] },
-    { name: 'Breeding', qs: [
-      ['Bred by AI', ()=> ({ search_on:'cows', pregnancy_method:'AI' })],
-      ['Bred by ET', ()=> ({ search_on:'cows', pregnancy_method:'ET' })],
-      ['Bred by a bull (BB)', ()=> ({ search_on:'cows', pregnancy_method:'BB' })],
-      ['Confirmed pregnant', ()=> ({ search_on:'cows', preg_check_result:'pregnant' })],
-      ['Open at preg check', ()=> ({ search_on:'cows', preg_check_result:'open' })],
-      ['Open cows', ()=> ({ search_on:'cows', open_only:true })] ] },
-    { name: 'Calves', qs: [
-      ['Heifer calves born this year', ()=> Object.assign({ search_on:'calvings', calf_sex:'H' }, aiYearRange())],
-      ['Bull calves born this year', ()=> Object.assign({ search_on:'calvings', calf_sex:'B' }, aiYearRange())],
-      ['Hard pulls this year', ()=> Object.assign({ search_on:'calvings', birth_assist:'Hard Pull' }, aiYearRange())],
-      ['C-sections this year', ()=> Object.assign({ search_on:'calvings', birth_assist:'C-Section' }, aiYearRange())],
-      ['Calves that died this year', ()=> Object.assign({ search_on:'calvings', calf_outcome:'died' }, aiYearRange())],
-      ['Calves not weaned yet', ()=> ({ search_on:'calvings', weaning_status:'not_weaned' })],
-      ['Heaviest birth weights this year', ()=> Object.assign({ search_on:'calvings', sort_by:'birth_weight', sort_dir:'desc', limit:10 }, aiYearRange())] ] },
-    { name: 'Weaning', qs: [
-      ['Weaned this year, heaviest first', ()=> Object.assign({ search_on:'calvings', weaning_status:'weaned', sort_by:'weaning_weight', sort_dir:'desc' }, aiYearWeaned())],
-      ['Best gain per day, top 10', ()=> ({ search_on:'calvings', weaning_status:'weaned', sort_by:'gain_per_day', sort_dir:'desc', limit:10 })],
-      ['Weaned over 600 lbs', ()=> ({ search_on:'calvings', weaning_weight_min:600, sort_by:'weaning_weight', sort_dir:'desc' })],
-      ['Lightest weaning weights, top 10', ()=> ({ search_on:'calvings', weaning_status:'weaned', sort_by:'weaning_weight', sort_dir:'asc', limit:10 })],
-      ['Gain under 2 lbs a day', ()=> ({ search_on:'calvings', gain_max:2, sort_by:'gain_per_day', sort_dir:'asc' })],
-      ['Calves not weaned yet', ()=> ({ search_on:'calvings', weaning_status:'not_weaned' })] ] },
-    { name: 'Health', qs: [
-      ['Repeat treatments this year', ()=> Object.assign({ search_on:'cows', treatment_count_min:2 }, aiYearRange())],
-      ['Treated for the same reason twice this year', ()=> Object.assign({ search_on:'cows', treatment_count_min:2, same_reason:true }, aiYearRange())],
-      ['Treated this year', ()=> Object.assign({ search_on:'treatments' }, aiYearRange())],
-      ['Treated in the last 30 days', ()=> ({ search_on:'treatments', date_from: aiDaysAgo(30) })],
-      ['Cull list', ()=> ({ search_on:'cows', cull_list:true })] ] },
-    { name: 'Weights', qs: [
-      ['Cows missing a weight this year', ()=> Object.assign({ search_on:'cows', missing_weight:true }, aiYearRange())],
-      ['Cows never weighed', ()=> ({ search_on:'cows', missing_weight:true })],
-      ['Heaviest cows, top 10', ()=> ({ search_on:'weights', sort_by:'weight', sort_dir:'desc', limit:10 })],
-      ['Over 1,200 lbs', ()=> ({ search_on:'weights', weight_min:1200, sort_by:'weight', sort_dir:'desc' })],
-      ['Weighed this year', ()=> Object.assign({ search_on:'weights' }, aiYearRange())] ] }
-  ];
-  let aiTopicOpen = null;
-  function setAiQuickOpen(open){
-    document.getElementById('aiQuickBody').classList.toggle('hidden', !open);
-    document.getElementById('aiQuickToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
-    document.getElementById('aiQuickArrow').innerHTML = open ? '&#9652;' : '&#9662;';
-  }
-  // columns you picked for the kind of search (cow or calf) are applied unless the question named its own
-  function aiApplySavedColumns(out, f){
-    if(out.table) return;
-    const so = f && f.search_on;
-    if(!(out.kind === 'calf' || so === 'cows' || !so)) return;
-    const saved = aiSavedCols(out.kind);
-    if(saved.length) out.table = aiBuildTable(out, saved);
-  }
-  function runQuickSearch(label, filters, item){
-    aiSearchSetMsg('');
-    document.getElementById('aiSearchBox').value = label;
-    lastAiSearchQuestion = label;
-    const out = aiSearchRun(filters);
-    if(item && item.cols && item.cols.length) out.table = aiBuildTable(out, item.cols);   // the columns kept with this saved search
-    else aiApplySavedColumns(out, filters);
-    currentAiItemId = item ? item.id : null;
-    renderAiSearch(out, filters, aiLocalPills(filters));
-    const target = document.getElementById('aiSearchInterp');
-    if(target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-  function buildAiQuick(){
-    const tileStyle = 'text-align:left;min-height:74px;box-sizing:border-box;background:#FFFFFF;border-radius:12px;padding:10px 12px;cursor:pointer;box-shadow:0 2px 5px rgba(43,38,32,.16);';
-    document.getElementById('aiQuickGrid').innerHTML = AI_QUICK_TILES.map((q, i)=>{
-      const col = q.danger ? 'var(--barn)' : '#0C5A8E';
-      const border = q.danger ? 'var(--barn)' : '#2E88C4';
-      return `<button type="button" class="ai-tile" data-i="${i}" style="${tileStyle}border:2px solid ${border};"><div style="font-family:Arial,sans-serif;font-weight:700;font-size:14px;color:${col};">${escapeHtml(q.label)}</div><div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:3px;line-height:1.3;">${escapeHtml(q.sub)}</div></button>`;
-    }).join('');
-    drawAiTopics();
-  }
-  function drawAiTopics(){
-    document.getElementById('aiTopicRow').innerHTML = AI_TOPICS.map((tp, i)=>{
-      const on = aiTopicOpen === i;
-      return `<button type="button" class="ai-topic" data-i="${i}" aria-expanded="${on}" style="min-height:46px;box-sizing:border-box;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:12px;border:2px solid #0274BA;border-radius:10px;cursor:pointer;background:${on ? '#0274BA' : '#FFFFFF'};color:${on ? '#FFFFFF' : '#0C5A8E'};">${escapeHtml(tp.name)}</button>`;
-    }).join('');
-    const list = document.getElementById('aiTopicList');
-    if(aiTopicOpen === null){ list.classList.add('hidden'); list.innerHTML = ''; return; }
-    const tp = AI_TOPICS[aiTopicOpen];
-    list.classList.remove('hidden');
-    list.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#455B3D;font-weight:700;margin-bottom:8px;">${escapeHtml(tp.name)}: tap a question to run it</div>` +
-      tp.qs.map((q, j)=> `<button type="button" class="ai-topic-q" data-t="${aiTopicOpen}" data-j="${j}" style="width:100%;min-height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;font-family:Georgia,serif;font-size:15px;color:#2B2620;background:#FFFFFF;border:2px solid #3C9142;border-radius:10px;padding:8px 12px;margin-bottom:8px;cursor:pointer;"><span>${escapeHtml(q[0])}</span><span style="color:#3C9142;font-size:18px;">&#9654;</span></button>`).join('');
-  }
-  // ----- Saved and Recent (typed searches, kept with the filters the AI returned) -----
-  const AI_ITEMS_KEY = 'champ_ai_items_v1';
-  function aiItems(){ try{ const v = JSON.parse(localStorage.getItem(AI_ITEMS_KEY) || '[]'); return Array.isArray(v) ? v : []; }catch(e){ return []; } }
-  function aiWriteItems(list){ try{ localStorage.setItem(AI_ITEMS_KEY, JSON.stringify(list)); }catch(e){} }
-  function aiRememberSearch(label, filters){
-    const list = aiItems();
-    const key = JSON.stringify(filters);
-    let item = list.find(x=> x.label === label && JSON.stringify(x.filters) === key);
-    if(item){ list.splice(list.indexOf(item), 1); }
-    else item = { id: 'q' + Date.now() + Math.floor(Math.random() * 1000), label, filters, cols: null, saved: false };
-    item.at = new Date().toISOString();
-    list.unshift(item);
-    // keep every saved search, and the 10 newest others
-    let others = 0;
-    const kept = list.filter(x=> x.saved || (++others <= 10));
-    aiWriteItems(kept);
-    return item.id;
-  }
-  function aiCurrentItem(){ return currentAiItemId ? aiItems().find(x=> x.id === currentAiItemId) : null; }
-  function aiSetItemCols(keys){
-    if(!currentAiItemId) return;
-    const list = aiItems(), item = list.find(x=> x.id === currentAiItemId);
-    if(!item) return;
-    item.cols = keys && keys.length ? keys : null;
-    aiWriteItems(list);
-  }
-  function aiToggleSaved(id){
-    const list = aiItems(), item = list.find(x=> x.id === id);
-    if(!item) return;
-    item.saved = !item.saved;
-    if(item.saved && id === currentAiItemId && lastAiRender && lastAiRender.out.table) item.cols = lastAiRender.out.table.keys;   // keep the columns on screen
-    aiWriteItems(list);
-    aiRenderItemLists();
-    aiUpdateSaveButton();
-  }
-  function aiUpdateSaveButton(){
-    const btn = document.getElementById('aiSearchSaveBtn');
-    const item = aiCurrentItem();
-    btn.classList.toggle('hidden', !item);
-    if(item) btn.innerHTML = item.saved ? '&#9733; Saved' : '&#9734; Save';
-  }
-  function aiWhen(iso){
-    if(!iso) return '';
-    const d = new Date(iso), now = new Date();
-    const day = x => x.getFullYear() * 10000 + (x.getMonth() + 1) * 100 + x.getDate();
-    const y = new Date(now); y.setDate(y.getDate() - 1);
-    if(day(d) === day(now)) return 'Today';
-    if(day(d) === day(y)) return 'Yesterday';
-    return fmtDateShort(aiIso(d));
-  }
-  function aiRenderItemLists(){
-    const items = aiItems();
-    const row = it=> `<div style="display:flex;align-items:center;background:#FFFFFF;border:2px solid #c9bfa4;border-radius:10px;margin-bottom:8px;min-height:54px;box-sizing:border-box;">
-      <button type="button" class="ai-item-run" data-id="${escapeHtml(it.id)}" style="flex:1;min-width:0;text-align:left;background:none;border:none;padding:8px 10px;cursor:pointer;min-height:50px;"><div style="font-family:Georgia,serif;font-size:15px;color:#2B2620;overflow-wrap:anywhere;">${escapeHtml(it.label)}</div><div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:2px;">${escapeHtml(aiWhen(it.at))}${it.cols ? ' · your columns' : ''}</div></button>
-      <button type="button" class="ai-item-retype" data-id="${escapeHtml(it.id)}" aria-label="Put this question back in the typing box" style="width:44px;min-height:50px;background:none;border:none;font-size:20px;color:#2E88C4;cursor:pointer;">&#8599;</button>
-      <button type="button" class="ai-item-star" data-id="${escapeHtml(it.id)}" aria-label="${it.saved ? 'Remove from saved' : 'Save this search'}" style="width:44px;min-height:50px;background:none;border:none;font-size:26px;color:${it.saved ? '#C9A227' : '#bdb39a'};cursor:pointer;">${it.saved ? '&#9733;' : '&#9734;'}</button>
-    </div>`;
-    const saved = items.filter(x=> x.saved), recent = items.filter(x=> !x.saved);
-    document.getElementById('aiSavedBox').classList.toggle('hidden', saved.length === 0);
-    document.getElementById('aiRecentBox').classList.toggle('hidden', recent.length === 0);
-    document.getElementById('aiSavedList').innerHTML = saved.map(row).join('');
-    document.getElementById('aiRecentList').innerHTML = recent.map(row).join('');
-  }
-  buildAiQuick();
-  aiRenderItemLists();
-  document.getElementById('aiQuickToggle').addEventListener('click', ()=> setAiQuickOpen(document.getElementById('aiQuickBody').classList.contains('hidden')));
-  document.getElementById('aiQuickBox').addEventListener('click', e=>{
-    const tile = e.target.closest('.ai-tile');
-    if(tile){ const q = AI_QUICK_TILES[Number(tile.dataset.i)]; aiTopicOpen = null; drawAiTopics(); runQuickSearch(q.label, q.f()); return; }
-    const topic = e.target.closest('.ai-topic');
-    if(topic){ const i = Number(topic.dataset.i); aiTopicOpen = aiTopicOpen === i ? null : i; drawAiTopics(); return; }
-    const tq = e.target.closest('.ai-topic-q');
-    if(tq){ const q = AI_TOPICS[Number(tq.dataset.t)].qs[Number(tq.dataset.j)]; aiTopicOpen = null; drawAiTopics(); runQuickSearch(q[0], q[1]()); return; }
-    const run = e.target.closest('.ai-item-run');
-    if(run){
-      const list = aiItems(), item = list.find(x=> x.id === run.dataset.id);
-      if(!item) return;
-      item.at = new Date().toISOString();   // moves it to the top of Recent
-      list.splice(list.indexOf(item), 1); list.unshift(item); aiWriteItems(list);
-      runQuickSearch(item.label, item.filters, item);
-      return;
-    }
-    const retype = e.target.closest('.ai-item-retype');
-    if(retype){
-      const item = aiItems().find(x=> x.id === retype.dataset.id);
-      if(item){ document.getElementById('aiSearchBox').value = item.label; window.scrollTo(0, 0); showToast('Added. Tap Search.'); }
-      return;
-    }
-    const star = e.target.closest('.ai-item-star');
-    if(star){ aiToggleSaved(star.dataset.id); return; }
-  });
-  document.getElementById('aiSearchSaveBtn').addEventListener('click', ()=>{ if(currentAiItemId) aiToggleSaved(currentAiItemId); });
-
-  function toggleAiSearchHelp(){
-    const panel = document.getElementById('aiSearchHelpPanel');
-    const btn = document.getElementById('aiSearchHelpToggle');
-    const open = panel.classList.contains('hidden');   // hidden now => opening
-    if(open) buildAiSearchHelp();
-    panel.classList.toggle('hidden', !open);
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    document.getElementById('aiSearchHelpArrow').innerHTML = open ? '&#9652;' : '&#9662;';
-  }
-  function aiSearchSetMsg(text, kind){
-    const el = document.getElementById('aiSearchMsg');
-    if(!text){ el.classList.add('hidden'); el.textContent = ''; return; }
-    el.textContent = text;
-    el.style.cssText = kind === 'note' ? 'background:#fbeecb;border-color:#E3A93C;color:#6b4e12;' : '';
-    el.classList.remove('hidden');
-  }
-  function aiSearchOptionLists(){
-    const uniq = a => [...new Set(a.filter(Boolean))];
-    return {
-      locations: uniq([...getLocationOptions(), ...cows.map(c=>c.lot)]),
-      owners: uniq([...getOwnerOptions(), ...cows.map(c=>c.owner)]),
-      groups: uniq([...getGroupOptions(), ...cows.map(c=>c.cow_group)]),
-      medicines: getMedicineOptions(),
-      reasons: getReasonOptions(),
-      sires: getBullOptionsWithExtras(),
-      statuses: STATUS_OPTIONS
-    };
-  }
-
-  // Applies the AI's filters to the herd data. Returns the matching cows, the
-  // line-by-line activity table, and (when sorting by sire/location/owner/group) the group labels.
-  // ----- columns for AI Search results -----
-  // One catalog serves the Columns picker and "show ..." in a question.
-  // Cow rows (one per cow) and calf rows (one per calf) share it; each column knows how to fill itself for either.
-  const dash = v => (v === undefined || v === null || v === '') ? '—' : v;
-  const aiLatestBy = (list, field)=> [...list].sort((a,b)=> (b[field] || '').localeCompare(a[field] || ''))[0];
-  const aiOutcomeText = cv => cv.promoted_to_cow_number ? (cv.calf_outcome === 'bull' ? 'Kept as bull #' : 'Kept as cow #') + cv.promoted_to_cow_number : ({ sold: 'Sold', died: 'Died' })[cv.calf_outcome] || 'Active';
-  const aiGainText = cv=>{ const s = weaningStats(cv); return s && s.gain != null ? s.gain.toFixed(1) + ' lbs' : '—'; };
-  const AI_CALF_VAL = {
-    calf_sex:          cv=> dash(calfSexLabel(cv.calf_sex)),
-    calf_sire:         cv=> dash(cv.sire),
-    calf_born:         cv=> fmtDateShort(cv.calving_date),
-    calf_birth_weight: cv=> (cv.birth_weight != null && Number(cv.birth_weight) > 0) ? cv.birth_weight + ' lbs' : '—',
-    calf_assist:       cv=> dash(cv.birth_assist),
-    calf_outcome:      cv=> aiOutcomeText(cv),
-    calf_wean_date:    cv=>{ const s = weaningStats(cv); return s && s.date ? fmtDateShort(s.date) : '—'; },
-    calf_wean_weight:  cv=>{ const s = weaningStats(cv); return s ? s.weight + ' lbs' : '—'; },
-    calf_wean_age:     cv=>{ const s = weaningStats(cv); return s && s.age != null ? s.age + ' days' : '—'; },
-    calf_gain:         aiGainText
-  };
-  // [key, heading on a cow table, heading on a calf table, text in the picker]
-  const AI_CALF_COL_LABELS = {
-    calf_sex: ['Calf Sex', 'Sex', 'Sex'], calf_sire: ['Calf Sire', 'Sire', 'Sire'], calf_born: ['Calf Born', 'Born', 'Born'],
-    calf_birth_weight: ['Calf Birth Wt', 'Birth Wt', 'Birth weight'], calf_assist: ['Calf Assist', 'Assist', 'Birth assist'], calf_outcome: ['Calf Outcome', 'Outcome', 'Outcome'],
-    calf_wean_date: ['Calf Weaned', 'Weaned', 'Weaned date'], calf_wean_weight: ['Calf Wean Wt', 'Wean Wt', 'Weaning weight'],
-    calf_wean_age: ['Calf Age', 'Age', 'Age at weaning'], calf_gain: ['Calf Gain', 'Gain/Day', 'Gain per day']
-  };
-  const AI_COLS = {};   // key -> { cow: [heading, fn(cow), group], calf: [heading, fn(calving, mother), group] }
-  const defCol = (key, cow, calf, pick)=>{ AI_COLS[key] = { cow, calf, pick: pick || (cow ? cow[0] : calf[0]) }; };
-  const aiLastWeight = n => aiLatestBy(weightsFor(n).filter(x=> x.weight != null), 'weigh_date');
-  const aiLastBreeding = n => aiLatestBy(breedingFor(n), 'breed_date');
-  defCol('cow_number', ['Cow #', c=> '#' + c.number, 'Cow'], ['Mother', cv=> '#' + cv.cow_number, 'Calf'], 'Cow number');
-  defCol('location', ['Location', c=> dash(c.lot), 'Cow'], null);
-  defCol('owner', ['Owner', c=> dash(c.owner), 'Cow'], null);
-  defCol('group', ['Group', c=> dash(c.cow_group), 'Cow'], null);
-  defCol('status', ['Status', c=> c.status || 'Active', 'Cow'], null);
-  defCol('herd_season', ['Season', c=> dash(c.herd_season), 'Cow'], null, 'Herd season');
-  defCol('bred_to', ['Bred To', c=>{ const b = aiLastBreeding(c.number); return b ? dash(b.bred_to || b.natural_sire) : '—'; }, 'Breeding'], null, 'Bred to');
-  defCol('breeding_status', ['Breeding', c=>{ const b = aiLastBreeding(c.number); return b ? (b.pregnancy_status || '—') + (b.pregnancy_method ? ' (' + b.pregnancy_method + ')' : '') : '—'; }, 'Breeding'], null, 'Breeding status');
-  defCol('breeding_method', ['Method', c=>{ const b = aiLastBreeding(c.number); return b ? dash(b.pregnancy_method) : '—'; }, 'Breeding'], null, 'Method (AI, ET, BB)');
-  defCol('due_date', ['Due', c=>{ const b = aiLastBreeding(c.number); return b && b.expected_due_date ? fmtDateShort(b.expected_due_date) : '—'; }, 'Breeding'], null, 'Due date');
-  defCol('last_treatment', ['Last Med', c=>{ const t = aiLatestBy(recordsFor(c.number).filter(x=> x.medicine), 'date'); return t ? t.medicine + ' (' + fmtDateShort(t.date) + ')' : '—'; }, 'Health'], null, 'Last medicine');
-  defCol('treatments_year', ['Meds (yr)', c=>{ const y = new Date().getFullYear() + '-01-01'; return String(recordsFor(c.number).filter(x=> x.medicine && (x.date || '') >= y).length); }, 'Health'], null, 'Treatments this year');
-  defCol('last_weight', ['Last Wt', c=>{ const w = aiLastWeight(c.number); return w ? Number(w.weight).toLocaleString() + ' lbs' : '—'; }, 'Weights'], null, 'Last weight');
-  defCol('last_weight_date', ['Wt Date', c=>{ const w = aiLastWeight(c.number); return w ? fmtDateShort(w.weigh_date) : '—'; }, 'Weights'], null, 'Weight date');
-  Object.keys(AI_CALF_VAL).forEach(k=>{
-    const lab = AI_CALF_COL_LABELS[k];
-    const weaning = /wean|gain/.test(k);
-    defCol(k, [lab[0], c=>{ const cv = aiLatestBy(calvingsFor(c.number), 'calving_date'); return cv ? AI_CALF_VAL[k](cv) : '—'; }, 'Her latest calf'],
-              [lab[1], cv=> AI_CALF_VAL[k](cv), weaning ? 'Weaning' : 'Calf'], lab[2]);
-  });
-  [['mother_location','Mother Loc','Location', m=> dash(m && m.lot)], ['mother_owner','Mother Owner','Owner', m=> dash(m && m.owner)],
-   ['mother_group','Mother Group','Group', m=> dash(m && m.cow_group)], ['mother_status','Mother Status','Status', m=> (m && m.status) || 'Active']]
-    .forEach(([k, head, pick, fn])=> defCol(k, null, [head, (cv, m)=> fn(m), 'Mother'], pick));
-  const AI_COL_GROUPS = { cow: ['Cow', 'Breeding', 'Health', 'Weights', 'Her latest calf'], calf: ['Calf', 'Weaning', 'Mother'] };
-  // names the AI (or older searches) may use -> the catalog's names
-  const AI_COL_ALIAS = { sire: 'calf_sire', birth_date: 'calf_born', birth_weight: 'calf_birth_weight', birth_assist: 'calf_assist', weaning_date: 'calf_wean_date',
-    weaning_weight: 'calf_wean_weight', weaning_age: 'calf_wean_age', gain_per_day: 'calf_gain', last_calving_date: 'calf_born', mother: 'cow_number' };
-  function aiResolveCol(key, kind){
-    if(typeof key !== 'string') return null;
-    let k = AI_COL_ALIAS[key] || key;
-    if(kind === 'calf' && ['location', 'owner', 'group', 'status'].includes(k)) k = 'mother_' + k;
-    return (AI_COLS[k] && AI_COLS[k][kind]) ? k : null;
-  }
-  const AI_MAX_COLS = 8;
-  // build a table of the chosen columns from a finished search (out.kind is 'cow' or 'calf')
-  function aiBuildTable(out, keys){
-    const kind = out.kind;
-    const ok = [];
-    (keys || []).forEach(k=>{ const r = aiResolveCol(k, kind); if(r && !ok.includes(r)) ok.push(r); });
-    const use = ok.slice(0, AI_MAX_COLS);
-    if(!use.length) return null;
-    const rows = [];
-    if(kind === 'calf') out.calfBase.forEach(b=> rows.push({ num: b.cow.number, group: b.group, cells: use.map(k=> AI_COLS[k].calf[1](b.cv, b.cow)) }));
-    else out.results.forEach(c=> rows.push({ num: c.number, group: out.hasGroups ? out.groupOf[c.number] : null, cells: use.map(k=> AI_COLS[k].cow[1](c)) }));
-    return { heads: use.map(k=> AI_COLS[k][kind][0]), keys: use, rows, calfRows: kind === 'calf' };
-  }
-  const AI_COLS_KEY = kind => 'champ_ai_cols_' + kind;
-  function aiSavedCols(kind){ try{ const v = JSON.parse(localStorage.getItem(AI_COLS_KEY(kind)) || '[]'); return Array.isArray(v) ? v : []; }catch(e){ return []; } }
-  function aiSaveCols(kind, keys){ try{ if(keys && keys.length) localStorage.setItem(AI_COLS_KEY(kind), JSON.stringify(keys)); else localStorage.removeItem(AI_COLS_KEY(kind)); }catch(e){} }
-
-  function aiSearchRun(f){
-    const lc = s => String(s == null ? '' : s).trim().toLowerCase();
-    const numOrNull = v => (v === undefined || v === null || v === '' || isNaN(Number(v))) ? null : Number(v);
-    const dFrom = f.date_from || '';
-    const dTo = f.date_to || '';
-    const wMin = numOrNull(f.weight_min), wMax = numOrNull(f.weight_max);
-    const bwMin = numOrNull(f.birth_weight_min), bwMax = numOrNull(f.birth_weight_max);
-    const searchOn = f.search_on || 'cows';
-    // weaning filters (the weaning date and weight live on each calving record)
-    const wwMin = numOrNull(f.weaning_weight_min), wwMax = numOrNull(f.weaning_weight_max);
-    const gMin = numOrNull(f.gain_min), gMax = numOrNull(f.gain_max);
-    const waMin = numOrNull(f.weaning_age_min), waMax = numOrNull(f.weaning_age_max);
-    const wdFrom = f.weaning_date_from || '', wdTo = f.weaning_date_to || '';
-    const weanStatus = (f.weaning_status === 'weaned' || f.weaning_status === 'not_weaned') ? f.weaning_status : null;
-    const weaningUsed = wwMin != null || wwMax != null || gMin != null || gMax != null || waMin != null || waMax != null || !!wdFrom || !!wdTo || weanStatus !== null
-      || ['weaning_weight', 'gain_per_day', 'weaning_date'].includes(f.sort_by);
-    const gainUsed = gMin != null || gMax != null || f.sort_by === 'gain_per_day';
-    // the three cow lists: missing a weight, repeat treatments, cull list
-    const missingWeight = f.missing_weight === true;
-    const tCountMin = numOrNull(f.treatment_count_min);
-    const sameReason = f.same_reason === true;
-    const cullOn = f.cull_list === true;
-    const cullMin = Math.max(1, Math.min(4, Math.floor(numOrNull(f.cull_min_reasons) || 1)));
-    const lightLbs = numOrNull(f.cull_light_calf_lbs);
-    const noBirthWeight = new Set();   // weaned calves left out of gain numbers because no birth weight is on record
-    const inRange = d => (!dFrom || (d || '') >= dFrom) && (!dTo || (d || '') <= dTo);
-
-    // When the question is about calves, Bred To / ET / AI / Natural Sire describe the breeding that
-    // produced each calf (see linkedBreeding), and the date range means the calf's birth date.
-    const calfContext = searchOn === 'calvings';
-    const breedFilterActive = !!(f.bred_to || f.pregnancy_method || f.natural_sire);
-    const breedingUsed = calfContext
-      ? !!(f.open_only || f.preg_check_result)
-      : (breedFilterActive || !!(f.open_only || f.preg_check_result) || searchOn === 'breedings');
-    const medUsed = !!(f.medicine || f.reason) || searchOn === 'treatments' || tCountMin != null;
-    const calvingUsed = !!(f.sire || f.calf_sex || f.birth_assist || f.calf_outcome || bwMin != null || bwMax != null || f.dam_cow) || searchOn === 'calvings' || weaningUsed;
-    const weightUsed = wMin != null || wMax != null || searchOn === 'weights';
-
-    const latestBreeding = n => [...breedingFor(n)].sort((a,b)=> (b.breed_date || '').localeCompare(a.breed_date || ''))[0];
-    // The app doesn't record which breeding made which calf, so use this cow's latest breeding
-    // on or before the birth date (ignored if it's more than 400 days earlier).
-    function linkedBreeding(n, cv){
-      const cands = breedingFor(n).filter(b=> b.breed_date && cv.calving_date && b.breed_date <= cv.calving_date)
-        .sort((a,b)=> b.breed_date.localeCompare(a.breed_date));
-      if(!cands.length) return null;
-      const days = (new Date(cv.calving_date + 'T00:00:00') - new Date(cands[0].breed_date + 'T00:00:00')) / 86400000;
-      return days <= 400 ? cands[0] : null;
-    }
-    function mBreeding(n){
-      const latest = latestBreeding(n);
-      return breedingFor(n).filter(b=>{
-        if(f.bred_to && b.bred_to !== f.bred_to) return false;
-        if(f.pregnancy_method && b.pregnancy_method !== f.pregnancy_method) return false;
-        if(f.natural_sire && !lc(b.natural_sire).includes(lc(f.natural_sire))) return false;
-        if(f.open_only && !(latest && b.id === latest.id && b.pregnancy_status === 'Open')) return false;
-        if(f.preg_check_result){
-          const want = f.preg_check_result === 'open' ? 'Open' : 'Bred';
-          if(!(latest && b.id === latest.id && b.pregnancy_status === want)) return false;
-        }
-        return inRange(f.preg_check_result ? (b.vet_call_date || b.breed_date) : b.breed_date);
-      });
-    }
-    const medMatch = t => (!f.medicine || t.medicine === f.medicine) && (!f.reason || t.reason === f.reason) && inRange(t.date);
-    const mMeds = n => recordsFor(n).filter(medMatch);
-    const mCalfMeds = n => {
-      const ids = calvingsFor(n).map(cv=>cv.id);
-      return calfTreatments.filter(t=> ids.includes(t.calving_id) && medMatch(t));
-    };
-    const mCalvings = n => calvingsFor(n).filter(cv=>{
-      if(f.sire && cv.sire !== f.sire) return false;
-      if(f.calf_sex && cv.calf_sex !== f.calf_sex) return false;
-      if(f.birth_assist && cv.birth_assist !== f.birth_assist) return false;
-      if(bwMin != null && !(cv.birth_weight != null && cv.birth_weight >= bwMin)) return false;
-      if(bwMax != null && !(cv.birth_weight != null && cv.birth_weight <= bwMax)) return false;
-      if(f.calf_outcome){
-        const o = cv.promoted_to_cow_number ? 'kept' : (cv.calf_outcome || 'active');
-        if(o !== f.calf_outcome) return false;
-      }
-      if(calfContext && breedFilterActive){
-        const lb = linkedBreeding(n, cv);
-        if(!lb) return false;
-        if(f.bred_to && lb.bred_to !== f.bred_to) return false;
-        if(f.pregnancy_method && lb.pregnancy_method !== f.pregnancy_method) return false;
-        if(f.natural_sire && !lc(lb.natural_sire).includes(lc(f.natural_sire))) return false;
-      }
-      if(weaningUsed){
-        const ws = weaningStats(cv);
-        if(weanStatus === 'weaned' && !ws) return false;
-        if(weanStatus === 'not_weaned'){
-          if(ws || cv.promoted_to_cow_number || cv.calf_outcome) return false;   // "not weaned yet" = current calves with no weaning weight
-        }
-        const needsWean = wwMin != null || wwMax != null || gMin != null || gMax != null || waMin != null || waMax != null || wdFrom || wdTo;
-        if(needsWean){
-          if(!ws) return false;
-          if(wwMin != null && !(ws.weight >= wwMin)) return false;
-          if(wwMax != null && !(ws.weight <= wwMax)) return false;
-          if(waMin != null && !(ws.age != null && ws.age >= waMin)) return false;
-          if(waMax != null && !(ws.age != null && ws.age <= waMax)) return false;
-          if(wdFrom && !(ws.date && ws.date >= wdFrom)) return false;
-          if(wdTo && !(ws.date && ws.date <= wdTo)) return false;
-          if(gMin != null || gMax != null){
-            if(ws.gain == null){ noBirthWeight.add(cv.id); return false; }
-            const shownGain = Math.round(ws.gain * 10) / 10;   // the same rounding as the "lbs/day" you see
-            if(gMin != null && !(shownGain >= gMin)) return false;
-            if(gMax != null && !(shownGain <= gMax)) return false;
-          }
-        }
-      }
-      return inRange(cv.calving_date);
-    });
-    const weightOk = w => w.weight != null && (wMin == null || Number(w.weight) >= wMin) && (wMax == null || Number(w.weight) <= wMax) && inRange(w.weigh_date);
-    const mWeights = n => {
-      const own = weightsFor(n).filter(weightOk).map(w=>({ date: w.weigh_date, weight: w.weight, type: 'Weight' }));
-      const ids = calvingsFor(n).map(cv=>cv.id);
-      const calf = calfWeights.filter(w=> ids.includes(w.calving_id) && weightOk(w)).map(w=>({ date: w.weigh_date, weight: w.weight, type: 'Calf Weight' }));
-      return [...own, ...calf];
-    };
-
-    // ---- helpers for the three cow lists ----
-    const isoOf = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    const yearAgoStr = (()=>{ const d = new Date(); d.setFullYear(d.getFullYear() - 1); return isoOf(d); })();
-    const byDateDesc = (x, y)=> (y.calving_date || '').localeCompare(x.calving_date || '');
-    const matchingMeds = n => recordsFor(n).filter(t=> t.medicine && medMatch(t));
-    const treatCount = n => {
-      const ms = matchingMeds(n);
-      if(!sameReason) return ms.length;
-      const g = {};
-      ms.forEach(t=>{ const k = lc(t.reason) || '(no reason)'; g[k] = (g[k] || 0) + 1; });
-      return Math.max(0, ...Object.values(g));
-    };
-    let weanAvgByYear = null;   // average weaning weight of each year's weaned calves (for the "light calf" test)
-    const weanAvg = year => {
-      if(!weanAvgByYear){
-        const acc = {};
-        calvings.forEach(cv=>{ const ws = weaningStats(cv); if(ws && ws.date){ const y = ws.date.slice(0, 4); (acc[y] = acc[y] || []).push(ws.weight); } });
-        weanAvgByYear = {};
-        Object.keys(acc).forEach(y=>{ if(acc[y].length >= 3) weanAvgByYear[y] = acc[y].reduce((p, q)=> p + q, 0) / acc[y].length; });
-      }
-      return weanAvgByYear[year];
-    };
-    const cullCache = {};
-    const cullReasons = c=>{
-      if(cullCache[c.number]) return cullCache[c.number];
-      const n = c.number, reasons = [];
-      const lb = latestBreeding(n);
-      if(lb && lb.pregnancy_status === 'Open') reasons.push('Open' + (lb.open_date ? ' since ' + fmtDateShort(lb.open_date) : ''));
-      const tc = recordsFor(n).filter(t=> t.medicine && (t.date || '') >= yearAgoStr).length;
-      if(tc >= 2) reasons.push(`${tc} treatments in 12 months`);
-      const hard = [...calvingsFor(n)].sort(byDateDesc).slice(0, 2).find(cv=> cv.birth_assist === 'Hard Pull' || cv.birth_assist === 'C-Section');
-      if(hard) reasons.push(`${hard.birth_assist} (${fmtDateShort(hard.calving_date)})`);
-      const lastWeaned = [...calvingsFor(n)].filter(cv=> weaningStats(cv)).sort(byDateDesc)[0];
-      if(lastWeaned){
-        const ws = weaningStats(lastWeaned);
-        if(lightLbs != null){
-          if(ws.weight < lightLbs) reasons.push(`Light calf (${ws.weight} lbs weaned)`);
-        } else if(ws.date){
-          const avg = weanAvg(ws.date.slice(0, 4));
-          if(avg != null && ws.weight < 0.85 * avg) reasons.push(`Light calf (${ws.weight} lbs weaned, herd average ${Math.round(avg)})`);
-        }
-      }
-      return (cullCache[n] = reasons);
-    };
-
-    let results = cows.filter(c=>{
-      if(f.location && lc(c.lot) !== lc(f.location)) return false;
-      if(f.owner && lc(c.owner) !== lc(f.owner)) return false;
-      if(f.group && lc(c.cow_group) !== lc(f.group)) return false;
-      if(f.herd_season){ if(f.herd_season === 'Undefined' ? c.herd_season : c.herd_season !== f.herd_season) return false; }
-      if(f.status && lc(c.status || 'Active') !== lc(f.status)) return false;
-      if(f.preg_bt_only && !c.preg_bt) return false;
-      if(f.sell_only && !c.sell) return false;
-      if(f.tag_needed && !c.tag_needed) return false;
-      if(f.flagged && !c.needs_entry) return false;
-      if(f.calved_pending && !c.calved) return false;
-      if(f.dam_cow && String(c.number) !== String(f.dam_cow)) return false;
-      if((missingWeight || cullOn || tCountMin != null) && !f.status && (c.status || 'Active') !== 'Active') return false;   // these lists are for active cows
-      if(missingWeight && weightsFor(c.number).some(w=> w.weight != null && inRange(w.weigh_date))) return false;
-      if(tCountMin != null && treatCount(c.number) < tCountMin) return false;
-      if(cullOn && cullReasons(c).length < cullMin) return false;
-      if(breedingUsed && mBreeding(c.number).length === 0) return false;
-      if(medUsed && mMeds(c.number).length === 0 && mCalfMeds(c.number).length === 0) return false;
-      if(calvingUsed && mCalvings(c.number).length === 0) return false;
-      if(weightUsed && mWeights(c.number).length === 0) return false;
-      if(!breedingUsed && !medUsed && !calvingUsed && !weightUsed && !missingWeight && !cullOn && (dFrom || dTo) && !cowHasActivityInDateRange(c.number, dFrom, dTo)) return false;
-      return true;
-    });
-
-    // ---- sorting ----
-    const sortBy = f.sort_by || (cullOn ? 'reason_count' : (tCountMin != null ? 'treatment_count' : 'cow_number'));
-    const descByDefault = ['reason_count','treatment_count','calving_date','breed_date','weigh_date','weight','treatment_date','birth_weight','weaning_weight','gain_per_day','weaning_date'].includes(sortBy);
-    const dir = (f.sort_dir || (descByDefault ? 'desc' : 'asc')) === 'desc' ? -1 : 1;
-    const latestOf = arr => arr.filter(Boolean).sort().pop() || '';
-    function sortVal(c){
-      const n = c.number;
-      switch(sortBy){
-        case 'location': return c.lot || '';
-        case 'owner': return c.owner || '';
-        case 'group': return c.cow_group || '';
-        case 'sire': {
-          const fromBreeding = () => { const b = latestBreeding(n); return (b && (b.bred_to || b.natural_sire)) || ''; };
-          const fromCalving = () => {
-            const cv = [...mCalvings(n)].sort((a,b)=> (b.calving_date || '').localeCompare(a.calving_date || ''))[0];
-            return (cv && cv.sire) || '';
-          };
-          return (breedingUsed && !calvingUsed) ? (fromBreeding() || fromCalving()) : (fromCalving() || fromBreeding());
-        }
-        case 'calving_date': {
-          const ds = mCalvings(n).map(x=>x.calving_date).filter(Boolean).sort();
-          return ds.length ? (dir === 1 ? ds[0] : ds[ds.length - 1]) : '';
-        }
-        case 'birth_weight': { const v = mCalvings(n).map(x=>x.birth_weight).filter(x=>x != null); return v.length ? Math.max(...v.map(Number)) : ''; }
-        case 'breed_date': return latestOf(mBreeding(n).map(x=>x.breed_date));
-        case 'weigh_date': return latestOf(weightsFor(n).map(x=>x.weigh_date));
-        case 'weight': {
-          const latest = [...weightsFor(n)].filter(x=>x.weight != null).sort((a,b)=> (b.weigh_date || '').localeCompare(a.weigh_date || ''))[0];
-          return latest ? Number(latest.weight) : '';
-        }
-        case 'treatment_date': return latestOf([...mMeds(n), ...mCalfMeds(n)].map(x=>x.date));
-        case 'reason_count': return cullReasons(c).length;
-        case 'treatment_count': return treatCount(n);
-        case 'weaning_weight': case 'gain_per_day': case 'weaning_date': {
-          const vals = mCalvings(n).map(cv=>{
-            const ws = weaningStats(cv);
-            if(!ws) return null;
-            if(sortBy === 'weaning_weight') return ws.weight;
-            if(sortBy === 'gain_per_day') return ws.gain;
-            return ws.date;
-          }).filter(v=> v != null && v !== '');
-          if(!vals.length) return '';
-          vals.sort((x, y)=> x < y ? -1 : x > y ? 1 : 0);
-          return dir === 1 ? vals[0] : vals[vals.length - 1];   // best per cow for the direction asked
-        }
-        default: return c.number;
-      }
-    }
-    const blank = v => v === '' || v === null || v === undefined;
-    const cmp = (a, b) => {
-      if(blank(a) && blank(b)) return 0;
-      if(blank(a)) return 1;   // blanks always go last
-      if(blank(b)) return -1;
-      if(typeof a === 'number' && typeof b === 'number') return (a - b) * dir;
-      return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }) * dir;
-    };
-    const keyed = results.map(c=>({ c, k: sortVal(c) }));
-    keyed.sort((x, y)=> cmp(x.k, y.k) || String(x.c.number).localeCompare(String(y.c.number), undefined, { numeric: true }));
-    results = keyed.map(x=>x.c);
-    const topN = numOrNull(f.limit);
-    if(topN != null && topN >= 1) results = results.slice(0, Math.floor(topN));
-
-    const groupPrefix = { sire: 'Sire', location: 'Location', owner: 'Owner', group: 'Group' }[sortBy];
-    const hasGroupsFlag = !!groupPrefix;
-    const groupOf = {};
-    if(groupPrefix){
-      keyed.forEach(x=>{ groupOf[x.c.number] = groupPrefix + ': ' + (blank(x.k) ? '(none)' : x.k); });
-    }
-
-    // ---- line-by-line activity table ----
-    const entries = [];
-    results.forEach(c=>{
-      const num = c.number;
-      if(breedingUsed){
-        mBreeding(num).forEach(b=>{
-          const detail = [];
-          if(b.bred_to) detail.push(`Bred to: ${b.bred_to}`);
-          if(b.pregnancy_method) detail.push(b.pregnancy_method);
-          if(b.natural_sire) detail.push(`Natural sire: ${b.natural_sire}`);
-          if(b.pregnancy_status === 'Open') detail.push(`Open${b.open_date ? ' ('+fmtDate(b.open_date)+')' : ''}`);
-          else if(b.pregnancy_status === 'Bred' && b.vet_calls) detail.push(`Vet check: ${b.vet_calls} days`);
-          entries.push({ date: b.breed_date, num, type: 'Breeding', details: detail.join(' — ') });
-        });
-      }
-      if(medUsed){
-        mMeds(num).forEach(t=>{
-          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes || 'note');
-          entries.push({ date: t.date, num, type: 'Med', details: desc });
-        });
-        mCalfMeds(num).forEach(t=>{
-          const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes || 'note');
-          entries.push({ date: t.date, num, type: 'Calf Med', details: desc });
-        });
-      }
-      if(calvingUsed){
-        mCalvings(num).forEach(cv=>{
-          const detail = [`${calfSexLabel(cv.calf_sex)} calf`];
-          if(cv.sire) detail.push(`Sire: ${cv.sire}`);
-          if(cv.birth_assist) detail.push(cv.birth_assist);
-          if(cv.birth_weight != null) detail.push(`${cv.birth_weight} lbs`);
-          if(weaningUsed){ const wl = weaningLineText(cv); if(wl) detail.push(wl); }
-          if(calfContext && breedFilterActive){
-            const lb = linkedBreeding(num, cv);
-            if(lb) detail.push(`Bred ${fmtDateShort(lb.breed_date)}${lb.pregnancy_method ? ' (' + lb.pregnancy_method + ')' : ''}`);
-          }
-          entries.push({ date: cv.calving_date, num, type: 'Calving', details: detail.join(' — ') });
-        });
-      }
-      if(weightUsed){
-        mWeights(num).forEach(w=>{
-          entries.push({ date: w.date, num, type: w.type, details: `${w.weight} lb` });
-        });
-      }
-      if(missingWeight){
-        const ws = [...weightsFor(num)].filter(w=> w.weight != null).sort((x, y)=> (y.weigh_date || '').localeCompare(x.weigh_date || ''));
-        entries.push({ date: ws[0] ? ws[0].weigh_date : '', num, type: 'Weight', details: ws[0] ? `Last weight ${Number(ws[0].weight).toLocaleString()} lb` : 'No weight on record' });
-      }
-      if(cullOn){
-        entries.push({ date: '', num, type: 'Cull', details: cullReasons({ number: num }).join(' · ') });
-      }
-      if(!breedingUsed && !medUsed && !calvingUsed && !weightUsed && !missingWeight && !cullOn && (dFrom || dTo)){
-        recordsFor(num).forEach(t=>{
-          if(inRange(t.date)){
-            const desc = t.medicine ? `${t.medicine}${t.reason ? ' / '+t.reason : ''}` : (t.notes || 'note');
-            entries.push({ date: t.date, num, type: 'Med', details: desc });
-          }
-        });
-        calvingsFor(num).forEach(cv=>{
-          if(inRange(cv.calving_date)) entries.push({ date: cv.calving_date, num, type: 'Calving', details: `${calfSexLabel(cv.calf_sex)} calf` });
-        });
-        generalNotesFor(num).forEach(nt=>{
-          if(inRange(nt.note_date)) entries.push({ date: nt.note_date, num, type: 'Note', details: nt.note || '' });
-        });
-        weightsFor(num).forEach(w=>{
-          if(inRange(w.weigh_date)) entries.push({ date: w.weigh_date, num, type: 'Weight', details: w.weight != null ? w.weight + ' lb' : '' });
-        });
-        breedingFor(num).forEach(b=>{
-          if(inRange(b.breed_date)) entries.push({ date: b.breed_date, num, type: 'Breeding', details: b.bred_to ? 'Bred to: ' + b.bred_to : '' });
-        });
-      }
-    });
-    // keep the table in the same order as the cows (so group headers line up), newest first within a cow
-    const order = {};
-    results.forEach((c, i)=>{ order[c.number] = i; });
-    if(calfContext && sortBy === 'calving_date'){
-      entries.sort((a, b)=> ((a.date || '').localeCompare(b.date || '')) * dir || (order[a.num] - order[b.num]));
-    } else {
-      entries.sort((a, b)=> (order[a.num] - order[b.num]) || (b.date || '').localeCompare(a.date || ''));
-    }
-
-    const notes = [];
-    if((gMin != null || gMax != null) && noBirthWeight.size) notes.push(`${noBirthWeight.size} weaned ${noBirthWeight.size !== 1 ? 'calves' : 'calf'} left out of gain numbers (no birth weight on record)`);
-    else if(f.sort_by === 'gain_per_day'){
-      let noGain = 0;
-      results.forEach(c=>{ mCalvings(c.number).forEach(cv=>{ const ws = weaningStats(cv); if(ws && ws.gain == null) noGain++; }); });
-      if(noGain) notes.push(`${noGain} weaned ${noGain !== 1 ? 'calves' : 'calf'} listed last: no birth weight on record, so no gain figure`);
-    }
-    if(weanStatus === 'not_weaned') notes.push('showing current calves with no weaning weight yet');
-    if(missingWeight) notes.push('active cows with no weight in that time (sold and deceased cows left out)');
-    if(tCountMin != null) notes.push(`active cows with ${tCountMin} or more treatments${sameReason ? ' for the same reason' : ''}`);
-    if(cullOn) notes.push(`cull list: cows with ${cullMin} or more of these: open, 2+ treatments in 12 months, hard pull or C-section in her last 2 calvings, light calf (${lightLbs != null ? 'under ' + lightLbs + ' lbs' : 'under 85% of that year\'s average weaning weight'}); active cows only`);
-    // ---- who the rows are about: one per calf for a calf search, one per cow otherwise ----
-    const calfTable = searchOn === 'calvings' || weaningUsed;
-    const calfBase = [];
-    if(calfTable) results.forEach(c=>{
-      const g = hasGroupsFlag ? groupOf[c.number] : null;
-      [...mCalvings(c.number)].sort(byDateDesc).forEach(cv=> calfBase.push({ cow: c, cv, group: g }));
-    });
-    const out = { results, entries, groupOf, hasGroups: !!groupPrefix, notes, table: null, kind: calfTable ? 'calf' : 'cow', calfBase };
-    // ---- a table with exactly the columns that were asked for in the question ----
-    if(Array.isArray(f.columns) && f.columns.length){
-      const asked = [...new Set(f.columns.filter(k=> typeof k === 'string'))];
-      const dropped = asked.filter(k=> !aiResolveCol(k, out.kind));
-      out.table = aiBuildTable(out, asked);
-      if(out.table && out.table.keys.length > 5) notes.push('more than 5 columns, so swipe the table sideways');
-      if(dropped.length) notes.push(`${dropped.join(', ')} ${dropped.length === 1 ? "isn't" : "aren't"} available for this kind of search`);
-    }
-    return out;
-  }
-
-  function aiSearchPillsHtml(pills, filters){
-    const list = [...pills];
-    if(filters.search_on && filters.search_on !== 'cows') list.unshift({ label: 'Looking at', value: filters.search_on });
-    return list.map(p=>{
-      let v = String(p.value);
-      if(p.label === 'Calf Sex') v = v === 'B' ? 'Bull' : v === 'H' ? 'Heifer' : v;
-      if(p.label === 'Calf Outcome') v = ({ active:'Still Active', kept:'Kept (Promoted)', sold:'Sold', died:'Died' })[v] || v;
-      if(p.label === 'Preg check result') v = v === 'open' ? 'Open' : v === 'pregnant' ? 'Pregnant' : v;
-      if((p.label === 'From' || p.label === 'To' || p.label === 'Weaned from' || p.label === 'Weaned to') && /^\d{4}-\d{2}-\d{2}$/.test(v)) v = fmtDate(v);
-      if(p.label === 'Weaning') v = v === 'not_weaned' ? 'not weaned yet' : v;
-      if(p.label === 'Sorted by'){
-        v = v.replace(/_/g, ' ') + (filters.sort_dir === 'desc' ? ' (high to low)' : filters.sort_dir === 'asc' ? ' (low to high)' : '');
-      }
-      return `<span style="display:inline-flex;align-items:center;gap:4px;background:#E6F1FB;border:2px solid #2E88C4;color:#0C447C;border-radius:16px;padding:6px 12px;font-family:Arial,sans-serif;font-size:13px;"><b>${escapeHtml(p.label)}:</b> ${escapeHtml(v)}</span>`;
-    }).join('');
-  }
-
-  // ===== Tap-a-cow pop-up, shared by AI Search and the reports =====
+  // ===== Tap-a-cow pop-up, shared by the reports =====
   // Tap a cow in a report list -> small pop-up with her card (checkboxes + quick-add buttons),
   // a Full Profile button (profile's back button returns to the report), and Close.
   let suppressProfileRedraw = false;   // true only while Full Profile swaps screens
@@ -12185,7 +11225,6 @@
     wirePregBtCheckboxes(box);
     wireSellCheckboxes(box);
   }
-  function openAiCowCard(num){ openCowCardPopup(num, showAiSearch, '← Back to AI Search'); }
 
   // Makes the rows of a report table tappable (finds the "Cow #" column; rows that don't
   // match a cow are simply left alone) and adds a one-line "tap a cow" hint above the table.
@@ -12223,211 +11262,6 @@
     return `<div style="overflow-x:auto;"><table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;"><thead><tr style="background:#EFE8D8;"><th style="${th}">Cow #</th><th style="${th}">Location</th><th style="${th}">Owner</th><th style="${th}">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
-  function renderAiSearch(out, filters, pills){
-    const { results, entries, groupOf, hasGroups } = out;
-    lastAiSearchCows = results;
-    lastAiSearchEntries = entries;
-    lastAiSearchTable = out.table || null;
-    lastAiRender = { out, filters, pills };
-    const bar = document.getElementById('aiSearchColsBar');
-    bar.classList.toggle('hidden', results.length === 0);
-    bar.style.display = results.length === 0 ? 'none' : 'flex';
-    document.getElementById('aiSearchColsBtn').textContent = out.table ? `Columns (${out.table.keys.length})` : 'Columns';
-    document.getElementById('aiSearchColsResetBtn').classList.toggle('hidden', !out.table);
-    aiUpdateSaveButton();
-    setAiQuickOpen(false);
-    aiRenderItemLists();
-
-    document.getElementById('aiSearchPills').innerHTML = aiSearchPillsHtml(pills, filters);
-    document.getElementById('aiSearchInterp').classList.remove('hidden');
-    const matchedText = (out.table && out.table.calfRows) ? `${out.table.rows.length} ${out.table.rows.length !== 1 ? 'calves' : 'calf'} from ${results.length} cow${results.length !== 1 ? 's' : ''}` : `${results.length} cow${results.length !== 1 ? 's' : ''} matched`;
-    document.getElementById('aiSearchCount').textContent = matchedText + (results.length ? (out.table ? ' · tap a row to open her card' : ' · tap a cow to open her card') : '') + ((out.notes && out.notes.length) ? ' · ' + out.notes.join(' · ') : '');
-    document.getElementById('aiSearchPrintBtn').classList.toggle('hidden', results.length === 0);
-    document.getElementById('aiSearchTextBtn').classList.toggle('hidden', results.length === 0);
-
-    const tableEl = document.getElementById('aiSearchReportTable');
-    const thStyle = 'text-align:left;padding:8px 6px;color:#0C447C;border-bottom:2px solid #2E88C4;';
-    const tdStyle = 'padding:10px 6px;border-bottom:1px solid #c9bfa4;';
-    const numCell = num => `<td style="${tdStyle}font-weight:700;color:#0C5A8E;text-decoration:underline;">#${escapeHtml(num)}</td>`;
-    const groupRow = label => `<tr><td colspan="4" style="padding:8px 6px;background:#0C5A8E;color:#fff;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;">${escapeHtml(label)}</td></tr>`;
-    const shell = (heads, rows) => `
-        <div style="overflow-x:auto;">
-          <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
-            <thead><tr>${heads.map(h=>`<th style="${thStyle}">${h}</th>`).join('')}</tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>`;
-
-    if(out.table){
-      // your own columns
-      const tb = out.table;
-      let lastLabel = null;
-      const trs = tb.rows.map((r, i)=>{
-        let head = '';
-        if(r.group && r.group !== lastLabel){ head = `<tr><td colspan="${tb.heads.length}" style="padding:8px 6px;background:#0C5A8E;color:#fff;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;">${escapeHtml(r.group)}</td></tr>`; lastLabel = r.group; }
-        const tds = r.cells.map((cell, ci)=> ci === 0 && tb.heads[0] !== 'Mother' && tb.heads[0] !== 'Cow #'
-          ? `<td style="${tdStyle}">${escapeHtml(String(cell))}</td>`
-          : (tb.heads[ci] === 'Cow #' || tb.heads[ci] === 'Mother')
-            ? `<td style="${tdStyle}font-weight:700;color:#0C5A8E;text-decoration:underline;">${escapeHtml(String(cell))}</td>`
-            : `<td style="${tdStyle}">${escapeHtml(String(cell))}</td>`).join('');
-        return head + `<tr data-ai-open="${escapeHtml(r.num)}" style="background:${i % 2 === 0 ? '#fff' : '#F7F2E6'};cursor:pointer;">${tds}</tr>`;
-      }).join('');
-      tableEl.innerHTML = shell(tb.heads, trs);
-    } else if(entries.length > 0){
-      let lastLabel = null;
-      const rows = entries.map((e, i)=>{
-        let head = '';
-        const label = hasGroups ? groupOf[e.num] : null;
-        if(label && label !== lastLabel){ head = groupRow(label); lastLabel = label; }
-        return head + `<tr data-ai-open="${escapeHtml(e.num)}" style="background:${i % 2 === 0 ? '#fff' : '#F7F2E6'};cursor:pointer;">
-          <td style="${tdStyle}">${e.date ? fmtDateShort(e.date) : '—'}</td>
-          ${numCell(e.num)}
-          <td style="${tdStyle}">${escapeHtml(e.type)}</td>
-          <td style="${tdStyle}white-space:normal;">${escapeHtml(e.details)}</td>
-        </tr>`;
-      }).join('');
-      tableEl.innerHTML = shell(['Date', 'Cow #', 'Type', 'Details'], rows);
-    } else if(results.length > 0){
-      // no dated activity lines for this search (e.g. "cows that need a tag"): show a simple tappable cow list
-      let lastLabel = null;
-      const rows = results.map((c, i)=>{
-        let head = '';
-        const label = hasGroups ? groupOf[c.number] : null;
-        if(label && label !== lastLabel){ head = groupRow(label); lastLabel = label; }
-        return head + `<tr data-ai-open="${escapeHtml(c.number)}" style="background:${i % 2 === 0 ? '#fff' : '#F7F2E6'};cursor:pointer;">
-          ${numCell(c.number)}
-          <td style="${tdStyle}">${escapeHtml(c.lot || '')}</td>
-          <td style="${tdStyle}">${escapeHtml(c.owner || '')}</td>
-          <td style="${tdStyle}">${escapeHtml(c.status || 'Active')}</td>
-        </tr>`;
-      }).join('');
-      tableEl.innerHTML = shell(['Cow #', 'Location', 'Owner', 'Status'], rows);
-    } else {
-      tableEl.innerHTML = '';
-    }
-    tableEl.querySelectorAll('[data-ai-open]').forEach(tr=>{
-      tr.addEventListener('click', ()=> openAiCowCard(tr.dataset.aiOpen));
-    });
-
-    // the long list of cards is no longer drawn under the list
-    const resultsEl = document.getElementById('aiSearchResults');
-    resultsEl.innerHTML = results.length === 0 ? '<p class="empty">No cows match those filters.</p>' : '';
-  }
-
-  async function runAiSearch(){
-    const box = document.getElementById('aiSearchBox');
-    const btn = document.getElementById('aiSearchRunBtn');
-    const question = box.value.trim();
-    if(!question){ showToast('Type what you want to find'); return; }
-    if(!navigator.onLine){
-      aiSearchSetMsg('AI Search needs a phone signal. Use Advanced Search here.', 'note');
-      return;
-    }
-    aiSearchSetMsg('');
-    btn.disabled = true;
-    const oldLabel = btn.textContent;
-    btn.textContent = 'Searching…';
-    const ctrl = new AbortController();
-    const timer = setTimeout(()=> ctrl.abort(), 30000);
-    try{
-      const res = await fetch(SUPABASE_URL + '/functions/v1/ai-search', {
-        method: 'POST',
-        signal: ctrl.signal,
-        headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, options: aiSearchOptionLists() })
-      });
-      const data = await res.json().catch(()=> null);
-      if(!data){
-        aiSearchSetMsg("Couldn't reach AI Search. Check your signal and try again.");
-        return;
-      }
-      if(!data.ok){
-        const soft = data.error === 'unclear' || data.error === 'key_not_set' || data.error === 'busy';
-        aiSearchSetMsg(data.message || 'AI Search could not answer that. Try rewording it.', soft ? 'note' : 'error');
-        return;
-      }
-      lastAiSearchQuestion = question;
-      const out = aiSearchRun(data.filters || {});
-      aiApplySavedColumns(out, data.filters || {});
-      currentAiItemId = aiRememberSearch(question, data.filters || {});
-      renderAiSearch(out, data.filters || {}, data.pills || []);
-    }catch(e){
-      console.error(e);
-      aiSearchSetMsg(e && e.name === 'AbortError' ? 'That took too long. Try again.' : "Couldn't reach AI Search. Check your signal and try again.");
-    }finally{
-      clearTimeout(timer);
-      btn.disabled = false;
-      btn.textContent = oldLabel;
-    }
-  }
-  function clearAiSearch(){
-    document.getElementById('aiSearchBox').value = '';
-    aiSearchSetMsg('');
-    document.getElementById('aiSearchInterp').classList.add('hidden');
-    document.getElementById('aiSearchPills').innerHTML = '';
-    document.getElementById('aiSearchCount').textContent = '';
-    document.getElementById('aiSearchReportTable').innerHTML = '';
-    document.getElementById('aiSearchPrintBtn').classList.add('hidden');
-    document.getElementById('aiSearchTextBtn').classList.add('hidden');
-    document.getElementById('aiSearchResults').innerHTML = '';
-    lastAiSearchCows = [];
-    lastAiSearchEntries = [];
-    lastAiSearchTable = null;
-    lastAiRender = null;
-    currentAiItemId = null;
-    document.getElementById('aiSearchColsBar').style.display = 'none';
-    setAiQuickOpen(true);
-    lastAiSearchQuestion = '';
-  }
-  function textAiSearchResults(){
-    if(lastAiSearchCows.length === 0){ showToast('Nothing to send'); return; }
-    const entries = lastAiSearchTable
-      ? lastAiSearchTable.rows.map((r, i)=>({ id: i + ':' + r.num, line: r.cells.join(' · ') }))
-      : lastAiSearchCows.map(c=>({ id: c.number, line: '#' + c.number }));
-    sendTextListModal('AI Search Results', entries, textAiSearchResults);
-  }
-  function printAiSearchResults(){
-    if(lastAiSearchCows.length === 0){ showToast('Nothing to print'); return; }
-    const th = 'text-align:left;padding:6px;border-bottom:2px solid #000;';
-    const customHtml = lastAiSearchTable ? `
-      <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr>${lastAiSearchTable.heads.map(h=>`<th style="${th}">${escapeHtml(h)}</th>`).join('')}</tr></thead>
-        <tbody>${lastAiSearchTable.rows.map((r,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${r.cells.map(c=>`<td style="padding:6px;">${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table>` : '';
-    const cowRowsHtml = lastAiSearchTable ? '' : lastAiSearchCows.map((c,i)=>`
-      <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-        <td style="padding:6px;">#${escapeHtml(c.number)}</td>
-        <td style="padding:6px;">${escapeHtml(c.lot||'')}</td>
-        <td style="padding:6px;">${escapeHtml(c.cow_group||'')}</td>
-        <td style="padding:6px;">${escapeHtml(c.owner||'')}</td>
-        <td style="padding:6px;">${escapeHtml(c.status||'Active')}</td>
-      </tr>`).join('');
-    const activityHtml = (!lastAiSearchTable && lastAiSearchEntries.length > 0) ? `
-      <h3 style="margin:20px 0 8px;font-size:14px;">Matching Activity</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr><th style="${th}">Date</th><th style="${th}">Cow #</th><th style="${th}">Type</th><th style="${th}">Details</th></tr></thead>
-        <tbody>${lastAiSearchEntries.map((e,i)=>`
-          <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-            <td style="padding:6px;">${e.date ? fmtDateShort(e.date) : '—'}</td>
-            <td style="padding:6px;">#${escapeHtml(e.num)}</td>
-            <td style="padding:6px;">${escapeHtml(e.type)}</td>
-            <td style="padding:6px;">${escapeHtml(e.details)}</td>
-          </tr>`).join('')}</tbody>
-      </table>` : '';
-    document.getElementById('printListOutput').innerHTML = `
-      <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
-        <h2 style="margin:0 0 4px;">Farnan Cattle Co. — AI Search</h2>
-        <div style="font-size:13px;color:#555;margin-bottom:4px;">"${escapeHtml(lastAiSearchQuestion)}"</div>
-        <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${lastAiSearchCows.length} cow${lastAiSearchCows.length!==1?'s':''} matched</div>
-        ${lastAiSearchTable ? customHtml : `        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-          <thead><tr><th style="${th}">Cow #</th><th style="${th}">Location</th><th style="${th}">Group</th><th style="${th}">Owner</th><th style="${th}">Status</th></tr></thead>
-          <tbody>${cowRowsHtml}</tbody>
-        </table>`}
-        ${activityHtml}
-      </div>`;
-    document.body.classList.add('printing-list');
-    requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
-  }
 
   function renderGlobalSearchResults(){
     const q = (globalSearchBox.value||'').trim().toLowerCase();
