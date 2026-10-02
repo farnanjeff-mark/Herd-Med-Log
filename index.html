@@ -916,7 +916,7 @@
       <div style="width:48px;height:48px;border-radius:24px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🤖</div>
       <div>
         <div style="font-family:Arial,sans-serif;font-size:24px;font-weight:700;color:#fff;letter-spacing:.02em;">AI Search</div>
-        <div style="font-family:Arial,sans-serif;font-size:13px;color:rgba(255,255,255,.92);line-height:1.4;margin-top:2px;">Ask in plain English. Needs a phone signal.</div>
+        <div style="font-family:Arial,sans-serif;font-size:13px;color:rgba(255,255,255,.92);line-height:1.4;margin-top:2px;">Tap a ready-made search, or type a question (typing needs a phone signal).</div>
       </div>
     </div>
     <div style="background:#FFFFFF;border:2px solid #2E88C4;border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(43,38,32,.10),0 6px 16px rgba(43,38,32,.14);display:flex;flex-direction:column;gap:12px;margin-bottom:10px;">
@@ -925,7 +925,7 @@
       <div id="aiSearchHelpBox" style="background:#FFFFFF;border:2px solid #2E88C4;border-radius:10px;box-shadow:0 2px 5px rgba(43,38,32,.16);overflow:hidden;">
         <button type="button" id="aiSearchHelpToggle" aria-expanded="false" aria-controls="aiSearchHelpPanel" style="width:100%;min-height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:#FFFFFF;color:#0C5A8E;border:none;padding:12px 14px;cursor:pointer;"><span>What can I search?</span><span id="aiSearchHelpArrow" style="font-size:16px;">&#9662;</span></button>
         <div id="aiSearchHelpPanel" class="hidden" style="background:#F7F2E6;border-top:2px solid #2E88C4;padding:12px 14px 14px;">
-        <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;line-height:1.5;margin-bottom:12px;">Type it the way you'd say it, and mix and match. Say dates your way ("this year", "since August") and numbers your way ("over 600", "under 500"). Tap a section to open it, and tap an example to try it.</div>
+        <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;line-height:1.5;margin-bottom:12px;">Type it the way you'd say it, and mix and match, or tap a quick search below the typing box. Say dates your way ("this year", "since August") and numbers your way ("over 600", "under 500"). Tap a section to open it, and tap an example to try it.</div>
         <div id="aiHelpSections"></div>
       </div>
       </div>
@@ -934,7 +934,19 @@
         <button class="btn btn-barn" id="aiSearchClearBtn" style="flex:1;min-height:50px;">Clear</button>
       </div>
     </div>
-    <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;text-align:center;line-height:1.5;margin-bottom:14px;">No signal? Use Advanced Search.</div>
+    <div id="aiQuickBox" style="margin-bottom:14px;">
+      <button type="button" id="aiQuickToggle" aria-expanded="true" style="width:100%;min-height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:#FFFFFF;color:#0C5A8E;border:2px solid #2E88C4;border-radius:10px;padding:10px 14px;cursor:pointer;text-align:left;box-shadow:0 2px 5px rgba(43,38,32,.16);"><span>Quick searches</span><span id="aiQuickArrow" style="font-size:15px;">&#9652;</span></button>
+      <div id="aiQuickBody" style="padding-top:4px;">
+        <div class="section-label">One-tap searches</div>
+        <div id="aiQuickGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+        <div class="section-label">Or pick a topic</div>
+        <div id="aiTopicRow" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"></div>
+        <div id="aiTopicList" class="hidden" style="margin-top:10px;"></div>
+        <div id="aiSavedBox" class="hidden"><div class="section-label">Saved</div><div id="aiSavedList"></div></div>
+        <div id="aiRecentBox" class="hidden"><div class="section-label">Recent</div><div id="aiRecentList"></div></div>
+      </div>
+    </div>
+    <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;text-align:center;line-height:1.5;margin-bottom:14px;">No signal? The quick searches above still work, and so does Advanced Search.</div>
     <div id="aiSearchMsg" class="banner hidden"></div>
     <div id="aiSearchInterp" class="hidden">
       <div class="section-label" style="color:#0C447C;margin-top:6px;">I searched for</div>
@@ -944,7 +956,8 @@
     <div id="aiSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
     <div id="aiSearchColsBar" class="hidden" style="gap:10px;margin-bottom:12px;">
       <button class="btn btn-profile-nav" id="aiSearchColsBtn" style="flex:1;height:46px;padding:0 10px;">Columns</button>
-      <button class="btn btn-outline" id="aiSearchColsResetBtn" style="width:110px;height:46px;padding:0 10px;">Reset</button>
+      <button class="btn btn-outline hidden" id="aiSearchSaveBtn" style="width:96px;height:46px;padding:0 6px;">&#9734; Save</button>
+      <button class="btn btn-outline" id="aiSearchColsResetBtn" style="width:90px;height:46px;padding:0 6px;">Reset</button>
     </div>
     <div id="aiSearchReportTable" style="margin-bottom:14px;"></div>
     <button class="btn btn-outline btn-full hidden" id="aiSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
@@ -11251,6 +11264,7 @@
   let lastAiSearchQuestion = '';
   let lastAiSearchTable = null;
   let lastAiRender = null;   // { out, filters, pills } of the search on screen
+  let currentAiItemId = null;   // the Saved/Recent entry the search on screen belongs to
 
   function showAiSearch(){
     showAdvancedSearch(); // hides every other screen
@@ -11264,6 +11278,8 @@
     // y = the first real location / reason / bull / medicine in the herd, so the examples use your own words
     const loc = y.loc || 'the south pasture', bull = y.bull || 'a bull', reason = y.reason || 'pinkeye';
     return [
+      { title: 'Quick, saved and recent', lines: ['Under the typing box are 8 one-tap searches and 6 topics. Tap a topic to see its ready-made questions, and tap a question to run it. These run on your phone with no AI: instant, free, and they work with no signal.', 'Questions you type are kept under Recent (the last 10). Tap one to run it again, with no AI. Tap the star, or the Save button above the table, to keep it under Saved. The arrow puts the question back in the typing box so the AI can ask it fresh (good for "this year" questions next year).', 'A saved search keeps the columns you picked for it.'],
+        examples: [] },
       { title: 'Cows', lines: ['Location, Owner, Group, Herd Season (Spring, Fall, Undefined), Status (Active, Sold, Deceased).', 'Checkboxes: Tag needed, Flag, Calved, Open, Preg BT, Sell.'],
         examples: [`open cows in ${loc}`, 'cows that need a tag'] },
       { title: 'Breeding', lines: ['Bred To, method (AI, ET, BB), Natural Sire, preg check result (open or pregnant).'],
@@ -11384,6 +11400,7 @@
       if(!picks.length){ aiResetColumns(); return; }
       aiSaveCols(kind, picks);
       out.table = aiBuildTable(out, picks);
+      aiSetItemCols(picks);
       renderAiSearch(out, lastAiRender.filters, lastAiRender.pills);
     });
   }
@@ -11392,10 +11409,231 @@
     const { out, filters, pills } = lastAiRender;
     aiSaveCols(out.kind, []);
     out.table = null;
+    aiSetItemCols(null);
     renderAiSearch(out, filters, pills);
   }
   document.getElementById('aiSearchColsBtn').addEventListener('click', openAiColumnsPicker);
   document.getElementById('aiSearchColsResetBtn').addEventListener('click', aiResetColumns);
+
+  // ===================== QUICK SEARCHES, TOPICS, SAVED AND RECENT =====================
+  // These run on the phone with no AI, so they are instant, free and work with no signal.
+  const AI_FILTER_LABELS = { search_on:'Looking at', location:'Location', owner:'Owner', group:'Group', herd_season:'Herd Season', status:'Status', bred_to:'Bred To',
+    pregnancy_method:'Pregnancy Method', natural_sire:'Natural Sire', open_only:'Open cows only', preg_bt_only:'Preg BT only', sell_only:'Sell only', tag_needed:'Tag needed',
+    flagged:'Flagged', calved_pending:'Calved (pending entry)', medicine:'Medicine', reason:'Reason', sire:'Sire', dam_cow:'Out of cow', calf_sex:'Calf Sex',
+    birth_assist:'Birth Assist', calf_outcome:'Calf Outcome', birth_weight_min:'Birth weight at least (lbs)', birth_weight_max:'Birth weight at most (lbs)',
+    weaning_status:'Weaning', weaning_weight_min:'Weaning weight at least (lbs)', weaning_weight_max:'Weaning weight at most (lbs)', gain_min:'Gain at least (lbs/day)',
+    gain_max:'Gain at most (lbs/day)', weaning_age_min:'Weaned at least (days old)', weaning_age_max:'Weaned at most (days old)', weaning_date_from:'Weaned from',
+    weaning_date_to:'Weaned to', missing_weight:'Missing a weight', treatment_count_min:'Treated at least (times)', same_reason:'Same reason', cull_list:'Cull list',
+    cull_min_reasons:'Cull reasons at least', cull_light_calf_lbs:'Light calf under (lbs)', weight_min:'Weight at least (lbs)', weight_max:'Weight at most (lbs)',
+    preg_check_result:'Preg check result', date_from:'From', date_to:'To', sort_by:'Sorted by', limit:'Top' };
+  function aiLocalPills(f){
+    const pills = [];
+    Object.keys(AI_FILTER_LABELS).forEach(k=>{
+      if(k === 'search_on') return;
+      const v = f[k];
+      if(v === undefined || v === null || v === '' || v === false) return;
+      pills.push({ label: AI_FILTER_LABELS[k], value: v === true ? 'Yes' : String(v) });
+    });
+    return pills;
+  }
+  const aiIso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const aiYearRange = ()=>{ const y = new Date().getFullYear(); return { date_from: y + '-01-01', date_to: y + '-12-31' }; };
+  const aiYearWeaned = ()=>{ const y = new Date().getFullYear(); return { weaning_date_from: y + '-01-01', weaning_date_to: y + '-12-31' }; };
+  const aiDaysAgo = n =>{ const d = new Date(); d.setDate(d.getDate() - n); return aiIso(d); };
+  // filters are built when you tap, so "this year" is always the current year
+  const AI_QUICK_TILES = [
+    { label: 'Open cows',         sub: 'Latest breeding is open',          f: ()=> ({ search_on:'cows', open_only:true }) },
+    { label: 'Cull list',         sub: 'Open, treated, hard calving, light calf', danger:true, f: ()=> ({ search_on:'cows', cull_list:true }) },
+    { label: 'Missing a weight',  sub: 'No weight this year',              f: ()=> Object.assign({ search_on:'cows', missing_weight:true }, aiYearRange()) },
+    { label: 'Repeat treatments', sub: 'Treated 2 or more times this year', f: ()=> Object.assign({ search_on:'cows', treatment_count_min:2 }, aiYearRange()) },
+    { label: 'Not weaned yet',    sub: 'Current calves, no weaning weight', f: ()=> ({ search_on:'calvings', weaning_status:'not_weaned' }) },
+    { label: 'Best gain per day', sub: 'Top 10 calves',                    f: ()=> ({ search_on:'calvings', weaning_status:'weaned', sort_by:'gain_per_day', sort_dir:'desc', limit:10 }) },
+    { label: 'Heaviest weaning',  sub: 'Top 10 weaned this year',          f: ()=> Object.assign({ search_on:'calvings', weaning_status:'weaned', sort_by:'weaning_weight', sort_dir:'desc', limit:10 }, aiYearWeaned()) },
+    { label: 'Hard pulls this year', sub: 'Calves born this year',         f: ()=> Object.assign({ search_on:'calvings', birth_assist:'Hard Pull' }, aiYearRange()) }
+  ];
+  const AI_TOPICS = [
+    { name: 'Cows', qs: [
+      ['Open cows', ()=> ({ search_on:'cows', open_only:true })],
+      ['Cows that need a tag', ()=> ({ search_on:'cows', tag_needed:true })],
+      ['Flagged cows', ()=> ({ search_on:'cows', flagged:true })],
+      ['Cows marked to sell', ()=> ({ search_on:'cows', sell_only:true })],
+      ['Preg BT cows', ()=> ({ search_on:'cows', preg_bt_only:true })],
+      ['Cows missing a weight this year', ()=> Object.assign({ search_on:'cows', missing_weight:true }, aiYearRange())],
+      ['Cull list', ()=> ({ search_on:'cows', cull_list:true })] ] },
+    { name: 'Breeding', qs: [
+      ['Bred by AI', ()=> ({ search_on:'cows', pregnancy_method:'AI' })],
+      ['Bred by ET', ()=> ({ search_on:'cows', pregnancy_method:'ET' })],
+      ['Bred by a bull (BB)', ()=> ({ search_on:'cows', pregnancy_method:'BB' })],
+      ['Confirmed pregnant', ()=> ({ search_on:'cows', preg_check_result:'pregnant' })],
+      ['Open at preg check', ()=> ({ search_on:'cows', preg_check_result:'open' })],
+      ['Open cows', ()=> ({ search_on:'cows', open_only:true })] ] },
+    { name: 'Calves', qs: [
+      ['Heifer calves born this year', ()=> Object.assign({ search_on:'calvings', calf_sex:'H' }, aiYearRange())],
+      ['Bull calves born this year', ()=> Object.assign({ search_on:'calvings', calf_sex:'B' }, aiYearRange())],
+      ['Hard pulls this year', ()=> Object.assign({ search_on:'calvings', birth_assist:'Hard Pull' }, aiYearRange())],
+      ['C-sections this year', ()=> Object.assign({ search_on:'calvings', birth_assist:'C-Section' }, aiYearRange())],
+      ['Calves that died this year', ()=> Object.assign({ search_on:'calvings', calf_outcome:'died' }, aiYearRange())],
+      ['Calves not weaned yet', ()=> ({ search_on:'calvings', weaning_status:'not_weaned' })],
+      ['Heaviest birth weights this year', ()=> Object.assign({ search_on:'calvings', sort_by:'birth_weight', sort_dir:'desc', limit:10 }, aiYearRange())] ] },
+    { name: 'Weaning', qs: [
+      ['Weaned this year, heaviest first', ()=> Object.assign({ search_on:'calvings', weaning_status:'weaned', sort_by:'weaning_weight', sort_dir:'desc' }, aiYearWeaned())],
+      ['Best gain per day, top 10', ()=> ({ search_on:'calvings', weaning_status:'weaned', sort_by:'gain_per_day', sort_dir:'desc', limit:10 })],
+      ['Weaned over 600 lbs', ()=> ({ search_on:'calvings', weaning_weight_min:600, sort_by:'weaning_weight', sort_dir:'desc' })],
+      ['Lightest weaning weights, top 10', ()=> ({ search_on:'calvings', weaning_status:'weaned', sort_by:'weaning_weight', sort_dir:'asc', limit:10 })],
+      ['Gain under 2 lbs a day', ()=> ({ search_on:'calvings', gain_max:2, sort_by:'gain_per_day', sort_dir:'asc' })],
+      ['Calves not weaned yet', ()=> ({ search_on:'calvings', weaning_status:'not_weaned' })] ] },
+    { name: 'Health', qs: [
+      ['Repeat treatments this year', ()=> Object.assign({ search_on:'cows', treatment_count_min:2 }, aiYearRange())],
+      ['Treated for the same reason twice this year', ()=> Object.assign({ search_on:'cows', treatment_count_min:2, same_reason:true }, aiYearRange())],
+      ['Treated this year', ()=> Object.assign({ search_on:'treatments' }, aiYearRange())],
+      ['Treated in the last 30 days', ()=> ({ search_on:'treatments', date_from: aiDaysAgo(30) })],
+      ['Cull list', ()=> ({ search_on:'cows', cull_list:true })] ] },
+    { name: 'Weights', qs: [
+      ['Cows missing a weight this year', ()=> Object.assign({ search_on:'cows', missing_weight:true }, aiYearRange())],
+      ['Cows never weighed', ()=> ({ search_on:'cows', missing_weight:true })],
+      ['Heaviest cows, top 10', ()=> ({ search_on:'weights', sort_by:'weight', sort_dir:'desc', limit:10 })],
+      ['Over 1,200 lbs', ()=> ({ search_on:'weights', weight_min:1200, sort_by:'weight', sort_dir:'desc' })],
+      ['Weighed this year', ()=> Object.assign({ search_on:'weights' }, aiYearRange())] ] }
+  ];
+  let aiTopicOpen = null;
+  function setAiQuickOpen(open){
+    document.getElementById('aiQuickBody').classList.toggle('hidden', !open);
+    document.getElementById('aiQuickToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.getElementById('aiQuickArrow').innerHTML = open ? '&#9652;' : '&#9662;';
+  }
+  // columns you picked for the kind of search (cow or calf) are applied unless the question named its own
+  function aiApplySavedColumns(out, f){
+    if(out.table) return;
+    const so = f && f.search_on;
+    if(!(out.kind === 'calf' || so === 'cows' || !so)) return;
+    const saved = aiSavedCols(out.kind);
+    if(saved.length) out.table = aiBuildTable(out, saved);
+  }
+  function runQuickSearch(label, filters, item){
+    aiSearchSetMsg('');
+    document.getElementById('aiSearchBox').value = label;
+    lastAiSearchQuestion = label;
+    const out = aiSearchRun(filters);
+    if(item && item.cols && item.cols.length) out.table = aiBuildTable(out, item.cols);   // the columns kept with this saved search
+    else aiApplySavedColumns(out, filters);
+    currentAiItemId = item ? item.id : null;
+    renderAiSearch(out, filters, aiLocalPills(filters));
+    const target = document.getElementById('aiSearchInterp');
+    if(target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function buildAiQuick(){
+    const tileStyle = 'text-align:left;min-height:74px;box-sizing:border-box;background:#FFFFFF;border-radius:12px;padding:10px 12px;cursor:pointer;box-shadow:0 2px 5px rgba(43,38,32,.16);';
+    document.getElementById('aiQuickGrid').innerHTML = AI_QUICK_TILES.map((q, i)=>{
+      const col = q.danger ? 'var(--barn)' : '#0C5A8E';
+      const border = q.danger ? 'var(--barn)' : '#2E88C4';
+      return `<button type="button" class="ai-tile" data-i="${i}" style="${tileStyle}border:2px solid ${border};"><div style="font-family:Arial,sans-serif;font-weight:700;font-size:14px;color:${col};">${escapeHtml(q.label)}</div><div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:3px;line-height:1.3;">${escapeHtml(q.sub)}</div></button>`;
+    }).join('');
+    drawAiTopics();
+  }
+  function drawAiTopics(){
+    document.getElementById('aiTopicRow').innerHTML = AI_TOPICS.map((tp, i)=>{
+      const on = aiTopicOpen === i;
+      return `<button type="button" class="ai-topic" data-i="${i}" aria-expanded="${on}" style="min-height:46px;box-sizing:border-box;font-family:Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:12px;border:2px solid #0274BA;border-radius:10px;cursor:pointer;background:${on ? '#0274BA' : '#FFFFFF'};color:${on ? '#FFFFFF' : '#0C5A8E'};">${escapeHtml(tp.name)}</button>`;
+    }).join('');
+    const list = document.getElementById('aiTopicList');
+    if(aiTopicOpen === null){ list.classList.add('hidden'); list.innerHTML = ''; return; }
+    const tp = AI_TOPICS[aiTopicOpen];
+    list.classList.remove('hidden');
+    list.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#455B3D;font-weight:700;margin-bottom:8px;">${escapeHtml(tp.name)}: tap a question to run it</div>` +
+      tp.qs.map((q, j)=> `<button type="button" class="ai-topic-q" data-t="${aiTopicOpen}" data-j="${j}" style="width:100%;min-height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;font-family:Georgia,serif;font-size:15px;color:#2B2620;background:#FFFFFF;border:2px solid #3C9142;border-radius:10px;padding:8px 12px;margin-bottom:8px;cursor:pointer;"><span>${escapeHtml(q[0])}</span><span style="color:#3C9142;font-size:18px;">&#9654;</span></button>`).join('');
+  }
+  // ----- Saved and Recent (typed searches, kept with the filters the AI returned) -----
+  const AI_ITEMS_KEY = 'champ_ai_items_v1';
+  function aiItems(){ try{ const v = JSON.parse(localStorage.getItem(AI_ITEMS_KEY) || '[]'); return Array.isArray(v) ? v : []; }catch(e){ return []; } }
+  function aiWriteItems(list){ try{ localStorage.setItem(AI_ITEMS_KEY, JSON.stringify(list)); }catch(e){} }
+  function aiRememberSearch(label, filters){
+    const list = aiItems();
+    const key = JSON.stringify(filters);
+    let item = list.find(x=> x.label === label && JSON.stringify(x.filters) === key);
+    if(item){ list.splice(list.indexOf(item), 1); }
+    else item = { id: 'q' + Date.now() + Math.floor(Math.random() * 1000), label, filters, cols: null, saved: false };
+    item.at = new Date().toISOString();
+    list.unshift(item);
+    // keep every saved search, and the 10 newest others
+    let others = 0;
+    const kept = list.filter(x=> x.saved || (++others <= 10));
+    aiWriteItems(kept);
+    return item.id;
+  }
+  function aiCurrentItem(){ return currentAiItemId ? aiItems().find(x=> x.id === currentAiItemId) : null; }
+  function aiSetItemCols(keys){
+    if(!currentAiItemId) return;
+    const list = aiItems(), item = list.find(x=> x.id === currentAiItemId);
+    if(!item) return;
+    item.cols = keys && keys.length ? keys : null;
+    aiWriteItems(list);
+  }
+  function aiToggleSaved(id){
+    const list = aiItems(), item = list.find(x=> x.id === id);
+    if(!item) return;
+    item.saved = !item.saved;
+    if(item.saved && id === currentAiItemId && lastAiRender && lastAiRender.out.table) item.cols = lastAiRender.out.table.keys;   // keep the columns on screen
+    aiWriteItems(list);
+    aiRenderItemLists();
+    aiUpdateSaveButton();
+  }
+  function aiUpdateSaveButton(){
+    const btn = document.getElementById('aiSearchSaveBtn');
+    const item = aiCurrentItem();
+    btn.classList.toggle('hidden', !item);
+    if(item) btn.innerHTML = item.saved ? '&#9733; Saved' : '&#9734; Save';
+  }
+  function aiWhen(iso){
+    if(!iso) return '';
+    const d = new Date(iso), now = new Date();
+    const day = x => x.getFullYear() * 10000 + (x.getMonth() + 1) * 100 + x.getDate();
+    const y = new Date(now); y.setDate(y.getDate() - 1);
+    if(day(d) === day(now)) return 'Today';
+    if(day(d) === day(y)) return 'Yesterday';
+    return fmtDateShort(aiIso(d));
+  }
+  function aiRenderItemLists(){
+    const items = aiItems();
+    const row = it=> `<div style="display:flex;align-items:center;background:#FFFFFF;border:2px solid #c9bfa4;border-radius:10px;margin-bottom:8px;min-height:54px;box-sizing:border-box;">
+      <button type="button" class="ai-item-run" data-id="${escapeHtml(it.id)}" style="flex:1;min-width:0;text-align:left;background:none;border:none;padding:8px 10px;cursor:pointer;min-height:50px;"><div style="font-family:Georgia,serif;font-size:15px;color:#2B2620;overflow-wrap:anywhere;">${escapeHtml(it.label)}</div><div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:2px;">${escapeHtml(aiWhen(it.at))}${it.cols ? ' · your columns' : ''}</div></button>
+      <button type="button" class="ai-item-retype" data-id="${escapeHtml(it.id)}" aria-label="Put this question back in the typing box" style="width:44px;min-height:50px;background:none;border:none;font-size:20px;color:#2E88C4;cursor:pointer;">&#8599;</button>
+      <button type="button" class="ai-item-star" data-id="${escapeHtml(it.id)}" aria-label="${it.saved ? 'Remove from saved' : 'Save this search'}" style="width:44px;min-height:50px;background:none;border:none;font-size:26px;color:${it.saved ? '#C9A227' : '#bdb39a'};cursor:pointer;">${it.saved ? '&#9733;' : '&#9734;'}</button>
+    </div>`;
+    const saved = items.filter(x=> x.saved), recent = items.filter(x=> !x.saved);
+    document.getElementById('aiSavedBox').classList.toggle('hidden', saved.length === 0);
+    document.getElementById('aiRecentBox').classList.toggle('hidden', recent.length === 0);
+    document.getElementById('aiSavedList').innerHTML = saved.map(row).join('');
+    document.getElementById('aiRecentList').innerHTML = recent.map(row).join('');
+  }
+  buildAiQuick();
+  aiRenderItemLists();
+  document.getElementById('aiQuickToggle').addEventListener('click', ()=> setAiQuickOpen(document.getElementById('aiQuickBody').classList.contains('hidden')));
+  document.getElementById('aiQuickBox').addEventListener('click', e=>{
+    const tile = e.target.closest('.ai-tile');
+    if(tile){ const q = AI_QUICK_TILES[Number(tile.dataset.i)]; aiTopicOpen = null; drawAiTopics(); runQuickSearch(q.label, q.f()); return; }
+    const topic = e.target.closest('.ai-topic');
+    if(topic){ const i = Number(topic.dataset.i); aiTopicOpen = aiTopicOpen === i ? null : i; drawAiTopics(); return; }
+    const tq = e.target.closest('.ai-topic-q');
+    if(tq){ const q = AI_TOPICS[Number(tq.dataset.t)].qs[Number(tq.dataset.j)]; aiTopicOpen = null; drawAiTopics(); runQuickSearch(q[0], q[1]()); return; }
+    const run = e.target.closest('.ai-item-run');
+    if(run){
+      const list = aiItems(), item = list.find(x=> x.id === run.dataset.id);
+      if(!item) return;
+      item.at = new Date().toISOString();   // moves it to the top of Recent
+      list.splice(list.indexOf(item), 1); list.unshift(item); aiWriteItems(list);
+      runQuickSearch(item.label, item.filters, item);
+      return;
+    }
+    const retype = e.target.closest('.ai-item-retype');
+    if(retype){
+      const item = aiItems().find(x=> x.id === retype.dataset.id);
+      if(item){ document.getElementById('aiSearchBox').value = item.label; window.scrollTo(0, 0); showToast('Added. Tap Search.'); }
+      return;
+    }
+    const star = e.target.closest('.ai-item-star');
+    if(star){ aiToggleSaved(star.dataset.id); return; }
+  });
+  document.getElementById('aiSearchSaveBtn').addEventListener('click', ()=>{ if(currentAiItemId) aiToggleSaved(currentAiItemId); });
 
   function toggleAiSearchHelp(){
     const panel = document.getElementById('aiSearchHelpPanel');
@@ -11996,6 +12234,9 @@
     bar.style.display = results.length === 0 ? 'none' : 'flex';
     document.getElementById('aiSearchColsBtn').textContent = out.table ? `Columns (${out.table.keys.length})` : 'Columns';
     document.getElementById('aiSearchColsResetBtn').classList.toggle('hidden', !out.table);
+    aiUpdateSaveButton();
+    setAiQuickOpen(false);
+    aiRenderItemLists();
 
     document.getElementById('aiSearchPills').innerHTML = aiSearchPillsHtml(pills, filters);
     document.getElementById('aiSearchInterp').classList.remove('hidden');
@@ -12107,10 +12348,8 @@
       }
       lastAiSearchQuestion = question;
       const out = aiSearchRun(data.filters || {});
-      if(!out.table && (out.kind === 'calf' || (data.filters && data.filters.search_on === 'cows') || !(data.filters && data.filters.search_on))){
-        const saved = aiSavedCols(out.kind);
-        if(saved.length) out.table = aiBuildTable(out, saved);   // the columns you picked last time
-      }
+      aiApplySavedColumns(out, data.filters || {});
+      currentAiItemId = aiRememberSearch(question, data.filters || {});
       renderAiSearch(out, data.filters || {}, data.pills || []);
     }catch(e){
       console.error(e);
@@ -12135,7 +12374,9 @@
     lastAiSearchEntries = [];
     lastAiSearchTable = null;
     lastAiRender = null;
+    currentAiItemId = null;
     document.getElementById('aiSearchColsBar').style.display = 'none';
+    setAiQuickOpen(true);
     lastAiSearchQuestion = '';
   }
   function textAiSearchResults(){
