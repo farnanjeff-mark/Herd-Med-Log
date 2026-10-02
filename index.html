@@ -224,6 +224,9 @@
   #advancedSearchView details.adv-fold[open] > summary{background:#E6F1FB;border-bottom:1.5px solid #2E88C4;}
   #advancedSearchView .adv-fold-body{padding:12px 14px 4px;}
   #advancedSearchView .adv-badge{background:#3C9142;color:#FFFFFF;border-radius:20px;font-size:12px;font-weight:700;padding:2px 9px;display:none;}
+  #advancedSearchView .adv-mode-btn{padding:11px 8px;font-size:15px;}
+  #advancedSearchView .row2 > .adv-mode-btn{flex:1;min-width:0;}
+  #advancedSearchView .adv-mode-btn.on{background:#0C447C;border-color:#0C447C;color:#FFFFFF;}
   #advancedSearchView .adv-note{font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin:-2px 0 10px;}
 
   .fab{
@@ -953,7 +956,7 @@
       </div>
     </details>
 
-    <details class="adv-fold">
+    <details class="adv-fold" id="advFoldWeaning">
       <summary>Weaning<span class="adv-badge"></span></summary>
       <div class="adv-fold-body">
       <div class="field">
@@ -1078,11 +1081,20 @@
       </div>
     </details>
 
+    <div class="section-label">Show &amp; Columns</div>
+    <div class="row2" style="margin-bottom:10px;">
+      <button class="btn btn-outline adv-mode-btn on" id="advModeCow">Cows</button>
+      <button class="btn btn-outline adv-mode-btn" id="advModeCalf">Calves</button>
+    </div>
+    <button class="btn btn-outline btn-full" id="advColumnsBtn" style="margin-bottom:10px;">Columns</button>
+    <div id="advColumnsPanel" class="hidden" style="margin-bottom:10px;"></div>
+
     <button class="btn btn-barn btn-full" id="runAdvancedSearchBtn" style="margin-bottom:8px;">Search</button>
     <button class="btn btn-outline btn-full" id="clearAdvancedSearchBtn" style="margin-bottom:16px;">Clear Filters</button>
 
     <div id="advancedSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
     <div id="advancedSearchReportTable" style="margin-bottom:14px;"></div>
+    <div id="advancedSearchLinesTable" style="margin-bottom:14px;"></div>
     <button class="btn btn-outline btn-full hidden" id="advancedSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
     <button class="btn btn-outline btn-full hidden" id="advancedSearchTextBtn" style="margin-bottom:16px;">📱 Text List</button>
     <div id="advancedSearchResults"></div>
@@ -10718,6 +10730,208 @@
     ].filter(Boolean);
     return dates.some(d=> (!fromStr || d >= fromStr) && (!toStr || d <= toStr));
   }
+
+  // ===================== ADVANCED SEARCH: COLUMNS =====================
+  // Each column is one small piece of information shown in the results table, Print and Text List.
+  const ADV_COLS_KEY = 'champ_adv_cols_v1';
+  const ADV_COL_DEFAULTS = {
+    cow:  ['lot','cow_group','owner','status'],
+    calf: ['c_date','c_sex','c_sire','c_bw','w_wt','w_gain']
+  };
+  const advFmtD = d => d ? fmtDateShort(d) : '';
+  const advYes = v => v ? 'Yes' : '';
+  function advLatestBy(arr, key){ return [...arr].sort((a,b)=> (b[key]||'').localeCompare(a[key]||''))[0] || null; }
+  function advCalfOutcome(cv){
+    if(cv.calf_outcome === 'bull') return 'Kept as bull';
+    if(cv.promoted_to_cow_number) return 'Kept as #' + cv.promoted_to_cow_number;
+    return cv.calf_outcome === 'sold' ? 'Sold' : cv.calf_outcome === 'died' ? 'Died' : 'Active';
+  }
+  function advStat(cv, field){
+    const st = weaningStats(cv);
+    if(field === 'wt') return st ? String(st.weight) : '';
+    if(field === 'age') return st && st.age != null ? String(st.age) : '';
+    if(field === 'gain') return st && st.gain != null ? st.gain.toFixed(2) : '';
+    return '';
+  }
+  // x = the extra facts worked out once per cow (latest breeding, latest calf, etc.)
+  const ADV_COL_GROUPS = {
+    cow: [
+      { id:'cow', label:'Cow', cols:[
+        { key:'lot', label:'Location', get:(r)=> r.c.lot || '' },
+        { key:'owner', label:'Owner', get:(r)=> r.c.owner || '' },
+        { key:'cow_group', label:'Group', get:(r)=> r.c.cow_group || '' },
+        { key:'season', label:'Herd Season', get:(r)=> r.c.herd_season || '' },
+        { key:'status', label:'Status', get:(r)=> r.c.status || 'Active' },
+        { key:'tag', label:'Tag Needed', get:(r)=> advYes(r.c.tag_needed) },
+        { key:'flag', label:'Flagged', get:(r)=> advYes(r.c.needs_entry) },
+        { key:'calvedp', label:'Calved', get:(r)=> advYes(r.c.calved) },
+        { key:'sell', label:'Sell', get:(r)=> advYes(r.c.sell) },
+        { key:'pregbt', label:'Preg BT', get:(r)=> advYes(r.c.preg_bt) },
+        { key:'cull', label:'Cull Reasons', get:(r,x)=> x.cull ? x.cull().join('; ') : '' }
+      ]},
+      { id:'breeding', label:'Breeding (latest record)', cols:[
+        { key:'b_date', label:'Breed Date', get:(r,x)=> x.br ? advFmtD(x.br.breed_date) : '' },
+        { key:'b_to', label:'Bred To', get:(r,x)=> x.br ? (x.br.bred_to || '') : '' },
+        { key:'b_nat', label:'Natural Sire', get:(r,x)=> x.br ? (x.br.natural_sire || '') : '' },
+        { key:'b_method', label:'Method', get:(r,x)=> x.br ? (x.br.pregnancy_method || '') : '' },
+        { key:'b_check', label:'Preg Check', get:(r,x)=> !x.br ? '' : (x.br.pregnancy_status === 'Open' ? 'Open' : x.br.pregnancy_status === 'Bred' ? 'Bred (preg)' : 'Not checked') },
+        { key:'b_due', label:'Due Date', get:(r,x)=> x.br && x.br.pregnancy_status !== 'Open' ? advFmtD(x.br.expected_due_date) : '' },
+        { key:'b_open', label:'Open Date', get:(r,x)=> x.br && x.br.pregnancy_status === 'Open' ? advFmtD(x.br.open_date) : '' }
+      ]},
+      { id:'health', label:'Health', cols:[
+        { key:'h_all', label:'Treatments (all)', get:(r,x)=> String(x.tr.length) },
+        { key:'h_12', label:'Treatments (12 mo)', get:(r,x)=> String(x.tr.filter(t=> t.date >= x.cut).length) },
+        { key:'h_last', label:'Last Treatment', get:(r,x)=> x.lt ? advFmtD(x.lt.date) : '' },
+        { key:'h_med', label:'Last Medicine', get:(r,x)=> x.lt ? (x.lt.medicine || '') : '' },
+        { key:'h_reason', label:'Last Reason', get:(r,x)=> x.lt ? (x.lt.reason || '') : '' }
+      ]},
+      { id:'weights', label:'Weights', cols:[
+        { key:'w_last', label:'Latest Weight (lbs)', get:(r,x)=> x.lw ? String(x.lw.weight) : '' },
+        { key:'w_lastdate', label:'Weigh Date', get:(r,x)=> x.lw ? advFmtD(x.lw.weigh_date) : '' },
+        { key:'w_count', label:'# Weights', get:(r,x)=> String(x.wr.length) }
+      ]},
+      { id:'lastcalf', label:'Her latest calf', cols:[
+        { key:'l_count', label:'Calves (total)', get:(r,x)=> String(x.ncv) },
+        { key:'l_date', label:'Calving Date', get:(r,x)=> x.lc ? advFmtD(x.lc.calving_date) : '' },
+        { key:'l_sex', label:'Calf Sex', get:(r,x)=> x.lc ? calfSexLabel(x.lc.calf_sex) : '' },
+        { key:'l_sire', label:'Sire', get:(r,x)=> x.lc ? (x.lc.sire || '') : '' },
+        { key:'l_bw', label:'Birth Wt (lbs)', get:(r,x)=> x.lc && x.lc.birth_weight != null ? String(x.lc.birth_weight) : '' },
+        { key:'l_assist', label:'Birth Assist', get:(r,x)=> x.lc ? (x.lc.birth_assist || '') : '' },
+        { key:'l_outcome', label:'Outcome', get:(r,x)=> x.lc ? advCalfOutcome(x.lc) : '' },
+        { key:'l_wdate', label:'Weaning Date', get:(r,x)=> x.lc ? advFmtD(x.lc.weaning_date) : '' },
+        { key:'l_ww', label:'Weaning Wt (lbs)', get:(r,x)=> x.lc ? advStat(x.lc, 'wt') : '' },
+        { key:'l_age', label:'Age at Weaning (days)', get:(r,x)=> x.lc ? advStat(x.lc, 'age') : '' },
+        { key:'l_gain', label:'Gain / Day (lbs)', get:(r,x)=> x.lc ? advStat(x.lc, 'gain') : '' }
+      ]}
+    ],
+    calf: [
+      { id:'calf', label:'Calf', cols:[
+        { key:'c_date', label:'Calving Date', get:(r)=> advFmtD(r.cv.calving_date) },
+        { key:'c_sex', label:'Sex', get:(r)=> calfSexLabel(r.cv.calf_sex) },
+        { key:'c_sire', label:'Sire', get:(r)=> r.cv.sire || '' },
+        { key:'c_bw', label:'Birth Wt (lbs)', get:(r)=> r.cv.birth_weight != null ? String(r.cv.birth_weight) : '' },
+        { key:'c_assist', label:'Birth Assist', get:(r)=> r.cv.birth_assist || '' },
+        { key:'c_outcome', label:'Outcome', get:(r)=> advCalfOutcome(r.cv) },
+        { key:'c_agenow', label:'Age Now (days)', get:(r)=> String(daysBetween(r.cv.calving_date, todayLocal())) },
+        { key:'c_treat', label:'Calf Treatments', get:(r)=> String(calfTreatments.filter(t=> t.calving_id === r.cv.id).length) }
+      ]},
+      { id:'weaning', label:'Weaning', cols:[
+        { key:'w_weaned', label:'Weaned?', get:(r)=> (weaningStats(r.cv) || r.cv.weaning_date) ? 'Yes' : 'No' },
+        { key:'w_date', label:'Weaning Date', get:(r)=> advFmtD(r.cv.weaning_date) },
+        { key:'w_wt', label:'Weaning Wt (lbs)', get:(r)=> advStat(r.cv, 'wt') },
+        { key:'w_age', label:'Age at Weaning (days)', get:(r)=> advStat(r.cv, 'age') },
+        { key:'w_gain', label:'Gain / Day (lbs)', get:(r)=> advStat(r.cv, 'gain') }
+      ]},
+      { id:'mother', label:'Mother', cols:[
+        { key:'m_lot', label:'Location', get:(r)=> r.c.lot || '' },
+        { key:'m_owner', label:'Owner', get:(r)=> r.c.owner || '' },
+        { key:'m_group', label:'Group', get:(r)=> r.c.cow_group || '' },
+        { key:'m_status', label:'Status', get:(r)=> r.c.status || 'Active' },
+        { key:'m_season', label:'Herd Season', get:(r)=> r.c.herd_season || '' }
+      ]}
+    ]
+  };
+  function advAllCols(mode){ return ADV_COL_GROUPS[mode].reduce((a,g)=> a.concat(g.cols), []); }
+  let advMode = 'cow';
+  let advHasRun = false;
+  let advCols = { cow: ADV_COL_DEFAULTS.cow.slice(), calf: ADV_COL_DEFAULTS.calf.slice() };
+  try{
+    const saved = JSON.parse(localStorage.getItem(ADV_COLS_KEY) || 'null');
+    if(saved){
+      ['cow','calf'].forEach(m=>{
+        if(Array.isArray(saved[m])){
+          const valid = advAllCols(m).map(c=>c.key);
+          const keep = saved[m].filter(k=> valid.includes(k));
+          if(keep.length) advCols[m] = keep;
+        }
+      });
+    }
+  }catch(e){}
+  function advSaveCols(){ try{ localStorage.setItem(ADV_COLS_KEY, JSON.stringify(advCols)); }catch(e){} }
+  function advColumnSelected(mode, key){ return advCols[mode].includes(key); }
+  function advActiveColumns(mode){ return advAllCols(mode).filter(c=> advCols[mode].includes(c.key)); }
+  function advBuildCowFacts(c, cullFn){
+    const num = c.number;
+    const cvs = calvingsFor(num);
+    const tr = recordsFor(num).filter(t=> t.medicine);
+    const wr = weightsFor(num).filter(w=> w.weight != null);
+    return {
+      br: advLatestBy(breedingFor(num), 'breed_date'),
+      lc: advLatestBy(cvs, 'calving_date'),
+      ncv: cvs.length,
+      tr, lt: advLatestBy(tr, 'date'),
+      wr, lw: advLatestBy(wr, 'weigh_date'),
+      cut: addDays(todayLocal(), -365).toISOString().slice(0,10),
+      cull: advColumnSelected('cow','cull') ? (()=> cullFn(c)) : null
+    };
+  }
+  function advUpdateColumnsBtn(){
+    const b = document.getElementById('advColumnsBtn');
+    if(b) b.textContent = `Columns (${advCols[advMode].length} chosen) ${document.getElementById('advColumnsPanel').classList.contains('hidden') ? '▾' : '▴'}`;
+  }
+  function renderAdvColumnsPanel(){
+    const el = document.getElementById('advColumnsPanel');
+    if(!el) return;
+    const openIds = new Set([...el.querySelectorAll('details[open]')].map(d=> d.dataset.g));
+    const sel = advCols[advMode];
+    el.innerHTML = `<div class="adv-note" style="margin-top:0;">Tick the columns to show. Cow # is always shown first. These choices are kept on this phone.</div>` +
+      ADV_COL_GROUPS[advMode].map(g=>{
+        const n = g.cols.filter(c=> sel.includes(c.key)).length;
+        return `<details class="adv-fold adv-colgroup" data-g="${g.id}"${openIds.has(g.id) ? ' open' : ''}>
+          <summary>${g.label}<span class="adv-badge" style="display:${n ? 'inline-block' : 'none'};">${n} shown</span></summary>
+          <div class="adv-fold-body">${g.cols.map(c=>`
+            <div class="field" style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" class="adv-col-check" id="advCol_${c.key}" data-key="${c.key}" ${sel.includes(c.key) ? 'checked' : ''} style="width:20px;height:20px;"/>
+              <label style="margin:0;" for="advCol_${c.key}">${escapeHtml(c.label)}</label>
+            </div>`).join('')}
+          </div>
+        </details>`;
+      }).join('') +
+      `<button class="btn btn-outline btn-full" id="advColsResetBtn" style="margin-top:2px;">Reset columns to default</button>`;
+    advUpdateColumnsBtn();
+  }
+  function setAdvMode(mode){
+    if(mode !== 'cow' && mode !== 'calf') return;
+    const changed = mode !== advMode;
+    advMode = mode;
+    document.getElementById('advModeCow').classList.toggle('on', mode === 'cow');
+    document.getElementById('advModeCalf').classList.toggle('on', mode === 'calf');
+    renderAdvColumnsPanel();
+    if(changed && advHasRun) runAdvancedSearch();
+  }
+  (function wireAdvColumns(){
+    document.getElementById('advModeCow').addEventListener('click', ()=> setAdvMode('cow'));
+    document.getElementById('advModeCalf').addEventListener('click', ()=> setAdvMode('calf'));
+    document.getElementById('advColumnsBtn').addEventListener('click', ()=>{
+      document.getElementById('advColumnsPanel').classList.toggle('hidden');
+      advUpdateColumnsBtn();
+    });
+    const panel = document.getElementById('advColumnsPanel');
+    panel.addEventListener('change', (e)=>{
+      if(!e.target.classList.contains('adv-col-check')) return;
+      const keys = [...panel.querySelectorAll('.adv-col-check')].filter(cb=> cb.checked).map(cb=> cb.dataset.key);
+      advCols[advMode] = advAllCols(advMode).map(c=>c.key).filter(k=> keys.includes(k));
+      advSaveCols();
+      renderAdvColumnsPanel();
+      if(advHasRun) runAdvancedSearch();
+    });
+    panel.addEventListener('click', (e)=>{
+      if(e.target.id !== 'advColsResetBtn') return;
+      advCols[advMode] = ADV_COL_DEFAULTS[advMode].slice();
+      advSaveCols();
+      renderAdvColumnsPanel();
+      if(advHasRun) runAdvancedSearch();
+    });
+    // using any Weaning filter switches the results to Calves (you can switch back with the Cows button)
+    document.getElementById('advFoldWeaning').addEventListener('change', (e)=>{
+      const t = e.target;
+      const hasValue = t.type === 'checkbox' ? t.checked : t.value !== '';
+      if(hasValue && advMode !== 'calf') setAdvMode('calf');
+    });
+    renderAdvColumnsPanel();
+  })();
+  let lastAdvancedSearchView = { mode:'cow', headers:[], rows:[] }; // for print + text list
+
   let lastAdvancedSearchEntries = []; // for print
   let lastAdvancedSearchCows = []; // for print
   function runAdvancedSearch(){
@@ -10857,7 +11071,7 @@
     }
     // cull list: yearly average weaning weights are worked out once per search
     const yearAvg = {};
-    if(cullUsed){
+    if(cullUsed || advColumnSelected('cow','cull')){
       const sums = {};
       calvings.forEach(k=>{
         const w = Number(k.weaning_weight);
@@ -11003,17 +11217,53 @@
     lastAdvancedSearchEntries = reportEntries;
     lastAdvancedSearchCows = results;
 
+    advHasRun = true;
+    const mode = advMode;
     const countEl = document.getElementById('advancedSearchCount');
     const tableEl = document.getElementById('advancedSearchReportTable');
+    const linesEl = document.getElementById('advancedSearchLinesTable');
     const printBtn = document.getElementById('advancedSearchPrintBtn');
     const textBtn = document.getElementById('advancedSearchTextBtn');
     const resultsEl = document.getElementById('advancedSearchResults');
-    countEl.textContent = `${results.length} cow${results.length!==1?'s':''} matched`;
-    printBtn.classList.toggle('hidden', results.length === 0);
-    textBtn.classList.toggle('hidden', results.length === 0);
 
-    if(reportEntries.length > 0){
-      tableEl.innerHTML = `
+    // one row per cow (Cows) or one row per calf (Calves)
+    let rowObjs = [];
+    if(mode === 'calf'){
+      results.forEach(c=>{
+        [...matchingCalvingRecords(c.number)].sort((a,b)=> b.calving_date.localeCompare(a.calving_date)).forEach(cv=> rowObjs.push({ c, cv }));
+      });
+    } else {
+      rowObjs = results.map(c=> ({ c }));
+    }
+    const colDefs = advActiveColumns(mode);
+    const firstHead = mode === 'calf' ? 'Mother #' : 'Cow #';
+    const headers = [firstHead, ...colDefs.map(d=> d.label)];
+    const bodyRows = rowObjs.map(r=>{
+      const x = mode === 'cow' ? advBuildCowFacts(r.c, cullReasonsFor) : null;
+      return [ '#' + r.c.number, ...colDefs.map(d=> d.get(r, x)) ];
+    });
+    lastAdvancedSearchView = { mode, headers, rows: bodyRows };
+
+    countEl.textContent = mode === 'calf'
+      ? `${rowObjs.length} ${rowObjs.length===1?'calf':'calves'} from ${results.length} cow${results.length!==1?'s':''}`
+      : `${results.length} cow${results.length!==1?'s':''} matched`;
+    printBtn.classList.toggle('hidden', rowObjs.length === 0);
+    textBtn.classList.toggle('hidden', rowObjs.length === 0);
+
+    const th = 'text-align:left;padding:8px;';
+    if(rowObjs.length > 0){
+      tableEl.innerHTML = `<div style="overflow-x:auto;"><table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+        <thead><tr style="background:#EFE8D8;">${headers.map(h=>`<th style="${th}">${escapeHtml(h)}</th>`).join('')}</tr></thead>
+        <tbody>${bodyRows.map((cells,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${cells.map(v=>`<td style="padding:8px;">${escapeHtml(v)}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table></div>`;
+    } else {
+      tableEl.innerHTML = '';
+    }
+
+    // the line-by-line "what matched" list stays under the table (Cows view)
+    if(mode === 'cow' && reportEntries.length > 0){
+      linesEl.innerHTML = `
+        <div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0C447C;margin:6px 0 8px;">Matching records</div>
         <div style="overflow-x:auto;">
           <table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
             <thead><tr style="background:#EFE8D8;"><th style="text-align:left;padding:8px;">Date</th><th style="text-align:left;padding:8px;">Cow #</th><th style="text-align:left;padding:8px;">Type</th><th style="text-align:left;padding:8px;">Details</th></tr></thead>
@@ -11028,20 +11278,26 @@
               `).join('')}
             </tbody>
           </table>
-        </div>
-      `;
-    } else if(results.length > 0){
-      tableEl.innerHTML = plainCowListTableHtml(results);   // no dated lines for this search: plain tappable cow list
+        </div>`;
     } else {
-      tableEl.innerHTML = '';
+      linesEl.innerHTML = '';
     }
 
     if(results.length === 0){
       resultsEl.innerHTML = '<p class="empty">No cows match those filters.</p>';
       return;
     }
+    if(rowObjs.length === 0){
+      resultsEl.innerHTML = '<p class="empty">No calves match those filters.</p>';
+      return;
+    }
     resultsEl.innerHTML = '';
     wireTableRowsToCards(tableEl, showAdvancedSearch, '← Back to Search Results');
+    if(linesEl.innerHTML){
+      wireTableRowsToCards(linesEl, showAdvancedSearch, '← Back to Search Results');
+      const dupHint = linesEl.previousElementSibling;
+      if(dupHint && dupHint.classList && dupHint.classList.contains('card-tap-hint') && dupHint !== tableEl.previousElementSibling) dupHint.remove();
+    }
   }
   function applyAdvancedSearchDatePreset(){
     const preset = document.getElementById('advSearchDatePreset').value;
@@ -11061,7 +11317,7 @@
   }
   // green "N set" tag on each folded section that has a filter filled in
   function updateAdvancedSearchBadges(){
-    document.querySelectorAll('#advancedSearchView details.adv-fold').forEach(d=>{
+    document.querySelectorAll('#advancedSearchView details.adv-fold:not(.adv-colgroup)').forEach(d=>{
       let n = 0;
       d.querySelectorAll('input, select').forEach(el=>{
         if(el.id === 'advSearchDatePreset') return;
@@ -11094,12 +11350,16 @@
     document.getElementById('advSearchDatePreset').value = '';
     document.getElementById('advSearchDateFrom').value = '';
     document.getElementById('advSearchDateTo').value = '';
-    document.querySelectorAll('#advancedSearchView details.adv-fold input, #advancedSearchView details.adv-fold select').forEach(el=>{
+    document.querySelectorAll('#advancedSearchView details.adv-fold:not(.adv-colgroup) input, #advancedSearchView details.adv-fold:not(.adv-colgroup) select').forEach(el=>{
       if(el.type === 'checkbox') el.checked = false;
       else if(el.tagName === 'SELECT') el.selectedIndex = 0;
       else el.value = '';
     });
     updateAdvancedSearchBadges();
+    advHasRun = false;
+    setAdvMode('cow');
+    document.getElementById('advancedSearchLinesTable').innerHTML = '';
+    lastAdvancedSearchView = { mode:'cow', headers:[], rows:[] };
     document.getElementById('advancedSearchCount').textContent = '';
     document.getElementById('advancedSearchReportTable').innerHTML = '';
     document.getElementById('advancedSearchPrintBtn').classList.add('hidden');
@@ -11109,26 +11369,28 @@
     lastAdvancedSearchCows = [];
   }
   function textAdvancedSearchResults(){
-    if(lastAdvancedSearchCows.length === 0){ showToast('Nothing to send'); return; }
-    const sorted = [...lastAdvancedSearchCows].sort((a,b)=> a.number.localeCompare(b.number, undefined, {numeric:true}));
-    const entries = sorted.map(c=>({ id: c.number, line: '#' + c.number }));
-    sendTextListModal('Advanced Search Results', entries, textAdvancedSearchResults);
+    const v = lastAdvancedSearchView;
+    if(v.rows.length === 0){ showToast('Nothing to send'); return; }
+    const entries = v.rows.map((cells,i)=>{
+      const first = (v.mode === 'calf' ? 'Mother ' : '') + cells[0];
+      const rest = cells.slice(1).map((val,j)=> val ? `${v.headers[j+1]}: ${val}` : '').filter(Boolean);
+      return { id: i, line: rest.length ? `${first} — ${rest.join(' · ')}` : first };
+    });
+    sendTextListModal('Advanced Search ' + (v.mode === 'calf' ? 'Calves' : 'Cows'), entries, textAdvancedSearchResults);
   }
   function printAdvancedSearchResults(){
-    if(lastAdvancedSearchCows.length === 0){ showToast('Nothing to print'); return; }
-    const cowRowsHtml = lastAdvancedSearchCows.map((c,i)=>`
-      <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
-        <td style="padding:6px;">#${escapeHtml(c.number)}</td>
-        <td style="padding:6px;">${escapeHtml(c.lot||'')}</td>
-        <td style="padding:6px;">${escapeHtml(c.cow_group||'')}</td>
-        <td style="padding:6px;">${escapeHtml(c.owner||'')}</td>
-        <td style="padding:6px;">${escapeHtml(c.status||'Active')}</td>
-      </tr>
-    `).join('');
-    const activityHtml = lastAdvancedSearchEntries.length > 0 ? `
+    const v = lastAdvancedSearchView;
+    if(v.rows.length === 0){ showToast('Nothing to print'); return; }
+    const pth = 'text-align:left;padding:6px;border-bottom:2px solid #000;';
+    const mainTable = `
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr>${v.headers.map(h=>`<th style="${pth}">${escapeHtml(h)}</th>`).join('')}</tr></thead>
+        <tbody>${v.rows.map((cells,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${cells.map(val=>`<td style="padding:6px;">${escapeHtml(val)}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>`;
+    const activityHtml = (v.mode === 'cow' && lastAdvancedSearchEntries.length > 0) ? `
       <h3 style="margin:20px 0 8px;font-size:14px;">Matching Activity</h3>
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Date</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Type</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Details</th></tr></thead>
+        <thead><tr><th style="${pth}">Date</th><th style="${pth}">Cow #</th><th style="${pth}">Type</th><th style="${pth}">Details</th></tr></thead>
         <tbody>${lastAdvancedSearchEntries.map((e,i)=>`
           <tr style="background:${i%2===0?'#fff':'#F7F2E6'};">
             <td style="padding:6px;">${e.date ? fmtDateShort(e.date) : ''}</td>
@@ -11139,14 +11401,12 @@
         `).join('')}</tbody>
       </table>
     ` : '';
+    const countText = v.mode === 'calf' ? `${v.rows.length} ${v.rows.length===1?'calf':'calves'}` : `${v.rows.length} cow${v.rows.length!==1?'s':''} matched`;
     document.getElementById('printListOutput').innerHTML = `
       <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
         <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Advanced Search</h2>
-        <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${lastAdvancedSearchCows.length} cow${lastAdvancedSearchCows.length!==1?'s':''} matched</div>
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-          <thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Cow #</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Location</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Group</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Owner</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000;">Status</th></tr></thead>
-          <tbody>${cowRowsHtml}</tbody>
-        </table>
+        <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${countText}</div>
+        ${mainTable}
         ${activityHtml}
       </div>
     `;
