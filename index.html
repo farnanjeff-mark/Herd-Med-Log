@@ -917,6 +917,14 @@
           <option value="none">Not checked yet</option>
         </select>
       </div>
+      <div class="field">
+        <label>Calving</label>
+        <select id="advSearchNotCalved">
+          <option value="">Any</option>
+          <option value="yes">Not calved yet</option>
+        </select>
+        <div class="adv-note">Active cows that were bred, are not marked Open, and have no calf recorded since their last breeding date.</div>
+      </div>
       <button class="btn btn-outline btn-full adv-done" style="margin:4px 0 12px;">Done</button>
     </div>
     <div class="adv-panel only-cow" data-panel="meds">
@@ -11098,7 +11106,7 @@
   const ADV_FIELD_NAMES = {
     advSearchLocation:'Location', advSearchOwner:'Owner', advSearchGroup:'Group', advSearchHerdSeason:'Herd season', advSearchStatus:'Status',
     advSearchTagNeeded:'Tag needed', advSearchFlagged:'Flagged', advSearchCalvedPending:'Calved pending', advSearchOutOfCow:'Out of cow #', advSearchMotherNum:'Mother #',
-    advSearchBredTo:'Bred to', advSearchMethod:'Method', advSearchNaturalSire:'Natural sire', advSearchOpenOnly:'Open cows', advSearchPregBtOnly:'Preg BT', advSearchSellOnly:'Sell', advSearchPregCheck:'Preg check',
+    advSearchBredTo:'Bred to', advSearchMethod:'Method', advSearchNaturalSire:'Natural sire', advSearchOpenOnly:'Open cows', advSearchPregBtOnly:'Preg BT', advSearchSellOnly:'Sell', advSearchPregCheck:'Preg check', advSearchNotCalved:'Not calved yet',
     advSearchMedicine:'Medicine', advSearchReason:'Reason', advSearchMinTimes:'Times treated', advSearchSameReason:'Same reason',
     advSearchCowWtMin:'Weight', advSearchCowWtMax:'Weight', advSearchMissingWeight:'Missing weight',
     advSearchCalfSire:'Sire', advSearchCalfSex:'Sex', advSearchBirthAssist:'Birth assist', advSearchCalfOutcome:'Outcome', advSearchWeightMin:'Birth weight', advSearchWeightMax:'Birth weight',
@@ -11289,6 +11297,7 @@
     const flagged = document.getElementById('advSearchFlagged').checked;
     const calvedPending = document.getElementById('advSearchCalvedPending').checked;
     const pregCheck = document.getElementById('advSearchPregCheck').value;
+    const notCalved = document.getElementById('advSearchNotCalved').value;
     const sameReason = document.getElementById('advSearchSameReason').checked;
     let minTimes = numVal('advSearchMinTimes');
     if(minTimes == null && sameReason) minTimes = 2;
@@ -11398,6 +11407,15 @@
       if(owner){ if(owner==='__undefined__' ? c.owner : c.owner !== owner) return false; }
       if(group){ if(group==='__undefined__' ? c.cow_group : c.cow_group !== group) return false; }
       if(herdSeason){ if(herdSeason==='__undefined__' ? c.herd_season : c.herd_season !== herdSeason) return false; }
+      if(notCalved){
+        // active cow, bred, last breeding not marked Open, and no calf recorded on/after her last breeding date
+        if(!isActiveStatus(c)) return false;
+        const brs = breedingFor(c.number).filter(b=> b.breed_date).sort((a,b)=> String(a.breed_date).localeCompare(String(b.breed_date)));
+        if(!brs.length) return false;
+        const last = brs[brs.length - 1];
+        if(last.pregnancy_status === 'Open') return false;
+        if(calvings.some(k=> k.cow_number === c.number && k.calving_date && String(k.calving_date) >= String(last.breed_date))) return false;
+      }
       if(pregBtOnly && !c.preg_bt) return false;
       if(sellOnly && !c.sell) return false;
       if(status){ if(status === 'Active' ? !isActiveStatus(c) : c.status !== status) return false; }
