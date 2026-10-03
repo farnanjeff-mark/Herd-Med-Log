@@ -238,7 +238,10 @@
   /* ---- Guided Search ---- */
   #guidedSearchView .gs-step{font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:4px;}
   #guidedSearchView .gs-q{font-family:Arial,sans-serif;font-size:20px;font-weight:700;color:#0C447C;margin:4px 0 12px;}
-  #guidedSearchView .gs-back{font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0C447C;margin:2px 0 8px;cursor:pointer;display:inline-block;padding:6px 0;}
+  #guidedSearchView .gs-back{font-family:Arial,sans-serif;font-size:17px;font-weight:700;color:#0C447C;background:#fff;border:2px solid #2E88C4;border-radius:8px;min-height:44px;padding:0 18px;margin:0;cursor:pointer;display:inline-flex;align-items:center;flex:none;}
+  #guidedSearchView .gs-steprow{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+  #guidedSearchView .gs-adv{background:#E8F1F9;border:2px dashed #2E88C4;border-radius:8px;padding:14px;color:#0C447C;font-weight:700;font-size:16px;text-align:center;margin-top:6px;cursor:pointer;font-family:Arial,sans-serif;}
+  #guidedSearchView .gs-adv span{display:block;font-weight:400;font-size:12px;color:#6b6350;margin-top:3px;}
   #guidedSearchView .gs-cat{background:#fff;border:2px solid #2E88C4;border-radius:8px;min-height:76px;margin-bottom:10px;padding:10px 14px;display:flex;align-items:center;gap:14px;cursor:pointer;font-family:Arial,sans-serif;}
   #guidedSearchView .gs-cat .ic{font-size:30px;}
   #guidedSearchView .gs-cat b{display:block;color:#0C447C;font-size:17px;}
@@ -8175,7 +8178,7 @@
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
   document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
   document.getElementById('advancedSearchBtn').addEventListener('click', ()=> openSearchPage('cow'));
-  document.getElementById('calfSearchBtn').addEventListener('click', ()=> openSearchPage('calf'));
+  document.getElementById('calfSearchBtn').addEventListener('click', ()=>{ gsCalfOnly = true; showGuidedSearch(); });
   document.getElementById('advancedSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('runAdvancedSearchBtn').addEventListener('click', runAdvancedSearch);
   document.getElementById('advSearchDatePreset').addEventListener('change', applyAdvancedSearchDatePreset);
@@ -11902,15 +11905,22 @@
       }).join('')}</div>`).join(''));
     gsPut(html);
   }
+  let gsCalfOnly = false;
   function gsRenderCats(){
+    const all = [
+      ['calving','🍼','Calving',"Who calved, who hasn't, birth details"],
+      ['weaning','⚖️','Weaning','Weaned, not weaned, weights and gain'],
+      ['breeding','🐄','Breeding','Due soon, open, bred to, preg checks'],
+      ['health','💉','Health','Treatments and repeat treatments'],
+      ['weights','📏','Weights','Cow weights, missing a weight']
+    ];
+    const list = gsCalfOnly ? all.slice(0,2) : all;
     document.getElementById('gsBody').innerHTML = `
-      <div class="gs-q">What do you want to look at?</div>
-      <div class="gs-cat" data-cat="calving"><div class="ic">🍼</div><div><b>Calving</b><span>Who calved, who hasn't, birth details</span></div></div>
-      <div class="gs-cat" data-cat="weaning"><div class="ic">⚖️</div><div><b>Weaning</b><span>Weaned, not weaned, weights and gain</span></div></div>
-      <div class="gs-cat" data-cat="breeding"><div class="ic">🐄</div><div><b>Breeding</b><span>Due soon, open, bred to, preg checks</span></div></div>
-      <div class="gs-cat" data-cat="health"><div class="ic">💉</div><div><b>Health</b><span>Treatments and repeat treatments</span></div></div>
-      <div class="gs-cat" data-cat="weights"><div class="ic">📏</div><div><b>Weights</b><span>Cow weights, missing a weight</span></div></div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:6px;">Need something else? Use Advanced Search.</div>`;
+      <div class="gs-q">What do you want to look at?</div>` +
+      list.map(c=> `<div class="gs-cat" data-cat="${c[0]}"><div class="ic">${c[1]}</div><div><b>${c[2]}</b><span>${c[3]}</span></div></div>`).join('') +
+      (gsCalfOnly
+        ? `<div class="gs-adv" data-adv="1">Advanced Calf Search ›<span>the full list of options</span></div>`
+        : `<div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:6px;">Need something else? Use Advanced Search.</div>`);
   }
   function gsRender(){
     const step = document.getElementById('gsStep'), bar = document.getElementById('gsBar'), host = document.getElementById('gsResultsHost'), body = document.getElementById('gsBody');
@@ -11921,11 +11931,11 @@
       gsRenderCats();
       bar.innerHTML = '<button class="btn btn-outline" id="gsSavedBtn">★ Saved reports</button>';
     } else if(gs.step === 'q'){
-      step.innerHTML = `<span class="gs-back" id="gsBackCat">‹ Back</span> &nbsp; Step 2 of 3 — ${GS_NAMES[gs.cat] || ''}`;
+      step.innerHTML = `<div class="gs-steprow"><span class="gs-back" id="gsBackCat">‹ Back</span><span>Step 2 of 3 — ${GS_NAMES[gs.cat] || ''}</span></div>`;
       gsRenderQuestions();
       bar.innerHTML = '<button class="btn btn-outline" id="gsClearBtn">Clear</button><button class="btn btn-green" id="gsGoBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">Show Results ›</button>';
     } else {
-      step.innerHTML = `<span class="gs-back" id="gsBackQ">‹ Change answers</span> &nbsp; Step 3 of 3`;
+      step.innerHTML = `<div class="gs-steprow"><span class="gs-back" id="gsBackQ">‹ Change answers</span><span>Step 3 of 3</span></div>`;
       bar.innerHTML = '<button class="btn btn-outline" id="gsChangeBtn">Change answers</button><button class="btn" id="gsSaveBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">💾 Save</button>';
     }
     window.scrollTo(0,0);
@@ -11985,7 +11995,7 @@
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     fabAdd.classList.add('hidden'); fabAddEquipment.classList.add('hidden');
     guidedSearchView.classList.remove('hidden');
-    setHeaderTitle('Guided', 'Search');
+    setHeaderTitle(gsCalfOnly && ['calving','weaning'].includes(gs.cat) ? 'Calf' : 'Guided', 'Search');
     gs.step = 'res';
     gsRender();
   }
@@ -11994,7 +12004,8 @@
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     fabAdd.classList.add('hidden'); fabAddEquipment.classList.add('hidden');
     guidedSearchView.classList.remove('hidden');
-    setHeaderTitle('Guided', 'Search');
+    if(gsCalfOnly && !['calving','weaning'].includes(gs.cat)){ gs.cat = ''; gs.step = 'cat'; }
+    setHeaderTitle(gsCalfOnly ? 'Calf' : 'Guided', 'Search');
     if(gs.step === 'res') gs.step = 'q';
     if(!gs.cat) gs.step = 'cat';
     gsRender();
@@ -12097,12 +12108,13 @@
     gsRun();
   }
   (function wireGuided(){
-    document.getElementById('guidedSearchBtn').addEventListener('click', showGuidedSearch);
+    document.getElementById('guidedSearchBtn').addEventListener('click', ()=>{ gsCalfOnly = false; showGuidedSearch(); });
     document.getElementById('guidedHomeBtn').addEventListener('click', ()=>{ showHome(); });
     guidedSearchView.addEventListener('click', (e)=>{
       const t = e.target;
       const cat = t.closest('[data-cat]');
       if(cat){ gsResetAnswers(cat.dataset.cat); gsRender(); return; }
+      if(t.closest('[data-adv]')){ openSearchPage('calf'); return; }
       if(t.closest('#gsBackCat')){ gs.step = 'cat'; gsRender(); return; }
       if(t.closest('#gsBackQ') || t.closest('#gsChangeBtn')){ gs.step = 'q'; gsRender(); return; }
       if(t.closest('#gsSavedBtn')){ showSavedReports(); return; }
