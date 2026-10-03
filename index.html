@@ -242,16 +242,26 @@
   #guidedSearchView .gs-cat .ic{font-size:30px;}
   #guidedSearchView .gs-cat b{display:block;color:#0C447C;font-size:17px;}
   #guidedSearchView .gs-cat span{font-size:12px;color:#6b6350;}
-  #guidedSearchView .gs-box{background:#fff;border:2px solid #2E88C4;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-family:Arial,sans-serif;}
-  #guidedSearchView .gs-box.done{border-color:#3C9142;}
-  #guidedSearchView .gs-qq{font-size:15px;font-weight:700;color:#0C447C;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;}
-  #guidedSearchView .gs-qq i{font-style:normal;font-weight:400;font-size:12px;color:#6b6350;}
+  #guidedSearchView .gs-banner{background:linear-gradient(135deg,#2E88C4,#0C5A8E);border-radius:14px;padding:4px 16px;box-shadow:0 1px 2px rgba(43,38,32,.10),0 6px 16px rgba(43,38,32,.14);margin-bottom:14px;font-family:Arial,sans-serif;}
+  #guidedSearchView .gs-box{border-bottom:1px solid rgba(255,255,255,.28);}
+  #guidedSearchView .gs-box:last-child{border-bottom:0;}
+  #guidedSearchView .gs-row{display:flex;align-items:center;gap:10px;padding:12px 0;cursor:pointer;-webkit-user-select:none;user-select:none;}
+  #guidedSearchView .gs-qq{flex:1;min-width:0;}
+  #guidedSearchView .gs-qq b{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.82);font-weight:700;}
+  #guidedSearchView .gs-qq span{display:block;font-size:16px;font-weight:700;color:#fff;margin-top:3px;overflow-wrap:anywhere;}
+  #guidedSearchView .gs-qq span.none{font-weight:400;color:rgba(255,255,255,.7);}
+  #guidedSearchView .gs-chev{font-size:24px;line-height:1;color:rgba(255,255,255,.85);transition:transform .15s;}
+  #guidedSearchView .gs-box.open .gs-chev{transform:rotate(90deg);}
+  #guidedSearchView .gs-panel{display:none;background:#fff;border-radius:10px;padding:10px 12px 12px;margin:0 0 12px;}
+  #guidedSearchView .gs-box.open .gs-panel{display:block;}
+  #guidedSearchView .gs-hint{font-size:12px;color:#6b6350;margin-bottom:4px;}
   #guidedSearchView .gs-sub{font-size:11px;font-weight:700;color:#6b6350;text-transform:uppercase;margin:8px 0 5px;}
   #guidedSearchView .gs-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
   #guidedSearchView .gs-opt{position:relative;background:#E8F1F9;border:2px solid #2E88C4;color:#0C447C;border-radius:6px;aspect-ratio:1/1;padding:3px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.15;font-size:11.5px;font-weight:700;cursor:pointer;overflow:hidden;word-break:break-word;overflow-wrap:anywhere;hyphens:auto;-webkit-hyphens:auto;-webkit-user-select:none;user-select:none;box-sizing:border-box;min-width:0;}
   #guidedSearchView .gs-opt.sm{font-size:10px;}
   #guidedSearchView .gs-opt[data-t="m"].on::after,#guidedSearchView .gs-opt[data-t="c"].on::after{content:'✓';position:absolute;top:1px;right:4px;font-size:11px;line-height:1;}
   #guidedSearchView .gs-opt.on{background:#3C9142;border-color:#3C9142;color:#fff;}
+  #guidedSearchView .gs-opt[data-n]::before{content:attr(data-n);position:absolute;top:2px;left:3px;width:15px;height:15px;border-radius:50%;background:#fff;color:#3C9142;font-size:10px;font-weight:700;line-height:15px;text-align:center;}
   #guidedSearchView .gs-dates{display:flex;gap:8px;margin-top:8px;}
   #guidedSearchView .gs-dates label{font-size:11px;color:#6b6350;display:block;margin-bottom:2px;}
   #guidedSearchView .gs-sum{background:#E8F1F9;border:2px solid #2E88C4;border-radius:6px;padding:8px 10px;font-family:Arial,sans-serif;font-size:13px;color:#0C447C;margin-bottom:10px;}
@@ -11634,11 +11644,17 @@
     printBtn.classList.toggle('hidden', rowObjs.length === 0);
     textBtn.classList.toggle('hidden', rowObjs.length === 0);
 
-    const th = 'text-align:left;padding:8px;';
+    // short, wrapping column headings on screen only (print and text copy keep the full names)
+    const SHORT_HEAD = { 'Weaning Wt (lbs)':'Wean Wt', 'Age at Weaning (days)':'Wean Age', 'Gain / Day (lbs)':'Gain / Day', 'Birth Wt (lbs)':'Birth Wt',
+      'Latest Weight (lbs)':'Last Wt', 'Weaning Date':'Wean Date', 'Calving Date':'Calved', 'Herd Season':'Season', 'Treatments (all)':'Treats',
+      'Treatments (12 mo)':'Treats 12 mo', 'Last Treatment':'Last Treat', 'Last Medicine':'Last Med', 'Calves (total)':'Calves', 'Birth Assist':'Assist',
+      'Age Now (days)':'Age Now', 'Calf Treatments':'Calf Treats', 'Tag Needed':'Tag', 'Natural Sire':'Nat Sire', 'Preg Check':'Preg Chk',
+      'Weigh Date':'Wt Date', '# Weights':'# Wts', 'Breed Date':'Bred', 'Weaned?':'Weaned' };
+    const th = 'text-align:left;padding:6px 5px;font-size:11px;line-height:1.15;white-space:normal;vertical-align:bottom;';
     if(rowObjs.length > 0){
       tableEl.innerHTML = `<div style="overflow-x:auto;"><table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
-        <thead><tr style="background:#EFE8D8;">${headers.map(h=>`<th style="${th}">${escapeHtml(h)}</th>`).join('')}</tr></thead>
-        <tbody>${bodyRows.map((cells,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${cells.map(v=>`<td style="padding:8px;${rowLevels[i] >= 0 ? 'border-top:' + DIV_SCREEN[Math.min(rowLevels[i], 2)] + ';' : ''}">${escapeHtml(v)}</td>`).join('')}</tr>`).join('')}</tbody>
+        <thead><tr style="background:#EFE8D8;">${headers.map(h=>`<th style="${th}">${escapeHtml(SHORT_HEAD[h] || h)}</th>`).join('')}</tr></thead>
+        <tbody>${bodyRows.map((cells,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${cells.map(v=>`<td style="padding:8px 5px;${rowLevels[i] >= 0 ? 'border-top:' + DIV_SCREEN[Math.min(rowLevels[i], 2)] + ';' : ''}">${escapeHtml(v)}</td>`).join('')}</tr>`).join('')}</tbody>
       </table></div>`;
     } else {
       tableEl.innerHTML = '';
@@ -11720,10 +11736,10 @@
   function gsBlankAnswers(){
     return { when:'', pickFrom:'', pickTo:'', kind:'', dueDays:'14', location:[], owner:[], group:[], season:[],
              sex:'', assist:'', sire:[], bredTo:[], method:'', medicine:[], reason:[], minTimes:'', same:false,
-             wtMin:'', wtMax:'', sort:'', rev:false, cols:[] };
+             wtMin:'', wtMax:'', sort:'', sorts:[], rev:false, cols:[] };
   }
   function gsResetAnswers(cat){
-    gs = { step:'q', cat, a: gsBlankAnswers() };
+    gs = { step:'q', cat, a: gsBlankAnswers() }; gsOpenRow = null;
     gsApplyDefaults();
   }
   function gsVariant(){
@@ -11752,6 +11768,7 @@
     const v = gsVariant();
     gs.a.sort = GS_SORTS[v][0][0];
     if(v === 'breeding' && gs.a.kind === 'due') gs.a.sort = 'due';
+    gs.a.sorts = [gs.a.sort];
     gs.a.rev = false;
     gs.a.cols = GS_COLS[v].slice();
   }
@@ -11776,9 +11793,28 @@
     const a = gs.a;
     return pairs.map(([val,label])=> `<div class="gs-opt ${a[key]===val?'on':''}" data-k="${key}" data-v="${val}" data-t="s">${escapeHtml(label)}</div>`).join('');
   }
-  function gsBox(title, hint, done, inner){
-    return `<div class="gs-box ${done?'done':''}"><div class="gs-qq"><span>${title}</span><i>${hint||''}</i></div>${inner}</div>`;
+  // the sorts picked, in order (older saved reports only have one)
+  function gsSortList(a, v){
+    const valid = (GS_SORTS[v || gsVariant()] || []).map(x=> x[0]);
+    let list = (a.sorts && a.sorts.length) ? a.sorts.slice() : (a.sort ? [a.sort] : []);
+    list = list.filter(k=> valid.includes(k));
+    return list.slice(0,3);
   }
+  let gsOpenRow = null, gsBoxIdx = 0;
+  function gsAnswerText(inner){
+    const out = []; const re = /class="gs-opt on[^"]*"[^>]*>([^<]*)</g; let m;
+    while((m = re.exec(inner))) out.push(m[1]);
+    if(out.length > 3) return out.length + ' chosen';
+    return out.join(', ');
+  }
+  function gsBox(title, hint, done, inner, ansOverride){
+    const idx = gsBoxIdx++;
+    const open = (gsOpenRow === null) ? idx === 0 : gsOpenRow === title;
+    const ans = ansOverride !== undefined ? ansOverride : gsAnswerText(inner);
+    const shown = ans ? `<span>${ans}</span>` : `<span class="none">${/skip/.test(hint||'') ? 'Any' : 'Tap to choose'}</span>`;
+    return `<div class="gs-box ${open?'open':''}"><div class="gs-row" data-row="${escapeHtml(title)}"><div class="gs-qq"><b>${title}</b>${shown}</div><div class="gs-chev">&rsaquo;</div></div><div class="gs-panel">${hint?`<div class="gs-hint">${hint}</div>`:''}${inner}</div></div>`;
+  }
+  function gsPut(html){ document.getElementById('gsBody').innerHTML = `<div class="gs-banner">${html}</div>`; }
   function gsDatesBox(title, pairs){
     const a = gs.a;
     return gsBox(title,'',!!a.when,
@@ -11799,11 +11835,12 @@
   function gsRenderQuestions(){
     try{ populateAdvancedSearchDropdowns(); }catch(e){}
     const a = gs.a, v = gsVariant();
+    gsBoxIdx = 0;
     let html = '';
     if(gs.cat === 'calving'){
       html += gsBox('What do you want to see?','',!!a.kind,
         `<div class="gs-opts">${gsSingleChips('kind',[['calved','Cows that calved'],['notcalved','Not calved yet']])}</div>`);
-      if(!a.kind){ document.getElementById('gsBody').innerHTML = html; return; }
+      if(!a.kind){ gsPut(html); return; }
     }
     if(v === 'weaning') html += gsDatesBox('When were they weaned?',[['today','Today'],['week','This week'],['notyet','Not weaned yet'],['all','All weaned'],['pick','Pick dates']]);
     if(v === 'calved') html += gsDatesBox('When did they calve?',[['today','Today'],['week','This week'],['month','This month'],['any','Any time'],['pick','Pick dates']]);
@@ -11811,7 +11848,7 @@
       html += gsBox('What do you want to see?','',!!a.kind,
         `<div class="gs-opts">${gsSingleChips('kind',[['expecting','Bred, due to calve'],['due','Due soon'],['open','Open'],['unchecked','Not preg-checked yet']])}</div>`+
         (a.kind==='due' ? `<div class="gs-sub">Due within</div><div class="gs-opts">${gsSingleChips('dueDays',[['7','7 days'],['14','14 days'],['30','30 days']])}</div>` : ''));
-      if(!a.kind){ document.getElementById('gsBody').innerHTML = html; return; }
+      if(!a.kind){ gsPut(html); return; }
     }
     if(v === 'health'){
       html += gsDatesBox('When were they treated?',[['today','Today'],['week','This week'],['month','This month'],['any','Any time'],['pick','Pick dates']]);
@@ -11826,7 +11863,7 @@
     if(v === 'weights'){
       html += gsBox('What do you want to see?','',!!a.kind,
         `<div class="gs-opts">${gsSingleChips('kind',[['has','Cows with a weight'],['missing','Missing a weight']])}</div>`);
-      if(!a.kind){ document.getElementById('gsBody').innerHTML = html; return; }
+      if(!a.kind){ gsPut(html); return; }
       if(a.kind === 'has'){
         html += gsDatesBox('When were they weighed?',[['today','Today'],['week','This week'],['month','This month'],['any','Any time'],['pick','Pick dates']]);
         html += gsBox('Weight between…','skip for any', !!(a.wtMin !== '' || a.wtMax !== ''),
@@ -11849,16 +11886,18 @@
       html += gsBox('Only certain breedings?','skip for all', !!(a.bredTo.length || a.method), b);
     }
     const sorts = GS_SORTS[v];
-    html += gsBox('How should I sort them?','', true,
-      `<div class="gs-opts">${sorts.map(([k,label])=> `<div class="gs-opt ${a.sort===k?'on':''}${gsSm(label)}" data-k="sort" data-v="${k}" data-t="s">${label}</div>`).join('')}</div>`+
-      `<div class="gs-sub">Order</div><div class="gs-opts"><div class="gs-opt ${a.rev?'on':''}" data-k="rev" data-t="flag">Reverse the order</div></div>`);
+    const sList = gsSortList(a, v);
+    const sortAns = sList.map(k=> (sorts.find(x=> x[0] === k) || [k,k])[1]).join(' › ');
+    html += gsBox('How should I sort them?','tap up to 3 — the first one is the main sort', true,
+      `<div class="gs-opts">${sorts.map(([k,label])=>{ const n = sList.indexOf(k) + 1; return `<div class="gs-opt ${n?'on':''}${gsSm(label)}" ${n?`data-n="${n}"`:''} data-k="sort" data-v="${k}" data-t="s">${label}</div>`; }).join('')}</div>`+
+      `<div class="gs-sub">Order</div><div class="gs-opts"><div class="gs-opt ${a.rev?'on':''}" data-k="rev" data-t="flag">Reverse the order</div></div>`, sortAns);
     const groupsDef = ADV_COL_GROUPS[gsMode()];
     html += gsBox('Which columns?','tick any', a.cols.length > 0,
       groupsDef.map(g=> `<div class="gs-sub">${escapeHtml(g.label)}</div><div class="gs-opts">${g.cols.map(c=>{
         const on = a.cols.includes(c.key);
         return `<div class="gs-opt ${on?'on':''}${gsSm(c.label)}" data-k="cols" data-v="${c.key}" data-t="c">${escapeHtml(c.label)}</div>`;
       }).join('')}</div>`).join(''));
-    document.getElementById('gsBody').innerHTML = html;
+    gsPut(html);
   }
   function gsRenderCats(){
     document.getElementById('gsBody').innerHTML = `
@@ -11922,8 +11961,8 @@
     if(a.reason && a.reason.length) parts.push('for ' + a.reason.join(', '));
     if(a.minTimes) parts.push('treated ' + a.minTimes + '+ times' + (a.same ? ' (same reason)' : ''));
     if(v === 'weights' && (a.wtMin !== '' || a.wtMax !== '')) parts.push((a.wtMin !== '' ? a.wtMin : '0') + '–' + (a.wtMax !== '' ? a.wtMax : 'up') + ' lbs');
-    const so = (GS_SORTS[v] || []).find(x=> x[0] === a.sort);
-    if(so) parts.push('sorted by ' + so[1].toLowerCase());
+    const sNames = gsSortList(a, v).map(k=> ((GS_SORTS[v] || []).find(x=> x[0] === k) || [k,k])[1].toLowerCase());
+    if(sNames.length) parts.push('sorted by ' + sNames.join(', then '));
     return parts.join(' · ');
   }
   function gsTakeResults(){
@@ -12011,10 +12050,12 @@
       if(v === 'calved') setV('advSearchBirthAssist', a.assist);
     }
     // sort
-    const so = GS_SORTS[v].find(x=> x[0] === a.sort) || GS_SORTS[v][0];
-    setV('advSortField1', so[0]);
-    const dir = a.rev ? (so[2] === 'desc' ? 'asc' : 'desc') : so[2];
-    setV('advSortDir1', dir);
+    let sl = gsSortList(a, v); if(!sl.length) sl = [GS_SORTS[v][0][0]];
+    [1,2,3].forEach(n=>{
+      const so = GS_SORTS[v].find(x=> x[0] === sl[n-1]);
+      setV('advSortField' + n, so ? so[0] : '');
+      if(so) setV('advSortDir' + n, a.rev ? (so[2] === 'desc' ? 'asc' : 'desc') : so[2]);
+    });
     // several-at-once picks
     guidedMulti.location = a.location.slice(); guidedMulti.owner = a.owner.slice(); guidedMulti.group = a.group.slice();
     guidedMulti.season = a.season.slice();
@@ -12068,6 +12109,14 @@
         saveAdvReportModal({ type:'guided_search', settings:{ guided:true, cat: gs.cat, a: JSON.parse(JSON.stringify(gs.a)) } });
         return;
       }
+      const row = t.closest('.gs-row');
+      if(row){
+        const title = row.dataset.row;
+        const isOpen = row.parentElement.classList.contains('open');
+        gsOpenRow = isOpen ? '__none__' : title;
+        const y0 = window.scrollY; gsRenderQuestions(); window.scrollTo(0, y0);
+        return;
+      }
       const opt = t.closest('.gs-opt');
       if(!opt) return;
       const k = opt.dataset.k, val = opt.dataset.v, kind = opt.dataset.t, a = gs.a;
@@ -12075,7 +12124,14 @@
       else if(kind === 'c'){ const i = a.cols.indexOf(val); if(i >= 0) a.cols.splice(i,1); else a.cols.push(val); }
       else if(kind === 'flag'){ a[k] = !a[k]; }
       else if(kind === 's'){
-        if(k === 'sort') a.sort = val;
+        if(k === 'sort'){
+          const list = gsSortList(a);
+          const i = list.indexOf(val);
+          if(i >= 0){ if(list.length > 1) list.splice(i,1); }
+          else if(list.length < 3) list.push(val);
+          else showToast('Up to 3 sorts. Tap a numbered one to remove it.');
+          a.sorts = list; a.sort = list[0] || val;
+        }
         else if(k === 'kind'){ if(a.kind !== val){ a.kind = val; gsApplyDefaults(); } }
         else if(k === 'when' || k === 'dueDays') a[k] = val;
         else a[k] = (a[k] === val) ? '' : val;
