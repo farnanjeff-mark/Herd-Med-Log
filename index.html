@@ -233,6 +233,29 @@
   #advancedSearchView[data-page="calf"] .only-cow{display:none !important;}
   #advancedSearchView[data-page="cow"] .only-calf{display:none !important;}
 
+
+  /* ---- Guided Search ---- */
+  #guidedSearchView .gs-step{font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:4px;}
+  #guidedSearchView .gs-q{font-family:Arial,sans-serif;font-size:20px;font-weight:700;color:#0C447C;margin:4px 0 12px;}
+  #guidedSearchView .gs-back{font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0C447C;margin:2px 0 8px;cursor:pointer;display:inline-block;padding:6px 0;}
+  #guidedSearchView .gs-cat{background:#fff;border:2px solid #2E88C4;border-radius:8px;min-height:76px;margin-bottom:10px;padding:10px 14px;display:flex;align-items:center;gap:14px;cursor:pointer;font-family:Arial,sans-serif;}
+  #guidedSearchView .gs-cat .ic{font-size:30px;}
+  #guidedSearchView .gs-cat b{display:block;color:#0C447C;font-size:17px;}
+  #guidedSearchView .gs-cat span{font-size:12px;color:#6b6350;}
+  #guidedSearchView .gs-box{background:#fff;border:2px solid #2E88C4;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-family:Arial,sans-serif;}
+  #guidedSearchView .gs-box.done{border-color:#3C9142;}
+  #guidedSearchView .gs-qq{font-size:15px;font-weight:700;color:#0C447C;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;}
+  #guidedSearchView .gs-qq i{font-style:normal;font-weight:400;font-size:12px;color:#6b6350;}
+  #guidedSearchView .gs-sub{font-size:11px;font-weight:700;color:#6b6350;text-transform:uppercase;margin:8px 0 5px;}
+  #guidedSearchView .gs-opts{display:flex;flex-wrap:wrap;gap:6px;}
+  #guidedSearchView .gs-opt{background:#E8F1F9;border:2px solid #2E88C4;color:#0C447C;border-radius:6px;min-height:38px;padding:0 12px;display:flex;align-items:center;font-size:13px;font-weight:700;cursor:pointer;-webkit-user-select:none;user-select:none;}
+  #guidedSearchView .gs-opt.on{background:#3C9142;border-color:#3C9142;color:#fff;}
+  #guidedSearchView .gs-dates{display:flex;gap:8px;margin-top:8px;}
+  #guidedSearchView .gs-dates label{font-size:11px;color:#6b6350;display:block;margin-bottom:2px;}
+  #guidedSearchView .gs-sum{background:#E8F1F9;border:2px solid #2E88C4;border-radius:6px;padding:8px 10px;font-family:Arial,sans-serif;font-size:13px;color:#0C447C;margin-bottom:10px;}
+  #guidedSearchView .gs-bar{position:sticky;bottom:0;display:flex;gap:8px;padding:10px 0 4px;margin-top:6px;background:#F7F2E6;}
+  #guidedSearchView .gs-bar .btn{flex:1;height:46px;justify-content:center;}
+  #guidedSearchView #advancedSearchSummary{display:none;}
   /* ---- Saved Reports ---- */
   #savedReportsView .sr-folder{background:#FFFFFF;border:2px solid #2E88C4;border-radius:8px;margin-bottom:10px;overflow:hidden;}
   #savedReportsView .sr-folder-head{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;background:#E8F1F9;}
@@ -706,6 +729,7 @@
     <button class="btn btn-outline btn-full" id="reportsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
 
     <div class="section-label">Search</div>
+    <button class="btn btn-nav-tool btn-full" id="guidedSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🧭</span>&nbsp;&nbsp;Guided Search</button>
     <button class="btn btn-nav-tool btn-full" id="advancedSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🔍</span>&nbsp;&nbsp;Advanced Search</button>
     <button class="btn btn-nav-tool btn-full" id="calfSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🐮</span>&nbsp;&nbsp;Calf Search</button>
     <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
@@ -807,7 +831,7 @@
       <button class="adv-tile only-calf" data-tile="calf" data-panel="calv"><span class="t">Calf</span><span class="c">Any</span></button>
       <button class="adv-tile only-calf" data-tile="wean" data-panel="wean"><span class="t">Weaning</span><span class="c">Any</span></button>
       <button class="adv-tile only-calf" data-tile="mother" data-panel="herd"><span class="t">Mother</span><span class="c">Any</span></button>
-      <button class="adv-tile" data-tile="dates" data-panel="dates"><span class="t">Dates</span><span class="c">Any</span></button>
+      <button class="adv-tile" data-tile="dates" data-panel="dates"><span class="t"><span class="only-cow">Dates</span><span class="only-calf">Born between</span></span><span class="c">Any</span></button>
       <button class="adv-tile" data-tile="sort" data-panel="sort"><span class="t">Sort</span><span class="c">Any</span></button>
       <button class="adv-tile" data-tile="cols" data-panel="cols"><span class="t">Columns</span><span class="c">Any</span></button>
     </div>
@@ -1057,6 +1081,7 @@
           <input type="date" id="advSearchWeanTo"/>
         </div>
       </div>
+      <button type="button" class="btn btn-outline btn-full adv-today" data-from="advSearchWeanFrom" data-to="advSearchWeanTo" style="height:44px;margin-bottom:10px;">Weaned today</button>
       <div class="adv-note">Looks at each cow's calves. Gain per day = (weaning weight - birth weight) / days; calves with no birth weight are skipped for gain.</div>
       <button class="btn btn-outline btn-full adv-done" style="margin:4px 0 12px;">Done</button>
     </div>
@@ -1080,7 +1105,7 @@
       <button class="btn btn-outline btn-full adv-done" style="margin:4px 0 12px;">Done</button>
     </div>
     <div class="adv-panel" data-panel="dates">
-      <div class="adv-panel-title">Date Range (optional)</div>
+      <div class="adv-panel-title"><span class="only-cow">Date Range (optional)</span><span class="only-calf">Born Between (optional)</span></div>
       <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-bottom:10px;"><span class="only-cow">Matches cows with any activity in this range.</span><span class="only-calf">Matches calves born in this range.</span></div>
       <div class="field">
         <label>Quick Range</label>
@@ -1102,6 +1127,7 @@
           <input type="date" id="advSearchDateTo"/>
         </div>
       </div>
+      <button type="button" class="btn btn-outline btn-full adv-today" data-from="advSearchDateFrom" data-to="advSearchDateTo" data-preset="advSearchDatePreset" style="height:44px;margin-bottom:10px;">Today only</button>
 
       <button class="btn btn-outline btn-full adv-done" style="margin:4px 0 12px;">Done</button>
     </div>
@@ -1157,6 +1183,7 @@
     </div>
     <button class="btn btn-full" id="saveAdvReportBtn" style="margin-bottom:14px;background:#3C9142;color:#fff;border-color:#3C9142;justify-content:center;">💾 Save This Report</button>
 
+    <div id="advResultsWrap">
     <div id="advancedSearchSummary" class="adv-summary"></div>
     <div id="advancedSearchCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
     <div id="advancedSearchReportTable" style="margin-bottom:14px;"></div>
@@ -1164,6 +1191,7 @@
     <button class="btn btn-outline btn-full hidden" id="advancedSearchPrintBtn" style="margin-bottom:16px;">🖨️ Print</button>
     <button class="btn btn-outline btn-full hidden" id="advancedSearchTextBtn" style="margin-bottom:16px;">📱 Text List</button>
     <div id="advancedSearchResults"></div>
+    </div>
   </div>
 
   <div class="view hidden" id="farmOperationsView">
@@ -1228,6 +1256,14 @@
     <div class="modal-title" style="margin-bottom:6px;">Recently Deleted</div>
     <div class="banner banner-note" style="display:block;margin-bottom:14px;">Covers individual entries (meds, calvings, notes, weights, breeding) from the last 30 days. Whole-cow removals aren't recoverable here.</div>
     <div id="recentlyDeletedList"></div>
+  </div>
+
+  <div class="view hidden" id="guidedSearchView">
+    <button class="btn btn-outline btn-full" id="guidedHomeBtn" style="margin-bottom:12px;">🏠 Home</button>
+    <div id="gsStep" class="gs-step"></div>
+    <div id="gsBody"></div>
+    <div id="gsResultsHost" class="hidden"></div>
+    <div class="gs-bar" id="gsBar"></div>
   </div>
 
   <div class="view hidden" id="savedReportsView">
@@ -1820,6 +1856,7 @@
   const globalSearchView = document.getElementById('globalSearchView');
   const recentlyDeletedView = document.getElementById('recentlyDeletedView');
   const savedReportsView = document.getElementById('savedReportsView');
+  const guidedSearchView = document.getElementById('guidedSearchView');
   const herdTallyView = document.getElementById('herdTallyView');
   const hayingView = document.getElementById('hayingView');
   const manageCustomAIView = document.getElementById('manageCustomAIView');
@@ -2616,6 +2653,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
@@ -2675,6 +2713,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
@@ -2735,6 +2774,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     hayingView.classList.add('hidden');
@@ -2786,6 +2826,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
@@ -2837,6 +2878,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
@@ -2890,6 +2932,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
     hayingView.classList.add('hidden');
     equipmentListView.classList.add('hidden');
@@ -3020,6 +3063,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     herdTallyView.classList.add('hidden');
@@ -3070,6 +3114,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3104,6 +3149,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3142,6 +3188,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3180,6 +3227,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3209,6 +3257,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3236,6 +3285,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3264,6 +3314,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3293,6 +3344,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3322,6 +3374,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3357,6 +3410,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3392,6 +3446,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3427,6 +3482,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3490,6 +3546,7 @@
     renderCustomAIJobsList();
   }
   function showAdvancedSearch(){
+    gsReleaseResults();
     setHeaderTitle(advMode === 'calf' ? 'Calf' : 'Advanced', 'Search');
     homeView.classList.add('hidden');
     utilitiesView.classList.add('hidden');
@@ -3506,6 +3563,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     vetPregCheckView.classList.add('hidden');
@@ -3551,6 +3609,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3585,6 +3644,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3622,6 +3682,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3718,6 +3779,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3954,6 +4016,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -3987,6 +4050,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     importView.classList.remove('hidden');
@@ -4022,6 +4086,7 @@
     importView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     globalSearchView.classList.remove('hidden');
@@ -4085,6 +4150,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -4118,6 +4184,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -4209,6 +4276,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     profileView.classList.remove('hidden');
@@ -4255,6 +4323,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -4285,6 +4354,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -4320,6 +4390,7 @@
     globalSearchView.classList.add('hidden');
     recentlyDeletedView.classList.add('hidden');
     savedReportsView.classList.add('hidden');
+    guidedSearchView.classList.add('hidden');
     farmNotesView.classList.add('hidden');
     loanCalculatorView.classList.add('hidden');
     fabAdd.classList.add('hidden');
@@ -11127,6 +11198,7 @@
     return out;
   }
   function advFieldName(el, panel){
+    if(advMode === 'calf' && /^advSearchDate(From|To)$/.test(el.id)) return 'Born';
     if(ADV_FIELD_NAMES[el.id]) return ADV_FIELD_NAMES[el.id];
     let labelEl = el.id ? panel.querySelector('label[for="' + el.id + '"]') : null;
     if(!labelEl && el.closest('.field')) labelEl = el.closest('.field').querySelector('label');
@@ -11168,7 +11240,8 @@
     const out = [];
     const pairs = {};
     advChosenFields(panel).forEach(el=>{
-      const pair = ADV_PAIR[el.id];
+      let pair = ADV_PAIR[el.id];
+      if(pair && advMode === 'calf' && /^advSearchDate(From|To)$/.test(el.id)) pair = ['Born', pair[1], pair[2]];
       if(pair){
         if(!pairs[pair[0]]){ pairs[pair[0]] = { label: pair[0], date: pair[2] === 'date', lo: null, hi: null }; out.push(pairs[pair[0]]); }
         pairs[pair[0]][pair[1] === 'min' ? 'lo' : 'hi'] = el.value;
@@ -11230,6 +11303,7 @@
   }
   // from the Reports menu: coming from the other page starts a fresh search; same page keeps what you had
   function openSearchPage(page){
+    gsReleaseResults();
     if(advMode !== page){ clearAdvancedSearch(); setAdvPage(page); }
     showAdvancedSearch();
   }
@@ -11268,11 +11342,24 @@
   let lastAdvancedSearchView = { mode:'cow', headers:[], rows:[] }; // for print + text list
 
   let lastAdvancedSearchCows = []; // for print
+  // Guided Search can pick several locations / owners / groups / seasons / sires at once
+  let guidedActive = false;
+  const guidedMulti = { location:[], owner:[], group:[], season:[], calfSire:[] };
+  function advSelVal(id, key){
+    if(guidedActive && guidedMulti[key] && guidedMulti[key].length) return guidedMulti[key].slice();
+    return document.getElementById(id).value;
+  }
+  function advSelMatch(sel, actual){
+    const arr = Array.isArray(sel) ? sel : (sel ? [sel] : []);
+    if(!arr.length) return true;
+    return arr.some(v=> v === '__undefined__' ? !actual : actual === v);
+  }
+  function advBackAction(){ if(guidedActive) showGuidedResults(); else showAdvancedSearch(); }
   function runAdvancedSearch(){
-    const location = document.getElementById('advSearchLocation').value;
-    const owner = document.getElementById('advSearchOwner').value;
-    const group = document.getElementById('advSearchGroup').value;
-    const herdSeason = document.getElementById('advSearchHerdSeason').value;
+    const location = advSelVal('advSearchLocation', 'location');
+    const owner = advSelVal('advSearchOwner', 'owner');
+    const group = advSelVal('advSearchGroup', 'group');
+    const herdSeason = advSelVal('advSearchHerdSeason', 'season');
     const bredTo = document.getElementById('advSearchBredTo').value;
     const method = document.getElementById('advSearchMethod').value;
     const naturalSire = document.getElementById('advSearchNaturalSire').value.trim().toLowerCase();
@@ -11281,7 +11368,7 @@
     const sellOnly = document.getElementById('advSearchSellOnly').checked;
     const medicine = document.getElementById('advSearchMedicine').value;
     const reason = document.getElementById('advSearchReason').value;
-    const calfSire = document.getElementById('advSearchCalfSire').value;
+    const calfSire = advSelVal('advSearchCalfSire', 'calfSire');
     const calfSex = document.getElementById('advSearchCalfSex').value;
     const birthAssist = document.getElementById('advSearchBirthAssist').value;
     const calfOutcome = document.getElementById('advSearchCalfOutcome').value;
@@ -11351,7 +11438,7 @@
     }
     function matchingCalvingRecords(num){
       return calvingsFor(num).filter(cv=>{
-        if(calfSire && cv.sire !== calfSire) return false;
+        if(!advSelMatch(calfSire, cv.sire)) return false;
         if(calfSex && cv.calf_sex !== calfSex) return false;
         if(birthAssist && cv.birth_assist !== birthAssist) return false;
         if(weightMin != null && !(cv.birth_weight != null && cv.birth_weight >= weightMin)) return false;
@@ -11403,10 +11490,10 @@
     }
 
     const results = cows.filter(c=>{
-      if(location){ if(location==='__undefined__' ? c.lot : c.lot !== location) return false; }
-      if(owner){ if(owner==='__undefined__' ? c.owner : c.owner !== owner) return false; }
-      if(group){ if(group==='__undefined__' ? c.cow_group : c.cow_group !== group) return false; }
-      if(herdSeason){ if(herdSeason==='__undefined__' ? c.herd_season : c.herd_season !== herdSeason) return false; }
+      if(!advSelMatch(location, c.lot)) return false;
+      if(!advSelMatch(owner, c.owner)) return false;
+      if(!advSelMatch(group, c.cow_group)) return false;
+      if(!advSelMatch(herdSeason, c.herd_season)) return false;
       if(notCalved){
         // active cow, bred, last breeding not marked Open, and no calf recorded on/after her last breeding date
         if(!isActiveStatus(c)) return false;
@@ -11534,7 +11621,7 @@
       return;
     }
     resultsEl.innerHTML = '';
-    wireTableRowsToCards(tableEl, showAdvancedSearch, '← Back to Search Results');
+    wireTableRowsToCards(tableEl, advBackAction, '← Back to Search Results');
   }
   function applyAdvancedSearchDatePreset(){
     const preset = document.getElementById('advSearchDatePreset').value;
@@ -11595,6 +11682,302 @@
     lastAdvancedSearchCows = [];
   }
 
+
+  // ===================== GUIDED SEARCH =====================
+  // A step-by-step way to ask the same questions Advanced Search asks. It fills in the Advanced Search engine
+  // behind the scenes and shows the results here, so the numbers match.
+  let gs = { step:'cat', cat:'', a:{} };
+  let guidedSavedCols = null;
+  function gsResetAnswers(cat){
+    const base = { when:'', pickFrom:'', pickTo:'', kind:'', location:[], owner:[], group:[], season:[], sex:'', assist:'', sire:[], sort:'', rev:false, cols:[] };
+    gs = { step:'q', cat, a: base };
+    gsApplyDefaults();
+  }
+  function gsVariant(){
+    if(gs.cat === 'weaning') return 'weaning';
+    return gs.a.kind === 'notcalved' ? 'notcalved' : 'calved';
+  }
+  const GS_SORTS = {
+    weaning:   [['gain','Gain / day','desc'],['ww','Weaning weight','desc'],['wdate','Weaning date','desc'],['bw','Birth weight','desc'],['num','Cow #','asc']],
+    calved:    [['cdate','Calving date','desc'],['bw','Birth weight','desc'],['sire','Sire','asc'],['num','Cow #','asc']],
+    notcalved: [['num','Cow #','asc'],['bdate','Breed date','asc'],['lot','Location','asc']]
+  };
+  const GS_COLS = {
+    weaning:['w_date','w_wt','w_age','w_gain','c_bw'],
+    calved:['c_date','c_sex','c_sire','c_bw','c_assist'],
+    notcalved:['b_date','b_to','b_due']
+  };
+  function gsMode(){ return gsVariant() === 'notcalved' ? 'cow' : 'calf'; }
+  function gsApplyDefaults(){
+    const v = gsVariant();
+    gs.a.sort = GS_SORTS[v][0][0];
+    gs.a.rev = false;
+    gs.a.cols = GS_COLS[v].slice();
+  }
+  function gsDateStr(offset){
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + offset);
+    return localDateFromTimestamp(d);
+  }
+  function gsSelectOptions(selId){
+    const sel = document.getElementById(selId);
+    if(!sel) return [];
+    return [...sel.options].map(o=> o.value).filter(v=> v !== '' && v !== '__undefined__');
+  }
+  function gsChips(key, values, multi){
+    const a = gs.a;
+    return values.map(v=>{
+      const on = multi ? a[key].includes(v) : a[key] === v;
+      return `<div class="gs-opt ${on?'on':''}" data-k="${key}" data-v="${escapeHtml(v)}" data-t="${multi?'m':'s'}">${on && multi ? '✓ ' : ''}${escapeHtml(v)}</div>`;
+    }).join('');
+  }
+  function gsSingleChips(key, pairs){
+    const a = gs.a;
+    return pairs.map(([val,label])=> `<div class="gs-opt ${a[key]===val?'on':''}" data-k="${key}" data-v="${val}" data-t="s">${escapeHtml(label)}</div>`).join('');
+  }
+  function gsBox(title, hint, done, inner){
+    return `<div class="gs-box ${done?'done':''}"><div class="gs-qq"><span>${title}</span><i>${hint||''}</i></div>${inner}</div>`;
+  }
+  function gsRenderQuestions(){
+    try{ populateAdvancedSearchDropdowns(); }catch(e){}
+    const a = gs.a, v = gsVariant();
+    let html = '';
+    if(gs.cat === 'calving'){
+      html += gsBox('What do you want to see?','',!!a.kind,
+        `<div class="gs-opts">${gsSingleChips('kind',[['calved','Cows that calved'],['notcalved','Not calved yet']])}</div>`);
+      if(!a.kind){ document.getElementById('gsBody').innerHTML = html; return; }
+    }
+    if(v === 'weaning'){
+      html += gsBox('When were they weaned?','',!!a.when,
+        `<div class="gs-opts">${gsSingleChips('when',[['today','Today'],['week','This week'],['notyet','Not weaned yet'],['all','All weaned'],['pick','Pick dates']])}</div>`+
+        (a.when==='pick' ? `<div class="gs-dates"><div style="flex:1"><label>From</label><input type="date" id="gsPickFrom" value="${a.pickFrom}"/></div><div style="flex:1"><label>To</label><input type="date" id="gsPickTo" value="${a.pickTo}"/></div></div>` : ''));
+    }
+    if(v === 'calved'){
+      html += gsBox('When did they calve?','',!!a.when,
+        `<div class="gs-opts">${gsSingleChips('when',[['today','Today'],['week','This week'],['month','This month'],['any','Any time'],['pick','Pick dates']])}</div>`+
+        (a.when==='pick' ? `<div class="gs-dates"><div style="flex:1"><label>From</label><input type="date" id="gsPickFrom" value="${a.pickFrom}"/></div><div style="flex:1"><label>To</label><input type="date" id="gsPickTo" value="${a.pickTo}"/></div></div>` : ''));
+    }
+    const any = a.location.length || a.owner.length || a.group.length || a.season.length;
+    let cows = '';
+    const locs = gsSelectOptions('advSearchLocation'), owners = gsSelectOptions('advSearchOwner'), groups = gsSelectOptions('advSearchGroup');
+    if(locs.length) cows += `<div class="gs-sub">Location</div><div class="gs-opts">${gsChips('location', locs, true)}</div>`;
+    if(owners.length) cows += `<div class="gs-sub">Owner</div><div class="gs-opts">${gsChips('owner', owners, true)}</div>`;
+    if(groups.length) cows += `<div class="gs-sub">Group</div><div class="gs-opts">${gsChips('group', groups, true)}</div>`;
+    cows += `<div class="gs-sub">Herd season</div><div class="gs-opts">${gsChips('season', ['Spring','Fall'], true)}</div>`;
+    html += gsBox('Which cows?','pick as many as you like — skip for all', !!any, cows);
+    if(v !== 'notcalved'){
+      let calves = `<div class="gs-sub">Sex</div><div class="gs-opts">${gsSingleChips('sex',[['B','Bulls'],['H','Heifers']])}</div>`;
+      if(v === 'calved') calves += `<div class="gs-sub">Birth assist</div><div class="gs-opts">${gsChips('assist',['None','Easy Pull','Hard Pull','C-Section'], false)}</div>`;
+      const sires = gsSelectOptions('advSearchCalfSire');
+      if(sires.length) calves += `<div class="gs-sub">Sire</div><div class="gs-opts">${gsChips('sire', sires, true)}</div>`;
+      html += gsBox('Only certain calves?','skip for all', !!(a.sex || a.assist || a.sire.length), calves);
+    }
+    const sorts = GS_SORTS[v];
+    html += gsBox('How should I sort them?','', true,
+      `<div class="gs-opts">${sorts.map(([k,label])=> `<div class="gs-opt ${a.sort===k?'on':''}" data-k="sort" data-v="${k}" data-t="s">${label}</div>`).join('')}</div>`+
+      `<div class="gs-sub">Order</div><div class="gs-opts"><div class="gs-opt ${a.rev?'on':''}" data-k="rev" data-t="flag">Reverse the order</div></div>`);
+    const groupsDef = ADV_COL_GROUPS[gsMode()];
+    html += gsBox('Which columns?','tick any', a.cols.length > 0,
+      groupsDef.map(g=> `<div class="gs-sub">${escapeHtml(g.label)}</div><div class="gs-opts">${g.cols.map(c=>{
+        const on = a.cols.includes(c.key);
+        return `<div class="gs-opt ${on?'on':''}" data-k="cols" data-v="${c.key}" data-t="c">${on?'✓ ':''}${escapeHtml(c.label)}</div>`;
+      }).join('')}</div>`).join(''));
+    document.getElementById('gsBody').innerHTML = html;
+  }
+  function gsRenderCats(){
+    document.getElementById('gsBody').innerHTML = `
+      <div class="gs-q">What do you want to look at?</div>
+      <div class="gs-cat" data-cat="calving"><div class="ic">🍼</div><div><b>Calving</b><span>Who calved, who hasn't, birth details</span></div></div>
+      <div class="gs-cat" data-cat="weaning"><div class="ic">⚖️</div><div><b>Weaning</b><span>Weaned, not weaned, weights and gain</span></div></div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:6px;">Need something else? Use Advanced Search.</div>`;
+  }
+  function gsRender(){
+    const step = document.getElementById('gsStep'), bar = document.getElementById('gsBar'), host = document.getElementById('gsResultsHost'), body = document.getElementById('gsBody');
+    host.classList.toggle('hidden', gs.step !== 'res');
+    body.classList.toggle('hidden', gs.step === 'res');
+    if(gs.step === 'cat'){
+      step.innerHTML = 'Step 1 of 3';
+      gsRenderCats();
+      bar.innerHTML = '<button class="btn btn-outline" id="gsSavedBtn">★ Saved reports</button>';
+    } else if(gs.step === 'q'){
+      step.innerHTML = `<span class="gs-back" id="gsBackCat">‹ Back</span> &nbsp; Step 2 of 3 — ${gs.cat === 'weaning' ? 'Weaning' : 'Calving'}`;
+      gsRenderQuestions();
+      bar.innerHTML = '<button class="btn btn-outline" id="gsClearBtn">Clear</button><button class="btn btn-green" id="gsGoBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">Show Results ›</button>';
+    } else {
+      step.innerHTML = `<span class="gs-back" id="gsBackQ">‹ Change answers</span> &nbsp; Step 3 of 3`;
+      bar.innerHTML = '<button class="btn btn-outline" id="gsChangeBtn">Change answers</button><button class="btn" id="gsSaveBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">💾 Save</button>';
+    }
+    window.scrollTo(0,0);
+  }
+  function gsSummaryText(cat, a, withDates){
+    if(!a) return '';
+    const parts = [];
+    const save = { cat: gs.cat, a: gs.a };
+    gs.cat = cat; gs.a = a;
+    const v = gsVariant();
+    gs.cat = save.cat; gs.a = save.a;
+    parts.push(cat === 'weaning' ? 'Weaning' : (v === 'notcalved' ? 'Calving: not calved yet' : 'Calving'));
+    const W = { today:'Today', week:'This week', month:'This month', notyet:'Not weaned yet', all:'All weaned', any:'Any time' };
+    if(a.when === 'pick') parts.push((a.pickFrom||'…') + ' to ' + (a.pickTo||'…'));
+    else if(a.when && W[a.when]){
+      let t = W[a.when];
+      if(withDates){
+        const td = gsDateStr(0);
+        if(a.when === 'today') t += ' (' + fmtDateShort(td) + ')';
+        else if(a.when === 'week') t += ' (' + fmtDateShort(gsDateStr(-7)) + ' to ' + fmtDateShort(td) + ')';
+        else if(a.when === 'month') t += ' (' + fmtDateShort(gsDateStr(-30)) + ' to ' + fmtDateShort(td) + ')';
+      }
+      parts.push(t);
+    }
+    ['location','owner','group','season'].forEach(k=>{ if(a[k] && a[k].length) parts.push(a[k].join(', ')); });
+    if(a.sex) parts.push(a.sex === 'B' ? 'Bulls' : 'Heifers');
+    if(a.assist) parts.push(a.assist);
+    if(a.sire && a.sire.length) parts.push('Sire ' + a.sire.join(', '));
+    const so = (GS_SORTS[v] || []).find(x=> x[0] === a.sort);
+    if(so) parts.push('sorted by ' + so[1].toLowerCase());
+    return parts.join(' · ');
+  }
+  function gsTakeResults(){
+    const wrap = document.getElementById('advResultsWrap');
+    document.getElementById('gsResultsHost').appendChild(wrap);
+  }
+  function gsReleaseResults(){
+    if(!guidedActive) return;
+    guidedActive = false;
+    ['location','owner','group','season','calfSire'].forEach(k=> guidedMulti[k] = []);
+    document.getElementById('advancedSearchView').appendChild(document.getElementById('advResultsWrap'));
+    if(guidedSavedCols){ advCols.cow = guidedSavedCols.cow; advCols.calf = guidedSavedCols.calf; guidedSavedCols = null; }
+    clearAdvancedSearch();
+    renderAdvColumnsPanel();
+    advRefreshSortControls();
+  }
+  function showGuidedResults(){
+    document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+    fabAdd.classList.add('hidden'); fabAddEquipment.classList.add('hidden');
+    guidedSearchView.classList.remove('hidden');
+    setHeaderTitle('Guided', 'Search');
+    gs.step = 'res';
+    gsRender();
+  }
+  function showGuidedSearch(){
+    gsReleaseResults();
+    document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+    fabAdd.classList.add('hidden'); fabAddEquipment.classList.add('hidden');
+    guidedSearchView.classList.remove('hidden');
+    setHeaderTitle('Guided', 'Search');
+    if(gs.step === 'res') gs.step = 'q';
+    if(!gs.cat) gs.step = 'cat';
+    gsRender();
+  }
+  function gsRun(){
+    const a = gs.a, v = gsVariant(), mode = gsMode();
+    const setV = (id, val)=>{ const el = document.getElementById(id); if(el) el.value = val; };
+    if(v === 'weaning' && !a.when){ showToast('Pick when they were weaned'); return false; }
+    if(gs.cat === 'calving' && !a.kind){ showToast('Pick what you want to see'); return false; }
+    if(a.when === 'pick' && !a.pickFrom && !a.pickTo){ showToast('Pick at least one date'); return false; }
+    gsReleaseResults();
+    if(advMode !== mode) setAdvPage(mode);
+    clearAdvancedSearch();
+    guidedSavedCols = { cow: advCols.cow.slice(), calf: advCols.calf.slice() };
+    const valid = advAllCols(mode).map(c=>c.key);
+    advCols[mode] = a.cols.filter(k=> valid.includes(k));
+    renderAdvColumnsPanel();
+    advRefreshSortControls();
+    // dates
+    let from = '', to = '';
+    const today = gsDateStr(0);
+    if(a.when === 'today'){ from = today; to = today; }
+    else if(a.when === 'week'){ from = gsDateStr(-7); to = today; }
+    else if(a.when === 'month'){ from = gsDateStr(-30); to = today; }
+    else if(a.when === 'pick'){ from = a.pickFrom; to = a.pickTo; }
+    if(v === 'weaning'){
+      if(a.when === 'notyet') setV('advSearchWeaned','no');
+      else if(a.when === 'all') setV('advSearchWeaned','yes');
+      else { setV('advSearchWeanFrom', from); setV('advSearchWeanTo', to); }
+    } else if(v === 'calved'){
+      setV('advSearchDateFrom', from); setV('advSearchDateTo', to);
+    } else {
+      setV('advSearchNotCalved','yes');
+    }
+    if(v !== 'notcalved'){
+      setV('advSearchCalfSex', a.sex);
+      if(v === 'calved') setV('advSearchBirthAssist', a.assist);
+    }
+    // sort
+    const so = GS_SORTS[v].find(x=> x[0] === a.sort) || GS_SORTS[v][0];
+    setV('advSortField1', so[0]);
+    const dir = a.rev ? (so[2] === 'desc' ? 'asc' : 'desc') : so[2];
+    setV('advSortDir1', dir);
+    // several-at-once picks
+    guidedMulti.location = a.location.slice(); guidedMulti.owner = a.owner.slice(); guidedMulti.group = a.group.slice();
+    guidedMulti.season = a.season.slice(); guidedMulti.calfSire = v === 'notcalved' ? [] : a.sire.slice();
+    guidedActive = true;
+    gsTakeResults();
+    runAdvancedSearch();
+    showGuidedResults();
+    let sumEl = document.getElementById('gsSumLine');
+    if(!sumEl){
+      sumEl = document.createElement('div'); sumEl.id = 'gsSumLine'; sumEl.className = 'gs-sum';
+      document.getElementById('gsResultsHost').insertBefore(sumEl, document.getElementById('advResultsWrap'));
+    }
+    sumEl.textContent = gsSummaryText(gs.cat, gs.a, true);
+    // nothing found: say what dates are actually on file, so a date mix-up is easy to spot
+    let hint = document.getElementById('gsEmptyHint');
+    if(hint) hint.remove();
+    if(document.querySelector('#advancedSearchResults .empty') && gsVariant() === 'weaning'){
+      const dates = calvings.map(c=> c.weaning_date).filter(Boolean).sort();
+      const latest = dates.length ? dates[dates.length - 1] : '';
+      const nLatest = dates.filter(d=> d === latest).length;
+      hint = document.createElement('div'); hint.id = 'gsEmptyHint'; hint.className = 'gs-sum';
+      hint.style.borderColor = '#7A2E27'; hint.style.color = '#7A2E27';
+      hint.textContent = latest
+        ? 'Nothing matched. The most recent weaning date on file is ' + fmtDateShort(latest) + ' (' + nLatest + ' calves). Today on this device is ' + fmtDateShort(gsDateStr(0)) + '.'
+        : 'Nothing matched, and no calves have a weaning date yet.';
+      sumEl.insertAdjacentElement('afterend', hint);
+    }
+    return true;
+  }
+  function gsRunSaved(st){
+    gs = { step:'q', cat: st.cat, a: Object.assign({ when:'', pickFrom:'', pickTo:'', kind:'', location:[], owner:[], group:[], season:[], sex:'', assist:'', sire:[], sort:'', rev:false, cols:[] }, JSON.parse(JSON.stringify(st.a || {}))) };
+    gsRun();
+  }
+  (function wireGuided(){
+    document.getElementById('guidedSearchBtn').addEventListener('click', showGuidedSearch);
+    document.getElementById('guidedHomeBtn').addEventListener('click', ()=>{ showHome(); });
+    guidedSearchView.addEventListener('click', (e)=>{
+      const t = e.target;
+      const cat = t.closest('[data-cat]');
+      if(cat){ gsResetAnswers(cat.dataset.cat); gsRender(); return; }
+      if(t.closest('#gsBackCat')){ gs.step = 'cat'; gsRender(); return; }
+      if(t.closest('#gsBackQ') || t.closest('#gsChangeBtn')){ gs.step = 'q'; gsRender(); return; }
+      if(t.closest('#gsSavedBtn')){ showSavedReports(); return; }
+      if(t.closest('#gsClearBtn')){ if(gs.cat) gsResetAnswers(gs.cat); gsRender(); return; }
+      if(t.closest('#gsGoBtn')){ gsRun(); return; }
+      if(t.closest('#gsSaveBtn')){
+        saveAdvReportModal({ type:'guided_search', settings:{ guided:true, cat: gs.cat, a: JSON.parse(JSON.stringify(gs.a)) } });
+        return;
+      }
+      const opt = t.closest('.gs-opt');
+      if(!opt) return;
+      const k = opt.dataset.k, val = opt.dataset.v, kind = opt.dataset.t, a = gs.a;
+      if(kind === 'm'){ const i = a[k].indexOf(val); if(i >= 0) a[k].splice(i,1); else a[k].push(val); }
+      else if(kind === 'c'){ const i = a.cols.indexOf(val); if(i >= 0) a.cols.splice(i,1); else a.cols.push(val); }
+      else if(kind === 'flag'){ a[k] = !a[k]; }
+      else if(kind === 's'){
+        if(k === 'sort') a.sort = val;
+        else if(k === 'kind'){ if(a.kind !== val){ a.kind = val; gsApplyDefaults(); } }
+        else if(k === 'when') a.when = val;
+        else a[k] = (a[k] === val) ? '' : val;
+      }
+      const y = window.scrollY;
+      gsRenderQuestions();
+      window.scrollTo(0, y);
+    });
+    guidedSearchView.addEventListener('change', (e)=>{
+      if(e.target.id === 'gsPickFrom') gs.a.pickFrom = e.target.value;
+      if(e.target.id === 'gsPickTo') gs.a.pickTo = e.target.value;
+    });
+  })();
+
   // ===================== SAVED REPORTS =====================
   let savedFolders = [];
   let savedReports = [];
@@ -11627,6 +12010,7 @@
     return { mode: advMode, fields, cols: advCols[advMode].slice() };
   }
   function savedSettingsSummary(settings){
+    if(settings && settings.guided) return gsSummaryText(settings.cat, settings.a);
     const f = (settings && settings.fields) || {};
     const parts = [];
     Object.keys(f).forEach(id=>{
@@ -11643,6 +12027,8 @@
     const r = savedReports.find(x=> x.id === id);
     if(!r) return;
     const st = r.settings || {};
+    gsReleaseResults();
+    if(st.guided){ gsRunSaved(st); return; }
     const mode = (st.mode === 'calf' || r.report_type === 'calf_search') ? 'calf' : 'cow';
     if(advMode !== mode) setAdvPage(mode);
     clearAdvancedSearch();
@@ -11674,7 +12060,7 @@
         <button class="sr-star ${r.starred?'on':''}" data-act="star" data-id="${r.id}" title="Star">${r.starred?'★':'☆'}</button>
         <div class="sr-main" data-act="run" data-id="${r.id}">
           <div class="sr-title">${escapeHtml(r.name)}</div>
-          <div class="sr-sub">${showFolder && fol ? '📁 ' + escapeHtml(fol.name) + ' — ' : ''}${r.report_type === 'calf_search' ? '🐮 Calf — ' : ''}${escapeHtml(savedSettingsSummary(r.settings))}</div>
+          <div class="sr-sub">${showFolder && fol ? '📁 ' + escapeHtml(fol.name) + ' — ' : ''}${r.report_type === 'calf_search' ? '🐮 Calf — ' : ''}${r.report_type === 'guided_search' ? '🧭 Guided — ' : ''}${escapeHtml(savedSettingsSummary(r.settings))}</div>
         </div>
         <button class="sr-del" data-act="delreport" data-id="${r.id}">Delete</button>
       </div>`;
@@ -11756,7 +12142,8 @@
     });
   }
 
-  async function saveAdvReportModal(){
+  async function saveAdvReportModal(spec){
+    const custom = (spec && spec.settings) ? spec : null;
     if(!savedReportsLoaded) await loadSavedReports();
     const opts = savedFolders.map(f=> `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
     const modal = openModal(`
@@ -11804,7 +12191,7 @@
         const inserted = await api('/saved_reports', {
           method:'POST',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify({ folder_id: folderId, name, report_type: advMode === 'calf' ? 'calf_search' : 'cow_search', settings: advCaptureSettings(), starred:false })
+          body: JSON.stringify({ folder_id: folderId, name, report_type: custom ? custom.type : (advMode === 'calf' ? 'calf_search' : 'cow_search'), settings: custom ? custom.settings : advCaptureSettings(), starred:false })
         });
         savedReports.unshift(inserted[0]);
         savedFoldersOpen.add(folderId);
@@ -11854,11 +12241,24 @@
     }catch(e){ showToast('Could not delete — try again'); }
   }
 
+  // "Today only" buttons: put today's date in both the From and To boxes in one tap
+  document.querySelectorAll('#advPanels .adv-today').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const today = todayLocal();
+      if(btn.dataset.preset){ const pr = document.getElementById(btn.dataset.preset); if(pr) pr.value = ''; }
+      [btn.dataset.from, btn.dataset.to].forEach(id=>{
+        const el = document.getElementById(id);
+        el.value = today;
+        el.dispatchEvent(new Event('input', { bubbles:true }));
+        el.dispatchEvent(new Event('change', { bubbles:true }));
+      });
+    });
+  });
   (function wireSavedReports(){
     document.getElementById('savedReportsBtn').addEventListener('click', showSavedReports);
     document.getElementById('savedReportsHomeBtn').addEventListener('click', showHome);
     document.getElementById('newReportFolderBtn').addEventListener('click', newReportFolderModal);
-    document.getElementById('saveAdvReportBtn').addEventListener('click', saveAdvReportModal);
+    document.getElementById('saveAdvReportBtn').addEventListener('click', ()=> saveAdvReportModal());
     document.getElementById('savedReportsContent').addEventListener('click', (e)=>{
       const t = e.target.closest('[data-act]');
       if(!t) return;
