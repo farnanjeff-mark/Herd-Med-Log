@@ -949,6 +949,15 @@
         </select>
         <div class="adv-note">Active cows that were bred, are not marked Open, and have no calf recorded since their last breeding date.</div>
       </div>
+      <div class="field">
+        <label>Due within (days)</label>
+        <input type="number" id="advSearchDueWithin" step="1" min="0" placeholder="Any"/>
+        <div class="adv-note">Bred cows not yet calved whose due date is within this many days (overdue ones are included).</div>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="advSearchUnchecked" style="width:20px;height:20px;"/>
+        <label style="margin:0;" for="advSearchUnchecked">Latest breeding not preg-checked yet</label>
+      </div>
       <button class="btn btn-outline btn-full adv-done" style="margin:4px 0 12px;">Done</button>
     </div>
     <div class="adv-panel only-cow" data-panel="meds">
@@ -11025,6 +11034,7 @@
       { key:'cdate',label:'Calving date (latest calf)',  type:'date', get:(r,x)=> x.lc ? x.lc.calving_date : '' },
       { key:'bw',   label:'Birth weight (latest calf)',  type:'num',  get:(r,x)=> x.lc ? advNumOrNull(x.lc.birth_weight) : null },
       { key:'bdate',label:'Breed date (latest)',         type:'date', get:(r,x)=> x.br ? x.br.breed_date : '' },
+      { key:'due',  label:'Due date (latest breeding)',  type:'date', get:(r,x)=> x.br && x.br.pregnancy_status !== 'Open' ? (x.br.expected_due_date || '') : '' },
       { key:'wdate2',label:'Weigh date (latest)',        type:'date', get:(r,x)=> x.lw ? x.lw.weigh_date : '' },
       { key:'wt',   label:'Weight (latest)',             type:'num',  get:(r,x)=> x.lw ? advNumOrNull(x.lw.weight) : null },
       { key:'tdate',label:'Treatment date (last)',       type:'date', get:(r,x)=> x.lt ? x.lt.date : '' },
@@ -11177,7 +11187,7 @@
   const ADV_FIELD_NAMES = {
     advSearchLocation:'Location', advSearchOwner:'Owner', advSearchGroup:'Group', advSearchHerdSeason:'Herd season', advSearchStatus:'Status',
     advSearchTagNeeded:'Tag needed', advSearchFlagged:'Flagged', advSearchCalvedPending:'Calved pending', advSearchOutOfCow:'Out of cow #', advSearchMotherNum:'Mother #',
-    advSearchBredTo:'Bred to', advSearchMethod:'Method', advSearchNaturalSire:'Natural sire', advSearchOpenOnly:'Open cows', advSearchPregBtOnly:'Preg BT', advSearchSellOnly:'Sell', advSearchPregCheck:'Preg check', advSearchNotCalved:'Not calved yet',
+    advSearchBredTo:'Bred to', advSearchMethod:'Method', advSearchNaturalSire:'Natural sire', advSearchOpenOnly:'Open cows', advSearchPregBtOnly:'Preg BT', advSearchSellOnly:'Sell', advSearchPregCheck:'Preg check', advSearchNotCalved:'Not calved yet', advSearchDueWithin:'Due within', advSearchUnchecked:'Not preg-checked',
     advSearchMedicine:'Medicine', advSearchReason:'Reason', advSearchMinTimes:'Times treated', advSearchSameReason:'Same reason',
     advSearchCowWtMin:'Weight', advSearchCowWtMax:'Weight', advSearchMissingWeight:'Missing weight',
     advSearchCalfSire:'Sire', advSearchCalfSex:'Sex', advSearchBirthAssist:'Birth assist', advSearchCalfOutcome:'Outcome', advSearchWeightMin:'Birth weight', advSearchWeightMax:'Birth weight',
@@ -11234,7 +11244,8 @@
     advSearchOutOfCow: v=> 'Out of #' + v,
     advSearchMotherNum: v=> 'Mother #' + v,
     advSearchNaturalSire: v=> 'Natural sire ' + v,
-    advSearchMinTimes: v=> 'Treated ' + v + '+ times'
+    advSearchMinTimes: v=> 'Treated ' + v + '+ times',
+    advSearchDueWithin: v=> 'Due within ' + v + ' days'
   };
   function advTileChoiceTexts(panel){
     const out = [];
@@ -11344,7 +11355,7 @@
   let lastAdvancedSearchCows = []; // for print
   // Guided Search can pick several locations / owners / groups / seasons / sires at once
   let guidedActive = false;
-  const guidedMulti = { location:[], owner:[], group:[], season:[], calfSire:[] };
+  const guidedMulti = { location:[], owner:[], group:[], season:[], calfSire:[], bredTo:[], medicine:[], reason:[] };
   function advSelVal(id, key){
     if(guidedActive && guidedMulti[key] && guidedMulti[key].length) return guidedMulti[key].slice();
     return document.getElementById(id).value;
@@ -11360,14 +11371,14 @@
     const owner = advSelVal('advSearchOwner', 'owner');
     const group = advSelVal('advSearchGroup', 'group');
     const herdSeason = advSelVal('advSearchHerdSeason', 'season');
-    const bredTo = document.getElementById('advSearchBredTo').value;
+    const bredTo = advSelVal('advSearchBredTo', 'bredTo');
     const method = document.getElementById('advSearchMethod').value;
     const naturalSire = document.getElementById('advSearchNaturalSire').value.trim().toLowerCase();
     const openOnly = document.getElementById('advSearchOpenOnly').checked;
     const pregBtOnly = document.getElementById('advSearchPregBtOnly').checked;
     const sellOnly = document.getElementById('advSearchSellOnly').checked;
-    const medicine = document.getElementById('advSearchMedicine').value;
-    const reason = document.getElementById('advSearchReason').value;
+    const medicine = advSelVal('advSearchMedicine', 'medicine');
+    const reason = advSelVal('advSearchReason', 'reason');
     const calfSire = advSelVal('advSearchCalfSire', 'calfSire');
     const calfSex = document.getElementById('advSearchCalfSex').value;
     const birthAssist = document.getElementById('advSearchBirthAssist').value;
@@ -11385,6 +11396,8 @@
     const calvedPending = document.getElementById('advSearchCalvedPending').checked;
     const pregCheck = document.getElementById('advSearchPregCheck').value;
     const notCalved = document.getElementById('advSearchNotCalved').value;
+    const dueWithin = (document.getElementById('advSearchDueWithin').value !== '') ? parseInt(document.getElementById('advSearchDueWithin').value, 10) : null;
+    const uncheckedOnly = document.getElementById('advSearchUnchecked').checked;
     const sameReason = document.getElementById('advSearchSameReason').checked;
     let minTimes = numVal('advSearchMinTimes');
     if(minTimes == null && sameReason) minTimes = 2;
@@ -11409,8 +11422,8 @@
       const records = breedingFor(num);
       const latest = [...records].sort((a,b)=> b.breed_date.localeCompare(a.breed_date))[0];
       return records.filter(b=>
-        (!bredTo || b.bred_to === bredTo) &&
-        (!method || b.pregnancy_method === method) &&
+        (!bredTo || (Array.isArray(bredTo) ? (latest && b.id === latest.id && advSelMatch(bredTo, b.bred_to)) : b.bred_to === bredTo)) &&
+        (!method || (guidedActive ? (latest && b.id === latest.id && b.pregnancy_method === method) : b.pregnancy_method === method)) &&
         (!naturalSire || (b.natural_sire||'').toLowerCase().includes(naturalSire)) &&
         (!openOnly || (latest && b.id === latest.id && b.pregnancy_status === 'Open')) &&
         (!pregCheck || (pregCheck === 'open' ? b.pregnancy_status === 'Open' : pregCheck === 'bred' ? b.pregnancy_status === 'Bred' : !b.pregnancy_status)) &&
@@ -11420,8 +11433,8 @@
     }
     function matchingMedRecords(num){
       return recordsFor(num).filter(t=>
-        (!medicine || t.medicine === medicine) &&
-        (!reason || t.reason === reason) &&
+        advSelMatch(medicine, t.medicine) &&
+        advSelMatch(reason, t.reason) &&
         (!dateFrom || t.date >= dateFrom) &&
         (!dateTo || t.date <= dateTo)
       );
@@ -11430,8 +11443,8 @@
       const calvingIds = calvingsFor(num).map(cv=>cv.id);
       return calfTreatments.filter(t=>
         calvingIds.includes(t.calving_id) &&
-        (!medicine || t.medicine === medicine) &&
-        (!reason || t.reason === reason) &&
+        advSelMatch(medicine, t.medicine) &&
+        advSelMatch(reason, t.reason) &&
         (!dateFrom || t.date >= dateFrom) &&
         (!dateTo || t.date <= dateTo)
       );
@@ -11502,6 +11515,20 @@
         const last = brs[brs.length - 1];
         if(last.pregnancy_status === 'Open') return false;
         if(calvings.some(k=> k.cow_number === c.number && k.calving_date && String(k.calving_date) >= String(last.breed_date))) return false;
+      }
+      if(dueWithin != null || uncheckedOnly){
+        // active, bred, no calf since her last breeding; then check due date / preg-check on that latest breeding
+        if(!isActiveStatus(c)) return false;
+        const brs2 = breedingFor(c.number).filter(b=> b.breed_date).sort((a,b)=> String(a.breed_date).localeCompare(String(b.breed_date)));
+        if(!brs2.length) return false;
+        const last2 = brs2[brs2.length - 1];
+        if(calvings.some(k=> k.cow_number === c.number && k.calving_date && String(k.calving_date) >= String(last2.breed_date))) return false;
+        if(dueWithin != null){
+          if(last2.pregnancy_status === 'Open' || !last2.expected_due_date) return false;
+          const cut = gsDateStr(dueWithin);
+          if(String(last2.expected_due_date) > cut) return false;
+        }
+        if(uncheckedOnly && last2.pregnancy_status) return false;
       }
       if(pregBtOnly && !c.preg_bt) return false;
       if(sellOnly && !c.sell) return false;
@@ -11688,29 +11715,41 @@
   // behind the scenes and shows the results here, so the numbers match.
   let gs = { step:'cat', cat:'', a:{} };
   let guidedSavedCols = null;
+  function gsBlankAnswers(){
+    return { when:'', pickFrom:'', pickTo:'', kind:'', dueDays:'14', location:[], owner:[], group:[], season:[],
+             sex:'', assist:'', sire:[], bredTo:[], method:'', medicine:[], reason:[], minTimes:'', same:false,
+             wtMin:'', wtMax:'', sort:'', rev:false, cols:[] };
+  }
   function gsResetAnswers(cat){
-    const base = { when:'', pickFrom:'', pickTo:'', kind:'', location:[], owner:[], group:[], season:[], sex:'', assist:'', sire:[], sort:'', rev:false, cols:[] };
-    gs = { step:'q', cat, a: base };
+    gs = { step:'q', cat, a: gsBlankAnswers() };
     gsApplyDefaults();
   }
   function gsVariant(){
-    if(gs.cat === 'weaning') return 'weaning';
-    return gs.a.kind === 'notcalved' ? 'notcalved' : 'calved';
+    if(gs.cat === 'calving') return gs.a.kind === 'notcalved' ? 'notcalved' : 'calved';
+    return gs.cat;   // weaning, breeding, health, weights
   }
+  const GS_NAMES = { calving:'Calving', weaning:'Weaning', breeding:'Breeding', health:'Health', weights:'Weights' };
   const GS_SORTS = {
     weaning:   [['gain','Gain / day','desc'],['ww','Weaning weight','desc'],['wdate','Weaning date','desc'],['bw','Birth weight','desc'],['num','Cow #','asc']],
     calved:    [['cdate','Calving date','desc'],['bw','Birth weight','desc'],['sire','Sire','asc'],['num','Cow #','asc']],
-    notcalved: [['num','Cow #','asc'],['bdate','Breed date','asc'],['lot','Location','asc']]
+    notcalved: [['num','Cow #','asc'],['bdate','Breed date','asc'],['lot','Location','asc']],
+    breeding:  [['num','Cow #','asc'],['due','Due date','asc'],['bdate','Breed date','asc'],['lot','Location','asc']],
+    health:    [['tdate','Last treatment date','desc'],['ntreat','Number of treatments','desc'],['num','Cow #','asc'],['lot','Location','asc']],
+    weights:   [['wt','Weight','desc'],['wdate2','Weigh date','desc'],['num','Cow #','asc'],['lot','Location','asc']]
   };
   const GS_COLS = {
     weaning:['w_date','w_wt','w_age','w_gain','c_bw'],
     calved:['c_date','c_sex','c_sire','c_bw','c_assist'],
-    notcalved:['b_date','b_to','b_due']
+    notcalved:['b_date','b_to','b_due'],
+    breeding:['b_date','b_to','b_due','b_check'],
+    health:['h_last','h_med','h_reason','h_all'],
+    weights:['w_last','w_lastdate']
   };
-  function gsMode(){ return gsVariant() === 'notcalved' ? 'cow' : 'calf'; }
+  function gsMode(){ const v = gsVariant(); return (v === 'weaning' || v === 'calved') ? 'calf' : 'cow'; }
   function gsApplyDefaults(){
     const v = gsVariant();
     gs.a.sort = GS_SORTS[v][0][0];
+    if(v === 'breeding' && gs.a.kind === 'due') gs.a.sort = 'due';
     gs.a.rev = false;
     gs.a.cols = GS_COLS[v].slice();
   }
@@ -11737,6 +11776,23 @@
   function gsBox(title, hint, done, inner){
     return `<div class="gs-box ${done?'done':''}"><div class="gs-qq"><span>${title}</span><i>${hint||''}</i></div>${inner}</div>`;
   }
+  function gsDatesBox(title, pairs){
+    const a = gs.a;
+    return gsBox(title,'',!!a.when,
+      `<div class="gs-opts">${gsSingleChips('when',pairs)}</div>`+
+      (a.when==='pick' ? `<div class="gs-dates"><div style="flex:1"><label>From</label><input type="date" id="gsPickFrom" value="${a.pickFrom}"/></div><div style="flex:1"><label>To</label><input type="date" id="gsPickTo" value="${a.pickTo}"/></div></div>` : ''));
+  }
+  function gsCowsBox(){
+    const a = gs.a;
+    const any = a.location.length || a.owner.length || a.group.length || a.season.length;
+    let cows = '';
+    const locs = gsSelectOptions('advSearchLocation'), owners = gsSelectOptions('advSearchOwner'), groups = gsSelectOptions('advSearchGroup');
+    if(locs.length) cows += `<div class="gs-sub">Location</div><div class="gs-opts">${gsChips('location', locs, true)}</div>`;
+    if(owners.length) cows += `<div class="gs-sub">Owner</div><div class="gs-opts">${gsChips('owner', owners, true)}</div>`;
+    if(groups.length) cows += `<div class="gs-sub">Group</div><div class="gs-opts">${gsChips('group', groups, true)}</div>`;
+    cows += `<div class="gs-sub">Herd season</div><div class="gs-opts">${gsChips('season', ['Spring','Fall'], true)}</div>`;
+    return gsBox('Which cows?','pick as many as you like — skip for all', !!any, cows);
+  }
   function gsRenderQuestions(){
     try{ populateAdvancedSearchDropdowns(); }catch(e){}
     const a = gs.a, v = gsVariant();
@@ -11746,30 +11802,48 @@
         `<div class="gs-opts">${gsSingleChips('kind',[['calved','Cows that calved'],['notcalved','Not calved yet']])}</div>`);
       if(!a.kind){ document.getElementById('gsBody').innerHTML = html; return; }
     }
-    if(v === 'weaning'){
-      html += gsBox('When were they weaned?','',!!a.when,
-        `<div class="gs-opts">${gsSingleChips('when',[['today','Today'],['week','This week'],['notyet','Not weaned yet'],['all','All weaned'],['pick','Pick dates']])}</div>`+
-        (a.when==='pick' ? `<div class="gs-dates"><div style="flex:1"><label>From</label><input type="date" id="gsPickFrom" value="${a.pickFrom}"/></div><div style="flex:1"><label>To</label><input type="date" id="gsPickTo" value="${a.pickTo}"/></div></div>` : ''));
+    if(v === 'weaning') html += gsDatesBox('When were they weaned?',[['today','Today'],['week','This week'],['notyet','Not weaned yet'],['all','All weaned'],['pick','Pick dates']]);
+    if(v === 'calved') html += gsDatesBox('When did they calve?',[['today','Today'],['week','This week'],['month','This month'],['any','Any time'],['pick','Pick dates']]);
+    if(v === 'breeding'){
+      html += gsBox('What do you want to see?','',!!a.kind,
+        `<div class="gs-opts">${gsSingleChips('kind',[['expecting','Bred, due to calve'],['due','Due soon'],['open','Open'],['unchecked','Not preg-checked yet']])}</div>`+
+        (a.kind==='due' ? `<div class="gs-sub">Due within</div><div class="gs-opts">${gsSingleChips('dueDays',[['7','7 days'],['14','14 days'],['30','30 days']])}</div>` : ''));
+      if(!a.kind){ document.getElementById('gsBody').innerHTML = html; return; }
     }
-    if(v === 'calved'){
-      html += gsBox('When did they calve?','',!!a.when,
-        `<div class="gs-opts">${gsSingleChips('when',[['today','Today'],['week','This week'],['month','This month'],['any','Any time'],['pick','Pick dates']])}</div>`+
-        (a.when==='pick' ? `<div class="gs-dates"><div style="flex:1"><label>From</label><input type="date" id="gsPickFrom" value="${a.pickFrom}"/></div><div style="flex:1"><label>To</label><input type="date" id="gsPickTo" value="${a.pickTo}"/></div></div>` : ''));
+    if(v === 'health'){
+      html += gsDatesBox('When were they treated?',[['today','Today'],['week','This week'],['month','This month'],['any','Any time'],['pick','Pick dates']]);
+      const meds = gsSelectOptions('advSearchMedicine'), reasons = gsSelectOptions('advSearchReason');
+      let t = '';
+      if(meds.length) t += `<div class="gs-sub">Medicine</div><div class="gs-opts">${gsChips('medicine', meds, true)}</div>`;
+      if(reasons.length) t += `<div class="gs-sub">Reason</div><div class="gs-opts">${gsChips('reason', reasons, true)}</div>`;
+      html += gsBox('What were they treated with, or for?','pick as many as you like — skip for any', !!(a.medicine.length || a.reason.length), t || '<div style="font-size:12px;color:#6b6350;">No medicines or reasons set up yet.</div>');
+      html += gsBox('Treated more than once?','skip for any', !!a.minTimes,
+        `<div class="gs-opts">${gsSingleChips('minTimes',[['2','2 or more times'],['3','3 or more times']])}<div class="gs-opt ${a.same?'on':''}" data-k="same" data-t="flag">Same reason each time</div></div>`);
     }
-    const any = a.location.length || a.owner.length || a.group.length || a.season.length;
-    let cows = '';
-    const locs = gsSelectOptions('advSearchLocation'), owners = gsSelectOptions('advSearchOwner'), groups = gsSelectOptions('advSearchGroup');
-    if(locs.length) cows += `<div class="gs-sub">Location</div><div class="gs-opts">${gsChips('location', locs, true)}</div>`;
-    if(owners.length) cows += `<div class="gs-sub">Owner</div><div class="gs-opts">${gsChips('owner', owners, true)}</div>`;
-    if(groups.length) cows += `<div class="gs-sub">Group</div><div class="gs-opts">${gsChips('group', groups, true)}</div>`;
-    cows += `<div class="gs-sub">Herd season</div><div class="gs-opts">${gsChips('season', ['Spring','Fall'], true)}</div>`;
-    html += gsBox('Which cows?','pick as many as you like — skip for all', !!any, cows);
-    if(v !== 'notcalved'){
+    if(v === 'weights'){
+      html += gsBox('What do you want to see?','',!!a.kind,
+        `<div class="gs-opts">${gsSingleChips('kind',[['has','Cows with a weight'],['missing','Missing a weight']])}</div>`);
+      if(!a.kind){ document.getElementById('gsBody').innerHTML = html; return; }
+      if(a.kind === 'has'){
+        html += gsDatesBox('When were they weighed?',[['today','Today'],['week','This week'],['month','This month'],['any','Any time'],['pick','Pick dates']]);
+        html += gsBox('Weight between…','skip for any', !!(a.wtMin !== '' || a.wtMax !== ''),
+          `<div class="gs-dates"><div style="flex:1"><label>At least (lbs)</label><input type="number" id="gsWtMin" inputmode="decimal" value="${escapeHtml(String(a.wtMin))}" placeholder="Any"/></div><div style="flex:1"><label>No more than (lbs)</label><input type="number" id="gsWtMax" inputmode="decimal" value="${escapeHtml(String(a.wtMax))}" placeholder="Any"/></div></div>`);
+      }
+    }
+    html += gsCowsBox();
+    if(v === 'weaning' || v === 'calved'){
       let calves = `<div class="gs-sub">Sex</div><div class="gs-opts">${gsSingleChips('sex',[['B','Bulls'],['H','Heifers']])}</div>`;
       if(v === 'calved') calves += `<div class="gs-sub">Birth assist</div><div class="gs-opts">${gsChips('assist',['None','Easy Pull','Hard Pull','C-Section'], false)}</div>`;
       const sires = gsSelectOptions('advSearchCalfSire');
       if(sires.length) calves += `<div class="gs-sub">Sire</div><div class="gs-opts">${gsChips('sire', sires, true)}</div>`;
       html += gsBox('Only certain calves?','skip for all', !!(a.sex || a.assist || a.sire.length), calves);
+    }
+    if(v === 'breeding'){
+      const bulls = gsSelectOptions('advSearchBredTo');
+      let b = '';
+      if(bulls.length) b += `<div class="gs-sub">Bred to</div><div class="gs-opts">${gsChips('bredTo', bulls, true)}</div>`;
+      b += `<div class="gs-sub">Method</div><div class="gs-opts">${gsChips('method',['AI','ET','BB'], false)}</div>`;
+      html += gsBox('Only certain breedings?','skip for all', !!(a.bredTo.length || a.method), b);
     }
     const sorts = GS_SORTS[v];
     html += gsBox('How should I sort them?','', true,
@@ -11788,6 +11862,9 @@
       <div class="gs-q">What do you want to look at?</div>
       <div class="gs-cat" data-cat="calving"><div class="ic">🍼</div><div><b>Calving</b><span>Who calved, who hasn't, birth details</span></div></div>
       <div class="gs-cat" data-cat="weaning"><div class="ic">⚖️</div><div><b>Weaning</b><span>Weaned, not weaned, weights and gain</span></div></div>
+      <div class="gs-cat" data-cat="breeding"><div class="ic">🐄</div><div><b>Breeding</b><span>Due soon, open, bred to, preg checks</span></div></div>
+      <div class="gs-cat" data-cat="health"><div class="ic">💉</div><div><b>Health</b><span>Treatments and repeat treatments</span></div></div>
+      <div class="gs-cat" data-cat="weights"><div class="ic">📏</div><div><b>Weights</b><span>Cow weights, missing a weight</span></div></div>
       <div style="font-family:Arial,sans-serif;font-size:12px;color:#6b6350;margin-top:6px;">Need something else? Use Advanced Search.</div>`;
   }
   function gsRender(){
@@ -11799,7 +11876,7 @@
       gsRenderCats();
       bar.innerHTML = '<button class="btn btn-outline" id="gsSavedBtn">★ Saved reports</button>';
     } else if(gs.step === 'q'){
-      step.innerHTML = `<span class="gs-back" id="gsBackCat">‹ Back</span> &nbsp; Step 2 of 3 — ${gs.cat === 'weaning' ? 'Weaning' : 'Calving'}`;
+      step.innerHTML = `<span class="gs-back" id="gsBackCat">‹ Back</span> &nbsp; Step 2 of 3 — ${GS_NAMES[gs.cat] || ''}`;
       gsRenderQuestions();
       bar.innerHTML = '<button class="btn btn-outline" id="gsClearBtn">Clear</button><button class="btn btn-green" id="gsGoBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">Show Results ›</button>';
     } else {
@@ -11815,7 +11892,11 @@
     gs.cat = cat; gs.a = a;
     const v = gsVariant();
     gs.cat = save.cat; gs.a = save.a;
-    parts.push(cat === 'weaning' ? 'Weaning' : (v === 'notcalved' ? 'Calving: not calved yet' : 'Calving'));
+    const K = { notcalved:'Calving: not calved yet', calved:'Calving', weaning:'Weaning', breeding:'Breeding', health:'Health', weights:'Weights' };
+    parts.push(K[v] || 'Search');
+    const KIND = { expecting:'Bred, due to calve', open:'Open', unchecked:'Not preg-checked yet', has:'With a weight', missing:'Missing a weight' };
+    if(v === 'breeding' && a.kind === 'due') parts.push('Due within ' + (a.dueDays || '14') + ' days');
+    else if((v === 'breeding' || v === 'weights') && KIND[a.kind]) parts.push(KIND[a.kind]);
     const W = { today:'Today', week:'This week', month:'This month', notyet:'Not weaned yet', all:'All weaned', any:'Any time' };
     if(a.when === 'pick') parts.push((a.pickFrom||'…') + ' to ' + (a.pickTo||'…'));
     else if(a.when && W[a.when]){
@@ -11832,18 +11913,23 @@
     if(a.sex) parts.push(a.sex === 'B' ? 'Bulls' : 'Heifers');
     if(a.assist) parts.push(a.assist);
     if(a.sire && a.sire.length) parts.push('Sire ' + a.sire.join(', '));
+    if(a.bredTo && a.bredTo.length) parts.push('Bred to ' + a.bredTo.join(', '));
+    if(a.method) parts.push(a.method);
+    if(a.medicine && a.medicine.length) parts.push(a.medicine.join(', '));
+    if(a.reason && a.reason.length) parts.push('for ' + a.reason.join(', '));
+    if(a.minTimes) parts.push('treated ' + a.minTimes + '+ times' + (a.same ? ' (same reason)' : ''));
+    if(v === 'weights' && (a.wtMin !== '' || a.wtMax !== '')) parts.push((a.wtMin !== '' ? a.wtMin : '0') + '–' + (a.wtMax !== '' ? a.wtMax : 'up') + ' lbs');
     const so = (GS_SORTS[v] || []).find(x=> x[0] === a.sort);
     if(so) parts.push('sorted by ' + so[1].toLowerCase());
     return parts.join(' · ');
   }
   function gsTakeResults(){
-    const wrap = document.getElementById('advResultsWrap');
-    document.getElementById('gsResultsHost').appendChild(wrap);
+    document.getElementById('gsResultsHost').appendChild(document.getElementById('advResultsWrap'));
   }
   function gsReleaseResults(){
     if(!guidedActive) return;
     guidedActive = false;
-    ['location','owner','group','season','calfSire'].forEach(k=> guidedMulti[k] = []);
+    Object.keys(guidedMulti).forEach(k=> guidedMulti[k] = []);
     document.getElementById('advancedSearchView').appendChild(document.getElementById('advResultsWrap'));
     if(guidedSavedCols){ advCols.cow = guidedSavedCols.cow; advCols.calf = guidedSavedCols.calf; guidedSavedCols = null; }
     clearAdvancedSearch();
@@ -11871,8 +11957,10 @@
   function gsRun(){
     const a = gs.a, v = gsVariant(), mode = gsMode();
     const setV = (id, val)=>{ const el = document.getElementById(id); if(el) el.value = val; };
+    const setC = (id, on)=>{ const el = document.getElementById(id); if(el) el.checked = !!on; };
     if(v === 'weaning' && !a.when){ showToast('Pick when they were weaned'); return false; }
-    if(gs.cat === 'calving' && !a.kind){ showToast('Pick what you want to see'); return false; }
+    if((gs.cat === 'calving' || v === 'breeding' || v === 'weights') && !a.kind){ showToast('Pick what you want to see'); return false; }
+    if(v === 'health' && !(a.when && a.when !== 'any') && !a.medicine.length && !a.reason.length && !a.minTimes){ showToast('Answer at least one question'); return false; }
     if(a.when === 'pick' && !a.pickFrom && !a.pickTo){ showToast('Pick at least one date'); return false; }
     gsReleaseResults();
     if(advMode !== mode) setAdvPage(mode);
@@ -11895,10 +11983,27 @@
       else { setV('advSearchWeanFrom', from); setV('advSearchWeanTo', to); }
     } else if(v === 'calved'){
       setV('advSearchDateFrom', from); setV('advSearchDateTo', to);
-    } else {
+    } else if(v === 'notcalved'){
       setV('advSearchNotCalved','yes');
+    } else if(v === 'breeding'){
+      if(a.kind === 'expecting') setV('advSearchNotCalved','yes');
+      else if(a.kind === 'open') setC('advSearchOpenOnly', true);
+      else if(a.kind === 'unchecked') setC('advSearchUnchecked', true);
+      else if(a.kind === 'due') setV('advSearchDueWithin', a.dueDays || '14');
+      setV('advSearchMethod', a.method);
+    } else if(v === 'health'){
+      setV('advSearchDateFrom', from); setV('advSearchDateTo', to);
+      setV('advSearchMinTimes', a.minTimes || '1');
+      if(a.same && a.minTimes) setC('advSearchSameReason', true);
+    } else if(v === 'weights'){
+      if(a.kind === 'missing') setC('advSearchMissingWeight', true);
+      else {
+        setV('advSearchDateFrom', from); setV('advSearchDateTo', to);
+        setV('advSearchCowWtMin', a.wtMin !== '' ? a.wtMin : '0');
+        if(a.wtMax !== '') setV('advSearchCowWtMax', a.wtMax);
+      }
     }
-    if(v !== 'notcalved'){
+    if(v === 'weaning' || v === 'calved'){
       setV('advSearchCalfSex', a.sex);
       if(v === 'calved') setV('advSearchBirthAssist', a.assist);
     }
@@ -11909,7 +12014,11 @@
     setV('advSortDir1', dir);
     // several-at-once picks
     guidedMulti.location = a.location.slice(); guidedMulti.owner = a.owner.slice(); guidedMulti.group = a.group.slice();
-    guidedMulti.season = a.season.slice(); guidedMulti.calfSire = v === 'notcalved' ? [] : a.sire.slice();
+    guidedMulti.season = a.season.slice();
+    guidedMulti.calfSire = (v === 'weaning' || v === 'calved') ? a.sire.slice() : [];
+    guidedMulti.bredTo = v === 'breeding' ? a.bredTo.slice() : [];
+    guidedMulti.medicine = v === 'health' ? a.medicine.slice() : [];
+    guidedMulti.reason = v === 'health' ? a.reason.slice() : [];
     guidedActive = true;
     gsTakeResults();
     runAdvancedSearch();
@@ -11923,7 +12032,7 @@
     // nothing found: say what dates are actually on file, so a date mix-up is easy to spot
     let hint = document.getElementById('gsEmptyHint');
     if(hint) hint.remove();
-    if(document.querySelector('#advancedSearchResults .empty') && gsVariant() === 'weaning'){
+    if(document.querySelector('#advancedSearchResults .empty') && v === 'weaning'){
       const dates = calvings.map(c=> c.weaning_date).filter(Boolean).sort();
       const latest = dates.length ? dates[dates.length - 1] : '';
       const nLatest = dates.filter(d=> d === latest).length;
@@ -11937,7 +12046,7 @@
     return true;
   }
   function gsRunSaved(st){
-    gs = { step:'q', cat: st.cat, a: Object.assign({ when:'', pickFrom:'', pickTo:'', kind:'', location:[], owner:[], group:[], season:[], sex:'', assist:'', sire:[], sort:'', rev:false, cols:[] }, JSON.parse(JSON.stringify(st.a || {}))) };
+    gs = { step:'q', cat: st.cat, a: Object.assign(gsBlankAnswers(), JSON.parse(JSON.stringify(st.a || {}))) };
     gsRun();
   }
   (function wireGuided(){
@@ -11965,7 +12074,7 @@
       else if(kind === 's'){
         if(k === 'sort') a.sort = val;
         else if(k === 'kind'){ if(a.kind !== val){ a.kind = val; gsApplyDefaults(); } }
-        else if(k === 'when') a.when = val;
+        else if(k === 'when' || k === 'dueDays') a[k] = val;
         else a[k] = (a[k] === val) ? '' : val;
       }
       const y = window.scrollY;
@@ -11975,6 +12084,8 @@
     guidedSearchView.addEventListener('change', (e)=>{
       if(e.target.id === 'gsPickFrom') gs.a.pickFrom = e.target.value;
       if(e.target.id === 'gsPickTo') gs.a.pickTo = e.target.value;
+      if(e.target.id === 'gsWtMin') gs.a.wtMin = e.target.value;
+      if(e.target.id === 'gsWtMax') gs.a.wtMax = e.target.value;
     });
   })();
 
