@@ -11763,16 +11763,19 @@
   }
   function gsVariant(){
     if(gs.cat === 'calving') return gs.a.kind === 'notcalved' ? 'notcalved' : 'calved';
+    if(gs.cat === 'brsummary') return 'brsummary';
+    if(gs.cat === 'bsummary') return 'calved';   // same questions as Calving, shown as a summary
     if(gs.cat === 'wsummary') return 'weaning';   // same questions as Weaning, shown as a summary
     return gs.cat;   // weaning, breeding, health, weights
   }
-  const GS_NAMES = { calving:'Calving', weaning:'Weaning', wsummary:'Weaning Summary', breeding:'Breeding', health:'Health', weights:'Weights' };
+  const GS_NAMES = { calving:'Calving', weaning:'Weaning', wsummary:'Weaning Summary', bsummary:'Birthing Summary', brsummary:'Breeding Summary', breeding:'Breeding', health:'Health', weights:'Weights' };
   const GS_SORTS = {
     weaning:   [['gain','Gain / day','desc'],['ww','Weaning weight','desc'],['wdate','Weaning date','desc'],['bw','Birth weight','desc'],['num','Cow #','asc']],
     calved:    [['cdate','Calving date','desc'],['bw','Birth weight','desc'],['sire','Sire','asc'],['num','Cow #','asc']],
     notcalved: [['num','Cow #','asc'],['bdate','Breed date','asc'],['lot','Location','asc']],
     breeding:  [['num','Cow #','asc'],['due','Due date','asc'],['bdate','Breed date','asc'],['lot','Location','asc']],
     health:    [['tdate','Last treatment date','desc'],['ntreat','Number of treatments','desc'],['num','Cow #','asc'],['lot','Location','asc']],
+    brsummary: [['x','x','asc']],
     weights:   [['wt','Weight','desc'],['wdate2','Weigh date','desc'],['num','Cow #','asc'],['lot','Location','asc']]
   };
   const GS_COLS = {
@@ -11781,7 +11784,8 @@
     notcalved:['b_date','b_to','b_due'],
     breeding:['b_date','b_to','b_due','b_check'],
     health:['h_last','h_med','h_reason','h_all'],
-    weights:['w_last','w_lastdate']
+    weights:['w_last','w_lastdate'],
+    brsummary:[]
   };
   function gsMode(){ const v = gsVariant(); return (v === 'weaning' || v === 'calved') ? 'calf' : 'cow'; }
   function gsApplyDefaults(){
@@ -11857,6 +11861,16 @@
     const a = gs.a, v = gsVariant();
     gsBoxIdx = 0;
     let html = '';
+    if(gs.cat === 'brsummary'){
+      html += gsDatesBox('When were they bred?',[['year','This year'],['12mo','Last 12 months'],['all','Any time'],['pick','Pick dates']]);
+      html += gsCowsBox();
+      const bulls0 = gsSelectOptions('advSearchBredTo');
+      let b0 = '';
+      if(bulls0.length) b0 += `<div class="gs-sub">Bred to</div><div class="gs-opts">${gsChips('bredTo', bulls0, true)}</div>`;
+      b0 += `<div class="gs-sub">Method</div><div class="gs-opts">${gsChips('method',['AI','ET','BB'], false)}</div>`;
+      html += gsBox('Only certain breedings?','skip for all', !!(a.bredTo.length || a.method), b0);
+      gsPut(html); return;
+    }
     if(gs.cat === 'calving'){
       html += gsBox('What do you want to see?','',!!a.kind,
         `<div class="gs-opts">${gsSingleChips('kind',[['calved','Cows that calved'],['notcalved','Not calved yet']])}</div>`);
@@ -11906,7 +11920,7 @@
       b += `<div class="gs-sub">Method</div><div class="gs-opts">${gsChips('method',['AI','ET','BB'], false)}</div>`;
       html += gsBox('Only certain breedings?','skip for all', !!(a.bredTo.length || a.method), b);
     }
-    if(gs.cat !== 'wsummary'){
+    if(gs.cat !== 'wsummary' && gs.cat !== 'bsummary' && gs.cat !== 'brsummary'){
     const sorts = GS_SORTS[v];
     const sList = gsSortList(a, v);
     const sortAns = sList.map(k=> (sorts.find(x=> x[0] === k) || [k,k])[1]).join(' › ');
@@ -11928,11 +11942,13 @@
       ['calving','🍼','Calving',"Who calved, who hasn't, birth details"],
       ['weaning','⚖️','Weaning','Weaned, not weaned, weights and gain'],
       ['wsummary','📊','Weaning Summary','Averages and breakdowns, no cow list'],
+      ['bsummary','🐮','Birthing Summary','Bulls vs heifers, birth assist, birth weights'],
+      ['brsummary','📈','Breeding Summary','Success by method, sire and location'],
       ['breeding','🐄','Breeding','Due soon, open, bred to, preg checks'],
       ['health','💉','Health','Treatments and repeat treatments'],
       ['weights','📏','Weights','Cow weights, missing a weight']
     ];
-    const list = gsCalfOnly ? all.slice(0,3) : all;
+    const list = gsCalfOnly ? all.slice(0,4) : all;
     document.getElementById('gsBody').innerHTML = `
       <div class="gs-q">What do you want to look at?</div>` +
       list.map(c=> `<div class="gs-cat" data-cat="${c[0]}"><div class="ic">${c[1]}</div><div><b>${c[2]}</b><span>${c[3]}</span></div></div>`).join('') +
@@ -11954,7 +11970,7 @@
       bar.innerHTML = '<button class="btn btn-outline" id="gsClearBtn">Clear</button><button class="btn btn-green" id="gsGoBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">Show Results ›</button>';
     } else {
       step.innerHTML = `<div class="gs-steprow"><span class="gs-back" id="gsBackQ">‹ Change answers</span><span>Step 3 of 3</span></div>`;
-      bar.innerHTML = '<button class="btn btn-outline" id="gsChangeBtn">Change answers</button>' + (gs.cat === 'wsummary' ? '<button class="btn btn-outline" id="gsPrintBtn">🖨️ Print</button>' : '') + '<button class="btn" id="gsSaveBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">💾 Save</button>';
+      bar.innerHTML = '<button class="btn btn-outline" id="gsChangeBtn">‹ Change</button>' + ((gs.cat === 'wsummary' || gs.cat === 'bsummary' || gs.cat === 'brsummary') ? '<button class="btn btn-outline" id="gsPrintBtn">🖨️ Print</button>' : '') + '<button class="btn" id="gsSaveBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">💾 Save</button>';
     }
     window.scrollTo(0,0);
   }
@@ -11966,11 +11982,11 @@
     const v = gsVariant();
     gs.cat = save.cat; gs.a = save.a;
     const K = { notcalved:'Calving: not calved yet', calved:'Calving', weaning:'Weaning', breeding:'Breeding', health:'Health', weights:'Weights' };
-    parts.push(cat === 'wsummary' ? 'Weaning summary' : (K[v] || 'Search'));
+    parts.push(cat === 'brsummary' ? 'Breeding summary' : cat === 'wsummary' ? 'Weaning summary' : cat === 'bsummary' ? 'Birthing summary' : (K[v] || 'Search'));
     const KIND = { expecting:'Bred, due to calve', open:'Open', unchecked:'Not preg-checked yet', has:'With a weight', missing:'Missing a weight' };
     if(v === 'breeding' && a.kind === 'due') parts.push('Due within ' + (a.dueDays || '14') + ' days');
     else if((v === 'breeding' || v === 'weights') && KIND[a.kind]) parts.push(KIND[a.kind]);
-    const W = { today:'Today', week:'This week', month:'This month', notyet:'Not weaned yet', all:'All weaned', any:'Any time' };
+    const W = { today:'Today', week:'This week', month:'This month', notyet:'Not weaned yet', all: cat === 'brsummary' ? 'Any time' : 'All weaned', any:'Any time', year:'This year', '12mo':'Last 12 months' };
     if(a.when === 'pick') parts.push((a.pickFrom||'…') + ' to ' + (a.pickTo||'…'));
     else if(a.when && W[a.when]){
       let t = W[a.when];
@@ -11992,7 +12008,7 @@
     if(a.reason && a.reason.length) parts.push('for ' + a.reason.join(', '));
     if(a.minTimes) parts.push('treated ' + a.minTimes + '+ times' + (a.same ? ' (same reason)' : ''));
     if(v === 'weights' && (a.wtMin !== '' || a.wtMax !== '')) parts.push((a.wtMin !== '' ? a.wtMin : '0') + '–' + (a.wtMax !== '' ? a.wtMax : 'up') + ' lbs');
-    const sNames = cat === 'wsummary' ? [] : gsSortList(a, v).map(k=> ((GS_SORTS[v] || []).find(x=> x[0] === k) || [k,k])[1].toLowerCase());
+    const sNames = (cat === 'wsummary' || cat === 'bsummary' || cat === 'brsummary') ? [] : gsSortList(a, v).map(k=> ((GS_SORTS[v] || []).find(x=> x[0] === k) || [k,k])[1].toLowerCase());
     if(sNames.length) parts.push('sorted by ' + sNames.join(', then '));
     return parts.join(' · ');
   }
@@ -12015,7 +12031,7 @@
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     fabAdd.classList.add('hidden'); fabAddEquipment.classList.add('hidden');
     guidedSearchView.classList.remove('hidden');
-    setHeaderTitle(gsCalfOnly && ['calving','weaning','wsummary'].includes(gs.cat) ? 'Calf' : 'Guided', 'Search');
+    setHeaderTitle(gsCalfOnly && ['calving','weaning','wsummary','bsummary'].includes(gs.cat) ? 'Calf' : 'Guided', 'Search');
     gs.step = 'res';
     gsRender();
   }
@@ -12024,13 +12040,14 @@
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     fabAdd.classList.add('hidden'); fabAddEquipment.classList.add('hidden');
     guidedSearchView.classList.remove('hidden');
-    if(gsCalfOnly && !['calving','weaning','wsummary'].includes(gs.cat)){ gs.cat = ''; gs.step = 'cat'; }
+    if(gsCalfOnly && !['calving','weaning','wsummary','bsummary'].includes(gs.cat)){ gs.cat = ''; gs.step = 'cat'; }
     setHeaderTitle(gsCalfOnly ? 'Calf' : 'Guided', 'Search');
     if(gs.step === 'res') gs.step = 'q';
     if(!gs.cat) gs.step = 'cat';
     gsRender();
   }
   function gsRun(){
+    if(gs.cat === 'brsummary') return gsRunBreedSummary();
     const a = gs.a, v = gsVariant(), mode = gsMode();
     const setV = (id, val)=>{ const el = document.getElementById(id); if(el) el.value = val; };
     const setC = (id, on)=>{ const el = document.getElementById(id); if(el) el.checked = !!on; };
@@ -12101,11 +12118,11 @@
     gsTakeResults();
     runAdvancedSearch();
     showGuidedResults();
-    if(gs.cat === 'wsummary'){
+    if(gs.cat === 'wsummary' || gs.cat === 'bsummary'){
       document.getElementById('advResultsWrap').style.display = 'none';
       const old = document.getElementById('gsSummaryBox'); if(old) old.remove();
       const box = document.createElement('div'); box.id = 'gsSummaryBox';
-      box.innerHTML = gsBuildSummary(lastAdvRowObjs);
+      box.innerHTML = gs.cat === 'bsummary' ? gsBuildBirthSummary(lastAdvRowObjs) : gsBuildSummary(lastAdvRowObjs);
       document.getElementById('gsResultsHost').appendChild(box);
     }
     let sumEl = document.getElementById('gsSumLine');
@@ -12206,10 +12223,213 @@
     }
     return html;
   }
+
+  // ---- Birthing Summary: averages and breakdowns for the calves a Calving search finds (no cow list) ----
+  function gsBuildBirthSummary(rows){
+    const calves = rows.filter(r=> r.cv);
+    const n = calves.length;
+    const NAVY = '#0C447C', GRAY = '#6b6350';
+    const card = (title, inner)=> `<div style="background:#fff;border:2px solid #2E88C4;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-family:Arial,sans-serif;"><div style="font-size:15px;font-weight:700;color:${NAVY};margin-bottom:6px;">${title}</div>${inner}</div>`;
+    if(!n) return card('Birthing Summary', `<div style="font-size:14px;color:${GRAY};">No calves matched. Change the answers and try again.</div>`);
+    const mean = a=> a.length ? a.reduce((x,y)=>x+y,0) / a.length : null;
+    const f1 = v=> v == null ? '–' : (Math.round(v * 10) / 10).toFixed(1);
+    const pct = (k, tot)=> tot ? Math.round(k / tot * 100) + '%' : '–';
+    const info = calves.map(r=>{
+      const cv = r.cv;
+      const bw = (cv.birth_weight != null && Number(cv.birth_weight) > 0) ? Number(cv.birth_weight) : null;
+      const ba = cv.birth_assist || 'None';
+      return { r, cv, bw, ba, assisted: ba !== 'None', hard: ba === 'Hard Pull' || ba === 'C-Section', died: cv.calf_outcome === 'died', sex: calfSexLabel(cv.calf_sex) };
+    });
+    const bws = info.filter(x=> x.bw != null).map(x=> x.bw);
+    const range = (a, fn)=> a.length ? ` <span style="color:${GRAY};font-weight:400;">(${fn(Math.min.apply(null,a))} – ${fn(Math.max.apply(null,a))})</span>` : '';
+    const kv = (k, v)=> `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #dbe7f1;font-size:14px;"><span style="color:${GRAY};">${k}</span><b style="color:${NAVY};text-align:right;">${v}</b></div>`;
+    const cnt = fn=> info.filter(fn).length;
+    const mothers = new Set(info.map(x=> x.r.c.number)).size;
+    const cdates = info.map(x=> x.cv.calving_date).filter(Boolean).sort();
+    const bulls = cnt(x=> x.cv.calf_sex === 'B'), heifers = cnt(x=> x.cv.calf_sex === 'H');
+    const assisted = cnt(x=> x.assisted), hard = cnt(x=> x.hard), died = cnt(x=> x.died);
+    let html = card('Overall',
+      kv('Calves', n + ' from ' + mothers + ' cows') +
+      (cdates.length ? kv('Born between', fmtDateShort(cdates[0]) + ' – ' + fmtDateShort(cdates[cdates.length-1])) : '') +
+      kv('Bulls', bulls + ' (' + pct(bulls, n) + ')') +
+      kv('Heifers', heifers + ' (' + pct(heifers, n) + ')') +
+      kv('Natural births (no assist)', (n - assisted) + ' (' + pct(n - assisted, n) + ')') +
+      kv('Needed assistance', assisted + ' (' + pct(assisted, n) + ')') +
+      kv('Hard pull or C-section', hard + ' (' + pct(hard, n) + ')') +
+      kv('Calves lost (died)', died + ' (' + pct(died, n) + ')') +
+      kv('Avg birth weight', f1(mean(bws)) + ' lbs' + range(bws, f1)) +
+      kv('Missing a birth weight', String(n - bws.length)));
+    const th = `text-align:left;padding:4px 4px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:${GRAY};border-bottom:2px solid #2E88C4;`;
+    const thr = th.replace('text-align:left','text-align:right');
+    const tdl = `padding:6px 4px;font-size:13px;font-weight:700;color:${NAVY};border-bottom:1px solid #dbe7f1;overflow-wrap:break-word;min-width:64px;`;
+    const tdr = 'padding:6px 4px;font-size:13px;text-align:right;color:#2B2620;border-bottom:1px solid #dbe7f1;white-space:nowrap;';
+    // cols: list of [heading, fn(arr) -> text]
+    const group = (title, keyFn, cols, order)=>{
+      const g = new Map();
+      info.forEach(x=>{ const k = keyFn(x) || '(none)'; if(!g.has(k)) g.set(k, []); g.get(k).push(x); });
+      let list = [...g.entries()];
+      list.sort(order || ((a,b)=> b[1].length - a[1].length || String(a[0]).localeCompare(String(b[0]))));
+      const body = list.map(([k, arr])=> `<tr><td style="${tdl}">${escapeHtml(String(k))}</td>` + cols.map(c=> `<td style="${tdr}">${c[1](arr)}</td>`).join('') + `</tr>`).join('');
+      return card(title, `<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="${th}"></th>${cols.map(c=> `<th style="${thr}">${c[0]}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`);
+    };
+    const C_N = ['Calves', a=> String(a.length)], C_P = ['%', a=> pct(a.length, n)];
+    const C_BW = ['Avg birth', a=> f1(mean(a.filter(x=> x.bw != null).map(x=> x.bw)))];
+    const C_AS = ['Assisted', a=> pct(a.filter(x=> x.assisted).length, a.length)];
+    const base = [C_N, C_P, C_BW, C_AS];
+    html += group('Bulls vs heifers', x=> x.sex, base);
+    const ORDER = ['None','Easy Pull','Hard Pull','C-Section'];
+    html += group('Birth assist', x=> x.ba === 'None' ? 'Natural (no assist)' : x.ba, [C_N, C_P, C_BW],
+      (a,b)=> { const ia = ORDER.indexOf(a[0] === 'Natural (no assist)' ? 'None' : a[0]), ib = ORDER.indexOf(b[0] === 'Natural (no assist)' ? 'None' : b[0]); return (ia < 0 ? 9 : ia) - (ib < 0 ? 9 : ib); });
+    html += group('Calf status', x=> advCalfOutcome(x.cv), [C_N, C_P]);
+    html += group('By owner', x=> x.r.c.owner, base);
+    html += group('By location', x=> x.r.c.lot, base);
+    html += group('By sire', x=> x.cv.sire, [C_N, ['Bulls / Heifers', a=> a.filter(x=> x.cv.calf_sex === 'B').length + ' / ' + a.filter(x=> x.cv.calf_sex === 'H').length], C_BW, ['Hard / C-sec', a=> pct(a.filter(x=> x.hard).length, a.length)]]);
+    // calves per week (weeks start on Sunday)
+    const weekStart = iso=>{ const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() - d.getDay()); return localDateFromTimestamp(d); };
+    html += group('Calves per week', x=> x.cv.calving_date ? weekStart(x.cv.calving_date) : '', [C_N, C_P, C_BW],
+      (a,b)=> String(a[0]).localeCompare(String(b[0])));
+    // fix week labels
+    html = html.replace(/<td style="([^"]*)">(\d{4}-\d{2}-\d{2})<\/td>/g, (m, st, d)=> `<td style="${st}">Week of ${fmtDateShort(d)}</td>`);
+
+    // calving spread: how many were born in the first 21 days, the next 21, and later
+    if(cdates.length){
+      const first = cdates[0];
+      const bucket = x=>{ if(!x.cv.calving_date) return null; const d = daysBetween(first, x.cv.calving_date); return d <= 20 ? 0 : d <= 41 ? 1 : 2; };
+      const names = ['First 21 days', 'Days 22 – 42', 'After 42 days'];
+      const counts = [0,0,0]; info.forEach(x=>{ const b = bucket(x); if(b != null) counts[b]++; });
+      let cum = 0;
+      const rowsHtml = names.map((nm,i)=>{ cum += counts[i]; return `<tr><td style="${tdl}">${nm}</td><td style="${tdr}">${counts[i]}</td><td style="${tdr}">${pct(counts[i], n)}</td><td style="${tdr}">${pct(cum, n)}</td></tr>`; }).join('');
+      html += card('Calving spread', kv('First calf', fmtDateShort(first)) + kv('Last calf', fmtDateShort(cdates[cdates.length-1])) +
+        `<table style="width:100%;border-collapse:collapse;margin-top:6px;"><thead><tr><th style="${th}"></th><th style="${thr}">Calves</th><th style="${thr}">%</th><th style="${thr}">Running %</th></tr></thead><tbody>${rowsHtml}</tbody></table>` +
+        `<div style="font-size:11px;color:${GRAY};margin-top:6px;">Counted from the first calf born in this report.</div>`);
+    }
+    // birth weight by sex and by sire
+    const C_MIN = ['Lightest', a=>{ const w = a.filter(x=> x.bw != null).map(x=> x.bw); return w.length ? String(Math.min.apply(null,w)) : '–'; }];
+    const C_MAX = ['Heaviest', a=>{ const w = a.filter(x=> x.bw != null).map(x=> x.bw); return w.length ? String(Math.max.apply(null,w)) : '–'; }];
+    const bwCols = [C_N, C_BW, C_MIN, C_MAX];
+    html += group('Birth weight by sex', x=> x.sex, bwCols);
+    html += group('Birth weight by sire', x=> x.cv.sire, bwCols);
+    // birth weight vs hard pulls
+    const wi = info.filter(x=> x.bw != null);
+    if(wi.length){
+      const avgOf = fn=> f1(mean(wi.filter(fn).map(x=> x.bw)));
+      const brk = x=> x.bw < 70 ? 'Under 70 lbs' : x.bw < 80 ? '70 – 79 lbs' : x.bw < 90 ? '80 – 89 lbs' : '90 lbs and up';
+      const BORD = ['Under 70 lbs','70 – 79 lbs','80 – 89 lbs','90 lbs and up'];
+      const bg = new Map(); wi.forEach(x=>{ const k = brk(x); if(!bg.has(k)) bg.set(k, []); bg.get(k).push(x); });
+      const brows = BORD.filter(k=> bg.has(k)).map(k=>{ const a = bg.get(k); return `<tr><td style="${tdl}">${k}</td><td style="${tdr}">${a.length}</td><td style="${tdr}">${pct(a.filter(x=> x.assisted).length, a.length)}</td><td style="${tdr}">${pct(a.filter(x=> x.hard).length, a.length)}</td></tr>`; }).join('');
+      html += card('Birth weight vs. hard pulls',
+        kv('Avg birth weight, natural births', avgOf(x=> !x.assisted) + ' lbs') +
+        kv('Avg birth weight, any assist', avgOf(x=> x.assisted) + ' lbs') +
+        kv('Avg birth weight, hard pull or C-section', avgOf(x=> x.hard) + ' lbs') +
+        `<table style="width:100%;border-collapse:collapse;margin-top:6px;"><thead><tr><th style="${th}">Birth weight</th><th style="${thr}">Calves</th><th style="${thr}">Assisted</th><th style="${thr}">Hard / C-sec</th></tr></thead><tbody>${brows}</tbody></table>` +
+        `<div style="font-size:11px;color:${GRAY};margin-top:6px;">Only calves with a birth weight are counted here (${wi.length} of ${n}).</div>`);
+    }
+    // heaviest / lightest and who needed help (mother numbers)
+    const w2 = info.filter(x=> x.bw != null);
+    let ex = '';
+    if(w2.length){
+      const hv = w2.reduce((a,b)=> b.bw > a.bw ? b : a), lt = w2.reduce((a,b)=> b.bw < a.bw ? b : a);
+      ex += kv('Heaviest', '#' + escapeHtml(String(hv.r.c.number)) + ' · ' + hv.bw + ' lbs') + kv('Lightest', '#' + escapeHtml(String(lt.r.c.number)) + ' · ' + lt.bw + ' lbs');
+    }
+    const help = info.filter(x=> x.hard).map(x=> '#' + escapeHtml(String(x.r.c.number)) + ' (' + escapeHtml(x.ba) + ')');
+    const lost = info.filter(x=> x.died).map(x=> '#' + escapeHtml(String(x.r.c.number)));
+    ex += kv('Hard pull / C-section', help.length ? help.join(', ') : 'None');
+    ex += kv('Calves lost', lost.length ? lost.join(', ') : 'None');
+    html += card('Notes (mother #)', ex);
+    return html;
+  }
+
+  // ---- Breeding Summary: how breedings turned out, by method, sire, location, owner and month ----
+  function gsRunBreedSummary(){
+    const a = gs.a;
+    if(a.when === 'pick' && !a.pickFrom && !a.pickTo){ showToast('Pick at least one date'); return false; }
+    gsReleaseResults();
+    const today = gsDateStr(0);
+    let from = '', to = '';
+    const when = a.when || 'all';
+    if(when === 'year'){ from = today.slice(0,4) + '-01-01'; to = today; }
+    else if(when === '12mo'){ from = gsDateStr(-365); to = today; }
+    else if(when === 'pick'){ from = a.pickFrom || ''; to = a.pickTo || ''; }
+    const cowBy = new Map(); cows.forEach(c=> cowBy.set(String(c.number), c));
+    const recs = breedingRecords.filter(b=>{
+      if(!b.breed_date) return false;
+      if(from && b.breed_date < from) return false;
+      if(to && b.breed_date > to) return false;
+      const c = cowBy.get(String(b.cow_number)); if(!c) return false;
+      if(a.location.length && !a.location.includes(c.lot)) return false;
+      if(a.owner.length && !a.owner.includes(c.owner)) return false;
+      if(a.group.length && !a.group.includes(c.cow_group)) return false;
+      if(a.season.length && !a.season.includes(c.herd_season)) return false;
+      if(a.method && b.pregnancy_method !== a.method) return false;
+      if(a.bredTo.length && !a.bredTo.includes(b.bred_to) && !a.bredTo.includes(b.natural_sire)) return false;
+      return true;
+    });
+    showGuidedResults();
+    const old = document.getElementById('gsSummaryBox'); if(old) old.remove();
+    const box = document.createElement('div'); box.id = 'gsSummaryBox';
+    box.innerHTML = gsBuildBreedSummary(recs, cowBy);
+    document.getElementById('gsResultsHost').appendChild(box);
+    let sumEl = document.getElementById('gsSumLine');
+    if(!sumEl){ sumEl = document.createElement('div'); sumEl.id = 'gsSumLine'; sumEl.className = 'gs-sum'; document.getElementById('gsResultsHost').insertBefore(sumEl, box); }
+    sumEl.textContent = gsSummaryText(gs.cat, gs.a, true);
+    return true;
+  }
+  function gsBuildBreedSummary(recs, cowBy){
+    const NAVY = '#0C447C', GRAY = '#6b6350';
+    const card = (title, inner)=> `<div style="background:#fff;border:2px solid #2E88C4;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-family:Arial,sans-serif;"><div style="font-size:15px;font-weight:700;color:${NAVY};margin-bottom:6px;">${title}</div>${inner}</div>`;
+    const n = recs.length;
+    if(!n) return card('Breeding Summary', `<div style="font-size:14px;color:${GRAY};">No breedings matched. Change the answers and try again.</div>`);
+    const pct = (k, tot)=> tot ? Math.round(k / tot * 100) + '%' : '–';
+    const kv = (k, v)=> `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #dbe7f1;font-size:14px;"><span style="color:${GRAY};">${k}</span><b style="color:${NAVY};text-align:right;">${v}</b></div>`;
+    // how each breeding turned out: a calf born about 240-320 days later = Calved; otherwise the preg-check result
+    const info = recs.map(b=>{
+      const c = cowBy.get(String(b.cow_number)) || {};
+      const calved = calvings.some(cv=> String(cv.cow_number) === String(b.cow_number) && cv.calving_date && (()=>{ const d = daysBetween(b.breed_date, cv.calving_date); return d >= 240 && d <= 320; })());
+      const out = calved ? 'Calved' : b.pregnancy_status === 'Bred' ? 'Pregnant' : b.pregnancy_status === 'Open' ? 'Open' : 'Not checked';
+      const m = b.pregnancy_method;
+      const method = m === 'AI' ? 'AI' : m === 'ET' ? 'ET' : m === 'BB' ? 'Natural (BB)' : 'Unknown';
+      const sire = (m === 'BB' ? (b.natural_sire || b.bred_to) : (b.bred_to || b.natural_sire)) || '(none)';
+      return { b, c, out, method, sire };
+    });
+    const cnt = (arr, o)=> arr.filter(x=> x.out === o).length;
+    const ok = arr=> cnt(arr,'Calved') + cnt(arr,'Pregnant');
+    const checked = arr=> ok(arr) + cnt(arr,'Open');
+    const rate = arr=> checked(arr) ? pct(ok(arr), checked(arr)) : '–';
+    const dates = info.map(x=> x.b.breed_date).sort();
+    const cowsN = new Set(info.map(x=> String(x.b.cow_number))).size;
+    let html = card('Overall',
+      kv('Breedings', n + ' on ' + cowsN + ' cows') +
+      kv('Bred between', fmtDateShort(dates[0]) + ' – ' + fmtDateShort(dates[dates.length-1])) +
+      kv('Calved', cnt(info,'Calved') + ' (' + pct(cnt(info,'Calved'), n) + ')') +
+      kv('Pregnant (checked, not calved yet)', cnt(info,'Pregnant') + ' (' + pct(cnt(info,'Pregnant'), n) + ')') +
+      kv('Open', cnt(info,'Open') + ' (' + pct(cnt(info,'Open'), n) + ')') +
+      kv('Not checked yet', cnt(info,'Not checked') + ' (' + pct(cnt(info,'Not checked'), n) + ')') +
+      kv('Success rate (of checked)', rate(info)));
+    const th = `text-align:left;padding:4px 4px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:${GRAY};border-bottom:2px solid #2E88C4;`;
+    const thr = th.replace('text-align:left','text-align:right');
+    const tdl = `padding:6px 4px;font-size:13px;font-weight:700;color:${NAVY};border-bottom:1px solid #dbe7f1;overflow-wrap:break-word;min-width:64px;`;
+    const tdr = 'padding:6px 4px;font-size:13px;text-align:right;color:#2B2620;border-bottom:1px solid #dbe7f1;white-space:nowrap;';
+    const group = (title, keyFn, order)=>{
+      const g = new Map();
+      info.forEach(x=>{ const k = keyFn(x) || '(none)'; if(!g.has(k)) g.set(k, []); g.get(k).push(x); });
+      const list = [...g.entries()].sort(order || ((p,q)=> q[1].length - p[1].length || String(p[0]).localeCompare(String(q[0]))));
+      const body = list.map(([k, arr])=> `<tr><td style="${tdl}">${escapeHtml(String(k))}</td><td style="${tdr}">${arr.length}</td><td style="${tdr}">${ok(arr)}</td><td style="${tdr}">${cnt(arr,'Open')}</td><td style="${tdr}">${cnt(arr,'Not checked')}</td><td style="${tdr}"><b>${rate(arr)}</b></td></tr>`).join('');
+      return card(title, `<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="${th}"></th><th style="${thr}">Bred</th><th style="${thr}">Preg / calved</th><th style="${thr}">Open</th><th style="${thr}">Not chk</th><th style="${thr}">Rate</th></tr></thead><tbody>${body}</tbody></table>`);
+    };
+    html += group('By method', x=> x.method);
+    html += group('By sire', x=> x.sire);
+    html += group('By location', x=> x.c.lot);
+    html += group('By owner', x=> x.c.owner);
+    html += group('By herd season', x=> x.c.herd_season);
+    html += group('By month bred', x=> x.b.breed_date.slice(0,7), (p,q)=> String(p[0]).localeCompare(String(q[0])));
+    html = html.replace(/<td style="([^"]*)">(\d{4})-(\d{2})<\/td>/g, (m, st, y, mo)=> `<td style="${st}">${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(mo)-1]} ${y}</td>`);
+    html += `<div style="font-size:12px;color:${GRAY};font-family:Arial,sans-serif;margin:0 2px 10px;">A breeding counts as <b>calved</b> when the cow has a calf born 240 – 320 days after it. The success rate leaves out breedings not checked yet.</div>`;
+    return html;
+  }
   function gsPrintSummary(){
     const box = document.getElementById('gsSummaryBox');
     if(!box){ showToast('Nothing to print'); return; }
-    document.getElementById('printListOutput').innerHTML = `<div style="padding:24px;font-family:Arial,sans-serif;color:#000;"><h2 style="margin:0 0 4px;">Farnan Cattle Co. — Weaning Summary</h2><div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${escapeHtml(gsSummaryText(gs.cat, gs.a, true))}</div>${box.innerHTML}</div>`;
+    document.getElementById('printListOutput').innerHTML = `<div style="padding:24px;font-family:Arial,sans-serif;color:#000;"><h2 style="margin:0 0 4px;">Farnan Cattle Co. — ${gs.cat === 'brsummary' ? 'Breeding Summary' : gs.cat === 'bsummary' ? 'Birthing Summary' : 'Weaning Summary'}</h2><div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${escapeHtml(gsSummaryText(gs.cat, gs.a, true))}</div>${box.innerHTML}</div>`;
     document.body.classList.add('printing-list');
     requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
   }
