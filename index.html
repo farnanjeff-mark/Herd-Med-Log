@@ -224,13 +224,24 @@
   #advancedSearchView details.adv-fold[open] > summary{background:#E6F1FB;border-bottom:1.5px solid #2E88C4;}
   #advancedSearchView .adv-fold-body{padding:12px 14px 4px;}
   #advancedSearchView .adv-badge{background:#3C9142;color:#FFFFFF;border-radius:20px;font-size:12px;font-weight:700;padding:2px 9px;display:none;}
-  #advancedSearchView .adv-tiles{display:block;background:linear-gradient(135deg,#2E88C4,#0C5A8E);border-radius:14px;padding:4px 16px;box-shadow:0 1px 2px rgba(43,38,32,.10),0 6px 16px rgba(43,38,32,.14);margin-bottom:14px;}
-  #advancedSearchView .adv-tile{background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.28);border-radius:0;padding:12px 0;text-align:left;cursor:pointer;font-family:Arial,sans-serif;min-height:0;width:100%;display:flex;flex-direction:column;justify-content:center;position:relative;color:#fff;-webkit-appearance:none;appearance:none;}
-  #advancedSearchView .adv-tile:last-child{border-bottom:0;}
-  #advancedSearchView .adv-tile::after{content:'\203A';position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:24px;line-height:1;color:rgba(255,255,255,.85);}
-  #advancedSearchView .adv-tile .t{display:block;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.82);}
-  #advancedSearchView .adv-tile .c{display:block;font-size:16px;font-weight:400;color:rgba(255,255,255,.7);margin-top:3px;line-height:1.25;padding-right:26px;overflow-wrap:anywhere;}
-  #advancedSearchView .adv-tile.has .c{color:#fff;font-weight:700;}
+  #advancedSearchView .adv-tiles{display:block;margin-bottom:12px;}
+  #advancedSearchView .adv-tile{background:#fff;border:2px solid #2E88C4;border-radius:8px;min-height:76px;margin-bottom:10px;padding:10px 40px 10px 14px;text-align:left;cursor:pointer;width:100%;display:grid;grid-template-columns:44px 1fr;column-gap:10px;align-items:center;align-content:center;position:relative;font-family:Arial,sans-serif;-webkit-appearance:none;appearance:none;}
+  #advancedSearchView .adv-tile::before{grid-row:1 / 3;grid-column:1;font-size:30px;line-height:1;text-align:center;content:'\1F50D';}
+  #advancedSearchView .adv-tile[data-tile="herd"]::before{content:'\1F404';}
+  #advancedSearchView .adv-tile[data-tile="breed"]::before{content:'\1F4C5';}
+  #advancedSearchView .adv-tile[data-tile="meds"]::before{content:'\1F489';}
+  #advancedSearchView .adv-tile[data-tile="wts"]::before{content:'\1F4CF';}
+  #advancedSearchView .adv-tile[data-tile="calf"]::before{content:'\1F37C';}
+  #advancedSearchView .adv-tile[data-tile="wean"]::before{content:'\2696\FE0F';}
+  #advancedSearchView .adv-tile[data-tile="mother"]::before{content:'\1F42E';}
+  #advancedSearchView .adv-tile[data-tile="dates"]::before{content:'\1F5D3\FE0F';}
+  #advancedSearchView .adv-tile[data-tile="sort"]::before{content:'\2195\FE0F';}
+  #advancedSearchView .adv-tile[data-tile="cols"]::before{content:'\1F4CB';}
+  #advancedSearchView .adv-tile::after{content:'\203A';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:26px;line-height:1;color:#2E88C4;}
+  #advancedSearchView .adv-tile .t{grid-column:2;grid-row:1;display:block;font-weight:700;font-size:17px;color:#0C447C;align-self:end;}
+  #advancedSearchView .adv-tile .c{grid-column:2;grid-row:2;display:block;font-size:12px;color:#6b6350;margin-top:2px;line-height:1.25;align-self:start;overflow-wrap:anywhere;}
+  #advancedSearchView .adv-tile.has{border-left:6px solid #3C9142;}
+  #advancedSearchView .adv-tile.has .c{color:#2F7A35;font-weight:700;}
   #advancedSearchView[data-page="calf"] .only-cow{display:none !important;}
   #advancedSearchView[data-page="cow"] .only-calf{display:none !important;}
 
@@ -270,7 +281,7 @@
   #guidedSearchView .gs-dates label{font-size:11px;color:#6b6350;display:block;margin-bottom:2px;}
   #guidedSearchView .gs-sum{background:#E8F1F9;border:2px solid #2E88C4;border-radius:6px;padding:8px 10px;font-family:Arial,sans-serif;font-size:13px;color:#0C447C;margin-bottom:10px;}
   #guidedSearchView .gs-bar{position:sticky;bottom:0;display:flex;gap:8px;padding:10px 0 4px;margin-top:6px;background:#F7F2E6;}
-  #guidedSearchView .gs-bar .btn{flex:1;height:46px;justify-content:center;}
+  #guidedSearchView .gs-bar .btn{flex:1 1 0;min-width:0;height:46px;justify-content:center;padding-left:6px;padding-right:6px;font-size:13px;white-space:nowrap;}
   #guidedSearchView #advancedSearchSummary{display:none;}
   /* ---- Saved Reports ---- */
   #savedReportsView .sr-folder{background:#FFFFFF;border:2px solid #2E88C4;border-radius:8px;margin-bottom:10px;overflow:hidden;}
@@ -285,7 +296,7 @@
   #savedReportsView .sr-star.on{background:#FFF4D6;border-color:#D9A21B;color:#D9A21B;}
   #savedReportsView .sr-del{height:44px;flex:0 0 auto;padding:0 12px;border:2px solid var(--barn);border-radius:6px;background:#fff;color:var(--barn);font-family:Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
   #savedReportsView .sr-empty{font-family:Arial,sans-serif;font-size:13px;color:#8a8163;padding:12px;background:#fff;}
-  #advancedSearchView .adv-tile.open{background:rgba(255,255,255,.12);box-shadow:-16px 0 0 rgba(255,255,255,.12),16px 0 0 rgba(255,255,255,.12);}
+  #advancedSearchView .adv-tile.open{background:#E6F1FB;box-shadow:inset 0 0 0 2px #0C447C;}
   #advancedSearchView .adv-tile.open::after{transform:translateY(-50%) rotate(90deg);}
   #advancedSearchView .adv-panel{display:none;background:#FFFFFF;border:2px solid #2E88C4;border-radius:6px;margin:0 0 12px;padding:14px 14px 4px;}
   #advancedSearchView .adv-panel.show{display:block;}
@@ -11002,7 +11013,7 @@
         { key:'l_sex', label:'Calf Sex', get:(r,x)=> x.lc ? calfSexLabel(x.lc.calf_sex) : '' },
         { key:'l_sire', label:'Sire', get:(r,x)=> x.lc ? (x.lc.sire || '') : '' },
         { key:'l_bw', label:'Birth Wt (lbs)', get:(r,x)=> x.lc && x.lc.birth_weight != null ? String(x.lc.birth_weight) : '' },
-        { key:'l_assist', label:'Birth Assist', get:(r,x)=> x.lc ? (x.lc.birth_assist || '') : '' },
+        { key:'l_assist', label:'Birth Assist', get:(r,x)=> x.lc ? (x.lc.birth_assist || 'None') : '' },
         { key:'l_outcome', label:'Outcome', get:(r,x)=> x.lc ? advCalfOutcome(x.lc) : '' },
         { key:'l_wdate', label:'Weaning Date', get:(r,x)=> x.lc ? advFmtD(x.lc.weaning_date) : '' },
         { key:'l_ww', label:'Weaning Wt (lbs)', get:(r,x)=> x.lc ? advStat(x.lc, 'wt') : '' },
@@ -11016,7 +11027,7 @@
         { key:'c_sex', label:'Sex', get:(r)=> calfSexLabel(r.cv.calf_sex) },
         { key:'c_sire', label:'Sire', get:(r)=> r.cv.sire || '' },
         { key:'c_bw', label:'Birth Wt (lbs)', get:(r)=> r.cv.birth_weight != null ? String(r.cv.birth_weight) : '' },
-        { key:'c_assist', label:'Birth Assist', get:(r)=> r.cv.birth_assist || '' },
+        { key:'c_assist', label:'Birth Assist', get:(r)=> r.cv.birth_assist || 'None' },
         { key:'c_outcome', label:'Outcome', get:(r)=> advCalfOutcome(r.cv) },
         { key:'c_agenow', label:'Age Now (days)', get:(r)=> String(daysBetween(r.cv.calving_date, todayLocal())) },
         { key:'c_treat', label:'Calf Treatments', get:(r)=> String(calfTreatments.filter(t=> t.calving_id === r.cv.id).length) }
@@ -11471,7 +11482,7 @@
       return calvingsFor(num).filter(cv=>{
         if(!advSelMatch(calfSire, cv.sire)) return false;
         if(calfSex && cv.calf_sex !== calfSex) return false;
-        if(birthAssist && cv.birth_assist !== birthAssist) return false;
+        if(birthAssist && (cv.birth_assist || 'None') !== birthAssist) return false;
         if(weightMin != null && !(cv.birth_weight != null && cv.birth_weight >= weightMin)) return false;
         if(weightMax != null && !(cv.birth_weight != null && cv.birth_weight <= weightMax)) return false;
         if(calfOutcome){
@@ -11587,6 +11598,7 @@
     } else {
       rowObjs = results.map(c=> ({ c }));
     }
+    lastAdvRowObjs = rowObjs;
     const colDefs = advActiveColumns(mode);
     const firstHead = mode === 'calf' ? 'Mother #' : 'Cow #';
     const headers = [firstHead, ...colDefs.map(d=> d.label)];
@@ -11739,6 +11751,7 @@
   // behind the scenes and shows the results here, so the numbers match.
   let gs = { step:'cat', cat:'', a:{} };
   let guidedSavedCols = null;
+  let lastAdvRowObjs = [];
   function gsBlankAnswers(){
     return { when:'', pickFrom:'', pickTo:'', kind:'', dueDays:'14', location:[], owner:[], group:[], season:[],
              sex:'', assist:'', sire:[], bredTo:[], method:'', medicine:[], reason:[], minTimes:'', same:false,
@@ -11750,9 +11763,10 @@
   }
   function gsVariant(){
     if(gs.cat === 'calving') return gs.a.kind === 'notcalved' ? 'notcalved' : 'calved';
+    if(gs.cat === 'wsummary') return 'weaning';   // same questions as Weaning, shown as a summary
     return gs.cat;   // weaning, breeding, health, weights
   }
-  const GS_NAMES = { calving:'Calving', weaning:'Weaning', breeding:'Breeding', health:'Health', weights:'Weights' };
+  const GS_NAMES = { calving:'Calving', weaning:'Weaning', wsummary:'Weaning Summary', breeding:'Breeding', health:'Health', weights:'Weights' };
   const GS_SORTS = {
     weaning:   [['gain','Gain / day','desc'],['ww','Weaning weight','desc'],['wdate','Weaning date','desc'],['bw','Birth weight','desc'],['num','Cow #','asc']],
     calved:    [['cdate','Calving date','desc'],['bw','Birth weight','desc'],['sire','Sire','asc'],['num','Cow #','asc']],
@@ -11848,7 +11862,8 @@
         `<div class="gs-opts">${gsSingleChips('kind',[['calved','Cows that calved'],['notcalved','Not calved yet']])}</div>`);
       if(!a.kind){ gsPut(html); return; }
     }
-    if(v === 'weaning') html += gsDatesBox('When were they weaned?',[['today','Today'],['week','This week'],['notyet','Not weaned yet'],['all','All weaned'],['pick','Pick dates']]);
+    if(gs.cat === 'wsummary') html += gsDatesBox('When were they weaned?',[['today','Today'],['week','This week'],['all','All weaned'],['pick','Pick dates']]);
+    else if(v === 'weaning') html += gsDatesBox('When were they weaned?',[['today','Today'],['week','This week'],['notyet','Not weaned yet'],['all','All weaned'],['pick','Pick dates']]);
     if(v === 'calved') html += gsDatesBox('When did they calve?',[['today','Today'],['week','This week'],['month','This month'],['any','Any time'],['pick','Pick dates']]);
     if(v === 'breeding'){
       html += gsBox('What do you want to see?','',!!a.kind,
@@ -11891,6 +11906,7 @@
       b += `<div class="gs-sub">Method</div><div class="gs-opts">${gsChips('method',['AI','ET','BB'], false)}</div>`;
       html += gsBox('Only certain breedings?','skip for all', !!(a.bredTo.length || a.method), b);
     }
+    if(gs.cat !== 'wsummary'){
     const sorts = GS_SORTS[v];
     const sList = gsSortList(a, v);
     const sortAns = sList.map(k=> (sorts.find(x=> x[0] === k) || [k,k])[1]).join(' › ');
@@ -11903,6 +11919,7 @@
         const on = a.cols.includes(c.key);
         return `<div class="gs-opt ${on?'on':''}${gsSm(c.label)}" data-k="cols" data-v="${c.key}" data-t="c">${escapeHtml(c.label)}</div>`;
       }).join('')}</div>`).join(''));
+    }
     gsPut(html);
   }
   let gsCalfOnly = false;
@@ -11910,11 +11927,12 @@
     const all = [
       ['calving','🍼','Calving',"Who calved, who hasn't, birth details"],
       ['weaning','⚖️','Weaning','Weaned, not weaned, weights and gain'],
+      ['wsummary','📊','Weaning Summary','Averages and breakdowns, no cow list'],
       ['breeding','🐄','Breeding','Due soon, open, bred to, preg checks'],
       ['health','💉','Health','Treatments and repeat treatments'],
       ['weights','📏','Weights','Cow weights, missing a weight']
     ];
-    const list = gsCalfOnly ? all.slice(0,2) : all;
+    const list = gsCalfOnly ? all.slice(0,3) : all;
     document.getElementById('gsBody').innerHTML = `
       <div class="gs-q">What do you want to look at?</div>` +
       list.map(c=> `<div class="gs-cat" data-cat="${c[0]}"><div class="ic">${c[1]}</div><div><b>${c[2]}</b><span>${c[3]}</span></div></div>`).join('') +
@@ -11936,7 +11954,7 @@
       bar.innerHTML = '<button class="btn btn-outline" id="gsClearBtn">Clear</button><button class="btn btn-green" id="gsGoBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">Show Results ›</button>';
     } else {
       step.innerHTML = `<div class="gs-steprow"><span class="gs-back" id="gsBackQ">‹ Change answers</span><span>Step 3 of 3</span></div>`;
-      bar.innerHTML = '<button class="btn btn-outline" id="gsChangeBtn">Change answers</button><button class="btn" id="gsSaveBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">💾 Save</button>';
+      bar.innerHTML = '<button class="btn btn-outline" id="gsChangeBtn">Change answers</button>' + (gs.cat === 'wsummary' ? '<button class="btn btn-outline" id="gsPrintBtn">🖨️ Print</button>' : '') + '<button class="btn" id="gsSaveBtn" style="background:#3C9142;color:#fff;border-color:#3C9142;">💾 Save</button>';
     }
     window.scrollTo(0,0);
   }
@@ -11948,7 +11966,7 @@
     const v = gsVariant();
     gs.cat = save.cat; gs.a = save.a;
     const K = { notcalved:'Calving: not calved yet', calved:'Calving', weaning:'Weaning', breeding:'Breeding', health:'Health', weights:'Weights' };
-    parts.push(K[v] || 'Search');
+    parts.push(cat === 'wsummary' ? 'Weaning summary' : (K[v] || 'Search'));
     const KIND = { expecting:'Bred, due to calve', open:'Open', unchecked:'Not preg-checked yet', has:'With a weight', missing:'Missing a weight' };
     if(v === 'breeding' && a.kind === 'due') parts.push('Due within ' + (a.dueDays || '14') + ' days');
     else if((v === 'breeding' || v === 'weights') && KIND[a.kind]) parts.push(KIND[a.kind]);
@@ -11974,7 +11992,7 @@
     if(a.reason && a.reason.length) parts.push('for ' + a.reason.join(', '));
     if(a.minTimes) parts.push('treated ' + a.minTimes + '+ times' + (a.same ? ' (same reason)' : ''));
     if(v === 'weights' && (a.wtMin !== '' || a.wtMax !== '')) parts.push((a.wtMin !== '' ? a.wtMin : '0') + '–' + (a.wtMax !== '' ? a.wtMax : 'up') + ' lbs');
-    const sNames = gsSortList(a, v).map(k=> ((GS_SORTS[v] || []).find(x=> x[0] === k) || [k,k])[1].toLowerCase());
+    const sNames = cat === 'wsummary' ? [] : gsSortList(a, v).map(k=> ((GS_SORTS[v] || []).find(x=> x[0] === k) || [k,k])[1].toLowerCase());
     if(sNames.length) parts.push('sorted by ' + sNames.join(', then '));
     return parts.join(' · ');
   }
@@ -11982,6 +12000,8 @@
     document.getElementById('gsResultsHost').appendChild(document.getElementById('advResultsWrap'));
   }
   function gsReleaseResults(){
+    const sb = document.getElementById('gsSummaryBox'); if(sb) sb.remove();
+    const rw = document.getElementById('advResultsWrap'); if(rw) rw.style.display = '';
     if(!guidedActive) return;
     guidedActive = false;
     Object.keys(guidedMulti).forEach(k=> guidedMulti[k] = []);
@@ -11995,7 +12015,7 @@
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     fabAdd.classList.add('hidden'); fabAddEquipment.classList.add('hidden');
     guidedSearchView.classList.remove('hidden');
-    setHeaderTitle(gsCalfOnly && ['calving','weaning'].includes(gs.cat) ? 'Calf' : 'Guided', 'Search');
+    setHeaderTitle(gsCalfOnly && ['calving','weaning','wsummary'].includes(gs.cat) ? 'Calf' : 'Guided', 'Search');
     gs.step = 'res';
     gsRender();
   }
@@ -12004,7 +12024,7 @@
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     fabAdd.classList.add('hidden'); fabAddEquipment.classList.add('hidden');
     guidedSearchView.classList.remove('hidden');
-    if(gsCalfOnly && !['calving','weaning'].includes(gs.cat)){ gs.cat = ''; gs.step = 'cat'; }
+    if(gsCalfOnly && !['calving','weaning','wsummary'].includes(gs.cat)){ gs.cat = ''; gs.step = 'cat'; }
     setHeaderTitle(gsCalfOnly ? 'Calf' : 'Guided', 'Search');
     if(gs.step === 'res') gs.step = 'q';
     if(!gs.cat) gs.step = 'cat';
@@ -12081,6 +12101,13 @@
     gsTakeResults();
     runAdvancedSearch();
     showGuidedResults();
+    if(gs.cat === 'wsummary'){
+      document.getElementById('advResultsWrap').style.display = 'none';
+      const old = document.getElementById('gsSummaryBox'); if(old) old.remove();
+      const box = document.createElement('div'); box.id = 'gsSummaryBox';
+      box.innerHTML = gsBuildSummary(lastAdvRowObjs);
+      document.getElementById('gsResultsHost').appendChild(box);
+    }
     let sumEl = document.getElementById('gsSumLine');
     if(!sumEl){
       sumEl = document.createElement('div'); sumEl.id = 'gsSumLine'; sumEl.className = 'gs-sum';
@@ -12103,6 +12130,89 @@
     }
     return true;
   }
+
+  // ---- Weaning Summary: averages and breakdowns for the calves a Weaning search finds (no cow list) ----
+  function gsBuildSummary(rows){
+    const calves = rows.filter(r=> r.cv);
+    const n = calves.length;
+    const NAVY = '#0C447C', GRAY = '#6b6350';
+    const card = (title, inner)=> `<div style="background:#fff;border:2px solid #2E88C4;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-family:Arial,sans-serif;"><div style="font-size:15px;font-weight:700;color:${NAVY};margin-bottom:6px;">${title}</div>${inner}</div>`;
+    if(!n) return card('Weaning Summary', `<div style="font-size:14px;color:${GRAY};">No calves matched. Change the answers and try again.</div>`);
+    const mean = a=> a.length ? a.reduce((x,y)=>x+y,0) / a.length : null;
+    const f1 = v=> v == null ? '–' : (Math.round(v * 10) / 10).toFixed(1);
+    const f2 = v=> v == null ? '–' : (Math.round(v * 100) / 100).toFixed(2);
+    const stats = calves.map(r=> ({ r, st: weaningStats(r.cv), bw: (r.cv.birth_weight != null && Number(r.cv.birth_weight) > 0) ? Number(r.cv.birth_weight) : null }));
+    const wts = stats.filter(x=> x.st).map(x=> x.st.weight);
+    const gains = stats.filter(x=> x.st && x.st.gain != null).map(x=> x.st.gain);
+    const ages = stats.filter(x=> x.st && x.st.age != null).map(x=> x.st.age);
+    const bws = stats.filter(x=> x.bw != null).map(x=> x.bw);
+    const range = (a, fn)=> a.length ? ` <span style="color:${GRAY};font-weight:400;">(${fn(Math.min.apply(null,a))} – ${fn(Math.max.apply(null,a))})</span>` : '';
+    const kv = (k, v)=> `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #dbe7f1;font-size:14px;"><span style="color:${GRAY};">${k}</span><b style="color:${NAVY};text-align:right;">${v}</b></div>`;
+    const mothers = new Set(calves.map(r=> r.c.number)).size;
+    const cdates = calves.map(r=> r.cv.calving_date).filter(Boolean).sort();
+    const wdates = calves.map(r=> r.cv.weaning_date).filter(Boolean).sort();
+    let html = '';
+    html += card('Overall',
+      kv('Calves', n + ' from ' + mothers + ' cows') +
+      kv('Avg weaning weight', f1(mean(wts)) + ' lbs' + range(wts, f1)) +
+      kv('Avg birth weight', f1(mean(bws)) + ' lbs' + range(bws, f1)) +
+      kv('Avg age at weaning', ages.length ? Math.round(mean(ages)) + ' days' + range(ages, v=> Math.round(v)) : '–') +
+      kv('Avg gain per day', f2(mean(gains)) + ' lbs' + range(gains, f2)) +
+      kv('Total pounds weaned', wts.length ? Math.round(wts.reduce((x,y)=>x+y,0)).toLocaleString() + ' lbs' : '–') +
+      (cdates.length ? kv('Born between', fmtDateShort(cdates[0]) + ' – ' + fmtDateShort(cdates[cdates.length-1])) : '') +
+      (wdates.length ? kv('Weaned between', wdates[0] === wdates[wdates.length-1] ? fmtDateShort(wdates[0]) : fmtDateShort(wdates[0]) + ' – ' + fmtDateShort(wdates[wdates.length-1])) : '') +
+      kv('Missing a birth weight', String(n - bws.length)) +
+      kv('Missing a weaning weight', String(n - wts.length)));
+    const th = `text-align:left;padding:4px 4px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:${GRAY};border-bottom:2px solid #2E88C4;`;
+    const thr = th.replace('text-align:left','text-align:right');
+    const tdl = `padding:6px 4px;font-size:13px;font-weight:700;color:${NAVY};border-bottom:1px solid #dbe7f1;overflow-wrap:anywhere;`;
+    const tdr = 'padding:6px 4px;font-size:13px;text-align:right;color:#2B2620;border-bottom:1px solid #dbe7f1;white-space:nowrap;';
+    const group = (title, keyFn, withAvg)=>{
+      const g = new Map();
+      stats.forEach(x=>{ const k = keyFn(x) || '(none)'; if(!g.has(k)) g.set(k, []); g.get(k).push(x); });
+      const list = [...g.entries()].sort((a,b)=> b[1].length - a[1].length || String(a[0]).localeCompare(String(b[0])));
+      const body = list.map(([k, arr])=>{
+        const w = arr.filter(x=> x.st).map(x=> x.st.weight), gn = arr.filter(x=> x.st && x.st.gain != null).map(x=> x.st.gain);
+        return `<tr><td style="${tdl}">${escapeHtml(String(k))}</td><td style="${tdr}">${arr.length}</td><td style="${tdr}">${Math.round(arr.length / n * 100)}%</td>` +
+          (withAvg ? `<td style="${tdr}">${f1(mean(w))}</td><td style="${tdr}">${f2(mean(gn))}</td>` : '') + `</tr>`;
+      }).join('');
+      return card(title, `<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="${th}"></th><th style="${thr}">Calves</th><th style="${thr}">%</th>` +
+        (withAvg ? `<th style="${thr}">Avg wean</th><th style="${thr}">Avg gain</th>` : '') + `</tr></thead><tbody>${body}</tbody></table>`);
+    };
+    html += group('Bulls vs heifers', x=> calfSexLabel(x.r.cv.calf_sex), true);
+    html += group('By owner', x=> x.r.c.owner, true);
+    html += group('By location', x=> x.r.c.lot, true);
+    html += group('By sire', x=> x.r.cv.sire, true);
+    // breeding method: taken from the cow's breeding record that lines up with the calf's birth (about 240-320 days before)
+    html += group('How they were bred', x=>{
+      const cv = x.r.cv; if(!cv.calving_date) return 'Unknown';
+      const recs = breedingRecords.filter(b=> String(b.cow_number) === String(cv.cow_number) && b.breed_date && b.breed_date <= cv.calving_date)
+        .map(b=> ({ b, d: daysBetween(b.breed_date, cv.calving_date) })).filter(o=> o.d >= 240 && o.d <= 320).sort((p,q)=> q.b.breed_date.localeCompare(p.b.breed_date));
+      const m = recs.length ? recs[0].b.pregnancy_method : '';
+      return m === 'AI' ? 'AI' : m === 'ET' ? 'ET' : m === 'BB' ? 'Natural (BB)' : 'Unknown (no breeding record)';
+    }, true);
+    html += group('Birth assist', x=> { const ba = x.r.cv.birth_assist || 'None'; return ba === 'None' ? 'Natural (no assist)' : ba; }, true);
+    html += group('Calf status', x=> advCalfOutcome(x.r.cv), true);
+    // heaviest / lightest / best / slowest, by mother number
+    const w2 = stats.filter(x=> x.st), g2 = stats.filter(x=> x.st && x.st.gain != null);
+    if(w2.length){
+      const hv = w2.reduce((a,b)=> b.st.weight > a.st.weight ? b : a), lt = w2.reduce((a,b)=> b.st.weight < a.st.weight ? b : a);
+      let ex = kv('Heaviest', '#' + escapeHtml(String(hv.r.c.number)) + ' · ' + hv.st.weight + ' lbs') + kv('Lightest', '#' + escapeHtml(String(lt.r.c.number)) + ' · ' + lt.st.weight + ' lbs');
+      if(g2.length){
+        const bg = g2.reduce((a,b)=> b.st.gain > a.st.gain ? b : a), sg = g2.reduce((a,b)=> b.st.gain < a.st.gain ? b : a);
+        ex += kv('Fastest gain', '#' + escapeHtml(String(bg.r.c.number)) + ' · ' + f2(bg.st.gain) + ' lbs/day') + kv('Slowest gain', '#' + escapeHtml(String(sg.r.c.number)) + ' · ' + f2(sg.st.gain) + ' lbs/day');
+      }
+      html += card('Extremes (mother #)', ex);
+    }
+    return html;
+  }
+  function gsPrintSummary(){
+    const box = document.getElementById('gsSummaryBox');
+    if(!box){ showToast('Nothing to print'); return; }
+    document.getElementById('printListOutput').innerHTML = `<div style="padding:24px;font-family:Arial,sans-serif;color:#000;"><h2 style="margin:0 0 4px;">Farnan Cattle Co. — Weaning Summary</h2><div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${escapeHtml(gsSummaryText(gs.cat, gs.a, true))}</div>${box.innerHTML}</div>`;
+    document.body.classList.add('printing-list');
+    requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
+  }
   function gsRunSaved(st){
     gs = { step:'q', cat: st.cat, a: Object.assign(gsBlankAnswers(), JSON.parse(JSON.stringify(st.a || {}))) };
     gsRun();
@@ -12120,6 +12230,7 @@
       if(t.closest('#gsSavedBtn')){ showSavedReports(); return; }
       if(t.closest('#gsClearBtn')){ if(gs.cat) gsResetAnswers(gs.cat); gsRender(); return; }
       if(t.closest('#gsGoBtn')){ gsRun(); return; }
+      if(t.closest('#gsPrintBtn')){ gsPrintSummary(); return; }
       if(t.closest('#gsSaveBtn')){
         saveAdvReportModal({ type:'guided_search', settings:{ guided:true, cat: gs.cat, a: JSON.parse(JSON.stringify(gs.a)) } });
         return;
