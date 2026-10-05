@@ -763,10 +763,11 @@
     <button class="btn btn-outline btn-full" id="reportsHomeBtn" style="padding:14px 16px;font-size:16px;margin-bottom:24px;"><span style="font-size:26px;">🏠</span>&nbsp;&nbsp;Home</button>
 
     <div class="section-label">Search</div>
-    <button class="btn btn-nav-tool btn-full" id="guidedSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🧭</span>&nbsp;&nbsp;Guided Search</button>
     <button class="btn btn-nav-tool btn-full" id="advancedSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🔍</span>&nbsp;&nbsp;Advanced Search</button>
-    <button class="btn btn-nav-tool btn-full" id="calfSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🐮</span>&nbsp;&nbsp;Calf Search</button>
+    <button class="btn btn-nav-tool btn-full" id="simpleReportBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">📋</span>&nbsp;&nbsp;Simple Report</button>
     <button class="btn btn-nav-tool btn-full" id="homeGlobalSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🔎</span>&nbsp;&nbsp;Search Everything</button>
+    <button class="btn btn-nav-tool btn-full" id="guidedSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🧭</span>&nbsp;&nbsp;Guided Cow Search</button>
+    <button class="btn btn-nav-tool btn-full" id="calfSearchBtn" style="padding:12px 14px;font-size:15px;margin-bottom:8px;"><span style="font-size:20px;">🐮</span>&nbsp;&nbsp;Guided Calf Search</button>
     <button class="btn btn-nav-tool btn-full" id="savedReportsBtn" style="padding:12px 14px;font-size:15px;margin-bottom:12px;"><span style="font-size:20px;">⭐</span>&nbsp;&nbsp;Saved Reports</button>
 
     <div class="section-label">Vet</div>
@@ -8192,6 +8193,11 @@
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
   document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
   document.getElementById('advancedSearchBtn').addEventListener('click', ()=> openSearchPage('cow'));
+  document.getElementById('simpleReportBtn').addEventListener('click', ()=>{
+    reportsView.classList.add('hidden');
+    showProfileList();
+    setHeaderTitle('Simple', 'Report');
+  });
   document.getElementById('calfSearchBtn').addEventListener('click', ()=>{ gsCalfOnly = true; showGuidedSearch(); });
   document.getElementById('advancedSearchHomeBtn').addEventListener('click', showHome);
   document.getElementById('runAdvancedSearchBtn').addEventListener('click', runAdvancedSearch);
@@ -10975,6 +10981,15 @@
     return '';
   }
   // x = the extra facts worked out once per cow (latest breeding, latest calf, etc.)
+  const advNoteTxt = (rec, dateKey, textKey)=> rec ? ((rec[dateKey] ? advFmtD(rec[dateKey]) + ': ' : '') + String(rec[textKey]).trim()) : '';
+  const advAllNotes = (x)=> []
+    .concat(x.gn.map(n=> ({d:n.note_date, t:'Note: ' + String(n.note).trim()})))
+    .concat(x.mn.map(n=> ({d:n.date, t:'Med: ' + String(n.notes).trim()})))
+    .concat(x.wn.map(n=> ({d:n.weigh_date, t:'Weight: ' + String(n.notes).trim()})))
+    .concat(x.cn.map(n=> ({d:n.calving_date, t:'Calving: ' + String(n.notes).trim()})))
+    .concat(x.bn.map(n=> ({d:n.breed_date, t:'Breeding: ' + String(n.vet_calls).trim()})))
+    .sort((a,b)=> (b.d||'').localeCompare(a.d||''))
+    .map(n=> (n.d ? advFmtD(n.d) + ' ' : '') + n.t).join(' | ');
   const ADV_COL_GROUPS = {
     cow: [
       { id:'cow', label:'Cow', cols:[
@@ -11010,6 +11025,14 @@
         { key:'w_lastdate', label:'Weigh Date', get:(r,x)=> x.lw ? advFmtD(x.lw.weigh_date) : '' },
         { key:'w_count', label:'# Weights', get:(r,x)=> String(x.wr.length) }
       ]},
+      { id:'notes', label:'Notes (latest of each kind)', cols:[
+        { key:'n_gen', label:'General Note', get:(r,x)=> advNoteTxt(advLatestBy(x.gn, 'note_date'), 'note_date', 'note') },
+        { key:'n_med', label:'Med Note', get:(r,x)=> advNoteTxt(advLatestBy(x.mn, 'date'), 'date', 'notes') },
+        { key:'n_wt', label:'Weight Note', get:(r,x)=> advNoteTxt(advLatestBy(x.wn, 'weigh_date'), 'weigh_date', 'notes') },
+        { key:'n_calv', label:'Calving Note', get:(r,x)=> advNoteTxt(advLatestBy(x.cn, 'calving_date'), 'calving_date', 'notes') },
+        { key:'n_breed', label:'Breeding / Vet Note', get:(r,x)=> advNoteTxt(advLatestBy(x.bn, 'breed_date'), 'breed_date', 'vet_calls') },
+        { key:'n_all', label:'All Notes (combined)', get:(r,x)=> advAllNotes(x) }
+      ]},
       { id:'lastcalf', label:'Her latest calf', cols:[
         { key:'l_count', label:'Calves (total)', get:(r,x)=> String(x.ncv) },
         { key:'l_date', label:'Calving Date', get:(r,x)=> x.lc ? advFmtD(x.lc.calving_date) : '' },
@@ -11033,6 +11056,7 @@
         { key:'c_assist', label:'Birth Assist', get:(r)=> r.cv.birth_assist || 'None' },
         { key:'c_outcome', label:'Outcome', get:(r)=> advCalfOutcome(r.cv) },
         { key:'c_agenow', label:'Age Now (days)', get:(r)=> String(daysBetween(r.cv.calving_date, todayLocal())) },
+        { key:'c_note', label:'Calving Note', get:(r)=> (r.cv.notes||'').trim() },
         { key:'c_treat', label:'Calf Treatments', get:(r)=> String(calfTreatments.filter(t=> t.calving_id === r.cv.id).length) }
       ]},
       { id:'weaning', label:'Weaning', cols:[
@@ -11047,7 +11071,8 @@
         { key:'m_owner', label:'Owner', get:(r)=> r.c.owner || '' },
         { key:'m_group', label:'Group', get:(r)=> r.c.cow_group || '' },
         { key:'m_status', label:'Status', get:(r)=> r.c.status || 'Active' },
-        { key:'m_season', label:'Herd Season', get:(r)=> r.c.herd_season || '' }
+        { key:'m_season', label:'Herd Season', get:(r)=> r.c.herd_season || '' },
+        { key:'m_note', label:'Mother\'s Latest Note', get:(r)=> { const n = advLatestBy(generalNotesFor(r.c.number).filter(n=> (n.note||'').trim()), 'note_date'); return n ? advNoteTxt(n, 'note_date', 'note') : ''; } }
       ]}
     ]
   };
@@ -11176,6 +11201,11 @@
       ncv: cvs.length,
       tr, lt: advLatestBy(tr, 'date'),
       wr, lw: advLatestBy(wr, 'weigh_date'),
+      gn: generalNotesFor(num).filter(n=> (n.note||'').trim()),
+      mn: recordsFor(num).filter(t=> (t.notes||'').trim()),
+      wn: weightsFor(num).filter(w=> (w.notes||'').trim()),
+      cn: cvs.filter(v=> (v.notes||'').trim()),
+      bn: breedingFor(num).filter(b=> (b.vet_calls||'').trim()),
       cut: addDays(todayLocal(), -365).toISOString().slice(0,10)
     };
   }
