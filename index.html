@@ -1309,8 +1309,11 @@
   <div class="view hidden" id="savedReportsView">
     <button class="btn btn-outline btn-full" id="savedReportsHomeBtn" style="margin-bottom:16px;">🏠 Home</button>
     <div class="modal-title" style="margin-bottom:6px;">Saved Reports</div>
-    <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Tap a report to run it on today's herd. Tap the star to keep it at the top.</div>
-    <button class="btn btn-nav-tool btn-full" id="newReportFolderBtn" style="margin-bottom:14px;">+ New Folder</button>
+    <div style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:14px;">Tap a report to run it on today's herd. Tap Manage to star, rename, move or delete.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <button class="btn btn-nav-tool" id="newReportFolderBtn">+ New Folder</button>
+      <button class="btn btn-nav-tool" id="manageReportsBtn">&#9998; Manage</button>
+    </div>
     <div id="savedReportsContent"></div>
   </div>
 
@@ -12596,23 +12599,24 @@
     if(skipped) showToast('Ran it — ' + skipped + ' choice' + (skipped>1?'s':'') + ' no longer exist and were skipped');
   }
 
+  let savedManage = false;
   function renderSavedReports(){
     const el = document.getElementById('savedReportsContent');
     if(!el) return;
     const row = (r, showFolder)=>{
       const fol = savedFolders.find(f=> f.id === r.folder_id);
       return `<div class="sr-row" data-id="${r.id}">
-        <button class="sr-star ${r.starred?'on':''}" data-act="star" data-id="${r.id}" title="Star">${r.starred?'★':'☆'}</button>
+        ${savedManage ? `<button class="sr-star ${r.starred?'on':''}" data-act="star" data-id="${r.id}" title="Star">${r.starred?'★':'☆'}</button>` : ''}
         <div class="sr-main" data-act="run" data-id="${r.id}">
           <div class="sr-title">${escapeHtml(r.name)}</div>
           <div class="sr-sub">${showFolder && fol ? '📁 ' + escapeHtml(fol.name) + ' — ' : ''}${r.report_type === 'calf_search' ? '🐮 Calf — ' : ''}${r.report_type === 'guided_search' ? '🧭 Guided — ' : ''}${escapeHtml(savedSettingsSummary(r.settings))}</div>
         </div>
-        <button class="sr-del" data-act="delreport" data-id="${r.id}">Delete</button>
+        ${savedManage ? `<button class="sr-ico edit" data-act="editreport" data-id="${r.id}" title="Edit report" aria-label="Edit report">&#9998;</button>` : ''}
       </div>`;
     };
     const starred = savedReports.filter(r=> r.starred);
     let html = `<div class="section-label" style="margin-top:0;">★ Starred</div>
-      <div class="sr-folder" style="border-color:#D9A21B;">${starred.length ? starred.map(r=> row(r,true)).join('') : '<div class="sr-empty">Nothing starred yet. Tap the ☆ next to a report to put it here.</div>'}</div>
+      <div class="sr-folder" style="border-color:#D9A21B;">${starred.length ? starred.map(r=> row(r,true)).join('') : '<div class="sr-empty">Nothing starred yet. Tap Manage, then the ☆ next to a report, to put it here.</div>'}</div>
       <div class="section-label">Folders</div>`;
     if(savedFolders.length === 0){
       html += '<div class="empty" style="padding:24px 20px;">No folders yet.<br/>Tap "+ New Folder" above, or save a report from Advanced Search.</div>';
@@ -12623,16 +12627,19 @@
       html += `<div class="sr-folder">
         <div class="sr-folder-head">
           <div class="sr-folder-name" data-act="toggle" data-id="${f.id}">${open?'📂':'📁'}&nbsp;${escapeHtml(f.name)}<span class="n">${inF.length} report${inF.length===1?'':'s'}</span></div>
-          <button class="sr-ico edit" data-act="renamefolder" data-id="${f.id}" title="Rename folder" aria-label="Rename folder">&#9998;</button>
-          <button class="sr-ico del" data-act="delfolder" data-id="${f.id}" title="Delete folder" aria-label="Delete folder">&times;</button>
+          ${savedManage ? `<button class="sr-ico edit" data-act="renamefolder" data-id="${f.id}" title="Rename folder" aria-label="Rename folder">&#9998;</button>
+          <button class="sr-ico del" data-act="delfolder" data-id="${f.id}" title="Delete folder" aria-label="Delete folder">&times;</button>` : ''}
         </div>
         ${open ? (inF.length ? inF.map(r=> row(r,false)).join('') : '<div class="sr-empty">Empty folder.</div>') : ''}
       </div>`;
     });
     el.innerHTML = html;
+    const mb = document.getElementById('manageReportsBtn');
+    if(mb){ mb.innerHTML = savedManage ? '&#10003; Done' : '&#9998; Manage'; mb.style.background = savedManage ? '#3C9142' : ''; mb.style.color = savedManage ? '#fff' : ''; }
   }
 
   async function showSavedReports(){
+    savedManage = false;
     setHeaderTitle('Saved', 'Reports');
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
     fabAdd.classList.add('hidden');
@@ -12772,6 +12779,41 @@
       showToast('Report deleted');
     }catch(e){ showToast('Could not delete — try again'); }
   }
+  function editSavedReportModal(id){
+    const r = savedReports.find(x=> x.id === id);
+    if(!r) return;
+    const modal = openModal(`
+      <div class="modal-title">Edit Report</div>
+      <div class="field">
+        <label>Report Name</label>
+        <input type="text" id="editReportName" value="${escapeHtml(r.name)}"/>
+      </div>
+      <div class="field">
+        <label>Folder</label>
+        <select id="editReportFolder">${savedFolders.map(f=> `<option value="${f.id}" ${f.id === r.folder_id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}</select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelEditReport">Cancel</button>
+        <button class="btn btn-barn" id="confirmEditReport">Save</button>
+      </div>
+      <button class="btn btn-full" id="deleteEditReport" style="margin-top:10px;background:#fff;color:var(--barn);border:2px solid var(--barn);">Delete This Report</button>
+    `);
+    modal.querySelector('#cancelEditReport').addEventListener('click', closeModal);
+    modal.querySelector('#deleteEditReport').addEventListener('click', ()=>{ closeModal(); deleteSavedReport(id); });
+    modal.querySelector('#confirmEditReport').addEventListener('click', async ()=>{
+      const name = modal.querySelector('#editReportName').value.trim();
+      const folder_id = modal.querySelector('#editReportFolder').value;
+      if(!name){ showToast('Type a report name'); return; }
+      if(name === r.name && folder_id === r.folder_id){ closeModal(); return; }
+      try{
+        await api('/saved_reports?id=eq.' + encodeURIComponent(id), { method:'PATCH', body: JSON.stringify({ name, folder_id }) });
+        r.name = name; r.folder_id = folder_id;
+        closeModal();
+        renderSavedReports();
+        showToast('Report updated');
+      }catch(e){ showToast('Could not save — try again'); }
+    });
+  }
   function renameReportFolderModal(id){
     const f = savedFolders.find(x=> x.id === id);
     if(!f) return;
@@ -12836,6 +12878,7 @@
     document.getElementById('savedReportsBtn').addEventListener('click', showSavedReports);
     document.getElementById('savedReportsHomeBtn').addEventListener('click', showHome);
     document.getElementById('newReportFolderBtn').addEventListener('click', newReportFolderModal);
+    document.getElementById('manageReportsBtn').addEventListener('click', ()=>{ savedManage = !savedManage; renderSavedReports(); });
     document.getElementById('saveAdvReportBtn').addEventListener('click', ()=> saveAdvReportModal());
     document.getElementById('savedReportsContent').addEventListener('click', (e)=>{
       const t = e.target.closest('[data-act]');
@@ -12843,7 +12886,7 @@
       const id = t.dataset.id;
       if(t.dataset.act === 'star') toggleReportStar(id);
       else if(t.dataset.act === 'run') runSavedReport(id);
-      else if(t.dataset.act === 'delreport') deleteSavedReport(id);
+      else if(t.dataset.act === 'editreport') editSavedReportModal(id);
       else if(t.dataset.act === 'delfolder') deleteReportFolder(id);
       else if(t.dataset.act === 'renamefolder') renameReportFolderModal(id);
       else if(t.dataset.act === 'toggle'){
