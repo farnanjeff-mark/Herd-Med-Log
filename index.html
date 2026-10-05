@@ -781,8 +781,6 @@
       <button class="btn" id="headcountByOwnerBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📊</span>Headcount</button>
       <button class="btn" id="biggestGainersBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📈</span>Biggest Gainers</button>
       <button class="btn" id="calvingReportBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">🐮</span>Calving Report</button>
-      <button class="btn" id="deadCalvesBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">💔</span>Dead Calves</button>
-      <button class="btn" id="soldDeceasedBtn" style="background:#fff;border:1.5px solid #2E88C4;color:#0C5A8E;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 10px;font-size:12px;"><span style="font-size:20px;">📋</span>Sold / Deceased</button>
     </div>
 
     <div class="section-label">Records</div>
@@ -8191,7 +8189,6 @@
   document.getElementById('hayingYearFilter').addEventListener('change', renderHayingList);
   document.getElementById('importDataBtn').addEventListener('click', showImportView);
   document.getElementById('headcountByOwnerBtn').addEventListener('click', headcountByOwnerModal);
-  document.getElementById('soldDeceasedBtn').addEventListener('click', soldDeceasedModal);
   document.getElementById('advancedSearchBtn').addEventListener('click', ()=> openSearchPage('cow'));
   document.getElementById('simpleReportBtn').addEventListener('click', ()=>{
     reportsView.classList.add('hidden');
@@ -8212,7 +8209,6 @@
   document.getElementById('recentlyDeletedBtn').addEventListener('click', showRecentlyDeleted);
   document.getElementById('biggestGainersBtn').addEventListener('click', biggestGainersModal);
   document.getElementById('calvingReportBtn').addEventListener('click', calvingReportModal);
-  document.getElementById('deadCalvesBtn').addEventListener('click', deadCalvesModal);
   document.getElementById('recentlyDeletedHomeBtn').addEventListener('click', showHome);
   document.getElementById('importHomeBtn').addEventListener('click', showHome);
   document.getElementById('importTypeMeds').addEventListener('click', ()=> setImportType('meds'));
