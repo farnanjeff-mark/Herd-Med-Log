@@ -429,7 +429,10 @@
           <button class="btn keypad-digit" data-digit="0" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:20px;padding:12px 0;">0</button>
           <button class="btn" id="homeQuickSearchBackBtn" style="background:#fff;color:#0C5A8E;border-color:#2E88C4;font-size:18px;padding:12px 0;">⌫</button>
         </div>
-        <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#fff;border-width:1.5px;font-size:18px;padding:12px 60px;display:block;margin:0 auto;">Go</button>
+        <div style="display:flex;gap:8px;justify-content:center;">
+          <button id="homeQuickSearchGoBtn" class="btn" style="background:#3C9142;color:#fff;border-color:#fff;border-width:1.5px;font-size:18px;padding:12px 0;flex:1 1 0;min-width:0;">Go</button>
+          <button id="homeQuickSearchMicBtn" class="btn" aria-label="Say a cow number" style="background:linear-gradient(135deg,#2E88C4,#0C5A8E);color:#fff;border-color:#fff;border-width:1.5px;font-size:18px;padding:12px 0;flex:1 1 0;min-width:0;">&#127908; Voice</button>
+        </div>
       </div>
       <div style="display:flex;gap:6px;padding-top:12px;">
         <div id="homeCalvedWrap" style="min-width:0;min-height:62px;box-sizing:border-box;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(135deg, #2E88C4, #0C5A8E);border:1.5px solid #fff;border-radius:10px;padding:8px 2px;cursor:pointer;">
@@ -15074,6 +15077,119 @@
       showQuickAction(partial);
     }
   }
+
+  // ---- Voice: say a cow number ----
+  const VOICE_WORDS = {zero:'0',oh:'0',o:'0',one:'1',won:'1',two:'2',to:'2',too:'2',three:'3',four:'4',for:'4',five:'5',six:'6',seven:'7',eight:'8',ate:'8',nine:'9'};
+  const VOICE_TEENS = {ten:'10',eleven:'11',twelve:'12',thirteen:'13',fourteen:'14',fifteen:'15',sixteen:'16',seventeen:'17',eighteen:'18',nineteen:'19'};
+  const VOICE_TENS = {twenty:'2',thirty:'3',forty:'4',fifty:'5',sixty:'6',seventy:'7',eighty:'8',ninety:'9'};
+  function parseSpokenCowNumber(text){
+    const toks = String(text||'').toLowerCase().replace(/[^a-z0-9 ]+/g,' ').split(/\s+/).filter(Boolean);
+    let out = '';
+    for(let i=0;i<toks.length;i++){
+      const t = toks[i];
+      if(/^[0-9]+$/.test(t)) out += t;
+      else if(/^[a-z][0-9]+$/.test(t) || /^[0-9]+[a-z]$/.test(t)) out += t.toUpperCase();
+      else if(VOICE_TEENS[t]) out += VOICE_TEENS[t];
+      else if(VOICE_TENS[t]){
+        const nxt = toks[i+1];
+        if(nxt && VOICE_WORDS[nxt] && VOICE_WORDS[nxt] !== '0' && nxt !== 'o' && nxt !== 'to' && nxt !== 'too' && nxt !== 'for' && nxt !== 'oh'){ out += VOICE_TENS[t] + VOICE_WORDS[nxt]; i++; }
+        else out += VOICE_TENS[t] + '0';
+      }
+      else if(VOICE_WORDS[t]) out += VOICE_WORDS[t];
+      else if(/^[a-z]$/.test(t)) out += t.toUpperCase();
+    }
+    return out.slice(0,6);
+  }
+  // ---- Voice: "mark 4008 calved" ----
+  const VOICE_MARKS = {
+    calved: { label:'Calved',      get:c=>!!c.calved,       set:(n,v)=>toggleCalved(n,v) },
+    tag:    { label:'Tag Needed',  get:c=>!!c.tag_needed,   set:(n,v)=>toggleTagNeeded(n,v) },
+    flag:   { label:'Flagged',     get:c=>!!c.needs_entry,  set:(n,v)=>toggleNeedsEntry(n,v) },
+    pregbt: { label:'Preg BT',     get:c=>!!c.preg_bt,      set:(n,v)=>togglePregBt(n,v) },
+    sell:   { label:'Sell',        get:c=>!!c.sell,         set:(n,v)=>toggleSell(n,v) }
+  };
+  function parseVoiceMarkCommand(text){
+    const t = ' ' + String(text||'').toLowerCase().replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ') + ' ';
+    const on = /\s(mark|check|set)\s/.test(t);
+    const off = /\s(unmark|uncheck|unset|remove|clear)\s/.test(t) || /\s(un mark|un check)\s/.test(t);
+    if(!on && !off) return null;
+    let kind = null;
+    if(/\s(calved|calve|calving|calf)\s/.test(t)) kind = 'calved';
+    else if(/\s(flagged|flag)\s/.test(t)) kind = 'flag';
+    else if(/\s(preg|pregnant|pregbt)\s/.test(t)) kind = 'pregbt';
+    else if(/\s(sell|sale|sold)\s/.test(t)) kind = 'sell';
+    else if(/\s(tag|tags|tagged)\s/.test(t)) kind = 'tag';
+    else if(/\s(open|opened)\s/.test(t)) return { unsupported:'open' };
+    if(!kind) return null;
+    const cleaned = t.replace(/\s(un ?mark|un ?check|unset|mark|check|set|remove|clear|as|a|the|cow|number|calved|calve|calving|calf|flagged|flag|preg|pregnant|pregbt|bt|sell|sale|sold|tag|tags|tagged|needed|is|it)\s/g,' ').replace(/\s(un ?mark|un ?check|unset|mark|check|set|remove|clear|as|a|the|cow|number|calved|calve|calving|calf|flagged|flag|preg|pregnant|pregbt|bt|sell|sale|sold|tag|tags|tagged|needed|is|it)\s/g,' ');
+    const num = parseSpokenCowNumber(cleaned);
+    if(!num) return null;
+    return { kind, num, value: !off };
+  }
+  function voiceMarkConfirm(cmd){
+    if(cmd.unsupported){ showToast('Open can\'t be marked by voice — use the Open box on her card'); return; }
+    const cow = cows.find(c=> c.number.toLowerCase() === cmd.num.toLowerCase());
+    const m = VOICE_MARKS[cmd.kind];
+    if(!cow){ showToast('No cow found with number ' + cmd.num); return; }
+    if(m.get(cow) === cmd.value){ showToast('#' + cow.number + ' is already ' + (cmd.value ? 'marked' : 'unmarked') + ' ' + m.label); return; }
+    const modal = openModal(`
+      <div class="modal-title">${cmd.value ? 'Mark' : 'Unmark'} #${escapeHtml(cow.number)}?</div>
+      <div style="font-family:Arial,sans-serif;font-size:16px;margin-bottom:14px;">${cmd.value ? 'Check' : 'Uncheck'} <b>${m.label}</b> for cow #${escapeHtml(cow.number)}?</div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="voiceMarkNo">No</button>
+        <button class="btn" id="voiceMarkYes" style="background:#3C9142;color:#fff;border-color:#3C9142;">Yes</button>
+      </div>
+    `);
+    modal.querySelector('#voiceMarkNo').addEventListener('click', closeModal);
+    modal.querySelector('#voiceMarkYes').addEventListener('click', async ()=>{
+      closeModal();
+      await m.set(cow.number, cmd.value);
+      updateCalvedBadge(); updateOpenBadge(); updatePregBtBadge(); updateSellBadge(); updateTagNeededBadge(); updateFlaggedBadge(); updateSyncHoldBadge();
+      showToast('#' + cow.number + ' ' + (cmd.value ? 'marked ' : 'unmarked ') + m.label);
+    });
+  }
+  let voiceRec = null;
+  function homeVoiceSearch(){
+    const btn = document.getElementById('homeQuickSearchMicBtn');
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ showToast('Voice is not available here — use the keypad'); return; }
+    if(voiceRec){ try{ voiceRec.stop(); }catch(e){} return; }
+    const rec = new SR();
+    voiceRec = rec;
+    rec.lang = 'en-US';
+    rec.interimResults = false;
+    rec.maxAlternatives = 3;
+    const reset = ()=>{ voiceRec = null; btn.innerHTML = '&#127908; Voice'; btn.style.background = ''; };
+    btn.innerHTML = 'Listening…';
+    btn.style.background = '#7A2E27';
+    let heard = false;
+    rec.onresult = (ev)=>{
+      heard = true;
+      const res = ev.results[0];
+      // First: a spoken command like "mark 4008 calved"
+      for(let i=0;i<res.length;i++){
+        const cmd = parseVoiceMarkCommand(res[i].transcript);
+        if(cmd){ voiceMarkConfirm(cmd); return; }
+      }
+      let num = '';
+      for(let i=0;i<res.length && !num;i++) num = parseSpokenCowNumber(res[i].transcript);
+      if(!num){ showToast('Did not catch a number — try again'); return; }
+      homeQuickSearchValue = num;
+      updateHomeQuickSearchDisplay();
+      showToast('Heard ' + num);
+      setTimeout(()=>{ if(homeQuickSearchValue === num) runHomeQuickSearch(); }, 900);
+    };
+    rec.onerror = (ev)=>{
+      const e = ev && ev.error;
+      if(e === 'not-allowed' || e === 'service-not-allowed') showToast('Allow the microphone for this app, or use the keypad');
+      else if(e === 'no-speech') showToast("Didn't hear anything — try again");
+      else if(e !== 'aborted') showToast('Voice did not work — use the keypad');
+      heard = true;
+    };
+    rec.onend = ()=>{ if(!heard) showToast("Didn't hear anything — try again"); reset(); };
+    try{ rec.start(); }catch(e){ reset(); showToast('Voice did not work — use the keypad'); }
+  }
+  document.getElementById('homeQuickSearchMicBtn').addEventListener('click', (e)=>{ e.currentTarget.blur(); homeVoiceSearch(); });
 
   document.addEventListener('keydown', (e)=>{
     if(homeView.classList.contains('hidden')) return;
