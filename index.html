@@ -693,12 +693,12 @@
     </div>
     <div class="field" style="margin-bottom:14px;">
       <label>Method (optional)</label>
-      <select id="vetPregMethod">
-        <option value="">-- Select if known --</option>
-        <option value="AI">AI</option>
-        <option value="ET">ET</option>
-        <option value="BB">BB (Bull Bred)</option>
-      </select>
+      <input type="hidden" id="vetPregMethod" value=""/>
+      <div style="display:flex;gap:22px;flex-wrap:wrap;align-items:center;">
+        <label style="display:flex;align-items:center;gap:8px;font-family:Arial,sans-serif;font-size:14px;color:#0C5A8E;font-weight:700;cursor:pointer;"><input type="checkbox" class="rc-check vet-preg-method-check" data-method="AI" style="--rc-color:#0274BA;"/>AI</label>
+        <label style="display:flex;align-items:center;gap:8px;font-family:Arial,sans-serif;font-size:14px;color:#0C5A8E;font-weight:700;cursor:pointer;"><input type="checkbox" class="rc-check vet-preg-method-check" data-method="ET" style="--rc-color:#0274BA;"/>ET</label>
+        <label style="display:flex;align-items:center;gap:8px;font-family:Arial,sans-serif;font-size:14px;color:#0C5A8E;font-weight:700;cursor:pointer;"><input type="checkbox" class="rc-check vet-preg-method-check" data-method="BB" style="--rc-color:#0274BA;"/>BB (Bull Bred)</label>
+      </div>
       <div style="font-family:Arial,sans-serif;font-size:11px;color:#8a8163;margin-top:4px;">If AI or ET, Days Along fills in automatically from the recorded breed date — the breed date is trusted as exact either way.</div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:20px;">
@@ -3204,7 +3204,7 @@
     vetPregCheckView.classList.remove('hidden');
     document.getElementById('vetPregCowNum').value = '';
     document.getElementById('vetPregDaysAlong').value = '';
-    document.getElementById('vetPregMethod').value = '';
+    setVetPregMethod('');
     vetPregSessionEntries = [];
     renderVetPregTally();
     window.scrollTo(0,0);
@@ -7720,11 +7720,16 @@
     if(!e) return;
     document.getElementById('vetPregCowNum').value = e.cowNum;
     document.getElementById('vetPregDaysAlong').value = e.isOpen ? '' : e.daysAlong;
-    document.getElementById('vetPregMethod').value = e.method || '';
+    setVetPregMethod(e.method || '');
     document.getElementById('vetPregCowNum').focus();
     showToast(`Editing #${e.cowNum} — change and save to update her`);
   }
 
+  // Sets the chosen breeding method (AI / ET / BB, or '' for none) and ticks the matching box.
+  function setVetPregMethod(v){
+    document.getElementById('vetPregMethod').value = v || '';
+    document.querySelectorAll('.vet-preg-method-check').forEach(cb=>{ cb.checked = (cb.dataset.method === (v || '')); });
+  }
   function autoFillVetPregDaysAlong(){
     const methodVal = document.getElementById('vetPregMethod').value;
     if(methodVal !== 'AI' && methodVal !== 'ET') return;
@@ -7766,7 +7771,7 @@
       showToast(`#${cowNum} marked open`);
       cowNumInput.value = '';
       daysInput.value = '';
-      methodSelect.value = '';
+      setVetPregMethod('');
       cowNumInput.focus();
     }catch(e){
       if(e && e.isNetworkFailure){
@@ -7787,7 +7792,7 @@
         showToast(`#${cowNum} saved on this phone — will sync when you have signal`);
         cowNumInput.value = '';
         daysInput.value = '';
-        methodSelect.value = '';
+        setVetPregMethod('');
         cowNumInput.focus();
       } else {
         showToast('Could not save — try again');
@@ -7834,7 +7839,7 @@
       showToast(`#${cowNum} updated`);
       cowNumInput.value = '';
       daysInput.value = '';
-      methodSelect.value = '';
+      setVetPregMethod('');
       cowNumInput.focus();
     }catch(e){
       if(e && e.isNetworkFailure){
@@ -7853,7 +7858,7 @@
         showToast(`#${cowNum} saved on this phone — will sync when you have signal`);
         cowNumInput.value = '';
         daysInput.value = '';
-        methodSelect.value = '';
+        setVetPregMethod('');
         cowNumInput.focus();
       } else {
         showToast('Could not save — try again');
@@ -8087,7 +8092,12 @@
   document.getElementById('vetPregCheckBtn').addEventListener('click', showVetPregCheck);
   document.getElementById('vetPregCheckHomeBtn').addEventListener('click', showHome);
   document.getElementById('vetPregSaveBtn').addEventListener('click', saveVetPregCheckEntry);
-  document.getElementById('vetPregMethod').addEventListener('change', autoFillVetPregDaysAlong);
+  document.querySelectorAll('.vet-preg-method-check').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      setVetPregMethod(cb.checked ? cb.dataset.method : '');
+      autoFillVetPregDaysAlong();
+    });
+  });
   document.getElementById('vetPregCowNum').addEventListener('blur', autoFillVetPregDaysAlong);
   document.getElementById('quickCalfWeightBtn').addEventListener('click', showQuickCalfWeight);
   document.getElementById('quickCalfWeightHomeBtn').addEventListener('click', showHome);
