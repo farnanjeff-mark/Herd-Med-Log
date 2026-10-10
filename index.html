@@ -6013,6 +6013,7 @@
       <a href="#" id="toggleBulkMode" style="display:block;font-family:Arial,sans-serif;font-size:12px;color:var(--barn);text-decoration:underline;margin-bottom:14px;">Add multiple cows at once</a>
       ${fieldWithOther('newCowLot', 'Location (optional)', getLocationOptions(), 'Type location')}
       ${fieldWithOther('newCowOwner', 'Owner (optional)', getOwnerOptions(), 'Type owner name')}
+      ${fieldWithOther('newCowGroup', 'Group (optional)', getGroupOptions(), 'Type group name')}
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelAddCow">Cancel</button>
         <button class="btn btn-barn" id="confirmAddCow">Add Cow</button>
@@ -6020,6 +6021,7 @@
     `);
     wireFieldWithOther(modal, 'newCowLot');
     wireFieldWithOther(modal, 'newCowOwner');
+    wireFieldWithOther(modal, 'newCowGroup');
     modal.querySelector('#cancelAddCow').addEventListener('click', closeModal);
 
     let bulkMode = false;
@@ -6043,15 +6045,17 @@
     confirmBtn.addEventListener('click', async ()=>{
       const lot = valueOf(modal, 'newCowLot');
       const owner = valueOf(modal, 'newCowOwner');
+      const group = valueOf(modal, 'newCowGroup');
       confirmBtn.disabled = true;
       await addLocationIfNew(lot);
       await addOwnerIfNew(owner);
+      await addGroupIfNew(group);
 
       if(!bulkMode){
         const num = modal.querySelector('#newCowNum').value.trim();
         if(!num){ showToast('Enter a cow number'); confirmBtn.disabled = false; return; }
         if(cows.some(c=>c.number.toLowerCase()===num.toLowerCase())){ showToast('That cow already exists'); confirmBtn.disabled = false; return; }
-        const cowBody = { number: num, lot: lot||null, owner: owner||null };
+        const cowBody = { number: num, lot: lot||null, owner: owner||null, cow_group: group||null };
         try{
           const inserted = await api('/cows', {
             method:'POST',
@@ -6127,7 +6131,7 @@
         const inserted = await api('/cows', {
           method:'POST',
           headers: Object.assign({}, HEADERS, {'Prefer':'return=representation'}),
-          body: JSON.stringify(toAdd.map(num=>({ number: num, lot: lot||null, owner: owner||null })))
+          body: JSON.stringify(toAdd.map(num=>({ number: num, lot: lot||null, owner: owner||null, cow_group: group||null })))
         });
         cows.push(...inserted);
         closeModal();
