@@ -13608,11 +13608,11 @@
         <span>Rate of Gain</span>
         <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
       </div>
-      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Uses each cow's two most recent weights inside the dates you pick. Leave the dates blank to use her latest two weights ever. Sorted highest ADG first.</div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">The dates pick which weighing to report on. Each cow's newest weight inside the dates is compared with the weight just before it (any date). Leave the dates blank to use her latest two weights ever. Sorted highest ADG first.</div>
       <div style="background:#E6F1FB;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-          <div><label style="${fieldLbl}">Weighed from</label><input type="date" id="rogFrom"/></div>
-          <div><label style="${fieldLbl}">Weighed to</label><input type="date" id="rogTo"/></div>
+          <div><label style="${fieldLbl}">Latest weighing from</label><input type="date" id="rogFrom"/></div>
+          <div><label style="${fieldLbl}">Latest weighing to</label><input type="date" id="rogTo"/></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
           <div><label style="${fieldLbl}">Group</label><select id="rogGroup">${opts(uniq('cow_group'))}</select></div>
@@ -13645,11 +13645,17 @@
         if(grp && cow.cow_group !== grp) return;
         if(lot && cow.lot !== lot) return;
         if(own && cow.owner !== own) return;
+        // all of her weights, oldest to newest
         const w = weightsFor(cow.number)
-          .filter(x=> x.weight != null && x.weigh_date && (!from || x.weigh_date >= from) && (!to || x.weigh_date <= to))
+          .filter(x=> x.weight != null && x.weigh_date)
           .sort((a,b)=> a.weigh_date.localeCompare(b.weigh_date));
-        if(w.length < 2) return;
-        const prev = w[w.length-2], last = w[w.length-1];
+        // the dates pick the NEWEST weighing; it is compared with the weight just before it (any date)
+        let lastIdx = -1;
+        for(let i = w.length-1; i >= 0; i--){
+          if((!from || w[i].weigh_date >= from) && (!to || w[i].weigh_date <= to)){ lastIdx = i; break; }
+        }
+        if(lastIdx < 1) return; // not weighed in range, or no earlier weight to compare to
+        const prev = w[lastIdx-1], last = w[lastIdx];
         const days = Math.round((new Date(last.weigh_date+'T00:00:00') - new Date(prev.weigh_date+'T00:00:00'))/86400000);
         if(days < 1) return; // two weights on the same day can't give a daily rate
         const gain = Number(last.weight) - Number(prev.weight);
@@ -13657,7 +13663,7 @@
       });
       out.sort((a,b)=> (b.adg - a.adg) || a.cow.number.localeCompare(b.cow.number, undefined, {numeric:true}));
       const bits = [];
-      if(from || to) bits.push('Weighed ' + (from ? fmtDateShort(from) : 'start') + ' to ' + (to ? fmtDateShort(to) : 'latest'));
+      if(from || to) bits.push('Latest weighing between ' + (from ? fmtDateShort(from) : 'start') + ' and ' + (to ? fmtDateShort(to) : 'now'));
       else bits.push('Latest two weighings');
       if(grp) bits.push('Group: ' + grp);
       if(lot) bits.push('Location: ' + lot);
