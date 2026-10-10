@@ -12634,6 +12634,16 @@
     if(savedFolders.length === 0){
       html += '<div class="empty" style="padding:24px 20px;">No folders yet.<br/>Tap "+ New Folder" above, or save a report from Advanced Search.</div>';
     }
+    // Built-in folder (lives in the app itself, not the database) -- holds reports built for you by Claude
+    {
+      const aiOpen = savedFoldersOpen.has('builtin-ai');
+      html += `<div class="sr-folder">
+        <div class="sr-folder-head">
+          <div class="sr-folder-name" data-act="toggle" data-id="builtin-ai">${aiOpen?'📂':'📁'}&nbsp;AI Generated Reports<span class="n">1 report</span></div>
+        </div>
+        ${aiOpen ? `<div class="sr-row"><div class="sr-main" data-act="runbuiltin" data-id="rate-of-gain"><div class="sr-title">Rate of Gain</div><div class="sr-sub">📈 Pounds gained and ADG between each cow's last two weighings — pick dates, group, location, owner. Print or export.</div></div></div>` : ''}
+      </div>`;
+    }
     savedFolders.forEach(f=>{
       const inF = savedReports.filter(r=> r.folder_id === f.id);
       const open = savedFoldersOpen.has(f.id);
@@ -12899,6 +12909,7 @@
       const id = t.dataset.id;
       if(t.dataset.act === 'star') toggleReportStar(id);
       else if(t.dataset.act === 'run') runSavedReport(id);
+      else if(t.dataset.act === 'runbuiltin'){ if(id === 'rate-of-gain') rateOfGainModal(); }
       else if(t.dataset.act === 'editreport') editSavedReportModal(id);
       else if(t.dataset.act === 'delfolder') deleteReportFolder(id);
       else if(t.dataset.act === 'renamefolder') renameReportFolderModal(id);
@@ -13585,6 +13596,136 @@
         showToast('Exported');
       }catch(e){ showToast('Export failed — try again'); }
     });
+  }
+
+  // ===================== RATE OF GAIN (AI Generated Reports folder) =====================
+  function rateOfGainModal(){
+    const uniq = key => [...new Set(cows.map(c=>c[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
+    const opts = list => '<option value="">All</option>' + list.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    const fieldLbl = 'font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#0C447C;display:block;margin-bottom:4px;';
+    const modal = openModal(`
+      <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Rate of Gain</span>
+        <button class="modal-top-close-btn" style="background:none;border:none;font-size:26px;color:#a08f6b;cursor:pointer;line-height:1;padding:0 2px;">&times;</button>
+      </div>
+      <div style="font-family:Arial,sans-serif;font-size:12px;color:#8a8163;margin-bottom:10px;">Uses each cow's two most recent weights inside the dates you pick. Leave the dates blank to use her latest two weights ever. Sorted highest ADG first.</div>
+      <div style="background:#E6F1FB;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div><label style="${fieldLbl}">Weighed from</label><input type="date" id="rogFrom"/></div>
+          <div><label style="${fieldLbl}">Weighed to</label><input type="date" id="rogTo"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div><label style="${fieldLbl}">Group</label><select id="rogGroup">${opts(uniq('cow_group'))}</select></div>
+          <div><label style="${fieldLbl}">Location</label><select id="rogLot">${opts(uniq('lot'))}</select></div>
+        </div>
+        <div><label style="${fieldLbl}">Owner</label><select id="rogOwner">${opts(uniq('owner'))}</select></div>
+      </div>
+      <div id="rogCount" style="font-family:Arial,sans-serif;font-size:13px;color:#6b6350;margin-bottom:10px;"></div>
+      <div id="rogTableWrap" style="overflow-x:auto;margin-bottom:14px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-barn" id="rogPrintBtn">🖨️ Print</button>
+        <button class="btn btn-nav-tool" id="rogExportBtn">📊 Export</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline btn-full" id="rogCloseBtn">Close</button>
+      </div>
+    `);
+    const headers = ['Cow #','Group','Location','Owner','Prev Date','Prev Wt','Last Date','Last Wt','Days','Gain (lbs)','ADG'];
+    let current = { rows: [], subtitle: '' };
+
+    function compute(){
+      const from = modal.querySelector('#rogFrom').value;
+      const to = modal.querySelector('#rogTo').value;
+      const grp = modal.querySelector('#rogGroup').value;
+      const lot = modal.querySelector('#rogLot').value;
+      const own = modal.querySelector('#rogOwner').value;
+      const out = [];
+      cows.forEach(cow=>{
+        if(!isActiveStatus(cow)) return;
+        if(grp && cow.cow_group !== grp) return;
+        if(lot && cow.lot !== lot) return;
+        if(own && cow.owner !== own) return;
+        const w = weightsFor(cow.number)
+          .filter(x=> x.weight != null && x.weigh_date && (!from || x.weigh_date >= from) && (!to || x.weigh_date <= to))
+          .sort((a,b)=> a.weigh_date.localeCompare(b.weigh_date));
+        if(w.length < 2) return;
+        const prev = w[w.length-2], last = w[w.length-1];
+        const days = Math.round((new Date(last.weigh_date+'T00:00:00') - new Date(prev.weigh_date+'T00:00:00'))/86400000);
+        if(days < 1) return; // two weights on the same day can't give a daily rate
+        const gain = Number(last.weight) - Number(prev.weight);
+        out.push({ cow, prev, last, days, gain, adg: gain/days });
+      });
+      out.sort((a,b)=> (b.adg - a.adg) || a.cow.number.localeCompare(b.cow.number, undefined, {numeric:true}));
+      const bits = [];
+      if(from || to) bits.push('Weighed ' + (from ? fmtDateShort(from) : 'start') + ' to ' + (to ? fmtDateShort(to) : 'latest'));
+      else bits.push('Latest two weighings');
+      if(grp) bits.push('Group: ' + grp);
+      if(lot) bits.push('Location: ' + lot);
+      if(own) bits.push('Owner: ' + own);
+      current = { rows: out, subtitle: bits.join(' · ') };
+    }
+    function cellsFor(r){
+      return ['#'+r.cow.number, r.cow.cow_group||'', r.cow.lot||'', r.cow.owner||'',
+        fmtDateShort(r.prev.weigh_date), String(r.prev.weight), fmtDateShort(r.last.weigh_date), String(r.last.weight),
+        String(r.days), (r.gain>0?'+':'')+r.gain, r.adg.toFixed(2)];
+    }
+    function rowsHtml(pad){
+      return current.rows.map((r,i)=>`<tr style="background:${i%2===0?'#fff':'#F7F2E6'};">${cellsFor(r).map(c=>`<td style="padding:${pad}px;">${escapeHtml(c)}</td>`).join('')}</tr>`).join('');
+    }
+    function render(){
+      compute();
+      const n = current.rows.length;
+      modal.querySelector('#rogCount').textContent = n + ' cow' + (n!==1?'s':'') + ' · ' + current.subtitle;
+      const wrap = modal.querySelector('#rogTableWrap');
+      if(n === 0){ wrap.innerHTML = '<p class="empty">No cows have two weights that match these choices.</p>'; return; }
+      wrap.innerHTML = `<table style="width:auto;min-width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;white-space:nowrap;">
+        <thead><tr style="background:#E6F1FB;">${headers.map(h=>`<th style="text-align:left;padding:8px;color:#0C447C;">${h}</th>`).join('')}</tr></thead>
+        <tbody>${rowsHtml(8)}</tbody></table>`;
+    }
+    ['#rogFrom','#rogTo','#rogGroup','#rogLot','#rogOwner'].forEach(sel=> modal.querySelector(sel).addEventListener('change', render));
+    modal.querySelector('#rogCloseBtn').addEventListener('click', closeModal);
+    modal.querySelector('.modal-top-close-btn').addEventListener('click', closeModal);
+
+    modal.querySelector('#rogPrintBtn').addEventListener('click', ()=>{
+      if(current.rows.length === 0){ showToast('Nothing to print'); return; }
+      document.getElementById('printListOutput').innerHTML = `
+        <div style="padding:24px;font-family:Arial,sans-serif;color:#000;">
+          <h2 style="margin:0 0 4px;">Farnan Cattle Co. — Rate of Gain</h2>
+          <div style="font-size:13px;color:#555;margin-bottom:16px;">Printed ${fmtDate(todayLocal())} · ${current.rows.length} cow${current.rows.length!==1?'s':''} · ${escapeHtml(current.subtitle)}</div>
+          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead><tr>${headers.map(h=>`<th style="text-align:left;padding:5px;border-bottom:2px solid #000;">${h}</th>`).join('')}</tr></thead>
+            <tbody>${rowsHtml(5)}</tbody>
+          </table>
+        </div>`;
+      document.body.classList.add('printing-list');
+      requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
+    });
+
+    modal.querySelector('#rogExportBtn').addEventListener('click', async ()=>{
+      if(current.rows.length === 0){ showToast('Nothing to export'); return; }
+      if(typeof ExcelJS === 'undefined'){ showToast('Could not load spreadsheet library'); return; }
+      try{
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Rate of Gain');
+        ws.addRow(headers);
+        ws.getRow(1).font = { bold:true };
+        current.rows.forEach(r=>{
+          ws.addRow([r.cow.number, r.cow.cow_group||'', r.cow.lot||'', r.cow.owner||'',
+            fmtDateShort(r.prev.weigh_date), Number(r.prev.weight), fmtDateShort(r.last.weigh_date), Number(r.last.weight),
+            r.days, r.gain, Number(r.adg.toFixed(2))]);
+        });
+        ws.columns.forEach(col=>{ col.width = 14; });
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'rate-of-gain-' + todayLocal() + '.xlsx';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Exported');
+      }catch(e){ showToast('Export failed — try again'); }
+    });
+    render();
   }
 
   function headcountByOwnerModal(){
